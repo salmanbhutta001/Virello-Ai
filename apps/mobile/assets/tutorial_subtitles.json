@@ -1,0 +1,867 @@
+{
+ "version": 1,
+ "video": "virello_tutorial.mp4",
+ "chapters": [
+  {
+   "id": "ch1",
+   "title": "Welcome to Virello",
+   "start": 0.0,
+   "end": 11.33
+  },
+  {
+   "id": "ch2",
+   "title": "Home Feed",
+   "start": 11.33,
+   "end": 21.0
+  },
+  {
+   "id": "ch3",
+   "title": "Discover",
+   "start": 21.0,
+   "end": 31.0
+  },
+  {
+   "id": "ch4",
+   "title": "Create",
+   "start": 31.0,
+   "end": 40.05
+  },
+  {
+   "id": "ch5",
+   "title": "AI Analyze",
+   "start": 40.05,
+   "end": 53.8
+  },
+  {
+   "id": "ch6",
+   "title": "Audience Insights",
+   "start": 53.8,
+   "end": 64.0
+  },
+  {
+   "id": "ch7",
+   "title": "Campaign Setup",
+   "start": 64.0,
+   "end": 76.0
+  },
+  {
+   "id": "ch8",
+   "title": "AI Growth Agent",
+   "start": 76.0,
+   "end": 85.36
+  },
+  {
+   "id": "ch9",
+   "title": "Campaigns",
+   "start": 85.36,
+   "end": 94.16
+  },
+  {
+   "id": "ch10",
+   "title": "Profile",
+   "start": 94.16,
+   "end": 100.99
+  },
+  {
+   "id": "ch11",
+   "title": "Thank You!",
+   "start": 100.99,
+   "end": 108.72
+  }
+ ],
+ "languages": {
+  "en": {
+   "name_en": "English",
+   "name_native": "English",
+   "rtl": false,
+   "lines": [
+    "Welcome to Virello — your AI Growth Manager!",
+    "Home Feed: your growth dashboard.",
+    "Discover: AI finds the right audience for you.",
+    "Create: paste your post, pick a goal, let AI grow.",
+    "AI Analyze: deep content score and tips. An honest estimate.",
+    "Audience Insights: see who your post suits best — with clear reasons.",
+    "Campaign Setup: Free Grow or Paid Boost. You approve the countries.",
+    "AI Growth Agent: distributes, measures real signals, keeps improving.",
+    "Campaigns: all your Free and Paid campaigns in one place.",
+    "Profile: settings, language, and this Tutorial.",
+    "Paste your first post and let AI grow. Thank you!"
+   ]
+  },
+  "ur": {
+   "name_en": "اردو",
+   "name_native": "اردو",
+   "rtl": true,
+   "lines": [
+    "Virello میں خوش آمدید — آپ کا AI Growth Manager!",
+    "Home Feed: آپ کا growth dashboard.",
+    "Discover: AI آپ کے لیے درست audience تلاش کرتا ہے.",
+    "Create: اپنی post paste کریں، goal چنیں، AI کو grow کرنے دیں.",
+    "AI Analyze: گہری content score اور تجاویز. ایک ایماندار اندازہ.",
+    "Audience Insights: دیکھیے post کن کے لیے بہترین ہے — واضح وجوہات کے ساتھ.",
+    "Campaign Setup: Free Grow یا Paid Boost. Countries آپ approve کرتے ہیں.",
+    "AI Growth Agent: distribute کرتا ہے، اصلی signals ناپتا ہے، بہتر بناتا ہے.",
+    "Campaigns: تمام Free اور Paid campaigns ایک جگہ.",
+    "Profile: settings، language، اور یہ Tutorial.",
+    "اپنی پہلی post paste کریں اور AI کو grow کرنے دیں. شکریہ!"
+   ]
+  },
+  "ar": {
+   "name_en": "Arabic",
+   "name_native": "العربية",
+   "rtl": true,
+   "lines": [
+    "مرحبًا بك في Virello — مدير النمو الذكي الخاص بك!",
+    "الصفحة الرئيسية: لوحة النمو الخاصة بك.",
+    "اكتشف: الذكاء الاصطناعي يجد الجمهور المناسب لك.",
+    "إنشاء: الصق منشورك، واختر هدفًا، ودع الذكاء الاصطناعي ينمّي.",
+    "تحليل الذكاء الاصطناعي: درجة محتوى عميقة ونصائح. تقدير صادق.",
+    "رؤى الجمهور: شاهد لمن يكون منشورك أفضل — مع أسباب واضحة.",
+    "إعداد الحملة: النمو المجاني أو التعزيز المدفوع. أنت تعتمد الدول.",
+    "وكيل النمو الذكي: يوزّع، ويقيس الإشارات الحقيقية، ويواصل التحسين.",
+    "الحملات: جميع حملاتك المجانية والمدفوعة في مكان واحد.",
+    "الملف الشخصي: الإعدادات واللغة وهذا الدليل.",
+    "الصق منشورك الأول ودع الذكاء الاصطناعي ينمّي. شكرًا لك!"
+   ]
+  },
+  "hi": {
+   "name_en": "Hindi",
+   "name_native": "हिन्दी",
+   "rtl": false,
+   "lines": [
+    "Virello में आपका स्वागत है — आपका AI Growth Manager!",
+    "Home Feed: आपका growth dashboard.",
+    "Discover: AI आपके लिए सही audience ढूंढता है.",
+    "Create: अपनी post paste करें, goal चुनें, AI को grow करने दें.",
+    "AI Analyze: गहरी content score और सुझाव. एक ईमानदार अनुमान.",
+    "Audience Insights: देखें post किनके लिए सबसे बेहतर है — स्पष्ट कारणों के साथ.",
+    "Campaign Setup: Free Grow या Paid Boost. देश आप approve करते हैं.",
+    "AI Growth Agent: वितरण करता है, असली signals नापता है, सुधारता रहता है.",
+    "Campaigns: आपकी सभी Free और Paid campaigns एक जगह.",
+    "Profile: settings, भाषा, और ये Tutorial.",
+    "अपनी पहली post paste करें और AI को grow करने दें. धन्यवाद!"
+   ]
+  },
+  "fa": {
+   "name_en": "Persian / Dari",
+   "name_native": "فارسی / دری",
+   "rtl": true,
+   "lines": [
+    "به Virello خوش آمدید — مدیر رشد هوشمند شما!",
+    "صفحه اصلی: داشبورد رشد شما.",
+    "کشف: هوش مصنوعی مخاطب مناسب شما را پیدا می‌کند.",
+    "ایجاد: پست خود را بچسبانید، هدف انتخاب کنید، بگذارید هوش مصنوعی رشد دهد.",
+    "تحلیل هوش مصنوعی: امتیاز عمیق محتوا و پیشنهادها. یک برآورد صادقانه.",
+    "بینش مخاطب: ببینید پست شما برای چه کسانی بهتر است — با دلایل روشن.",
+    "راه‌اندازی کمپین: رشد رایگان یا تقویت پولی. کشورها را شما تأیید می‌کنید.",
+    "عامل رشد هوش مصنوعی: توزیع می‌کند، سیگنال‌های واقعی را می‌سنجد، بهبود می‌دهد.",
+    "کمپین‌ها: همه کمپین‌های رایگان و پولی شما در یک جا.",
+    "پروفایل: تنظیمات، زبان، و این آموزش.",
+    "اولین پست خود را بچسبانید و بگذارید هوش مصنوعی رشد دهد. متشکرم!"
+   ]
+  },
+  "bn": {
+   "name_en": "Bengali",
+   "name_native": "বাংলা",
+   "rtl": false,
+   "lines": [
+    "Virello-টে স্বাগত — আপনার AI Growth Manager!",
+    "Home Feed: আপনার growth dashboard.",
+    "Discover: AI আপনার জন্য সঠিক audience খুঁজে নেয়.",
+    "Create: আপনার post paste করুন, goal বাছুন, AI-কে grow করতে দিন.",
+    "AI Analyze: গভীর content score ও পরামর্শ. একটি সত আংদাজ.",
+    "Audience Insights: দেখুন post কার জন্য সবচেয়ে ভালো — স্পষ্ট কারণে সহ.",
+    "Campaign Setup: Free Grow বা Paid Boost. দেশগুলো আপনি অনুমোদন করেন.",
+    "AI Growth Agent: বিতরণ করে, আসল signal মাপে, উন্নত করতে থাকে.",
+    "Campaigns: আপনার সব Free ও Paid campaign এক জায়গায়.",
+    "Profile: settings, ভাষা, এবং এই Tutorial.",
+    "আপনার প্রথম post paste করুন এবং AI-কে grow করতে দিন. ধন্যবাদ!"
+   ]
+  },
+  "pa": {
+   "name_en": "Punjabi",
+   "name_native": "ਪੰਜਾਬੀ",
+   "rtl": false,
+   "lines": [
+    "Virello ਵਿੱਚ ਜੀ ਆਇਆਂ ਨੂੰ — ਤੁਹਾਡਾ AI Growth Manager!",
+    "Home Feed: ਤੁਹਾਡਾ growth dashboard.",
+    "Discover: AI ਤੁਹਾਡੇ ਲਈ ਸਹੀ audience ਲੱਭਦਾ ਹੈ.",
+    "Create: ਆਪਣੀ post paste ਕਰੋ, goal ਚੁਣੋ, AI ਨੂੰ grow ਕਰਨ ਦਿਓ.",
+    "AI Analyze: ਡੁੰਘੀ content score ਅਤੇ ਸੁਝਾਅ. ਇੱਕ ਇਮਾਨਦਾਰ ਅੰਦਾਜ਼ਾ.",
+    "Audience Insights: ਵੇਖੋ post ਕਿਨ੍ਨਾਂ ਲਈ ਸਭ ਤੋਂ ਚੰਗੀ ਹੈ — ਸਾਫ਼ ਕਾਰਨਾਂ ਨਾਲ.",
+    "Campaign Setup: Free Grow ਜਾਂ Paid Boost. ਦੇਸ਼ ਤੁਸੀਂ approve ਕਰਦੇ ਹੋ.",
+    "AI Growth Agent: ਵੰਡਦਾ ਹੈ, ਅਸਲੀ signals ਨਾਪਦਾ ਹੈ, ਸੁਧਾਰਦਾ ਰਹਿੰਦਾ ਹੈ.",
+    "Campaigns: ਤੁਹਾਡੀਆਂ ਸਾਰੀਆਂ Free ਅਤੇ Paid campaigns ਇੱਕ ਜਗ੍ਹਾ.",
+    "Profile: settings, ਭਾਸ਼ਾ, ਅਤੇ ਇਹ Tutorial.",
+    "ਆਪਣੀ ਪਹਿਲੀ post paste ਕਰੋ ਅਤੇ AI ਨੂੰ grow ਕਰਨ ਦਿਓ. ਸ਼ੁਕਰੀਆ!"
+   ]
+  },
+  "sd": {
+   "name_en": "Sindhi",
+   "name_native": "سنڌي",
+   "rtl": true,
+   "lines": [
+    "Virello میں بھلی ڪرے آیا — توھنجو AI Growth Manager!",
+    "Home Feed: توھنجو growth dashboard.",
+    "Discover: AI توھنجے لاءِ سھی audience ڳولھے تھو.",
+    "Create: پنھنجی post paste ڪیو، goal چنڍو، AI ڪے grow ڪرں ڍیو.",
+    "AI Analyze: گھرو content score ائیں سجھاءیو. ھڪ ایماندار اندازو.",
+    "Audience Insights: ڏسو post ڪن لاءِ بھترین آھے — واضح سببن ساں.",
+    "Campaign Setup: Free Grow یا Paid Boost. ملڪن ڪے توھیں approve ڪیو تھا.",
+    "AI Growth Agent: ونڍو ڪرے تھو، اصلی signals ناپے تھو، بھتر ڪندو رھے تھو.",
+    "Campaigns: توھنجیوں سٻھئی Free ائیں Paid campaigns ھڪ جگھہ.",
+    "Profile: settings، بولی، ائیں ھے Tutorial.",
+    "پنھنجی پھریں post paste ڪیو ائیں AI ڪے grow ڪرں ڍیو. مھربانی!"
+   ]
+  },
+  "ps": {
+   "name_en": "Pashto",
+   "name_native": "پښتو",
+   "rtl": true,
+   "lines": [
+    "Virello ته ښه راغلاست — ستاسو AI Growth Manager!",
+    "Home Feed: ستاسو د ودې ډشبورډ.",
+    "Discover: AI ستاسو لپاره سم اورېدونکي مومي.",
+    "Create: خپل پوسټ پېسټ کړئ، هدف وټاکئ، AI ته وده ورکولو پرېږدئ.",
+    "AI Analyze: ژور content score او وړاندیزونه. یو رښتینی اټکل.",
+    "Audience Insights: وګورئ پوسټ د چا لپاره غوره دی — له روښانه لاملونو سره.",
+    "Campaign Setup: وړیا وده یا پېسو سره وده. هېوادونه تاسو تاییدوئ.",
+    "AI Growth Agent: وېشي، رښتیني سیګنالونه اندازه کوي، ښه کولو ته دوام ورکوي.",
+    "Campaigns: ستاسو ټول وړیا او پېسے لرونکي کمپاینونه په یوه ځای کې.",
+    "Profile: ترتیبات، ژبه، او دا لارښود.",
+    "خپل لومړی پوسټ پېسټ کړئ او AI ته وده ورکولو پرېږدئ. مننه!"
+   ]
+  },
+  "es": {
+   "name_en": "Spanish",
+   "name_native": "Español",
+   "rtl": false,
+   "lines": [
+    "¡Bienvenido a Virello — tu Gestor de Crecimiento IA!",
+    "Inicio: tu panel de crecimiento.",
+    "Descubrir: la IA encuentra tu audiencia ideal.",
+    "Crear: pega tu publicación, elige un objetivo, deja crecer a la IA.",
+    "Análisis IA: puntuación profunda y consejos. Una estimación honesta.",
+    "Datos de audiencia: mira para quién es mejor tu publicación — con razones claras.",
+    "Configurar campaña: Crecimiento Gratis o Impulso Pagado. Tú apruebas los países.",
+    "Agente de Crecimiento IA: distribuye, mide señales reales, mejora siempre.",
+    "Campañas: todas tus campañas gratis y pagadas en un lugar.",
+    "Perfil: ajustes, idioma y este Tutorial.",
+    "Pega tu primera publicación y deja crecer a la IA. ¡Gracias!"
+   ]
+  },
+  "fr": {
+   "name_en": "French",
+   "name_native": "Français",
+   "rtl": false,
+   "lines": [
+    "Bienvenue sur Virello — votre Gestionnaire de Croissance IA !",
+    "Accueil : votre tableau de bord de croissance.",
+    "Découvrir : l’IA trouve l’audience idéale pour vous.",
+    "Créer : collez votre publication, choisissez un objectif, laissez l’IA booster.",
+    "Analyse IA : score approfondi et conseils. Une estimation honnête.",
+    "Données d’audience : voyez pour qui votre publication est idéale — avec des raisons claires.",
+    "Créer une campagne : Croissance Gratuite ou Boost Payant. Vous validez les pays.",
+    "Agent de Croissance IA : distribue, mesure les signaux réels, s’améliore sans cesse.",
+    "Campagnes : toutes vos campagnes gratuites et payantes au même endroit.",
+    "Profil : paramètres, langue et ce Tutoriel.",
+    "Collez votre première publication et laissez l’IA booster. Merci !"
+   ]
+  },
+  "de": {
+   "name_en": "German",
+   "name_native": "Deutsch",
+   "rtl": false,
+   "lines": [
+    "Willkommen bei Virello — Ihrem KI-Wachstumsmanager!",
+    "Startseite: Ihr Wachstums-Dashboard.",
+    "Entdecken: Die KI findet Ihre ideale Zielgruppe.",
+    "Erstellen: Beitrag einfügen, Ziel wählen, die KI wachsen lassen.",
+    "KI-Analyse: Tiefgehende Bewertung und Tipps. Eine ehrliche Schätzung.",
+    "Zielgruppen-Einblicke: Sehen Sie, für wen Ihr Beitrag am besten passt — mit klaren Gründen.",
+    "Kampagne einrichten: Kostenloses Wachstum oder Bezahlter Boost. Sie genehmigen die Länder.",
+    "KI-Wachstumsagent: verteilt, misst echte Signale, verbessert ständig.",
+    "Kampagnen: Alle Ihre kostenlosen und bezahlten Kampagnen an einem Ort.",
+    "Profil: Einstellungen, Sprache und dieses Tutorial.",
+    "Fügen Sie Ihren ersten Beitrag ein und lassen Sie die KI wachsen. Danke!"
+   ]
+  },
+  "it": {
+   "name_en": "Italian",
+   "name_native": "Italiano",
+   "rtl": false,
+   "lines": [
+    "Benvenuto su Virello — il tuo Manager di Crescita IA!",
+    "Home: la tua dashboard di crescita.",
+    "Scopri: l’IA trova il pubblico giusto per te.",
+    "Crea: incolla il tuo post, scegli un obiettivo, lascia crescere l’IA.",
+    "Analisi IA: punteggio approfondito e consigli. Una stima onesta.",
+    "Dati sul pubblico: vedi per chi è ideale il tuo post — con motivi chiari.",
+    "Configura campagna: Crescita Gratuita o Boost a Pagamento. Tu approvi i paesi.",
+    "Agente di Crescita IA: distribuisce, misura segnali reali, migliora sempre.",
+    "Campagne: tutte le tue campagne gratuite e a pagamento in un unico posto.",
+    "Profilo: impostazioni, lingua e questo Tutorial.",
+    "Incolla il tuo primo post e lascia crescere l’IA. Grazie!"
+   ]
+  },
+  "pt": {
+   "name_en": "Portuguese",
+   "name_native": "Português",
+   "rtl": false,
+   "lines": [
+    "Bem-vindo ao Virello — seu Gerente de Crescimento IA!",
+    "Início: seu painel de crescimento.",
+    "Descobrir: a IA encontra o público ideal para você.",
+    "Criar: cole sua publicação, escolha uma meta, deixe a IA crescer.",
+    "Análise IA: pontuação profunda e dicas. Uma estimativa honesta.",
+    "Dados de audiência: veja para quem sua publicação é ideal — com motivos claros.",
+    "Configurar campanha: Crescimento Grátis ou Impulso Pago. Você aprova os países.",
+    "Agente de Crescimento IA: distribui, mede sinais reais, melhora sempre.",
+    "Campanhas: todas as suas campanhas grátis e pagas em um só lugar.",
+    "Perfil: configurações, idioma e este Tutorial.",
+    "Cole sua primeira publicação e deixe a IA crescer. Obrigado!"
+   ]
+  },
+  "nl": {
+   "name_en": "Dutch",
+   "name_native": "Nederlands",
+   "rtl": false,
+   "lines": [
+    "Welkom bij Virello — jouw AI-groeimanager!",
+    "Home: je groei-dashboard.",
+    "Ontdekken: de AI vindt jouw ideale publiek.",
+    "Maken: plak je post, kies een doel, laat de AI groeien.",
+    "AI-analyse: diepgaande score en tips. Een eerlijke schatting.",
+    "Publieksinzichten: zie voor wie je post het beste past — met duidelijke redenen.",
+    "Campagne instellen: Gratis Groei of Betaalde Boost. Jij keurt de landen goed.",
+    "AI-groeiagent: verspreidt, meet echte signalen, blijft verbeteren.",
+    "Campagnes: al je gratis en betaalde campagnes op één plek.",
+    "Profiel: instellingen, taal en deze Tutorial.",
+    "Plak je eerste post en laat de AI groeien. Bedankt!"
+   ]
+  },
+  "ru": {
+   "name_en": "Russian",
+   "name_native": "Русский",
+   "rtl": false,
+   "lines": [
+    "Добро пожаловать в Virello — ваш ИИ-менеджер роста!",
+    "Главная: ваша панель роста.",
+    "Поиск: ИИ находит вашу идеальную аудиторию.",
+    "Создать: вставьте пост, выберите цель, позвольте ИИ расти.",
+    "ИИ-анализ: глубокая оценка и советы. Честная оценка.",
+    "Данные об аудитории: узнайте, кому ваш пост подходит лучше — с понятными причинами.",
+    "Настройка кампании: бесплатный рост или платное продвижение. Страны утверждаете вы.",
+    "ИИ-агент роста: распределяет, измеряет реальные сигналы, постоянно улучшается.",
+    "Кампании: все ваши бесплатные и платные кампании в одном месте.",
+    "Профиль: настройки, язык и это руководство.",
+    "Вставьте свой первый пост и позвольте ИИ расти. Спасибо!"
+   ]
+  },
+  "uk": {
+   "name_en": "Ukrainian",
+   "name_native": "Українська",
+   "rtl": false,
+   "lines": [
+    "Ласкаво просимо до Virello — вашого ШІ-менеджера зростання!",
+    "Головна: ваша панель зростання.",
+    "Пошук: ШІ знаходить вашу ідеальну аудиторію.",
+    "Створити: вставте допис, оберіть ціль, дозвольте ШІ зростати.",
+    "ШІ-аналіз: глибока оцінка та поради. Чесна оцінка.",
+    "Дані про аудиторію: дізнайтеся, кому ваш допис пасує найкраще — зі зрозумілими причинами.",
+    "Налаштування кампанії: безкоштовне зростання або платне просування. Країни затверджуєте ви.",
+    "ШІ-агент зростання: розподіляє, вимірює реальні сигнали, постійно вдосконалюється.",
+    "Кампанії: усі ваші безкоштовні та платні кампанії в одному місці.",
+    "Профіль: налаштування, мова та цей посібник.",
+    "Вставте свій перший допис і дозвольте ШІ зростати. Дякуємо!"
+   ]
+  },
+  "tr": {
+   "name_en": "Turkish",
+   "name_native": "Türkçe",
+   "rtl": false,
+   "lines": [
+    "Virello’ya hoş geldiniz — yapay zeka büyüme yöneticiniz!",
+    "Ana Sayfa: büyüme paneliniz.",
+    "Keşfet: yapay zeka size ideal kitleyi bulur.",
+    "Oluştur: gönderinizi yapıştırın, hedef seçin, yapay zekanın büyütmesine izin verin.",
+    "Yapay Zeka Analizi: derinlemesine puan ve ipuçları. Dürüst bir tahmin.",
+    "Kitle Verileri: gönderinizin kime en uygun olduğunu görün — net nedenlerle.",
+    "Kampanya Kurulumu: Ücretsiz Büyüme veya Ücretli Destek. Ülkeleri siz onaylarsınız.",
+    "Yapay Zeka Büyüme Aracısı: dağıtır, gerçek sinyalleri ölçer, sürekli iyileştirir.",
+    "Kampanyalar: tüm ücretsiz ve ücretli kampanyalarınız tek yerde.",
+    "Profil: ayarlar, dil ve bu Eğitim.",
+    "İlk gönderinizi yapıştırın ve yapay zekanın büyütmesine izin verin. Teşekkürler!"
+   ]
+  },
+  "id": {
+   "name_en": "Indonesian",
+   "name_native": "Bahasa Indonesia",
+   "rtl": false,
+   "lines": [
+    "Selamat datang di Virello — Manajer Pertumbuhan AI Anda!",
+    "Beranda: dasbor pertumbuhan Anda.",
+    "Jelajahi: AI menemukan audiens yang tepat untuk Anda.",
+    "Buat: tempel postingan Anda, pilih tujuan, biarkan AI berkembang.",
+    "Analisis AI: skor mendalam dan tips. Estimasi yang jujur.",
+    "Wawasan Audiens: lihat siapa yang paling cocok — dengan alasan jelas.",
+    "Siapkan Kampanye: Tumbuh Gratis atau Boost Berbayar. Anda menyetujui negaranya.",
+    "Agen Pertumbuhan AI: mendistribusikan, mengukur sinyal nyata, terus meningkat.",
+    "Kampanye: semua kampanye gratis dan berbayar Anda di satu tempat.",
+    "Profil: pengaturan, bahasa, dan Tutorial ini.",
+    "Tempel postingan pertama Anda dan biarkan AI berkembang. Terima kasih!"
+   ]
+  },
+  "ms": {
+   "name_en": "Malay",
+   "name_native": "Bahasa Melayu",
+   "rtl": false,
+   "lines": [
+    "Selamat datang ke Virello — Pengurus Pertumbuhan AI anda!",
+    "Laman Utama: papan pemuka pertumbuhan anda.",
+    "Terokai: AI mencari audiens yang sesuai untuk anda.",
+    "Cipta: tampal siaran anda, pilih matlamat, biarkan AI berkembang.",
+    "Analisis AI: skor mendalam dan tip. Anggaran yang jujur.",
+    "Wawasan Audiens: lihat siapa yang paling sesuai — dengan sebab yang jelas.",
+    "Sediakan Kempen: Pertumbuhan Percuma atau Boost Berbayar. Anda meluluskan negara.",
+    "Ejen Pertumbuhan AI: mengedar, mengukur isyarat sebenar, terus meningkat.",
+    "Kempen: semua kempen percuma dan berbayar anda di satu tempat.",
+    "Profil: tetapan, bahasa, dan Tutorial ini.",
+    "Tampal siaran pertama anda dan biarkan AI berkembang. Terima kasih!"
+   ]
+  },
+  "fil": {
+   "name_en": "Filipino",
+   "name_native": "Filipino",
+   "rtl": false,
+   "lines": [
+    "Maligayang pagdating sa Virello — ang iyong AI Growth Manager!",
+    "Home: ang iyong growth dashboard.",
+    "Tuklasin: hinahanap ng AI ang tamang audience para sa iyo.",
+    "Gumawa: i-paste ang post mo, pumili ng goal, hayaang lumago ang AI.",
+    "AI Analyze: malalim na score at tips. Isang tapat na tantiya.",
+    "Audience Insights: tingnan kung kanino bagay ang post mo — may malinaw na dahilan.",
+    "Campaign Setup: Libreng Paglago o Bayad na Boost. Ikaw ang nag-aapruba ng mga bansa.",
+    "AI Growth Agent: namamahagi, sumusukat ng totoong signals, patuloy na bumubuti.",
+    "Mga Campaign: lahat ng libre at bayad mong campaign sa isang lugar.",
+    "Profile: settings, wika, at ang Tutorial na ito.",
+    "I-paste ang una mong post at hayaang lumago ang AI. Salamat!"
+   ]
+  },
+  "vi": {
+   "name_en": "Vietnamese",
+   "name_native": "Tiếng Việt",
+   "rtl": false,
+   "lines": [
+    "Chào mừng đến với Virello — Trợ lý Tăng trưởng AI của bạn!",
+    "Trang chủ: bảng điều khiển tăng trưởng của bạn.",
+    "Khám phá: AI tìm đúng đối tượng cho bạn.",
+    "Tạo: dán bài đăng, chọn mục tiêu, để AI phát triển.",
+    "Phân tích AI: điểm số chuyên sâu và gợi ý. Một ước tính trung thực.",
+    "Hiểu biết khán giả: xem bài đăng phù hợp nhất với ai — kèm lý do rõ ràng.",
+    "Thiết lập chiến dịch: Tăng trưởng Miễn phí hoặc Tăng cường Trả phí. Bạn phê duyệt quốc gia.",
+    "Tác nhân Tăng trưởng AI: phân phối, đo tín hiệu thực, liên tục cải thiện.",
+    "Chiến dịch: mọi chiến dịch miễn phí và trả phí ở một nơi.",
+    "Hồ sơ: cài đặt, ngôn ngữ và Hướng dẫn này.",
+    "Dán bài đăng đầu tiên và để AI phát triển. Cảm ơn!"
+   ]
+  },
+  "th": {
+   "name_en": "Thai",
+   "name_native": "ไทย",
+   "rtl": false,
+   "lines": [
+    "ยินดีต้นรรัับสูรรร Virello — ผู้จัดกาารตารรรตารณร฿บบต AI ของงคุณ!",
+    "หน้าแรรก: แชชชบอ์รตารณร฿บบตของงคุณ",
+    "ค้นพบบ: AI ค้นหากลลุมหมายเที่ใใตารณร฿บบตแน่ใาสูรรรตารณร฿บบต",
+    "สร้าง: วางโพสต์ เลือเปืปแหมาย ปล่อเปแปย ปล่อใแตาง AI เติบติ",
+    "วิเคราะห์ AI: คะแนนเชิงลึกลักและเคลัปและลิด ประมารณรางยยงรอางตรงเดงตรงปร",
+    "ข้อมูลเอิงลักและมช้อม: ดูว่าโพสต์เหมายอ่าใกแป่ที่ใใตแน่ใาสูรรรแน่ใาสูรรร — พร้อเหตุผลชัดเชน",
+    "ตั้งค่าแคมเปป: เติบติฟรีหรีตร่าเหลือัอแบบแจ่ยเงนแจ่ยบาบเจ่ยเงินบุ้งปง คุณอนุมผติประเองประง",
+    "เอเจนต์ตารณร฿บบต AI: กระจาย วัดสิญญาณจริง พัฒนาอังดอัองยอังยว่งเน่ใเน่ง",
+    "แคมเปป: แคมเปปฟรีหรีตร่าเหลือัอแบบแจ่ยแบบแจ่ยบาบเจ่ยทั้งหมดใใวใใแนที่ใใว",
+    "โปรโฝล์: การตั้า ภาษา และบับสูณรสูณณนี้",
+    "วางโพสต์แรกของงคุณแล่รปล่อแป่รปล่อ AI เติบติ ขอบบคุณ!"
+   ]
+  },
+  "ja": {
+   "name_en": "Japanese",
+   "name_native": "日本語",
+   "rtl": false,
+   "lines": [
+    "Virelloへようこそ — あなたのAIグロースマネージャー!",
+    "ホーム: あなたの成長ダッシュボード。",
+    "発見: AIがあなたに最適なオーディエンスを見つけます。",
+    "作成: 投稿を貼り付け、目標を選び、AIに成長させましょう。",
+    "AI分析: 詳細なスコアとヒント。正直な見積もりです。",
+    "オーディエンス分析: 投稿が誰に最適か明確な理由と共に確認。",
+    "キャンペーン設定: 無料グロースまたは有料ブースト。国はあなたが承認。",
+    "AIグロースエージェント: 配信し、実際のシグナルを測定し、改善し続けます。",
+    "キャンペーン: 無料・有料の全キャンペーンを一か所に。",
+    "プロフィール: 設定、言語、そしてこのチュートリアル。",
+    "最初の投稿を貼り付けて、AIに成長させましょう。ありがとう!"
+   ]
+  },
+  "ko": {
+   "name_en": "Korean",
+   "name_native": "한국어",
+   "rtl": false,
+   "lines": [
+    "Virello에 오신 것을 환영합니다 — 당신의 AI 성장 매니저!",
+    "홈: 당신의 성장 대시보드.",
+    "탐색: AI가 당신에게 맞는 오디언스를 찾아줍니다.",
+    "만들기: 게시물을 붙여넣고, 목표를 선택하고, AI가 성장시키게 하세요.",
+    "AI 분석: 심층 점수와 팁. 정직한 추정치입니다.",
+    "오디언스 인사이트: 게시물이 누구에게 가장 잘 맞는지 명확한 이유와 함께 확인.",
+    "캠페인 설정: 무료 성장 또는 유료 부스트. 국가는 당신이 승인합니다.",
+    "AI 성장 에이전트: 배포하고, 실제 신호를 측정하고, 계속 개선합니다.",
+    "캠페인: 모든 무료 및 유료 캠페인을 한 곳에.",
+    "프로필: 설정, 언어, 그리고 이 튜토리얼.",
+    "첫 게시물을 붙여넣고 AI가 성장시키게 하세요. 감사합니다!"
+   ]
+  },
+  "zh_Hans": {
+   "name_en": "Chinese (Simplified)",
+   "name_native": "简体中文",
+   "rtl": false,
+   "lines": [
+    "欢迎来到 Virello — 您的 AI 增长管家!",
+    "首页: 您的增长仪表板。",
+    "发现: AI 为您找到合适的受众。",
+    "创建: 粘贴帖子、选择目标,让 AI 帮您增长。",
+    "AI 分析: 深度内容评分和建议。诚实的预估。",
+    "受众洞察: 查看帖子最适合谁 — 附明确原因。",
+    "广告系列设置: 免费增长或付费助推。国家由您审批。",
+    "AI 增长代理: 分发、测量真实信号、持续优化。",
+    "广告系列: 所有免费和付费广告系列集中一处。",
+    "个人资料: 设置、语言和本教程。",
+    "粘贴您的第一篇帖子,让 AI 帮您增长。谢谢!"
+   ]
+  },
+  "zh_Hant": {
+   "name_en": "Chinese (Traditional)",
+   "name_native": "繁體中文",
+   "rtl": false,
+   "lines": [
+    "歡迎來到 Virello — 您的 AI 增長管家!",
+    "首頁: 您的增長儀表板。",
+    "探索: AI 為您找到合適的受眾。",
+    "建立: 貼上貼文、選擇目標,讓 AI 幫您增長。",
+    "AI 分析: 深度內容評分和建議。誠實的預估。",
+    "受眾洞察: 查看貼文最適合誰 — 附明確原因。",
+    "廣告活動設定: 免費增長或付費推廣。國家由您審批。",
+    "AI 增長代理: 分發、測量真實訊號、持續優化。",
+    "廣告活動: 所有免費和付費活動集中一處。",
+    "個人檔案: 設定、語言和本教學。",
+    "貼上您的第一篇貼文,讓 AI 幫您增長。謝謝!"
+   ]
+  },
+  "gu": {
+   "name_en": "Gujarati",
+   "name_native": "ગુજરાતી",
+   "rtl": false,
+   "lines": [
+    "Virello મા સ્વાગત છે — તમારો AI Growth Manager!",
+    "Home Feed: તમારો growth dashboard.",
+    "Discover: AI તમારા માટે યોગ્ય audience શોધે છે.",
+    "Create: તમારી post paste કરો, goal પસંਦ કરો, AI ને grow કરવા દો.",
+    "AI Analyze: ઊંડી content score અને tips. એક પ્રામાણિક અંદાજ.",
+    "Audience Insights: જુઓ post કોને સૌ થી વધારે યોગ્ય છે — સ્પષ્ટ કારણો સાથે.",
+    "Campaign Setup: Free Grow કે Paid Boost. દેશો તમે approve કરો છો.",
+    "AI Growth Agent: વિતરણ કરે છે, સાચા signals માપે છે, સુધારો કરે છે.",
+    "Campaigns: તમારી બધી Free અને Paid campaigns એક જગ્યાએ.",
+    "Profile: settings, ભાષા, અને આ Tutorial.",
+    "તમારી પહેલી post paste કરો અને AI ને grow કરવા દો. આભાર!"
+   ]
+  },
+  "kn": {
+   "name_en": "Kannada",
+   "name_native": "ಕನ್ನಡ",
+   "rtl": false,
+   "lines": [
+    "Virello ಗೆ ಸ್ವಾಗತ — ನಿಮ್ಮ AI Growth Manager!",
+    "Home Feed: ನಿಮ್ಮ growth dashboard.",
+    "Discover: AI ನಿಮಗೆ ಸರಿಯಾದ audience ಹುಡುಕುತ್ತದೆ.",
+    "Create: ನಿಮ್ಮ post paste ಮಾಡಿ, goal ಆಯ್ಕೆ ಮಾಡಿ, AI grow ಮಾಡಲು ಬಿಡಿ.",
+    "AI Analyze: ಆಲವಾದ content score ಮತ್ತು ಸೂಚನೆಗಳು. ಒಂದು ಪ್ರಾಮಾಣಿಕ ಅಂದಾಜ.",
+    "Audience Insights: post ಯಾರಿಗೆ ಸೂಕ್ತವಾಗಿದೆ ನೋಡಿ — ಸ್ಪಷ್ಟ ಕಾರಕ್ಕಗಳೊಂದಿಗೆ.",
+    "Campaign Setup: Free Grow ಅಥವಾ Paid Boost. ದೇಶಗಳನ್ನು ನೀವು approve ಮಾಡುತ್ತೀರಿ.",
+    "AI Growth Agent: ಹಂಚುತ್ತದೆ, ನಿಜವಾದ ಸಂಕೇತಗಳನ್ನು ಅಳೆಯುತ್ತದೆ, ಸುಧಾರಿಸುತ್ತದೆ.",
+    "Campaigns: ನಿಮ್ಮ ಎಲ್ಲಾ Free ಮತ್ತು Paid campaignಗಳು ಒಂದು ಸ್ಥಳದಲ್ಲಿ.",
+    "Profile: settings, ಭಾಷೆ, ಮತ್ತು ಈ Tutorial.",
+    "ನಿಮ್ಮ ಮೊದಲನೆ post paste ಮಾಡಿ ಮತ್ತು AI grow ಮಾಡಲು ಬಿಡಿ. ಧನ್ಯವಾದಗಳು!"
+   ]
+  },
+  "ml": {
+   "name_en": "Malayalam",
+   "name_native": "മലയാളം",
+   "rtl": false,
+   "lines": [
+    "Virello-യിലേക്ക് സ്വാഗതം — നിങ്ങളുടെ AI Growth Manager!",
+    "Home Feed: നിങ്ങളുടെ growth dashboard.",
+    "Discover: AI നിങ്ങൾക്ക് അനുയോജ്യമായ audience കണ്ടുപിടിക്കുന്നു.",
+    "Create: നിങ്ങളുടെ post paste ചെയ്യു, goal തിരഞ്ഞെടുക്കു, AI-യെ വളരാൻ അനുവദിക്കൂ.",
+    "AI Analyze: ആഴമുള്ള content score-ഉം നിർദേശങ്ങളും. സത്യസന്ധമായ കണക്കുകൂട്ടൽ.",
+    "Audience Insights: post ആർക്ക് ഏറ്റവും അനുയോജ്യമെന്ന് കാണൂ — വ്യക്തമായ കാരണങ്ങളോടുകൂടി.",
+    "Campaign Setup: Free Grow അത്തോ Paid Boost. രാജ്യങ്ങൾ നിങ്ങൾ approve ചെയ്യുന്നു.",
+    "AI Growth Agent: വിതരണം ചെയ്യുന്നു, യഥാർഥ സിഗ്നലുകൾ അളക്കുന്നു, മെന്മയപ്പെടുത്തുന്നു.",
+    "Campaigns: നിങ്ങളുടെ എല്ലാ Free-ഉം Paid campaingalum ഒരിടത്ത്.",
+    "Profile: settings, ഭാഷ, ഈ Tutorial.",
+    "നിങ്ങളുടെ ആദ്യത്തെ post paste ചെയ്യു AI-യെ വളരാൻ അനുവദിക്കൂ. നന്നി!"
+   ]
+  },
+  "mr": {
+   "name_en": "Marathi",
+   "name_native": "मराठी",
+   "rtl": false,
+   "lines": [
+    "Virello मध्ये स्वागत — तुमचा AI Growth Manager!",
+    "Home Feed: तुमचा growth dashboard.",
+    "Discover: AI तुमच्यासाठी योग्य audience शोधतो.",
+    "Create: तुमची post paste करा, goal निवडा, AI ला grow करू द्या.",
+    "AI Analyze: खोल content score आणि tips. एक प्रामाणिक अंदाज.",
+    "Audience Insights: पहा post कोणासाठी सर्वात योग्य — स्पष्ट कारणांसह.",
+    "Campaign Setup: Free Grow कि Paid Boost. देश तुम्ही approve करता.",
+    "AI Growth Agent: वितरण करतो, खरे signals मोजतो, सुधारत राहतो.",
+    "Campaigns: तुमच्या सर्व Free आणि Paid campaigns एकाच ठिकाणी.",
+    "Profile: settings, भाषा, आणि हे Tutorial.",
+    "तुमची पहिली post paste करा आणि AI ला grow करू द्या. धन्यवाद!"
+   ]
+  },
+  "ta": {
+   "name_en": "Tamil",
+   "name_native": "தமிழ்",
+   "rtl": false,
+   "lines": [
+    "Virello-வுக்கு வரவேற்ப்பு — உங்கள் AI Growth Manager!",
+    "Home Feed: உங்கள் வளர்ச்சி dashboard.",
+    "Discover: AI உங்களுக்கு சரியான பார்வையாளர்களைக் கண்டுபிடிக்கிறது.",
+    "Create: உங்கள் பதிவை ஒட்டுங்கள், இலக்கைத் தேர்ந்தெடுங்கள், AI வளர விடுங்கள்.",
+    "AI Analyze: ஆழ்ந்த content score மற்றும் குறிப்புகள். ஒர் உண்மையான மதிப்பு.",
+    "Audience Insights: பதிவு யாருக்கு மிகவும் பொருத்தம் என்பதைப் பாருங்கள் — தெளிவான காரணங்களுடன்.",
+    "Campaign Setup: இலவச வளர்ச்சி அல்லது கட்டண பூஸ்ட். நாடுகளை நீங்கள் ஒப்புதல் செய்கிறீர்கள்.",
+    "AI Growth Agent: பகிர்ந்து, உண்மையான சைக்ஞைகளை அளக்கிறது, மெம்படுத்துகிறது.",
+    "Campaigns: உங்கள் அனைத்து இலவச மற்றும் கட்டண campaignகளும் ஒரே இடத்தில்.",
+    "Profile: அமைப்புகள், மொழி, மற்றும் இந்த Tutorial.",
+    "உங்கள் முதல் பதிவை ஒட்டுங்கள் AI வளர விடுங்கள். நன்றி!"
+   ]
+  },
+  "te": {
+   "name_en": "Telugu",
+   "name_native": "తెలుగు",
+   "rtl": false,
+   "lines": [
+    "Virello-కు స్వాగతం — మీ AI Growth Manager!",
+    "Home Feed: మీ growth dashboard.",
+    "Discover: AI మీకు తగిన audience-ను కనుక్కుంటుంది.",
+    "Create: మీ post paste చేయండి, goal ఎన్నుకోండి, AI పెంచనివ്వండి.",
+    "AI Analyze: లోతైన content score మరియు సూచനലు. నిజాయతిన అంచనా.",
+    "Audience Insights: post ఎవరికి బాగా సరి పోతుందో చూడండి — స్పష്టമైన కారണాലതో.",
+    "Campaign Setup: Free Grow లేక Paid Boost. దేశాలను మీరు approve చేస്తారు.",
+    "AI Growth Agent: పంచుతుంది, నిజమైన signalలను కొలుస്తుంది, మెరుగు పరుస്తുంദి.",
+    "Campaigns: మీ అన్ని Free మరియు Paid campaignలు ఒకచోట.",
+    "Profile: settings, భాష, మరియు ఈ Tutorial.",
+    "మీ మొదటి post paste చేయండి మరియు AI పెంచనివ്వండి. ధన్యవాదాలు!"
+   ]
+  },
+  "ne": {
+   "name_en": "Nepali",
+   "name_native": "नेपाली",
+   "rtl": false,
+   "lines": [
+    "Virello-मा स्वागत छ — तपाइँको AI Growth Manager!",
+    "Home Feed: तपाइँको growth dashboard.",
+    "Discover: AI-ले तपाइँको लागि उपयुक्त audience खोज्छ.",
+    "Create: तपाइँको post paste गर्नुस, लक्ष्य छान्नुस, AI-लाई बढ्न दिनुस.",
+    "AI Analyze: गहिरो content score र सुझाव. एक ईमानदार अनुमान.",
+    "Audience Insights: हेर्नुस post कसलाई सबै भन्दा उपयुक्त — स्पष्ट कारण सहित.",
+    "Campaign Setup: Free Grow वा Paid Boost. देशहरू तपाइँले approve गर्नुहुछ.",
+    "AI Growth Agent: बितरण गर्छ, वास्तविक signal नाप्छ, सुधार गर्दै जान्छ.",
+    "Campaigns: तपाइँका सबै Free र Paid campaign एकै ठाउँमा.",
+    "Profile: settings, भाषा, र यो Tutorial.",
+    "तपाइँको पहिलो post paste गर्नुस र AI-लाई बढ्न दिनुस. धन्यबाद!"
+   ]
+  },
+  "he": {
+   "name_en": "Hebrew",
+   "name_native": "עברית",
+   "rtl": true,
+   "lines": [
+    "ברוכים הבאים ל-Virello — מנהל הצמיחה החכם שלך!",
+    "דף הבית: לוח הצמיחה שלך.",
+    "גלה: ה-AI מוצא את הקהל המתאים לך.",
+    "צור: הדבק את הפוסט, בחר מטרה, תן ל-AI לצמוח.",
+    "ניתוח AI: ציון תוכן מעמיק וטיפים. הערכה כנה.",
+    "תובנות קהל: ראה למי הפוסט מתאים ביותר — עם סיבות ברורות.",
+    "הגדרת קמפיין: צמיחה חינם או קידום בתשלום. אתה מאשר את המדינות.",
+    "סוכן הצמיחה: מפיץ, מודד אותות אמיתיים, משתפר תמיד.",
+    "קמפיינים: כל הקמפיינים החינמיים והבתשלום במקום אחד.",
+    "פרופיל: הגדרות, שפה ומדריך זה.",
+    "הדבק את הפוסט הראשון ותן ל-AI לצמוח. תודה!"
+   ]
+  },
+  "el": {
+   "name_en": "Greek",
+   "name_native": "Ελληνικά",
+   "rtl": false,
+   "lines": [
+    "Καλώς ήρθατε στο Virello — τον AI Διαχειριστή Ανάπτυξής σας!",
+    "Αρχική: ο πίνακας ανάπτυξής σας.",
+    "Ανακάλυψη: η ΤΝ βρίσκει το ιδανικό κοινό για εσάς.",
+    "Δημιουργία: επικολλήστε την ανάρτηση, επιλέξτε στόχο, αφήστε την ΤΝ να αναπτυχθεί.",
+    "Ανάλυση ΤΝ: βαθμολόγηση και συμβουλές. Μια ειλικρινής εκτίμηση.",
+    "Στοιχεία κοινού: δείτε για ποιον είναι ιδανική η ανάρτησή σας — με σαφείς λόγους.",
+    "Ρύθμιση καμπάνιας: Δωρεάν Ανάπτυξη ή Πληρωμένη Προώθηση. Εσείς εγκρίνετε τις χώρες.",
+    "Πράκτορας Ανάπτυξης ΤΝ: διανέμει, μετρά πραγματικά σήματα, βελτιώνεται συνεχώς.",
+    "Καμπάνιες: όλες οι δωρεάν και πληρωμένες καμπάνιες σας σε ένα μέρος.",
+    "Προφίλ: ρυθμίσεις, γλώσσα και αυτός ο Οδηγός.",
+    "Επικολλήστε την πρώτη σας ανάρτηση και αφήστε την ΤΝ να αναπτυχθεί. Ευχαριστώ!"
+   ]
+  },
+  "sv": {
+   "name_en": "Swedish",
+   "name_native": "Svenska",
+   "rtl": false,
+   "lines": [
+    "Välkommen till Virello — din AI-tillväxtmanager!",
+    "Hem: din tillväxtöversikt.",
+    "Upptäck: AI:n hittar din ideala publik.",
+    "Skapa: klistra in ditt inlägg, välj ett mål, låt AI:n växa.",
+    "AI-analys: djupgående poäng och tips. En ärlig uppskattning.",
+    "Publikinsikter: se vem ditt inlägg passar bäst för — med tydliga skäl.",
+    "Kampanjinställning: Gratis Tillväxt eller Betald Boost. Du godkänner länderna.",
+    "AI-tillväxtagent: distribuerar, mäter verkliga signaler, förbättras ständigt.",
+    "Kampanjer: alla dina gratis- och betalkampanjer på ett ställe.",
+    "Profil: inställningar, språk och denna Handledning.",
+    "Klistra in ditt första inlägg och låt AI:n växa. Tack!"
+   ]
+  },
+  "da": {
+   "name_en": "Danish",
+   "name_native": "Dansk",
+   "rtl": false,
+   "lines": [
+    "Velkommen til Virello — din AI-vækstmanager!",
+    "Hjem: dit vækstoverblik.",
+    "Opdag: AI’en finder dit ideelle publikum.",
+    "Opret: indsæt dit opslag, vælg et mål, lad AI’en vokse.",
+    "AI-analyse: dybdegående score og tips. Et ærligt estimat.",
+    "Publikumsindsigt: se hvem dit opslag passer bedst til — med klare grunde.",
+    "Kampagneopsætning: Gratis Vækst eller Betalt Boost. Du godkender landene.",
+    "AI-vækstagent: distribuerer, måler ægte signaler, forbedres hele tiden.",
+    "Kampagner: alle dine gratis- og betalte kampagner ét sted.",
+    "Profil: indstillinger, sprog og denne Vejledning.",
+    "Indsæt dit første opslag og lad AI’en vokse. Tak!"
+   ]
+  },
+  "fi": {
+   "name_en": "Finnish",
+   "name_native": "Suomi",
+   "rtl": false,
+   "lines": [
+    "Tervetuloa Virelloon — tekoälykasvupäällikkösi!",
+    "Koti: kasvunäkymäsi.",
+    "Löydä: tekoäly löytää ihanteellisen yleisösi.",
+    "Luo: liitä julkaisusi, valitse tavoite, anna tekoälyn kasvaa.",
+    "Tekoälyanalyysi: syvällinen pisteytys ja vinkit. Rehellinen arvio.",
+    "Yleisönäkemykset: katso kenelle julkaisusi sopii parhaiten — selkein perustein.",
+    "Kampanjan asetukset: Ilmainen Kasvu tai Maksettu Tehostus. Hyväksyt maat.",
+    "Tekoälykasvuagentti: jakelee, mittaa todellisia signaaleja, paranee jatkuvasti.",
+    "Kampanjat: kaikki ilmaiset ja maksetut kampanjasi yhdessä paikassa.",
+    "Profiili: asetukset, kieli ja tämä Opas.",
+    "Liitä ensimmäinen julkaisusi ja anna tekoälyn kasvaa. Kiitos!"
+   ]
+  },
+  "nb": {
+   "name_en": "Norwegian",
+   "name_native": "Norsk",
+   "rtl": false,
+   "lines": [
+    "Velkommen til Virello — din AI-vekstsjef!",
+    "Hjem: ditt vekstoversikt.",
+    "Oppdag: AI-en finner ditt ideelle publikum.",
+    "Opprett: lim inn innlegget ditt, velg et mål, la AI-en vokse.",
+    "AI-analyse: dyptgående score og tips. Et ærlig estimat.",
+    "Publikumsinnsikt: se hvem innlegget ditt passer best for — med klare grunner.",
+    "Kampanjeoppsett: Gratis Vekst eller Betalt Boost. Du godkjenner landene.",
+    "AI-vekstagent: distribuerer, måler ekte signaler, forbedres hele tiden.",
+    "Kampanjer: alle dine gratis- og betalte kampanjer på ett sted.",
+    "Profil: innstillinger, språk og denne Veiledningen.",
+    "Lim inn ditt første innlegg og la AI-en vokse. Takk!"
+   ]
+  },
+  "pl": {
+   "name_en": "Polish",
+   "name_native": "Polski",
+   "rtl": false,
+   "lines": [
+    "Witamy w Virello — Twoim menedżerze wzrostu AI!",
+    "Strona główna: Twój panel wzrostu.",
+    "Odkrywaj: AI znajduje idealną publiczność dla Ciebie.",
+    "Utwórz: wklej swój post, wybierz cel, pozwól AI rosnąć.",
+    "Analiza AI: dogłębna ocena i wskazówki. Uczciwe oszacowanie.",
+    "Dane o odbiorcach: zobacz, dla kogo Twój post jest najlepszy — z jasnymi powodami.",
+    "Konfiguracja kampanii: Darmowy Wzrost lub Płatne Wzmocnienie. Kraje zatwierdzasz Ty.",
+    "Agent Wzrostu AI: dystrybuuje, mierzy prawdziwe sygnały, stale się doskonali.",
+    "Kampanie: wszystkie Twoje darmowe i płatne kampanie w jednym miejscu.",
+    "Profil: ustawienia, język i ten Poradnik.",
+    "Wklej swój pierwszy post i pozwól AI rosnąć. Dziękuję!"
+   ]
+  },
+  "cs": {
+   "name_en": "Czech",
+   "name_native": "Čeština",
+   "rtl": false,
+   "lines": [
+    "Vítejte ve Virello — vašem AI manažeru růstu!",
+    "Domů: váš přehled růstu.",
+    "Objevit: AI najde vaše ideální publikum.",
+    "Vytvořit: vložte svůj příspěvek, vyberte cíl, nechte AI růst.",
+    "AI analýza: hloubkové skóre a tipy. Poctivý odhad.",
+    "Přehled publika: zjistěte, pro koho je váš příspěvek nejlepší — s jasnými důvody.",
+    "Nastavení kampaně: Růst zdarma nebo Placený boost. Země schvalujete vy.",
+    "AI agent růstu: distribuuje, měří skutečné signály, neustále se zlepšuje.",
+    "Kampaně: všechny vaše bezplatné i placené kampaně na jednom místě.",
+    "Profil: nastavení, jazyk a tento Návod.",
+    "Vložte svůj první příspěvek a nechte AI růst. Děkuji!"
+   ]
+  },
+  "hu": {
+   "name_en": "Hungarian",
+   "name_native": "Magyar",
+   "rtl": false,
+   "lines": [
+    "Üdvözöljük a Virello-ban — az Ön MI-növekedésmenedzserében!",
+    "Főoldal: az Ön növekedési irányítópultja.",
+    "Felfedezés: a MI megtalálja az Ön ideális közönségét.",
+    "Létrehozás: illessze be bejegyzését, válasszon célt, hagyja növekedni a MI-t.",
+    "MI-elemzés: mélyreható pontszám és tippek. Őszinte becslés.",
+    "Közönségadatok: nézze meg, kinek a legjobb a bejegyzése — világos indokokkal.",
+    "Kampánybeállítás: Ingyenes Növekedés vagy Fizetett Boost. Az országokat Ön hagyja jóvá.",
+    "MI-növekedési ügynök: terjeszt, valódi jeleket mér, folyamatosan javul.",
+    "Kampányok: minden ingyenes és fizetett kampánya egy helyen.",
+    "Profil: beállítások, nyelv és ez az Útmutató.",
+    "Illessze be első bejegyzését, és hagyja növekedni a MI-t. Köszönjük!"
+   ]
+  },
+  "ro": {
+   "name_en": "Romanian",
+   "name_native": "Română",
+   "rtl": false,
+   "lines": [
+    "Bine ați venit la Virello — managerul dvs. de creștere AI!",
+    "Acasă: tabloul dvs. de bord pentru creștere.",
+    "Descoperă: AI găsește publicul ideal pentru dvs.",
+    "Creează: lipiți postarea, alegeți un obiectiv, lăsați AI să crească.",
+    "Analiză AI: scor aprofundat și sfaturi. O estimare onestă.",
+    "Date despre public: vedeți pentru cine e cea mai potrivită postarea — cu motive clare.",
+    "Configurare campanie: Creștere Gratuită sau Boost Plătit. Dvs. aprobați țările.",
+    "Agentul de Creștere AI: distribuie, măsoară semnale reale, se îmbunătățește mereu.",
+    "Campanii: toate campaniile dvs. gratuite și plătite într-un singur loc.",
+    "Profil: setări, limbă și acest Tutorial.",
+    "Lipiți prima postare și lăsați AI să crească. Mulțumesc!"
+   ]
+  }
+ },
+ "generated_from": "english-narration v2 (locked character, male EN voice)"
+}

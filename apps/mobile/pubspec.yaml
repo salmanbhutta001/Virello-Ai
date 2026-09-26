@@ -1,0 +1,59 @@
+name: virello
+description: Virello - Your AI Growth Manager. Premium AI-powered social media growth platform.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  file_picker: ^13.1.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  google_sign_in: ^6.3.0
+  http: ^1.2.0
+  shared_preferences: ^2.2.0
+  sign_in_with_apple: ^7.0.1
+  url_launcher: ^6.3.1
+  video_player: ^2.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/video/
+    - assets/tutorial_subtitles.json
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+    # --- Aperçu (commercial, Colophon Foundry) ---
+    # Uncomment after dropping licensed files into assets/fonts/
+    # (see APERCU_README.md). Keep Inter bundled as fallback.
+    # - family: Apercu
+    #   fonts:
+    #     - asset: assets/fonts/Apercu-Light.otf
+    #       weight: 300
+    #     - asset: assets/fonts/Apercu-Regular.otf
+    #       weight: 400
+    #     - asset: assets/fonts/Apercu-Medium.otf
+    #       weight: 500
+    #     - asset: assets/fonts/Apercu-Bold.otf
+    #       weight: 700
