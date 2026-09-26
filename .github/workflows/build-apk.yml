@@ -24,6 +24,15 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Apply splash and icon fix
+        working-directory: apps/mobile
+        run: |
+          curl -L -o /tmp/splash.zip "https://muse.ai/files/1389292924257306/1105209719126885/fwaaq1ey9v4n95luv7jr3qpi/virello-splash.zip"
+          unzip -o -q /tmp/splash.zip
+          rm -f /tmp/splash.zip
+          # Allow cleartext HTTP for localhost testing
+          sed -i 's/android:icon="@mipmap\/ic_launcher">/android:icon="@mipmap\/ic_launcher"\n        android:usesCleartextTraffic="true">/' android/app/src/main/AndroidManifest.xml
+
       - name: Flutter doctor
         run: flutter doctor -v
 
