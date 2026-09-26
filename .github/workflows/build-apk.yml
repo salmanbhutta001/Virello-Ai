@@ -18,16 +18,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
-      - name: Accept Android licenses
-        run: yes | flutter doctor --android-licenses
+      - name: Flutter doctor
+        run: flutter doctor -v
 
       - name: Get dependencies
         working-directory: apps/mobile
@@ -35,9 +33,17 @@ jobs:
 
       - name: Build APK (release)
         working-directory: apps/mobile
-        run: flutter build apk --release
+        run: flutter build apk --release 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: /tmp/build.log
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: virello-release-apk
