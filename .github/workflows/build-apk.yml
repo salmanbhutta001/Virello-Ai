@@ -33,17 +33,10 @@ jobs:
 
       - name: Build APK (release)
         working-directory: apps/mobile
-        run: flutter build apk --release 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: /tmp/build.log
+        # Test build: connect to localhost backend (Termux on same phone)
+        run: flutter build apk --release --dart-define=VIRELLO_API_URL=http://127.0.0.1:8125
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: virello-release-apk
