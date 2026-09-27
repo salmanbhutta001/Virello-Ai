@@ -42,8 +42,8 @@ jobs:
 
       - name: Build APK (release)
         working-directory: apps/mobile
-        # Test build: connect to localhost backend (Termux on same phone)
-        run: flutter build apk --release --dart-define=VIRELLO_API_URL=http://127.0.0.1:8125
+        # Production build: connect to Railway backend
+        run: flutter build apk --release --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
