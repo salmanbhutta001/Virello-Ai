@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme.dart';
 import 'core/strings.dart';
 import 'services/api_client.dart';
@@ -150,11 +151,30 @@ class _RootShellState extends State<RootShell> {
 
   int _index = 0;
   bool _onboarded = false;
+  static const _onboardedKey = 'virello_onboarded';
 
   @override
   void initState() {
     super.initState();
     requestedTab.addListener(_onRequestedTab);
+    _loadOnboarded();
+  }
+
+  Future<void> _loadOnboarded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() => _onboarded = prefs.getBool(_onboardedKey) ?? false);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _setOnboarded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_onboardedKey, true);
+    } catch (_) {}
+    if (mounted) setState(() => _onboarded = true);
   }
 
   @override
@@ -174,7 +194,7 @@ class _RootShellState extends State<RootShell> {
   @override
   Widget build(BuildContext context) {
     if (!_onboarded) {
-      return OnboardingScreen(onDone: () => setState(() => _onboarded = true));
+      return OnboardingScreen(onDone: _setOnboarded);
     }
     // NOTE: Using direct page instead of IndexedStack to avoid nested
     // Scaffold rendering issues. Pages are rebuilt on tab switch.
