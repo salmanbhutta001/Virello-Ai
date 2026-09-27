@@ -160,15 +160,30 @@ class _RootShellState extends State<RootShell> {
     if (!_onboarded) {
       return OnboardingScreen(onDone: () => setState(() => _onboarded = true));
     }
-    const pages = [
-      HomeScreen(),
-      DiscoveryScreen(),
-      CreateHubScreen(),
-      CampaignsScreen(),
-      ProfileScreen(),
-    ];
+    // NOTE: Using direct page instead of IndexedStack to avoid nested
+    // Scaffold rendering issues. Pages are rebuilt on tab switch.
+    Widget page;
+    switch (_index) {
+      case 0:
+        page = const HomeScreen();
+        break;
+      case 1:
+        page = const DiscoveryScreen();
+        break;
+      case 2:
+        page = const CreateHubScreen();
+        break;
+      case 3:
+        page = const CampaignsScreen();
+        break;
+      case 4:
+        page = const ProfileScreen();
+        break;
+      default:
+        page = const HomeScreen();
+    }
     return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
+      body: page,
       bottomNavigationBar: _bottomBar(),
     );
   }
