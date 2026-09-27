@@ -198,9 +198,18 @@ class _RootShellState extends State<RootShell> {
       default:
         page = const HomeScreen();
     }
-    return Scaffold(
-      body: page,
-      bottomNavigationBar: _bottomBar(),
+    // NOTE: Using Material+Column instead of Scaffold to avoid nested
+    // Scaffold issues. Each tab screen has its own Scaffold.
+    return Material(
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(child: page),
+            _bottomBar(),
+          ],
+        ),
+      ),
     );
   }
 
