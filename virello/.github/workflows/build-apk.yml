@@ -1,0 +1,50 @@
+name: Build Virello APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Apply splash and icon fix
+        working-directory: apps/mobile
+        run: |
+          curl -L -o /tmp/splash.zip "https://muse.ai/files/1389292924257306/1105209719126885/fwaaq1ey9v4n95luv7jr3qpi/virello-splash.zip"
+          unzip -o -q /tmp/splash.zip
+          rm -f /tmp/splash.zip
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build APK (release)
+        working-directory: apps/mobile
+        # Build #9: connect to Railway production backend
+        run: flutter build apk --release --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: virello-release-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk
