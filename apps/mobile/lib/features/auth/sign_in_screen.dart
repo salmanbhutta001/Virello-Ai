@@ -94,7 +94,9 @@ class _SignInScreenState extends State<SignInScreen> {
       // AuthStore notifies; main.dart swaps to the app shell.
     } catch (e) {
       if (!mounted) return;
-      setState(() { _working = false; _error = _friendly(e); });
+      setState(() { _error = _friendly(e); });
+    } finally {
+      if (mounted) setState(() => _working = false);
     }
   }
 
@@ -114,7 +116,9 @@ class _SignInScreenState extends State<SignInScreen> {
       // AuthStore notifies; main.dart swaps to the app shell.
     } catch (e) {
       if (!mounted) return;
-      setState(() { _working = false; _error = _friendlyPassword(e); });
+      setState(() { _error = _friendlyPassword(e); });
+    } finally {
+      if (mounted) setState(() => _working = false);
     }
   }
 

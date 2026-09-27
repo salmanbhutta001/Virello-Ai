@@ -55,7 +55,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // AuthStore notifies; main.dart swaps to the app shell.
     } catch (e) {
       if (!mounted) return;
-      setState(() { _working = false; _error = _friendly(e); });
+      setState(() { _error = _friendly(e); });
+    } finally {
+      if (mounted) setState(() => _working = false);
     }
   }
 
