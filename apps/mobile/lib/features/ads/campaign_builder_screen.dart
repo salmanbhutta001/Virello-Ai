@@ -541,15 +541,16 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             const SizedBox(height: 12),
             _planPicker(),
             const SizedBox(height: 12),
-            // Two fully separate modules: switching plans swaps everything
-            // below — Free Grow has no packages; Paid Boost is package-driven.
-            if (_plan == 'free') _freeModule() else _paidModule(),
-            const SizedBox(height: 12),
+            // Analyze button moved up — visible without scrolling through plan details.
             VGradientButton(
               label: s.adAnalyzeBuild,
               icon: Icons.auto_awesome_outlined,
               onPressed: _busy ? null : _build,
             ),
+            const SizedBox(height: 12),
+            // Two fully separate modules: switching plans swaps everything
+            // below — Free Grow has no packages; Paid Boost is package-driven.
+            if (_plan == 'free') _freeModule() else _paidModule(),
           ],
         ),
       );
