@@ -64,6 +64,7 @@ class VirelloApp extends StatefulWidget {
 
 class _VirelloAppState extends State<VirelloApp> {
   bool _trackedOpen = false;
+  bool _splashSeen = false;
 
   @override
   void initState() {
@@ -105,7 +106,16 @@ class _VirelloAppState extends State<VirelloApp> {
     if (!authStore.loaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (!authStore.signedIn) return const SignInScreen();
+    // If signed in, go straight to the app (skip splash).
+    // If not signed in, show splash first, then login.
+    if (!authStore.signedIn) {
+      if (!_splashSeen) {
+        return SplashScreen(
+          onGetStarted: () => setState(() => _splashSeen = true),
+        );
+      }
+      return const SignInScreen();
+    }
     return const RootShell();
   }
 }
@@ -124,7 +134,6 @@ class _RootShellState extends State<RootShell> {
 
   int _index = 0;
   bool _onboarded = false;
-  bool _splashSeen = false;
 
   @override
   void initState() {
@@ -150,10 +159,6 @@ class _RootShellState extends State<RootShell> {
   Widget build(BuildContext context) {
     if (!_onboarded) {
       return OnboardingScreen(onDone: () => setState(() => _onboarded = true));
-    }
-    if (!_splashSeen) {
-      return SplashScreen(
-          onGetStarted: () => setState(() => _splashSeen = true));
     }
     const pages = [
       HomeScreen(),
