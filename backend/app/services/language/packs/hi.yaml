@@ -1,0 +1,149 @@
+iso_639_1: hi
+iso_639_3: hin
+name_en: Hindi
+name_native: हिन्दी
+scripts:
+- Devanagari
+- Latin
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: curated
+stopwords:
+- का
+- की
+- के
+- से
+- ने
+- को
+- में
+- पर
+- और
+- है
+- हैं
+- था
+- थी
+- नहीं
+- यह
+- वह
+- जो
+- क्या
+detection_keywords:
+- है
+- हैं
+- और
+- में
+- से
+- का
+- की
+- के
+- नहीं
+- यह
+- वह
+- बहुत
+- अच्छा
+- धन्यवाद
+- नमस्ते
+topic_names:
+  technology: टेक्नोलॉजी
+  business: बिज़नेस
+  fashion: फैशन
+  food: खाना और रेसिपी
+  travel: यात्रा
+  fitness: फिटनेस
+  education: शिक्षा
+  music: संगीत
+  gaming: गेमिंग
+  comedy: कॉमेडी
+  beauty: सौंदर्य
+  health: स्वास्थ्य
+  finance: वित्त
+  sports: खेल
+  photography: फोटोग्राफी
+  art: कला और डिज़ाइन
+  motivation: प्रेरणा
+  parenting: पेरेंटिंग
+  realestate: रियल एस्टेट
+  automobiles: गाड़ियां
+  pets: पालतू जानवर
+  news: समाचार
+  lifestyle: लाइफस्टाइल
+  marketing: मार्केटिंग
+transliteration_variants:
+- hinglish
+transliteration_keywords:
+- mein
+- tum
+- aap
+- kya
+- hai
+- hain
+- ka
+- ki
+- ke
+- se
+- nahi
+- dhanyavaad
+- namaste
+- bhaiya
+- didi
+- acha
+- bahut
+- zindagi
+- ghar
+- paisa
+- karo
+- liye
+- saath
+- lekin
+- agar
+- yeh
+- woh
+- mera
+- meri
+- tumse
+- mujhe
+- tujhe
+- usse
+- isse
+- teri
+- apni
+- magar
+- phir
+- abhi
+- yahan
+- wahan
+- kaun
+- kitna
+- bilkul
+- zaroor
+- raha
+- rahi
+- gaya
+- gayi
+- wala
+- wali
+- karta
+- karti
+- karte
+- hota
+- hoti
+- accha
+- main
+- pyaar
+- pyar
+- mohabbat
+- muhabbat
+- doston
+- khaate
+related_languages:
+- code: ur
+  reason: shared everyday vocabulary; mutually intelligible in speech
+- code: mr
+  reason: shared Devanagari script; overlapping vocabulary
+- code: ne
+  reason: shared Devanagari script
+- code: pa
+  reason: shared Punjab region vocabulary
+notes: ''

@@ -1,0 +1,156 @@
+iso_639_1: ur
+iso_639_3: urd
+name_en: Urdu
+name_native: اردو
+scripts:
+- Arabic
+- Latin
+rtl: true
+regions:
+- PK
+- IN
+ui_status: full
+pack_quality: curated
+stopwords:
+- کا
+- کی
+- کے
+- سے
+- نے
+- کو
+- میں
+- پر
+- اور
+- ہے
+- ہیں
+- تھا
+- تھی
+- نہیں
+- یہ
+- وہ
+- جو
+- کیا
+detection_keywords:
+- ہے
+- ہیں
+- اور
+- میں
+- سے
+- کا
+- کی
+- کے
+- نہیں
+- یہ
+- وہ
+- بہت
+- اچھا
+- شکریہ
+topic_names:
+  technology: ٹیکنالوجی
+  business: کاروبار
+  fashion: فیشن
+  food: کھانے
+  travel: سفر
+  fitness: فٹنس
+  education: تعلیم
+  music: موسیقی
+  gaming: گیمنگ
+  comedy: مزاح
+  beauty: خوبصورتی
+  health: صحت
+  finance: مالیات
+  sports: کھیل
+  photography: فوٹوگرافی
+  art: فن
+  motivation: حوصلہ افزائی
+  parenting: والدین
+  realestate: جائیداد
+  automobiles: گاڑیاں
+  pets: پالتو جانور
+  news: خبریں
+  lifestyle: طرز زندگی
+  marketing: مارکیٹنگ
+transliteration_variants:
+- roman_urdu
+transliteration_keywords:
+- haal
+- mein
+- tum
+- aap
+- kya
+- hai
+- hain
+- ka
+- ki
+- ke
+- se
+- nahi
+- nahin
+- shukriya
+- khana
+- acha
+- bohat
+- zindagi
+- ghar
+- karo
+- liye
+- saath
+- lekin
+- agar
+- yeh
+- woh
+- mera
+- meri
+- tera
+- mohabbat
+- dil
+- paisa
+- paise
+- bhai
+- khushi
+- mujhe
+- tujhe
+- usse
+- isse
+- teri
+- apni
+- magar
+- phir
+- abhi
+- yahan
+- wahan
+- kaun
+- kitna
+- bilkul
+- zaroor
+- raha
+- rahi
+- gaya
+- gayi
+- wala
+- wali
+- karta
+- karti
+- hota
+- hoti
+- keh
+- sath
+- naya
+- purana
+- pyar
+- muhabbat
+- hamara
+- tumhara
+- sab
+- kuch
+- doston
+- khaate
+- par
+related_languages:
+- code: hi
+  reason: shared everyday vocabulary; mutually intelligible in speech
+- code: ar
+  reason: shared script and many loanwords
+- code: pa
+  reason: shared Punjab region vocabulary
+notes: ''

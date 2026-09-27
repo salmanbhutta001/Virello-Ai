@@ -1,0 +1,55 @@
+iso_639_1: hu
+iso_639_3: hun
+name_en: Hungarian
+name_native: Magyar
+scripts:
+- Latin
+rtl: false
+regions:
+- HU
+ui_status: partial
+pack_quality: draft
+stopwords:
+- és
+- a
+- az
+- ban
+- ben
+- hogy
+- nem
+- nagyon
+- van
+detection_keywords:
+- hogy
+- nagyon
+- köszönöm
+- szia
+topic_names:
+  technology: Technológia
+  business: Üzlet
+  fashion: Divat
+  food: Ételek és receptek
+  travel: Utazás
+  fitness: Fitnesz
+  education: Oktatás
+  music: Zene
+  gaming: Játékok
+  comedy: Vígjáték
+  beauty: Szépség
+  health: Egészség
+  finance: Pénzügy
+  sports: Sport
+  photography: Fotózás
+  art: Művészet és design
+  motivation: Motiváció
+  parenting: Szülőség
+  realestate: Ingatlan
+  automobiles: Autók
+  pets: Háziállatok
+  news: Hírek
+  lifestyle: Életmód
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

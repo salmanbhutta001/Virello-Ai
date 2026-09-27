@@ -1,0 +1,67 @@
+iso_639_1: sd
+iso_639_3: snd
+name_en: Sindhi
+name_native: سنڌي
+scripts:
+- Arabic
+rtl: true
+regions:
+- PK
+ui_status: partial
+pack_quality: draft
+stopwords:
+- جو
+- جي
+- جون
+- کان
+- ۾
+- تي
+- آهي
+- آهن
+- ۽
+- نه
+- هي
+- هو
+- ڇا
+detection_keywords:
+- ۽
+- آهي
+- آهن
+- ۾
+- کان
+- جو
+- جي
+- هي
+- هو
+- مهرباني
+topic_names:
+  technology: ٽيڪنالاجي
+  business: ڪاروبار
+  fashion: فيشن
+  food: کاڌو ۽ ترڪيبون
+  travel: سفر
+  fitness: تندرستي
+  education: تعليم
+  music: موسيقي
+  gaming: گيمنگ
+  comedy: مزاح
+  beauty: خوبصورتي
+  health: صحت
+  finance: ماليات
+  sports: رانديون
+  photography: فوٽوگرافي
+  art: فن ۽ ڊزائن
+  motivation: حوصلا افزائي
+  parenting: والدين
+  realestate: جائداد
+  automobiles: گاڏيون
+  pets: پالتو جانور
+  news: خبرون
+  lifestyle: طرز زندگي
+  marketing: مارڪيٽنگ
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ur
+  reason: shared script and regional vocabulary
+notes: ''

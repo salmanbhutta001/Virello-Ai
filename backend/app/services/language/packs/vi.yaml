@@ -1,0 +1,61 @@
+iso_639_1: vi
+iso_639_3: vie
+name_en: Vietnamese
+name_native: Tiếng Việt
+scripts:
+- Latin
+rtl: false
+regions:
+- VN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- của
+- và
+- là
+- trong
+- với
+- để
+- một
+- những
+- đã
+- không
+- này
+detection_keywords:
+- của
+- và
+- là
+- với
+- không
+- rất
+- cảm ơn
+- xin chào
+topic_names:
+  technology: Công nghệ
+  business: Kinh doanh
+  fashion: Thời trang
+  food: Ẩm thực & Công thức
+  travel: Du lịch
+  fitness: Thể hình
+  education: Giáo dục
+  music: Âm nhạc
+  gaming: Trò chơi
+  comedy: Hài kịch
+  beauty: Làm đẹp
+  health: Sức khỏe
+  finance: Tài chính
+  sports: Thể thao
+  photography: Nhiếp ảnh
+  art: Nghệ thuật & Thiết kế
+  motivation: Động lực
+  parenting: Nuôi dạy con
+  realestate: Bất động sản
+  automobiles: Ô tô
+  pets: Thú cưng
+  news: Tin tức
+  lifestyle: Phong cách sống
+  marketing: Tiếp thị
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

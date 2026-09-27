@@ -1,0 +1,67 @@
+iso_639_1: ms
+iso_639_3: msa
+name_en: Malay
+name_native: Bahasa Melayu
+scripts:
+- Latin
+rtl: false
+regions:
+- MY
+- SG
+ui_status: partial
+pack_quality: draft
+stopwords:
+- yang
+- dan
+- di
+- ke
+- dari
+- untuk
+- dengan
+- ini
+- itu
+- adalah
+- tidak
+- saya
+- awak
+detection_keywords:
+- yang
+- dan
+- ini
+- itu
+- dengan
+- untuk
+- tidak
+- sangat
+- terima kasih
+topic_names:
+  technology: Teknologi
+  business: Perniagaan
+  fashion: Fesyen
+  food: Makanan & Resipi
+  travel: Pelancongan
+  fitness: Kecergasan
+  education: Pendidikan
+  music: Muzik
+  gaming: Permainan
+  comedy: Komedi
+  beauty: Kecantikan
+  health: Kesihatan
+  finance: Kewangan
+  sports: Sukan
+  photography: Fotografi
+  art: Seni & Reka Bentuk
+  motivation: Motivasi
+  parenting: Keibubapaan
+  realestate: Hartanah
+  automobiles: Automotif
+  pets: Haiwan Peliharaan
+  news: Berita
+  lifestyle: Gaya Hidup
+  marketing: Pemasaran
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: id
+  reason: very close languages; largely mutually intelligible
+notes: ''

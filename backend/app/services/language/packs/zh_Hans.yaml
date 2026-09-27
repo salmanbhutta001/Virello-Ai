@@ -1,0 +1,70 @@
+iso_639_1: zh_Hans
+iso_639_3: zho
+name_en: Chinese (Simplified)
+name_native: 简体中文
+scripts:
+- Han
+rtl: false
+regions:
+- CN
+- SG
+ui_status: partial
+pack_quality: draft
+stopwords:
+- 的
+- 了
+- 和
+- 是
+- 在
+- 我
+- 你
+- 他
+- 这
+- 那
+- 不
+- 有
+- 个
+detection_keywords:
+- 的
+- 了
+- 和
+- 是
+- 在
+- 我
+- 你
+- 这
+- 不
+- 谢谢
+- 你好
+- 非常
+topic_names:
+  technology: 科技
+  business: 商业
+  fashion: 时尚
+  food: 美食与食谱
+  travel: 旅行
+  fitness: 健身
+  education: 教育
+  music: 音乐
+  gaming: 游戏
+  comedy: 喜剧
+  beauty: 美容
+  health: 健康
+  finance: 金融
+  sports: 体育
+  photography: 摄影
+  art: 艺术与设计
+  motivation: 励志
+  parenting: 育儿
+  realestate: 房地产
+  automobiles: 汽车
+  pets: 宠物
+  news: 新闻
+  lifestyle: 生活方式
+  marketing: 营销
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: zh_Hant
+  reason: same language, different script
+notes: langdetect reports zh-cn; mapped to zh_Hans.

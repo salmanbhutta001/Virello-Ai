@@ -1,0 +1,66 @@
+iso_639_1: ru
+iso_639_3: rus
+name_en: Russian
+name_native: Русский
+scripts:
+- Cyrillic
+rtl: false
+regions:
+- RU
+- KZ
+- UA
+ui_status: partial
+pack_quality: curated
+stopwords:
+- и
+- в
+- не
+- на
+- с
+- что
+- это
+- как
+- по
+- к
+- у
+- для
+- очень
+detection_keywords:
+- что
+- это
+- как
+- для
+- очень
+- спасибо
+- привет
+topic_names:
+  technology: Технологии
+  business: Бизнес
+  fashion: Мода
+  food: Еда и рецепты
+  travel: Путешествия
+  fitness: Фитнес
+  education: Образование
+  music: Музыка
+  gaming: Игры
+  comedy: Комедия
+  beauty: Красота
+  health: Здоровье
+  finance: Финансы
+  sports: Спорт
+  photography: Фотография
+  art: Искусство и дизайн
+  motivation: Мотивация
+  parenting: Родительство
+  realestate: Недвижимость
+  automobiles: Автомобили
+  pets: Питомцы
+  news: Новости
+  lifestyle: Образ жизни
+  marketing: Маркетинг
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: uk
+  reason: close languages; shared Cyrillic script
+notes: ''

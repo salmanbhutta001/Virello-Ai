@@ -1,0 +1,62 @@
+iso_639_1: uk
+iso_639_3: ukr
+name_en: Ukrainian
+name_native: Українська
+scripts:
+- Cyrillic
+rtl: false
+regions:
+- UA
+ui_status: partial
+pack_quality: draft
+stopwords:
+- і
+- в
+- не
+- на
+- з
+- що
+- це
+- як
+- по
+- для
+- дуже
+detection_keywords:
+- що
+- це
+- як
+- для
+- дуже
+- дякую
+- привіт
+topic_names:
+  technology: Технології
+  business: Бізнес
+  fashion: Мода
+  food: Їжа та рецепти
+  travel: Подорожі
+  fitness: Фітнес
+  education: Освіта
+  music: Музика
+  gaming: Ігри
+  comedy: Комедія
+  beauty: Краса
+  health: Здоров'я
+  finance: Фінанси
+  sports: Спорт
+  photography: Фотографія
+  art: Мистецтво та дизайн
+  motivation: Мотивація
+  parenting: Батьківство
+  realestate: Нерухомість
+  automobiles: Автомобілі
+  pets: Домашні улюбленці
+  news: Новини
+  lifestyle: Спосіб життя
+  marketing: Маркетинг
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ru
+  reason: close languages; shared Cyrillic script
+notes: ''

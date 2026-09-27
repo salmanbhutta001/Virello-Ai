@@ -1,0 +1,68 @@
+iso_639_1: ps
+iso_639_3: pus
+name_en: Pashto
+name_native: پښتو
+scripts:
+- Arabic
+rtl: true
+regions:
+- AF
+- PK
+ui_status: partial
+pack_quality: draft
+stopwords:
+- د
+- په
+- له
+- څخه
+- چې
+- دی
+- ده
+- نه
+- دا
+- هغه
+- او
+detection_keywords:
+- او
+- دی
+- ده
+- په
+- د
+- نه
+- دا
+- هغه
+- ډېر
+- مننه
+topic_names:
+  technology: ټکنالوژي
+  business: کاروبار
+  fashion: فېشن
+  food: خواړه او ترکیبونه
+  travel: سفر
+  fitness: فټنس
+  education: زده کړه
+  music: موسیقي
+  gaming: ګېمینګ
+  comedy: کامیډي
+  beauty: ښکلا
+  health: روغتیا
+  finance: مالي چارو
+  sports: سپورت
+  photography: عکاسي
+  art: هنر او ډیزاین
+  motivation: هڅونه
+  parenting: والدین
+  realestate: ریښتیني ملکیت
+  automobiles: موټرې
+  pets: څاروي
+  news: خبرونه
+  lifestyle: د ژوند طرز
+  marketing: بازارموندنه
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ur
+  reason: shared script and regional overlap
+- code: fa
+  reason: shared script; regional overlap
+notes: ''

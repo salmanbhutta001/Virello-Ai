@@ -1,0 +1,67 @@
+iso_639_1: nl
+iso_639_3: nld
+name_en: Dutch
+name_native: Nederlands
+scripts:
+- Latin
+rtl: false
+regions:
+- NL
+- BE
+ui_status: partial
+pack_quality: draft
+stopwords:
+- de
+- het
+- een
+- van
+- en
+- in
+- op
+- met
+- voor
+- dat
+- niet
+- ook
+detection_keywords:
+- van
+- met
+- voor
+- niet
+- ook
+- heel
+- dank je
+- hallo
+topic_names:
+  technology: Technologie
+  business: Business
+  fashion: Mode
+  food: Eten & Recepten
+  travel: Reizen
+  fitness: Fitness
+  education: Onderwijs
+  music: Muziek
+  gaming: Gamen
+  comedy: Comedy
+  beauty: Schoonheid
+  health: Gezondheid
+  finance: Financiën
+  sports: Sport
+  photography: Fotografie
+  art: Kunst & Design
+  motivation: Motivatie
+  parenting: Ouderschap
+  realestate: Vastgoed
+  automobiles: Auto's
+  pets: Huisdieren
+  news: Nieuws
+  lifestyle: Levensstijl
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: de
+  reason: close Germanic languages
+- code: en
+  reason: high English proficiency
+notes: ''

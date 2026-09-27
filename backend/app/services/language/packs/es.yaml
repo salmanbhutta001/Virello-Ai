@@ -1,0 +1,75 @@
+iso_639_1: es
+iso_639_3: spa
+name_en: Spanish
+name_native: Español
+scripts:
+- Latin
+rtl: false
+regions:
+- ES
+- MX
+- US
+- AR
+ui_status: partial
+pack_quality: curated
+stopwords:
+- el
+- la
+- de
+- que
+- y
+- en
+- un
+- una
+- los
+- las
+- con
+- para
+- por
+- como
+- más
+detection_keywords:
+- el
+- la
+- que
+- los
+- las
+- con
+- para
+- como
+- muy
+- gracias
+- hola
+topic_names:
+  technology: Tecnología
+  business: Negocios
+  fashion: Moda
+  food: Comida y recetas
+  travel: Viajes
+  fitness: Fitness
+  education: Educación
+  music: Música
+  gaming: Videojuegos
+  comedy: Comedia
+  beauty: Belleza
+  health: Salud
+  finance: Finanzas
+  sports: Deportes
+  photography: Fotografía
+  art: Arte y diseño
+  motivation: Motivación
+  parenting: Crianza
+  realestate: Bienes raíces
+  automobiles: Automóviles
+  pets: Mascotas
+  news: Noticias
+  lifestyle: Estilo de vida
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: pt
+  reason: close languages; partial mutual intelligibility
+- code: en
+  reason: large US bilingual overlap
+notes: ''

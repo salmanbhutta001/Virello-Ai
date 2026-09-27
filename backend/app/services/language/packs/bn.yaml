@@ -1,0 +1,69 @@
+iso_639_1: bn
+iso_639_3: ben
+name_en: Bengali
+name_native: বাংলা
+scripts:
+- Bengali
+rtl: false
+regions:
+- BD
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- এর
+- একটি
+- এবং
+- হয়
+- ছিল
+- থেকে
+- করে
+- যে
+- যা
+- না
+- এই
+- সেই
+- কি
+- হবে
+detection_keywords:
+- এবং
+- হয়
+- ছিল
+- থেকে
+- করে
+- যে
+- এই
+- সেই
+- খুব
+- ধন্যবাদ
+topic_names:
+  technology: প্রযুক্তি
+  business: ব্যবসা
+  fashion: ফ্যাশন
+  food: খাবার ও রেসিপি
+  travel: ভ্রমণ
+  fitness: ফিটনেস
+  education: শিক্ষা
+  music: সঙ্গীত
+  gaming: গেমিং
+  comedy: কমেডি
+  beauty: সৌন্দর্য
+  health: স্বাস্থ্য
+  finance: অর্থায়ন
+  sports: খেলাধুলা
+  photography: ফটোগ্রাফি
+  art: শিল্প ও নকশা
+  motivation: অনুপ্রেরণা
+  parenting: প্যারেন্টিং
+  realestate: রিয়েল এস্টেট
+  automobiles: অটোমোবাইল
+  pets: পোষা প্রাণী
+  news: সংবাদ
+  lifestyle: লাইফস্টাইল
+  marketing: মার্কেটিং
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: hi
+  reason: shared South-Asian vocabulary roots
+notes: ''

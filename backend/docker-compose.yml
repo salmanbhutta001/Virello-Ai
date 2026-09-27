@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: virello
+      POSTGRES_PASSWORD: ${VIRELLO_DB_PASSWORD:?set VIRELLO_DB_PASSWORD in .env}
+      POSTGRES_DB: virello
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U virello -d virello"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      VIRELLO_DATABASE_URL: postgresql+asyncpg://virello:${VIRELLO_DB_PASSWORD}@db:5432/virello
+      VIRELLO_JWT_SECRET: ${VIRELLO_JWT_SECRET:?set VIRELLO_JWT_SECRET in .env}
+      VIRELLO_AI_PROVIDER: ${VIRELLO_AI_PROVIDER:-dev}
+      VIRELLO_ANTHROPIC_API_KEY: ${VIRELLO_ANTHROPIC_API_KEY:-}
+      VIRELLO_OPENAI_API_KEY: ${VIRELLO_OPENAI_API_KEY:-}
+      VIRELLO_GOOGLE_API_KEY: ${VIRELLO_GOOGLE_API_KEY:-}
+      VIRELLO_PAYPAL_CLIENT_ID: ${VIRELLO_PAYPAL_CLIENT_ID:-}
+      VIRELLO_PAYPAL_SECRET: ${VIRELLO_PAYPAL_SECRET:-}
+      VIRELLO_PAYPAL_MODE: ${VIRELLO_PAYPAL_MODE:-sandbox}
+      VIRELLO_CORS_ORIGINS: '["*"]'
+      # ---- Email (payment receipts). Dev default: console (logged only).
+      # Prod built-in: EMAIL_PROVIDER=smtp with the opt-in `mail` service below.
+      # Prod fallback:  EMAIL_PROVIDER=brevo + BREVO_API_KEY (free 300/day).
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+      EMAIL_FROM: ${EMAIL_FROM:-Virello <noreply@virello.app>}
+      SMTP_HOST: ${SMTP_HOST:-mail}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+    ports:
+      - "8125:8125"
+    volumes:
+      - ./virello-prod.db:/srv/virello/virello-prod.db  # harmless if unused (pg is primary)
+
+  # ---- Built-in self-hosted email (OPT-IN, free forever, no third party) ----
+  # Start with:  docker compose --profile mail up -d
+  # The API relays receipts through this Postfix container over the compose
+  # network (SMTP_HOST=mail, port 25, no auth needed inside the network).
+  # No host port is exposed; Postfix only needs OUTBOUND port 25 to the
+  # internet — many VPS providers block it by default, request unblocking
+  # or use the Brevo fallback instead (see DEPLOY.md "Email").
+  mail:
+    image: boky/postfix:latest
+    restart: unless-stopped
+    profiles: ["mail"]
+    hostname: ${POSTFIX_HOSTNAME:-mail}
+    domainname: ${POSTFIX_DOMAIN:-virello.app}
+    environment:
+      ALLOWED_SENDER_DOMAINS: ${POSTFIX_ALLOWED_SENDERS:-virello.app}
+    volumes:
+      - postfix_spool:/var/spool/postfix
+      # Mount your OpenDKIM keys here when you set up DKIM (see DEPLOY.md):
+      # - ./dkim:/etc/opendkim/keys:ro
+
+volumes:
+  pgdata:
+  postfix_spool:

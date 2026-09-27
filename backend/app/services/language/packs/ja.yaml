@@ -1,0 +1,67 @@
+iso_639_1: ja
+iso_639_3: jpn
+name_en: Japanese
+name_native: 日本語
+scripts:
+- Han
+- Hiragana
+- Katakana
+rtl: false
+regions:
+- JP
+ui_status: partial
+pack_quality: draft
+stopwords:
+- の
+- に
+- は
+- を
+- た
+- が
+- で
+- て
+- と
+- も
+- な
+- に
+- です
+- ます
+detection_keywords:
+- の
+- は
+- を
+- が
+- です
+- ます
+- とても
+- ありがとう
+- こんにちは
+topic_names:
+  technology: テクノロジー
+  business: ビジネス
+  fashion: ファッション
+  food: 食べ物・レシピ
+  travel: 旅行
+  fitness: フィットネス
+  education: 教育
+  music: 音楽
+  gaming: ゲーム
+  comedy: コメディ
+  beauty: 美容
+  health: 健康
+  finance: 金融
+  sports: スポーツ
+  photography: 写真
+  art: アート・デザイン
+  motivation: モチベーション
+  parenting: 子育て
+  realestate: 不動産
+  automobiles: 自動車
+  pets: ペット
+  news: ニュース
+  lifestyle: ライフスタイル
+  marketing: マーケティング
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

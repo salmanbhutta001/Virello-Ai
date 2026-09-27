@@ -1,0 +1,58 @@
+iso_639_1: he
+iso_639_3: heb
+name_en: Hebrew
+name_native: עברית
+scripts:
+- Hebrew
+rtl: true
+regions:
+- IL
+ui_status: partial
+pack_quality: draft
+stopwords:
+- של
+- את
+- על
+- עם
+- כי
+- זה
+- זו
+- לא
+- מאוד
+- היה
+detection_keywords:
+- עם
+- מאוד
+- תודה
+- שלום
+topic_names:
+  technology: טכנולוגיה
+  business: עסקים
+  fashion: אופנה
+  food: אוכל ומתכונים
+  travel: טיולים
+  fitness: כושר
+  education: חינוך
+  music: מוזיקה
+  gaming: גיימינג
+  comedy: קומדיה
+  beauty: יופי
+  health: בריאות
+  finance: פיננסים
+  sports: ספורט
+  photography: צילום
+  art: אמנות ועיצוב
+  motivation: מוטיבציה
+  parenting: הורות
+  realestate: נדל״ן
+  automobiles: רכב
+  pets: חיות מחמד
+  news: חדשות
+  lifestyle: סגנון חיים
+  marketing: שיווק
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ar
+  reason: regional overlap; shared Semitic roots
+notes: ''

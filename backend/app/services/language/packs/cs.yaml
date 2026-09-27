@@ -1,0 +1,56 @@
+iso_639_1: cs
+iso_639_3: ces
+name_en: Czech
+name_native: Čeština
+scripts:
+- Latin
+rtl: false
+regions:
+- CZ
+ui_status: partial
+pack_quality: draft
+stopwords:
+- a
+- v
+- na
+- s
+- z
+- do
+- to
+- že
+- jak
+- velmi
+detection_keywords:
+- že
+- velmi
+- děkuji
+- ahoj
+topic_names:
+  technology: Technologie
+  business: Byznys
+  fashion: Móda
+  food: Jídlo a recepty
+  travel: Cestování
+  fitness: Fitness
+  education: Vzdělávání
+  music: Hudba
+  gaming: Hry
+  comedy: Komedie
+  beauty: Krása
+  health: Zdraví
+  finance: Finance
+  sports: Sport
+  photography: Fotografie
+  art: Umění a design
+  motivation: Motivace
+  parenting: Rodičovství
+  realestate: Nemovitosti
+  automobiles: Auta
+  pets: Domácí mazlíčci
+  news: Zprávy
+  lifestyle: Životní styl
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

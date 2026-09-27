@@ -1,0 +1,66 @@
+iso_639_1: fil
+iso_639_3: fil
+name_en: Filipino
+name_native: Filipino
+scripts:
+- Latin
+rtl: false
+regions:
+- PH
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ang
+- ng
+- sa
+- na
+- ay
+- mga
+- at
+- ngunit
+- kung
+- hindi
+- ako
+detection_keywords:
+- ang
+- ng
+- sa
+- mga
+- at
+- hindi
+- salamat
+- kamusta
+- napaka
+topic_names:
+  technology: Teknolohiya
+  business: Negosyo
+  fashion: Fashion
+  food: Pagkain & Recipe
+  travel: Paglalakbay
+  fitness: Fitness
+  education: Edukasyon
+  music: Musika
+  gaming: Gaming
+  comedy: Komedya
+  beauty: Kagandahan
+  health: Kalusugan
+  finance: Pananalapi
+  sports: Sports
+  photography: Photography
+  art: Sining & Disenyo
+  motivation: Motibasyon
+  parenting: Pagiging Magulang
+  realestate: Real Estate
+  automobiles: Sasakyan
+  pets: Alagang Hayop
+  news: Balita
+  lifestyle: Lifestyle
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: es
+  reason: many Spanish loanwords
+- code: en
+  reason: heavy English code-switching (Taglish)
+notes: ''

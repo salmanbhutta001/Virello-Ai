@@ -1,0 +1,63 @@
+iso_639_1: sv
+iso_639_3: swe
+name_en: Swedish
+name_native: Svenska
+scripts:
+- Latin
+rtl: false
+regions:
+- SE
+ui_status: partial
+pack_quality: draft
+stopwords:
+- och
+- att
+- det
+- som
+- en
+- ett
+- på
+- med
+- för
+- inte
+- också
+detection_keywords:
+- med
+- för
+- inte
+- också
+- tack
+- hej
+topic_names:
+  technology: Teknik
+  business: Affärer
+  fashion: Mode
+  food: Mat & recept
+  travel: Resor
+  fitness: Träning
+  education: Utbildning
+  music: Musik
+  gaming: Spel
+  comedy: Komedi
+  beauty: Skönhet
+  health: Hälsa
+  finance: Ekonomi
+  sports: Sport
+  photography: Fotografi
+  art: Konst & design
+  motivation: Motivation
+  parenting: Föräldraskap
+  realestate: Fastigheter
+  automobiles: Bilar
+  pets: Husdjur
+  news: Nyheter
+  lifestyle: Livsstil
+  marketing: Marknadsföring
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: da
+  reason: close Scandinavian languages
+- code: nb
+  reason: close Scandinavian languages
+notes: ''

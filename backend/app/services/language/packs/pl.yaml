@@ -1,0 +1,57 @@
+iso_639_1: pl
+iso_639_3: pol
+name_en: Polish
+name_native: Polski
+scripts:
+- Latin
+rtl: false
+regions:
+- PL
+ui_status: partial
+pack_quality: draft
+stopwords:
+- i
+- w
+- nie
+- na
+- z
+- do
+- to
+- że
+- jak
+- bardzo
+detection_keywords:
+- że
+- jak
+- bardzo
+- dziękuję
+- cześć
+topic_names:
+  technology: Technologia
+  business: Biznes
+  fashion: Moda
+  food: Jedzenie i przepisy
+  travel: Podróże
+  fitness: Fitness
+  education: Edukacja
+  music: Muzyka
+  gaming: Gry
+  comedy: Komedia
+  beauty: Uroda
+  health: Zdrowie
+  finance: Finanse
+  sports: Sport
+  photography: Fotografia
+  art: Sztuka i design
+  motivation: Motywacja
+  parenting: Rodzicielstwo
+  realestate: Nieruchomości
+  automobiles: Motoryzacja
+  pets: Zwierzęta
+  news: Wiadomości
+  lifestyle: Styl życia
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

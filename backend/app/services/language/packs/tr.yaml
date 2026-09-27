@@ -1,0 +1,69 @@
+iso_639_1: tr
+iso_639_3: tur
+name_en: Turkish
+name_native: Türkçe
+scripts:
+- Latin
+rtl: false
+regions:
+- TR
+- DE
+ui_status: partial
+pack_quality: curated
+stopwords:
+- ve
+- bir
+- bu
+- şu
+- için
+- ile
+- de
+- da
+- mi
+- mı
+- mu
+- mü
+- çok
+- değil
+detection_keywords:
+- ve
+- bir
+- bu
+- için
+- ile
+- çok
+- değil
+- merhaba
+- teşekkürler
+- nasıl
+topic_names:
+  technology: Teknoloji
+  business: İş
+  fashion: Moda
+  food: Yemek ve Tarifler
+  travel: Seyahat
+  fitness: Fitness
+  education: Eğitim
+  music: Müzik
+  gaming: Oyun
+  comedy: Komedi
+  beauty: Güzellik
+  health: Sağlık
+  finance: Finans
+  sports: Spor
+  photography: Fotoğrafçılık
+  art: Sanat ve Tasarım
+  motivation: Motivasyon
+  parenting: Ebeveynlik
+  realestate: Gayrimenkul
+  automobiles: Otomobil
+  pets: Evcil Hayvanlar
+  news: Haberler
+  lifestyle: Yaşam Tarzı
+  marketing: Pazarlama
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: de
+  reason: large Turkish-speaking community in Germany
+notes: ''

@@ -1,0 +1,67 @@
+iso_639_1: de
+iso_639_3: deu
+name_en: German
+name_native: Deutsch
+scripts:
+- Latin
+rtl: false
+regions:
+- DE
+- AT
+ui_status: partial
+pack_quality: curated
+stopwords:
+- der
+- die
+- das
+- und
+- in
+- zu
+- den
+- von
+- mit
+- ist
+- ein
+- eine
+- nicht
+- auch
+detection_keywords:
+- und
+- mit
+- ist
+- nicht
+- auch
+- sehr
+- danke
+- hallo
+topic_names:
+  technology: Technologie
+  business: Business
+  fashion: Mode
+  food: Essen & Rezepte
+  travel: Reisen
+  fitness: Fitness
+  education: Bildung
+  music: Musik
+  gaming: Gaming
+  comedy: Comedy
+  beauty: Schönheit
+  health: Gesundheit
+  finance: Finanzen
+  sports: Sport
+  photography: Fotografie
+  art: Kunst & Design
+  motivation: Motivation
+  parenting: Elternschaft
+  realestate: Immobilien
+  automobiles: Autos
+  pets: Haustiere
+  news: Nachrichten
+  lifestyle: Lebensstil
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: tr
+  reason: large Turkish-speaking community in Germany
+notes: ''

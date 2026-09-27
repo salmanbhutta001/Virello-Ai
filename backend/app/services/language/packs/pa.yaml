@@ -1,0 +1,113 @@
+iso_639_1: pa
+iso_639_3: pan
+name_en: Punjabi
+name_native: ਪੰਜਾਬੀ
+scripts:
+- Gurmukhi
+- Latin
+rtl: false
+regions:
+- IN
+- PK
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ਦਾ
+- ਦੀ
+- ਦੇ
+- ਤੋਂ
+- ਨੇ
+- ਨੂੰ
+- ਵਿੱਚ
+- ਉੱਤੇ
+- ਅਤੇ
+- ਹੈ
+- ਹਨ
+- ਸੀ
+- ਨਹੀਂ
+- ਇਹ
+- ਉਹ
+detection_keywords:
+- ਅਤੇ
+- ਹੈ
+- ਹਨ
+- ਵਿੱਚ
+- ਤੋਂ
+- ਦਾ
+- ਦੀ
+- ਦੇ
+- ਨਹੀਂ
+- ਇਹ
+- ਉਹ
+- ਬਹੁਤ
+- ਸ਼ੁਕਰੀਆ
+topic_names:
+  technology: ਤਕਨਾਲੋਜੀ
+  business: ਕਾਰੋਬਾਰ
+  fashion: ਫੈਸ਼ਨ
+  food: ਖਾਣਾ ਅਤੇ ਪਕਵਾਨ
+  travel: ਯਾਤਰਾ
+  fitness: ਤੰਦਰੁਸਤੀ
+  education: ਸਿੱਖਿਆ
+  music: ਸੰਗੀਤ
+  gaming: ਗੇਮਿੰਗ
+  comedy: ਕਾਮੇਡੀ
+  beauty: ਸੁੰਦਰਤਾ
+  health: ਸਿਹਤ
+  finance: ਵਿੱਤ
+  sports: ਖੇਡਾਂ
+  photography: ਫੋਟੋਗ੍ਰਾਫੀ
+  art: ਕਲਾ ਅਤੇ ਡਿਜ਼ਾਈਨ
+  motivation: ਪ੍ਰੇਰਨਾ
+  parenting: ਪਾਲਣ-ਪੋਸ਼ਣ
+  realestate: ਰੀਅਲ ਅਸਟੇਟ
+  automobiles: ਗੱਡੀਆਂ
+  pets: ਪਾਲਤੂ ਜਾਨਵਰ
+  news: ਖ਼ਬਰਾਂ
+  lifestyle: ਜੀਵਨ ਸ਼ੈਲੀ
+  marketing: ਮਾਰਕੀਟਿੰਗ
+transliteration_variants:
+- roman_punjabi
+transliteration_keywords:
+- mein
+- tussi
+- ki
+- hai
+- han
+- da
+- di
+- de
+- nahi
+- shukriya
+- balle
+- chak
+- mainu
+- tenu
+- ohda
+- ehda
+- mera
+- meri
+- tera
+- teri
+- sada
+- bada
+- changa
+- rakh
+- kar
+- karda
+- hunda
+- kyun
+- kiddan
+- ho
+- gya
+- lyi
+- warga
+- pyaar
+- mohabbat
+related_languages:
+- code: hi
+  reason: shared Punjab region vocabulary
+- code: ur
+  reason: shared Punjab region vocabulary
+notes: Shahmukhi (Arabic-script Punjabi) shares the Arabic block; detection falls
+  back to keyword scoring.

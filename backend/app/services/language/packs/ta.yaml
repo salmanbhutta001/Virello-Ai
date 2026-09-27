@@ -1,0 +1,61 @@
+iso_639_1: ta
+iso_639_3: tam
+name_en: Tamil
+name_native: தமிழ்
+scripts:
+- Tamil
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- இன்
+- ஒரு
+- மற்றும்
+- இது
+- அது
+- இல்லை
+- மிக
+- என்று
+detection_keywords:
+- மற்றும்
+- இல்லை
+- மிக
+- நன்றி
+- வணக்கம்
+topic_names:
+  technology: தொழில்நுட்பம்
+  business: வணிகம்
+  fashion: நாகரிகம்
+  food: உணவு மற்றும் சமையல்
+  travel: பயணம்
+  fitness: உடற்பயிற்சி
+  education: கல்வி
+  music: இசை
+  gaming: விளையாட்டுகள்
+  comedy: நகைச்சுவை
+  beauty: அழகு
+  health: ஆரோக்கியம்
+  finance: நிதி
+  sports: விளையாட்டு
+  photography: புகைப்படம்
+  art: கலை மற்றும் வடிவமைப்பு
+  motivation: உந்துதல்
+  parenting: பெற்றோர்
+  realestate: ரியல் எஸ்டேட்
+  automobiles: வாகனங்கள்
+  pets: செல்லப்பிராணிகள்
+  news: செய்திகள்
+  lifestyle: வாழ்க்கை முறை
+  marketing: சந்தைப்படுத்தல்
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: te
+  reason: Dravidian language family
+- code: ml
+  reason: Dravidian language family
+- code: kn
+  reason: Dravidian language family
+notes: ''

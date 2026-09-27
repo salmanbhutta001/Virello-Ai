@@ -1,0 +1,56 @@
+iso_639_1: el
+iso_639_3: ell
+name_en: Greek
+name_native: Ελληνικά
+scripts:
+- Greek
+rtl: false
+regions:
+- GR
+- CY
+ui_status: partial
+pack_quality: draft
+stopwords:
+- και
+- το
+- τη
+- στο
+- με
+- για
+- που
+- δεν
+- πολύ
+detection_keywords:
+- για
+- πολύ
+- ευχαριστώ
+- γεια
+topic_names:
+  technology: Τεχνολογία
+  business: Επιχειρήσεις
+  fashion: Μόδα
+  food: Φαγητό και συνταγές
+  travel: Ταξίδια
+  fitness: Γυμναστική
+  education: Εκπαίδευση
+  music: Μουσική
+  gaming: Παιχνίδια
+  comedy: Κωμωδία
+  beauty: Ομορφιά
+  health: Υγεία
+  finance: Οικονομικά
+  sports: Αθλητισμός
+  photography: Φωτογραφία
+  art: Τέχνη και σχέδιο
+  motivation: Κίνητρο
+  parenting: Γονεϊκότητα
+  realestate: Ακίνητα
+  automobiles: Αυτοκίνητα
+  pets: Κατοικίδια
+  news: Ειδήσεις
+  lifestyle: Τρόπος ζωής
+  marketing: Μάρκετινγκ
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

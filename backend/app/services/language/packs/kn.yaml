@@ -1,0 +1,57 @@
+iso_639_1: kn
+iso_639_3: kan
+name_en: Kannada
+name_native: ಕನ್ನಡ
+scripts:
+- Kannada
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ಮತ್ತು
+- ಇದು
+- ಅದು
+- ಅಲ್ಲ
+- ಬಹಳ
+- ಒಂದು
+detection_keywords:
+- ಮತ್ತು
+- ಅಲ್ಲ
+- ಬಹಳ
+- ಧನ್ಯವಾದ
+- ನಮಸ್ಕಾರ
+topic_names:
+  technology: ತಂತ್ರಜ್ಞಾನ
+  business: ವ್ಯಾಪಾರ
+  fashion: ಫ್ಯಾಷನ್
+  food: ಆಹಾರ ಮತ್ತು ಪಾಕವಿಧಾನಗಳು
+  travel: ಪ್ರಯಾಣ
+  fitness: ಫಿಟ್‌ನೆಸ್
+  education: ಶಿಕ್ಷಣ
+  music: ಸಂಗೀತ
+  gaming: ಗೇಮಿಂಗ್
+  comedy: ಹಾಸ್ಯ
+  beauty: ಸೌಂದರ್ಯ
+  health: ಆರೋಗ್ಯ
+  finance: ಹಣಕಾಸು
+  sports: ಕ್ರೀಡೆ
+  photography: ಛಾಯಾಗ್ರಹಣ
+  art: ಕಲೆ ಮತ್ತು ವಿನ್ಯಾಸ
+  motivation: ಪ್ರೇರಣೆ
+  parenting: ಪೋಷಕತ್ವ
+  realestate: ರಿಯಲ್ ಎಸ್ಟೇಟ್
+  automobiles: ವಾಹನಗಳು
+  pets: ಸಾಕುಪ್ರಾಣಿಗಳು
+  news: ಸುದ್ದಿ
+  lifestyle: ಜೀವನಶೈಲಿ
+  marketing: ಮಾರ್ಕೆಟಿಂಗ್
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: te
+  reason: Dravidian language family
+- code: ta
+  reason: Dravidian language family
+notes: ''

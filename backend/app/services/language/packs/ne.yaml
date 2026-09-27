@@ -1,0 +1,56 @@
+iso_639_1: ne
+iso_639_3: nep
+name_en: Nepali
+name_native: नेपाली
+scripts:
+- Devanagari
+rtl: false
+regions:
+- NP
+ui_status: partial
+pack_quality: draft
+stopwords:
+- को
+- का
+- की
+- र
+- छ
+- हो
+- छैन
+- धेरै
+detection_keywords:
+- छैन
+- धेरै
+- धन्यवाद
+- नमस्ते
+topic_names:
+  technology: प्रविधि
+  business: व्यवसाय
+  fashion: फेसन
+  food: खाना र परिकार
+  travel: यात्रा
+  fitness: फिटनेस
+  education: शिक्षा
+  music: संगीत
+  gaming: गेमिङ
+  comedy: कमेडी
+  beauty: सौन्दर्य
+  health: स्वास्थ्य
+  finance: वित्त
+  sports: खेलकुद
+  photography: फोटोग्राफी
+  art: कला र डिजाइन
+  motivation: प्रेरणा
+  parenting: अभिभावकत्व
+  realestate: घरजग्गा
+  automobiles: सवारी साधन
+  pets: घरपालुवा जनावर
+  news: समाचार
+  lifestyle: जीवनशैली
+  marketing: बजारीकरण
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: hi
+  reason: shared Devanagari script; overlapping vocabulary
+notes: ''

@@ -1,0 +1,62 @@
+iso_639_1: nb
+iso_639_3: nob
+name_en: Norwegian
+name_native: Norsk
+scripts:
+- Latin
+rtl: false
+regions:
+- 'NO'
+ui_status: partial
+pack_quality: draft
+stopwords:
+- og
+- at
+- det
+- som
+- en
+- et
+- på
+- med
+- for
+- ikke
+- også
+detection_keywords:
+- med
+- ikke
+- også
+- takk
+- hei
+topic_names:
+  technology: Teknologi
+  business: Bedrift
+  fashion: Mote
+  food: Mat & oppskrifter
+  travel: Reise
+  fitness: Trening
+  education: Utdanning
+  music: Musikk
+  gaming: Spill
+  comedy: Komedie
+  beauty: Skjønnhet
+  health: Helse
+  finance: Økonomi
+  sports: Sport
+  photography: Fotografi
+  art: Kunst & design
+  motivation: Motivasjon
+  parenting: Foreldreskap
+  realestate: Eiendom
+  automobiles: Biler
+  pets: Kjæledyr
+  news: Nyheter
+  lifestyle: Livsstil
+  marketing: Markedsføring
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: sv
+  reason: close Scandinavian languages
+- code: da
+  reason: close Scandinavian languages
+notes: ''

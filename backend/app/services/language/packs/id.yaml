@@ -1,0 +1,68 @@
+iso_639_1: id
+iso_639_3: ind
+name_en: Indonesian
+name_native: Bahasa Indonesia
+scripts:
+- Latin
+rtl: false
+regions:
+- ID
+- MY
+ui_status: partial
+pack_quality: curated
+stopwords:
+- yang
+- dan
+- di
+- ke
+- dari
+- untuk
+- dengan
+- ini
+- itu
+- adalah
+- tidak
+- saya
+- kamu
+detection_keywords:
+- yang
+- dan
+- ini
+- itu
+- dengan
+- untuk
+- tidak
+- sangat
+- terima kasih
+- halo
+topic_names:
+  technology: Teknologi
+  business: Bisnis
+  fashion: Fashion
+  food: Makanan & Resep
+  travel: Travel
+  fitness: Kebugaran
+  education: Pendidikan
+  music: Musik
+  gaming: Game
+  comedy: Komedi
+  beauty: Kecantikan
+  health: Kesehatan
+  finance: Keuangan
+  sports: Olahraga
+  photography: Fotografi
+  art: Seni & Desain
+  motivation: Motivasi
+  parenting: Parenting
+  realestate: Properti
+  automobiles: Otomotif
+  pets: Hewan Peliharaan
+  news: Berita
+  lifestyle: Gaya Hidup
+  marketing: Pemasaran
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ms
+  reason: very close languages; largely mutually intelligible
+notes: ''

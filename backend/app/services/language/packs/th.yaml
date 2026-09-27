@@ -1,0 +1,61 @@
+iso_639_1: th
+iso_639_3: tha
+name_en: Thai
+name_native: ไทย
+scripts:
+- Thai
+rtl: false
+regions:
+- TH
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ของ
+- และ
+- ใน
+- ที่
+- เป็น
+- ไม่
+- ได้
+- การ
+- มี
+- จะ
+detection_keywords:
+- และ
+- ใน
+- เป็น
+- ไม่
+- ได้
+- มาก
+- ขอบคุณ
+- สวัสดี
+topic_names:
+  technology: เทคโนโลยี
+  business: ธุรกิจ
+  fashion: แฟชั่น
+  food: อาหารและสูตรอาหาร
+  travel: ท่องเที่ยว
+  fitness: ฟิตเนส
+  education: การศึกษา
+  music: ดนตรี
+  gaming: เกม
+  comedy: ตลก
+  beauty: ความงาม
+  health: สุขภาพ
+  finance: การเงิน
+  sports: กีฬา
+  photography: การถ่ายภาพ
+  art: ศิลปะและการออกแบบ
+  motivation: แรงบันดาลใจ
+  parenting: การเลี้ยงดูบุตร
+  realestate: อสังหาริมทรัพย์
+  automobiles: ยานยนต์
+  pets: สัตว์เลี้ยง
+  news: ข่าว
+  lifestyle: ไลฟ์สไตล์
+  marketing: การตลาด
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: Thai is written without word spaces; keyword matching uses substring-tolerant
+  scoring in the detector.

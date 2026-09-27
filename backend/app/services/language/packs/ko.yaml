@@ -1,0 +1,64 @@
+iso_639_1: ko
+iso_639_3: kor
+name_en: Korean
+name_native: 한국어
+scripts:
+- Hangul
+rtl: false
+regions:
+- KR
+ui_status: partial
+pack_quality: draft
+stopwords:
+- 의
+- 가
+- 이
+- 은
+- 는
+- 을
+- 를
+- 에
+- 에서
+- 와
+- 과
+- 도
+- 으로
+detection_keywords:
+- 의
+- 은
+- 는
+- 을
+- 를
+- 에
+- 감사합니다
+- 안녕하세요
+- 매우
+topic_names:
+  technology: 기술
+  business: 비즈니스
+  fashion: 패션
+  food: 음식 및 레시피
+  travel: 여행
+  fitness: 피트니스
+  education: 교육
+  music: 음악
+  gaming: 게임
+  comedy: 코미디
+  beauty: 뷰티
+  health: 건강
+  finance: 금융
+  sports: 스포츠
+  photography: 사진
+  art: 예술 및 디자인
+  motivation: 동기부여
+  parenting: 육아
+  realestate: 부동산
+  automobiles: 자동차
+  pets: 반려동물
+  news: 뉴스
+  lifestyle: 라이프스타일
+  marketing: 마케팅
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

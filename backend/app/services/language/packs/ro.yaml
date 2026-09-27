@@ -1,0 +1,59 @@
+iso_639_1: ro
+iso_639_3: ron
+name_en: Romanian
+name_native: Română
+scripts:
+- Latin
+rtl: false
+regions:
+- RO
+ui_status: partial
+pack_quality: draft
+stopwords:
+- și
+- în
+- de
+- la
+- cu
+- pentru
+- ca
+- foarte
+- nu
+detection_keywords:
+- pentru
+- foarte
+- mulțumesc
+- bună
+topic_names:
+  technology: Tehnologie
+  business: Afaceri
+  fashion: Modă
+  food: Mâncare și rețete
+  travel: Călătorii
+  fitness: Fitness
+  education: Educație
+  music: Muzică
+  gaming: Jocuri
+  comedy: Comedie
+  beauty: Frumusețe
+  health: Sănătate
+  finance: Finanțe
+  sports: Sport
+  photography: Fotografie
+  art: Artă și design
+  motivation: Motivație
+  parenting: Parenting
+  realestate: Imobiliare
+  automobiles: Automobile
+  pets: Animale de companie
+  news: Știri
+  lifestyle: Stil de viață
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: es
+  reason: Romance language family
+- code: it
+  reason: Romance language family
+notes: ''

@@ -1,0 +1,66 @@
+iso_639_1: it
+iso_639_3: ita
+name_en: Italian
+name_native: Italiano
+scripts:
+- Latin
+rtl: false
+regions:
+- IT
+ui_status: partial
+pack_quality: draft
+stopwords:
+- il
+- lo
+- la
+- di
+- che
+- e
+- in
+- un
+- una
+- con
+- per
+- come
+- molto
+detection_keywords:
+- che
+- con
+- per
+- come
+- molto
+- grazie
+- ciao
+topic_names:
+  technology: Tecnologia
+  business: Business
+  fashion: Moda
+  food: Cibo e ricette
+  travel: Viaggi
+  fitness: Fitness
+  education: Istruzione
+  music: Musica
+  gaming: Giochi
+  comedy: Comicità
+  beauty: Bellezza
+  health: Salute
+  finance: Finanza
+  sports: Sport
+  photography: Fotografia
+  art: Arte e design
+  motivation: Motivazione
+  parenting: Genitorialità
+  realestate: Immobili
+  automobiles: Auto
+  pets: Animali domestici
+  news: Notizie
+  lifestyle: Stile di vita
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: es
+  reason: close Romance languages
+- code: fr
+  reason: close Romance languages
+notes: ''

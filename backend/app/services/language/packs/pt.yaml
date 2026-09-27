@@ -1,0 +1,67 @@
+iso_639_1: pt
+iso_639_3: por
+name_en: Portuguese
+name_native: Português
+scripts:
+- Latin
+rtl: false
+regions:
+- BR
+- PT
+ui_status: partial
+pack_quality: curated
+stopwords:
+- o
+- a
+- de
+- que
+- e
+- em
+- um
+- uma
+- os
+- as
+- com
+- para
+- por
+- como
+- mais
+detection_keywords:
+- que
+- com
+- para
+- como
+- muito
+- obrigado
+- olá
+topic_names:
+  technology: Tecnologia
+  business: Negócios
+  fashion: Moda
+  food: Comida e receitas
+  travel: Viagem
+  fitness: Fitness
+  education: Educação
+  music: Música
+  gaming: Jogos
+  comedy: Comédia
+  beauty: Beleza
+  health: Saúde
+  finance: Finanças
+  sports: Esportes
+  photography: Fotografia
+  art: Arte e design
+  motivation: Motivação
+  parenting: Parentalidade
+  realestate: Imóveis
+  automobiles: Automóveis
+  pets: Animais de estimação
+  news: Notícias
+  lifestyle: Estilo de vida
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: es
+  reason: close languages; partial mutual intelligibility
+notes: ''

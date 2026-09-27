@@ -1,0 +1,62 @@
+iso_639_1: da
+iso_639_3: dan
+name_en: Danish
+name_native: Dansk
+scripts:
+- Latin
+rtl: false
+regions:
+- DK
+ui_status: partial
+pack_quality: draft
+stopwords:
+- og
+- at
+- det
+- som
+- en
+- et
+- på
+- med
+- for
+- ikke
+- også
+detection_keywords:
+- med
+- ikke
+- også
+- tak
+- hej
+topic_names:
+  technology: Teknologi
+  business: Forretning
+  fashion: Mode
+  food: Mad & opskrifter
+  travel: Rejser
+  fitness: Fitness
+  education: Uddannelse
+  music: Musik
+  gaming: Spil
+  comedy: Komedie
+  beauty: Skønhed
+  health: Sundhed
+  finance: Økonomi
+  sports: Sport
+  photography: Fotografi
+  art: Kunst & design
+  motivation: Motivation
+  parenting: Forældreskab
+  realestate: Ejendomme
+  automobiles: Biler
+  pets: Kæledyr
+  news: Nyheder
+  lifestyle: Livsstil
+  marketing: Markedsføring
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: sv
+  reason: close Scandinavian languages
+- code: nb
+  reason: close Scandinavian languages
+notes: ''

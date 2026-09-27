@@ -1,0 +1,55 @@
+iso_639_1: fi
+iso_639_3: fin
+name_en: Finnish
+name_native: Suomi
+scripts:
+- Latin
+rtl: false
+regions:
+- FI
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ja
+- 'on'
+- ei
+- että
+- se
+- kanssa
+- myös
+- erittäin
+detection_keywords:
+- kanssa
+- myös
+- erittäin
+- kiitos
+- hei
+topic_names:
+  technology: Teknologia
+  business: Liiketoiminta
+  fashion: Muoti
+  food: Ruoka & reseptit
+  travel: Matkailu
+  fitness: Fitness
+  education: Koulutus
+  music: Musiikki
+  gaming: Pelaaminen
+  comedy: Komedia
+  beauty: Kauneus
+  health: Terveys
+  finance: Talous
+  sports: Urheilu
+  photography: Valokuvaus
+  art: Taide & design
+  motivation: Motivaatio
+  parenting: Vanhemmuus
+  realestate: Kiinteistöt
+  automobiles: Autot
+  pets: Lemmikit
+  news: Uutiset
+  lifestyle: Elämäntapa
+  marketing: Markkinointi
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

@@ -1,0 +1,54 @@
+iso_639_1: ml
+iso_639_3: mal
+name_en: Malayalam
+name_native: മലയാളം
+scripts:
+- Malayalam
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- ഉം
+- ഒരു
+- ഇത്
+- അത്
+- അല്ല
+- വളരെ
+detection_keywords:
+- അല്ല
+- വളരെ
+- നന്ദി
+- നമസ്കാരം
+topic_names:
+  technology: സാങ്കേതികവിദ്യ
+  business: ബിസിനസ്
+  fashion: ഫാഷൻ
+  food: ഭക്ഷണവും പാചകക്കുറിപ്പുകളും
+  travel: യാത്ര
+  fitness: ഫിറ്റ്നസ്
+  education: വിദ്യാഭ്യാസം
+  music: സംഗീതം
+  gaming: ഗെയിമിംഗ്
+  comedy: കോമഡി
+  beauty: സൗന്ദര്യം
+  health: ആരോഗ്യം
+  finance: ധനകാര്യം
+  sports: കായികം
+  photography: ഫോട്ടോഗ്രഫി
+  art: കലയും ഡിസൈനും
+  motivation: പ്രചോദനം
+  parenting: രക്ഷാകർതൃത്വം
+  realestate: റിയൽ എസ്റ്റേറ്റ്
+  automobiles: വാഹനങ്ങൾ
+  pets: വളർത്തുമൃഗങ്ങൾ
+  news: വാർത്തകൾ
+  lifestyle: ജീവിതശൈലി
+  marketing: മാർക്കറ്റിംഗ്
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ta
+  reason: Dravidian language family; closest relative
+notes: ''

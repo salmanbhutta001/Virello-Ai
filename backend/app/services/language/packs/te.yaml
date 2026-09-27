@@ -1,0 +1,58 @@
+iso_639_1: te
+iso_639_3: tel
+name_en: Telugu
+name_native: తెలుగు
+scripts:
+- Telugu
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- యొక్క
+- ఒక
+- మరియు
+- ఇది
+- అది
+- కాదు
+- చాలా
+detection_keywords:
+- మరియు
+- కాదు
+- చాలా
+- ధన్యవాదాలు
+- నమస్కారం
+topic_names:
+  technology: సాంకేతికత
+  business: వ్యాపారం
+  fashion: ఫ్యాషన్
+  food: ఆహారం మరియు వంటకాలు
+  travel: ప్రయాణం
+  fitness: ఫిట్‌నెస్
+  education: విద్య
+  music: సంగీతం
+  gaming: గేమింగ్
+  comedy: కామెడీ
+  beauty: అందం
+  health: ఆరోగ్యం
+  finance: ఆర్థికం
+  sports: క్రీడలు
+  photography: ఫోటోగ్రఫీ
+  art: కళ మరియు డిజైన్
+  motivation: ప్రేరణ
+  parenting: తల్లిదండ్రులు
+  realestate: రియల్ ఎస్టేట్
+  automobiles: వాహనాలు
+  pets: పెంపుడు జంతువులు
+  news: వార్తలు
+  lifestyle: జీవనశైలి
+  marketing: మార్కెటింగ్
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: ta
+  reason: Dravidian language family
+- code: kn
+  reason: Dravidian language family
+notes: ''

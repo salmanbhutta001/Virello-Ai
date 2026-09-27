@@ -1,0 +1,64 @@
+iso_639_1: fr
+iso_639_3: fra
+name_en: French
+name_native: Français
+scripts:
+- Latin
+rtl: false
+regions:
+- FR
+- CA
+ui_status: partial
+pack_quality: curated
+stopwords:
+- le
+- la
+- de
+- que
+- et
+- en
+- un
+- une
+- les
+- des
+- avec
+- pour
+- comme
+- plus
+detection_keywords:
+- que
+- avec
+- pour
+- comme
+- très
+- merci
+- bonjour
+topic_names:
+  technology: Technologie
+  business: Affaires
+  fashion: Mode
+  food: Cuisine et recettes
+  travel: Voyage
+  fitness: Fitness
+  education: Éducation
+  music: Musique
+  gaming: Jeux vidéo
+  comedy: Comédie
+  beauty: Beauté
+  health: Santé
+  finance: Finance
+  sports: Sport
+  photography: Photographie
+  art: Art et design
+  motivation: Motivation
+  parenting: Parentalité
+  realestate: Immobilier
+  automobiles: Automobile
+  pets: Animaux
+  news: Actualités
+  lifestyle: Mode de vie
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages: []
+notes: ''

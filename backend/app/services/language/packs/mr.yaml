@@ -1,0 +1,58 @@
+iso_639_1: mr
+iso_639_3: mar
+name_en: Marathi
+name_native: मराठी
+scripts:
+- Devanagari
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- चा
+- ची
+- चे
+- आणि
+- हे
+- ते
+- नाही
+- खूप
+- मध्ये
+detection_keywords:
+- आणि
+- नाही
+- खूप
+- धन्यवाद
+- नमस्कार
+topic_names:
+  technology: तंत्रज्ञान
+  business: व्यवसाय
+  fashion: फॅशन
+  food: अन्न आणि पाककृती
+  travel: प्रवास
+  fitness: फिटनेस
+  education: शिक्षण
+  music: संगीत
+  gaming: गेमिंग
+  comedy: विनोद
+  beauty: सौंदर्य
+  health: आरोग्य
+  finance: वित्त
+  sports: खेळ
+  photography: छायाचित्रण
+  art: कला आणि डिझाइन
+  motivation: प्रेरणा
+  parenting: पालकत्व
+  realestate: रिअल इस्टेट
+  automobiles: वाहने
+  pets: पाळीव प्राणी
+  news: बातम्या
+  lifestyle: जीवनशैली
+  marketing: विपणन
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: hi
+  reason: shared Devanagari script; overlapping vocabulary
+notes: ''

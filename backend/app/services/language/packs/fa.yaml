@@ -1,0 +1,88 @@
+iso_639_1: fa
+iso_639_3: fas
+name_en: Persian / Dari
+name_native: فارسی / دری
+scripts:
+- Arabic
+- Latin
+rtl: true
+regions:
+- IR
+- AF
+- TJ
+ui_status: partial
+pack_quality: draft
+stopwords:
+- از
+- به
+- در
+- با
+- که
+- این
+- آن
+- است
+- هست
+- بود
+- نه
+- و
+- را
+detection_keywords:
+- و
+- است
+- در
+- به
+- از
+- که
+- این
+- آن
+- نه
+- خیلی
+- مرسی
+- ممنون
+topic_names:
+  technology: فناوری
+  business: کسب‌وکار
+  fashion: مد
+  food: غذا و دستور پخت
+  travel: سفر
+  fitness: تناسب اندام
+  education: آموزش
+  music: موسیقی
+  gaming: بازی
+  comedy: کمدی
+  beauty: زیبایی
+  health: سلامت
+  finance: مالی
+  sports: ورزش
+  photography: عکاسی
+  art: هنر و طراحی
+  motivation: انگیزه
+  parenting: فرزندپروری
+  realestate: املاک
+  automobiles: خودرو
+  pets: حیوانات خانگی
+  news: اخبار
+  lifestyle: سبک زندگی
+  marketing: بازاریابی
+transliteration_variants:
+- finglish
+transliteration_keywords:
+- salam
+- merci
+- mamnoon
+- khoda
+- hafez
+- chetori
+- khoob
+- bale
+- na
+- man
+- to
+- in
+- oon
+related_languages:
+- code: ur
+  reason: many shared loanwords
+- code: ar
+  reason: shared script; many shared words
+notes: Covers both Iranian Persian and Afghan Dari; script identical.

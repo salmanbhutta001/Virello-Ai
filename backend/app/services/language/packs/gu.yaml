@@ -1,0 +1,57 @@
+iso_639_1: gu
+iso_639_3: guj
+name_en: Gujarati
+name_native: ગુજરાતી
+scripts:
+- Gujarati
+rtl: false
+regions:
+- IN
+ui_status: partial
+pack_quality: draft
+stopwords:
+- નું
+- ની
+- ના
+- અને
+- આ
+- તે
+- નથી
+- ખૂબ
+detection_keywords:
+- અને
+- નથી
+- ખૂબ
+- આભાર
+- નમસ્તે
+topic_names:
+  technology: ટેકનોલોજી
+  business: વ્યવસાય
+  fashion: ફેશન
+  food: ખોરાક અને વાનગીઓ
+  travel: મુસાફરી
+  fitness: ફિટનેસ
+  education: શિક્ષણ
+  music: સંગીત
+  gaming: ગેમિંગ
+  comedy: કોમેડી
+  beauty: સુંદરતા
+  health: આરોગ્ય
+  finance: નાણાં
+  sports: રમતો
+  photography: ફોટોગ્રાફી
+  art: કલા અને ડિઝાઇન
+  motivation: પ્રેરણા
+  parenting: પાલનપોષણ
+  realestate: રિયલ એસ્ટેટ
+  automobiles: વાહનો
+  pets: પાલતુ પ્રાણીઓ
+  news: સમાચાર
+  lifestyle: જીવનશૈલી
+  marketing: માર્કેટિંગ
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: hi
+  reason: shared Indo-Aryan roots
+notes: ''

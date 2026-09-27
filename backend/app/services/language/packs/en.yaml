@@ -1,0 +1,89 @@
+iso_639_1: en
+iso_639_3: eng
+name_en: English
+name_native: English
+scripts:
+- Latin
+rtl: false
+regions:
+- global
+ui_status: full
+pack_quality: curated
+stopwords:
+- the
+- and
+- for
+- with
+- from
+- this
+- that
+- have
+- will
+- your
+- you
+- are
+- was
+- were
+- has
+- not
+- but
+- all
+- can
+detection_keywords:
+- the
+- and
+- you
+- your
+- this
+- with
+- have
+- will
+- what
+- when
+- how
+- about
+- because
+- very
+- for
+- are
+- was
+- from
+- that
+- not
+- but
+- all
+- they
+- their
+topic_names:
+  technology: Technology
+  business: Business
+  fashion: Fashion
+  food: Food & Recipes
+  travel: Travel
+  fitness: Fitness
+  education: Education
+  music: Music
+  gaming: Gaming
+  comedy: Comedy
+  beauty: Beauty
+  health: Health
+  finance: Finance
+  sports: Sports
+  photography: Photography
+  art: Art & Design
+  motivation: Motivation
+  parenting: Parenting
+  realestate: Real Estate
+  automobiles: Automobiles
+  pets: Pets
+  news: News
+  lifestyle: Lifestyle
+  marketing: Marketing
+transliteration_variants: []
+transliteration_keywords: []
+related_languages:
+- code: es
+  reason: large bilingual overlap in the Americas
+- code: ur
+  reason: large diaspora communities
+notes: ''

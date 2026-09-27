@@ -1,0 +1,93 @@
+iso_639_1: ar
+iso_639_3: ara
+name_en: Arabic
+name_native: العربية
+scripts:
+- Arabic
+- Latin
+rtl: true
+regions:
+- SA
+- EG
+- AE
+- global
+ui_status: full
+pack_quality: curated
+stopwords:
+- من
+- في
+- على
+- إلى
+- عن
+- أن
+- هذا
+- هذه
+- التي
+- الذي
+- مع
+- كان
+- لم
+- لن
+- ما
+- لا
+detection_keywords:
+- من
+- في
+- على
+- هذا
+- هذه
+- مع
+- كان
+- التي
+- ما
+- جدا
+- شكرا
+- مرحبا
+topic_names:
+  technology: التكنولوجيا
+  business: الأعمال
+  fashion: الموضة
+  food: الطعام والوصفات
+  travel: السفر
+  fitness: اللياقة
+  education: التعليم
+  music: الموسيقى
+  gaming: الألعاب
+  comedy: الكوميديا
+  beauty: الجمال
+  health: الصحة
+  finance: التمويل
+  sports: الرياضة
+  photography: التصوير
+  art: الفن والتصميم
+  motivation: التحفيز
+  parenting: الأبوة والأمومة
+  realestate: العقارات
+  automobiles: السيارات
+  pets: الحيوانات الأليفة
+  news: الأخبار
+  lifestyle: نمط الحياة
+  marketing: التسويق
+transliteration_variants:
+- arabizi
+transliteration_keywords:
+- ana
+- enta
+- howa
+- heya
+- eh
+- keda
+- mish
+- shukran
+- ahlan
+- habibi
+- yalla
+- inshallah
+- mashallah
+- khalas
+related_languages:
+- code: ur
+  reason: shared script and loanwords
+- code: fa
+  reason: shared script; many shared words
+notes: ''
