@@ -31,6 +31,22 @@ Future<void> handleAuthFailure(String notice) async {
 }
 
 void main() async {
+  // Show actual errors instead of blank screens in release mode.
+  // This helps diagnose rendering issues on the phone.
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Container(
+        color: const Color(0xFFFFE0E0),
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Text(
+            'ERROR:\n${details.exception}\n\n${details.stack}',
+            style: const TextStyle(color: Color(0xFF990000), fontSize: 12),
+          ),
+        ),
+      ),
+    );
+  };
   WidgetsFlutterBinding.ensureInitialized();
   await savedStore.init();
   await authStore.load();
