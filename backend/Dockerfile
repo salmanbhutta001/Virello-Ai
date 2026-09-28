@@ -14,5 +14,5 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
 
-# Run migrations then start the API
-CMD ["sh", "-c", "python -m alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8125} --workers 2"]
+# Run migrations, seed community directory (idempotent), then start the API
+CMD ["sh", "-c", "python -m alembic upgrade head && (python -m app.data.seed_communities_run || true) && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8125} --workers 2"]

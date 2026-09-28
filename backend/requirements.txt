@@ -2,11 +2,12 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 sqlalchemy[asyncio]>=2.0
 asyncpg>=0.29
+psycopg[binary]>=3.0
 alembic>=1.13
 pydantic>=2.7
 pydantic-settings>=2.3
 python-jose[cryptography]>=3.3
-bcrypt>=4.1  # password hashing (passlib 1.7.4 is incompatible with bcrypt>=4)
+bcrypt>=4.1
 celery[redis]>=5.4
 redis>=5.0
 httpx>=0.27
@@ -14,9 +15,7 @@ cryptography>=42.0
 python-multipart>=0.0.9
 aiosqlite>=0.20
 email-validator>=2.0
-langdetect==1.0.9  # offline language detection (seeded); PyYAML for language packs
+langdetect==1.0.9
 pyyaml>=6.0
-# Optional neural multilingual embeddings (NOT required; heuristic fallback is
-# the default and is always labeled as such):
-# sentence-transformers>=3.0
+pytrends>=4.9.2
 pillow

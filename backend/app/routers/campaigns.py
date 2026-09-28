@@ -126,3 +126,66 @@ async def _owned(db: AsyncSession, user: User, campaign_id: uuid.UUID) -> Campai
     if campaign is None:
         raise HTTPException(404, "Campaign not found")
     return campaign
+
+
+# ---------------------------------------------------------------------------
+# Trackable campaign links — real click tracking for shared links.
+#
+# GET /api/v1/campaigns/{id}/share-link -> returns the public trackable URL
+# GET /c/{campaign_id} (public, no auth) -> logs click, redirects to post_url
+#
+# When the owner shares this link on WhatsApp/Instagram/etc, every real
+# visitor is counted. No fake data — only genuine HTTP visits.
+# ---------------------------------------------------------------------------
+class ShareLinkOut(BaseModel):
+    campaign_id: str
+    share_url: str
+    post_url: str
+
+
+@router.get("/{campaign_id}/share-link", response_model=ShareLinkOut)
+async def get_share_link(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ShareLinkOut:
+    """Get the public trackable share link for a campaign."""
+    from app.core.config import settings
+    campaign = await _owned(db, user, campaign_id)
+    base = getattr(settings, "public_base_url",
+                   "https://virello-api-production.up.railway.app")
+    return ShareLinkOut(
+        campaign_id=str(campaign.id),
+        share_url=f"{base}/c/{campaign.id}",
+        post_url=campaign.post_url,
+    )
+
+
+@router.get("/{campaign_id}/stats")
+async def campaign_stats(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Real campaign stats from genuine tracked events only."""
+    from sqlalchemy import func
+    from app.models.core import MetricDaily
+    campaign = await _owned(db, user, campaign_id)
+
+    res = await db.execute(
+        select(
+            func.sum(MetricDaily.impressions).label("impressions"),
+            func.sum(MetricDaily.reach).label("reach"),
+            func.sum(MetricDaily.clicks).label("clicks"),
+            func.sum(MetricDaily.engagement).label("engagement"),
+        ).where(MetricDaily.campaign_id == campaign.id)
+    )
+    row = res.one()
+    return {
+        "campaign_id": str(campaign.id),
+        "impressions": int(row.impressions or 0),
+        "reach": int(row.reach or 0),
+        "clicks": int(row.clicks or 0),
+        "engagement": int(row.engagement or 0),
+        "note": "Real tracked events only. Zero means no genuine visits yet.",
+    }

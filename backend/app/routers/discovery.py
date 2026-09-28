@@ -301,38 +301,284 @@ async def reader(body: ReaderIn,
 async def trending_now(
     geo: str = "US",
     limit: int = 10,
+    lang: str = "en",
     user: User = Depends(get_current_user),
 ) -> dict:
-    """Real trending searches from Google Trends (public data).
-    
-    Returns honestly-labeled trend data — these are search trends, not
-    Virello posts. Never fabricated.
+    """Real trending topics from free public sources.
+
+    Aggregates (no API keys needed, works from any server):
+    - Wikimedia Top Articles: most-viewed Wikipedia articles (real pageviews)
+      Supports language editions via `lang` (en, ur, ar, es, fr, de, etc.)
+    - Google News RSS: current top headlines (real news)
+
+    Returns honestly-labeled trend data — these are public attention
+    signals, not Virello posts. Never fabricated.
     """
+    import httpx
+    import xml.etree.ElementTree as ET
+    from datetime import date, timedelta
+
+    # Validate language code (2-3 letter codes only)
+    lang = (lang or "en").lower().strip()[:3]
+    if not lang.isalpha():
+        lang = "en"
+
+    trends: list[dict] = []
+    sources_used: list[str] = []
+
+    # ---- Source 1: Wikimedia Top Articles (yesterday, real pageviews) ----
+    # Supports language editions: en.wikipedia, ur.wikipedia, ar.wikipedia, etc.
     try:
-        from pytrends.request import TrendReq
-        pt = TrendReq(hl="en-US", tz=0, timeout=(10, 25))
-        # Get trending searches for the region
-        trending = pt.trending_searches(pn=geo.lower())
-        items = []
-        for idx, row in trending.head(limit).iterrows():
-            query = str(row[0]).strip()
-            if query:
-                items.append({
-                    "query": query,
-                    "source": "Google Trends",
-                    "geo": geo.upper(),
-                    # Honest label: this is search interest, not a post
-                    "type": "trend",
-                })
-        return {
-            "trends": items,
-            "source": "Google Trends (public search data)",
-            "note": "These are real Google search trends, not Virello posts.",
-        }
-    except Exception as e:
-        # If pytrends fails, return empty honestly — never fake data
-        return {
-            "trends": [],
-            "source": "Google Trends",
-            "note": f"Trends unavailable: {str(e)[:100]}",
-        }
+        yesterday = date.today() - timedelta(days=1)
+        wiki_url = (
+            "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/"
+            f"{lang}.wikipedia/all-access/"
+            f"{yesterday.year}/{yesterday.month:02d}/{yesterday.day:02d}"
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(
+                wiki_url,
+                headers={"User-Agent": "Virello/1.0 (trends; contact@virello.app)"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                articles = data.get("items", [{}])[0].get("articles", [])
+                for art in articles:
+                    title = art.get("article", "").replace("_", " ").strip()
+                    # Skip meta pages
+                    if not title or ":" in title or title.lower().startswith("main page"):
+                        continue
+                    # Skip technical/junk titles
+                    if title.startswith(".") or len(title) < 3:
+                        continue
+                    views = art.get("views", 0)
+
+                    # Fetch thumbnail + description from Wikipedia summary API
+                    thumb_url = ""
+                    description = ""
+                    try:
+                        slug = art.get("article", "")
+                        sum_resp = await client.get(
+                            f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{slug}",
+                            headers={"User-Agent": "Virello/1.0 (trends)"},
+                            timeout=8.0,
+                        )
+                        if sum_resp.status_code == 200:
+                            sum_data = sum_resp.json()
+                            thumb = sum_data.get("thumbnail") or {}
+                            thumb_url = thumb.get("source", "")
+                            description = sum_data.get("description", "") or ""
+                    except Exception:
+                        pass
+
+                    trends.append({
+                        "query": title,
+                        "source": "Wikipedia",
+                        "geo": "Global",
+                        "type": "trend",
+                        "detail": f"{views:,} views yesterday" if views else "",
+                        "thumbnail_url": thumb_url,
+                        "description": description,
+                    })
+                    if len(trends) >= limit:
+                        break
+                if trends:
+                    sources_used.append("Wikipedia Top Articles")
+    except Exception:
+        pass  # honest empty fallback below
+
+    # ---- Source 2: Google News RSS (top headlines, fills remaining) ----
+    if len(trends) < limit:
+        try:
+            news_url = (
+                f"https://news.google.com/rss?hl=en-{geo.upper()}"
+                f"&gl={geo.upper()}&ceid={geo.upper()}:en"
+            )
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.get(news_url)
+                if resp.status_code == 200:
+                    root = ET.fromstring(resp.text)
+                    for item in root.findall(".//item"):
+                        if len(trends) >= limit:
+                            break
+                        title_elem = item.find("title")
+                        source_elem = item.find("source")
+                        if title_elem is not None and title_elem.text:
+                            # Google News titles are "Headline - Source"
+                            full = title_elem.text.strip()
+                            headline = full.rsplit(" - ", 1)[0].strip()
+                            src_name = (
+                                source_elem.text.strip()
+                                if source_elem is not None and source_elem.text
+                                else "Google News"
+                            )
+                            if headline and not any(
+                                t["query"] == headline for t in trends
+                            ):
+                                trends.append({
+                                    "query": headline,
+                                    "source": src_name,
+                                    "geo": geo.upper(),
+                                    "type": "news",
+                                })
+                    if any(t["type"] == "news" for t in trends):
+                        sources_used.append("Google News")
+        except Exception:
+            pass
+
+    return {
+        "trends": trends[:limit],
+        "sources": sources_used,
+        "language": lang,
+        "note": (
+            "Real public attention signals (Wikipedia views + news headlines), "
+                    "not Virello posts. No data was fabricated."
+        ),
+    }
+
+
+# ---------------------------------------------------------------------------
+# AI Recommended: interest-matched trends.
+#
+# Matches real trending topics against the user's selected interests using
+# keyword matching. Honest heuristic — labeled as such, never fabricated.
+# ---------------------------------------------------------------------------
+_INTEREST_KEYWORDS: dict[str, list[str]] = {
+    "travel": ["travel", "tourism", "dubai", "pakistan", "flight", "hotel",
+               "destination", "trip", "vacation", "airline"],
+    "fitness": ["fitness", "workout", "gym", "exercise", "yoga", "weight",
+                "muscle", "training", "sport", "athlete"],
+    "education": ["education", "school", "university", "learn", "study",
+                  "student", "college", "course", "exam", "degree"],
+    "music": ["music", "song", "singer", "album", "concert", "band",
+              "k-pop", "coke studio", "musician", "spotify"],
+    "technology": ["technology", "ai", "artificial intelligence", "smartphone",
+                   "chatgpt", "tech", "software", "computer", "robot"],
+    "gaming": ["game", "gaming", "minecraft", "pubg", "video game",
+               "esports", "playstation", "xbox"],
+    "finance": ["finance", "stock", "crypto", "bitcoin", "money", "bank",
+                "investment", "market", "economy"],
+    "food": ["food", "recipe", "pizza", "biryani", "cooking", "restaurant",
+             "chef", "cuisine"],
+    "beauty": ["beauty", "cosmetic", "skincare", "makeup", "skin"],
+    "fashion": ["fashion", "style", "sneaker", "streetwear", "clothes"],
+    "sports": ["cricket", "football", "sport", "olympic", "match", "team",
+               "player", "championship", "league"],
+    "health": ["health", "mental health", "nutrition", "disease", "doctor",
+               "medical", "wellness"],
+    "news": ["news", "politics", "election", "government", "president"],
+    "business": ["business", "startup", "ecommerce", "company", "entrepreneur"],
+    "entertainment": ["movie", "film", "actor", "actress", "celebrity",
+                      "hollywood", "bollywood", "show", "series"],
+}
+
+
+@router.get("/recommended")
+async def recommended_for_you(
+    limit: int = 5,
+    lang: str = "en",
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """AI-matched trends based on the user's selected interests.
+
+    Fetches real trends, then scores each against the user's interests
+    using keyword matching. Returns the best matches with match reasons.
+    Honest heuristic — the matching is simple keyword scoring, labeled
+    as such. Trends are real, never fabricated.
+    """
+    # Get user's interests
+    interests = await get_my_interests(db, user.id)
+
+    # Get real trends (reuse the trending logic)
+    # We call the underlying trend fetch directly for efficiency
+    import httpx
+    from datetime import date, timedelta
+
+    lang = (lang or "en").lower().strip()[:3]
+    if not lang.isalpha():
+        lang = "en"
+
+    trends: list[dict] = []
+    try:
+        yesterday = date.today() - timedelta(days=1)
+        wiki_url = (
+            "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/"
+            f"{lang}.wikipedia/all-access/"
+            f"{yesterday.year}/{yesterday.month:02d}/{yesterday.day:02d}"
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(
+                wiki_url,
+                headers={"User-Agent": "Virello/1.0 (recommended)"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                articles = data.get("items", [{}])[0].get("articles", [])
+                for art in articles[:50]:  # check top 50 for matches
+                    title = art.get("article", "").replace("_", " ").strip()
+                    if not title or ":" in title:
+                        continue
+                    if title.startswith(".") or len(title) < 3:
+                        continue
+                    if title.lower().startswith("main page"):
+                        continue
+                    views = art.get("views", 0)
+
+                    # Score against user interests
+                    title_lower = title.lower()
+                    matched_interests = []
+                    for interest in interests:
+                        keywords = _INTEREST_KEYWORDS.get(interest.lower(), [])
+                        # Also match the interest name itself
+                        if interest.lower() in title_lower:
+                            matched_interests.append(interest)
+                        elif any(kw in title_lower for kw in keywords):
+                            matched_interests.append(interest)
+
+                    if matched_interests or not interests:
+                        # Include if it matches OR user has no interests
+                        # (show top trends as fallback)
+                        thumb_url = ""
+                        description = ""
+                        try:
+                            slug = art.get("article", "")
+                            sum_resp = await client.get(
+                                f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{slug}",
+                                headers={"User-Agent": "Virello/1.0"},
+                                timeout=8.0,
+                            )
+                            if sum_resp.status_code == 200:
+                                sum_data = sum_resp.json()
+                                thumb = sum_data.get("thumbnail") or {}
+                                thumb_url = thumb.get("source", "")
+                                description = sum_data.get("description", "") or ""
+                        except Exception:
+                            pass
+
+                        trends.append({
+                            "query": title,
+                            "source": "Wikipedia",
+                            "type": "trend",
+                            "detail": f"{views:,} views yesterday" if views else "",
+                            "thumbnail_url": thumb_url,
+                            "description": description,
+                            "matched_interests": matched_interests,
+                            "match_score": len(matched_interests),
+                        })
+
+                # Sort by match score (most interests matched first),
+                # then by views
+                trends.sort(key=lambda t: (t["match_score"], t.get("views", 0)),
+                            reverse=True)
+    except Exception:
+        pass
+
+    return {
+        "recommendations": trends[:limit],
+        "interests": interests,
+        "note": (
+            "Matched your interests against real Wikipedia trends using "
+            "keyword matching. Honest heuristic — not deep AI."
+        ),
+    }

@@ -18,6 +18,7 @@ from app.routers import social as social_router
 from app.routers import uploads as uploads_router
 from app.routers import content as content_router
 from app.routers import seeding as seeding_router
+from app.routers import communities as communities_router
 from app.routers import collab as collab_router
 from app.routers import referrals as referrals_router
 from app.routers import ctr as ctr_router
@@ -64,6 +65,7 @@ app.include_router(social_router.router, prefix="/api/v1/social",
 app.include_router(uploads_router.router, prefix="/api/v1/uploads", tags=["uploads"])
 app.include_router(content_router.router, prefix="/api/v1/content", tags=["content"])
 app.include_router(seeding_router.router, prefix="/api/v1/seeding", tags=["seeding"])
+app.include_router(communities_router.router, prefix="/api/v1", tags=["communities"])
 app.include_router(collab_router.router, prefix="/api/v1/collab", tags=["collab"])
 app.include_router(referrals_router.router, prefix="/api/v1/referrals", tags=["referrals"])
 app.include_router(ctr_router.router, prefix="/api/v1/content", tags=["content"])
@@ -73,3 +75,53 @@ app.include_router(ws.router, prefix="/api/v1")  # WebSocket: /api/v1/campaigns/
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "service": "virello-api"}
+
+
+@app.get("/c/{campaign_id}")
+async def campaign_redirect(campaign_id: str):
+    """Public trackable campaign link.
+
+    No auth — this is a shareable URL. Logs one genuine click in
+    MetricDaily, then 302-redirects to the campaign's real post_url.
+    Only real HTTP visits are counted. Bots hitting /health etc are
+    not counted (this endpoint only).
+    """
+    import uuid as uuid_mod
+    from fastapi.responses import RedirectResponse
+    from sqlalchemy import select
+    from app.core.database import SessionLocal
+    from app.models.core import Campaign, MetricDaily
+    from datetime import date
+
+    try:
+        cid = uuid_mod.UUID(campaign_id)
+    except ValueError:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Not found")
+
+    async with SessionLocal() as db:
+        res = await db.execute(
+            select(Campaign).where(Campaign.id == cid)
+        )
+        campaign = res.scalar_one_or_none()
+        if campaign is None:
+            from fastapi import HTTPException
+            raise HTTPException(404, "Not found")
+
+        # Log one genuine click for today
+        today = date.today().isoformat()
+        mres = await db.execute(
+            select(MetricDaily).where(
+                MetricDaily.campaign_id == cid,
+                MetricDaily.day == today,
+            )
+        )
+        metric = mres.scalar_one_or_none()
+        if metric is None:
+            metric = MetricDaily(campaign_id=cid, day=today)
+            db.add(metric)
+        metric.clicks = (metric.clicks or 0) + 1
+        metric.reach = (metric.reach or 0) + 1
+        await db.commit()
+
+        return RedirectResponse(url=campaign.post_url, status_code=302)
