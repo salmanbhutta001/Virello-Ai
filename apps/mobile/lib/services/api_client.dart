@@ -349,6 +349,12 @@ class ApiClient {
     return (j['items'] as List? ?? []).map((e) => DiscoveryItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  /// GET /api/v1/discovery/trending — real Google Trends data.
+  /// Returns honestly-labeled trends (search data, not Virello posts).
+  Future<Map<String, dynamic>> getTrending({String geo = 'US', int limit = 10}) async {
+    return await _getJson('/api/v1/discovery/trending?geo=$geo&limit=$limit');
+  }
+
   /// kind: view | save | visit | dismiss.
   /// [variantId] echoes the growth-engine variant the feed actually displayed.
   Future<void> recordInteraction(

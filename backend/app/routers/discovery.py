@@ -295,3 +295,44 @@ async def reader(body: ReaderIn,
         "reading_time_min": _reading_time_min(word_count),
         "transformed": True,
     }
+
+
+@router.get("/trending")
+async def trending_now(
+    geo: str = "US",
+    limit: int = 10,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Real trending searches from Google Trends (public data).
+    
+    Returns honestly-labeled trend data — these are search trends, not
+    Virello posts. Never fabricated.
+    """
+    try:
+        from pytrends.request import TrendReq
+        pt = TrendReq(hl="en-US", tz=0, timeout=(10, 25))
+        # Get trending searches for the region
+        trending = pt.trending_searches(pn=geo.lower())
+        items = []
+        for idx, row in trending.head(limit).iterrows():
+            query = str(row[0]).strip()
+            if query:
+                items.append({
+                    "query": query,
+                    "source": "Google Trends",
+                    "geo": geo.upper(),
+                    # Honest label: this is search interest, not a post
+                    "type": "trend",
+                })
+        return {
+            "trends": items,
+            "source": "Google Trends (public search data)",
+            "note": "These are real Google search trends, not Virello posts.",
+        }
+    except Exception as e:
+        # If pytrends fails, return empty honestly — never fake data
+        return {
+            "trends": [],
+            "source": "Google Trends",
+            "note": f"Trends unavailable: {str(e)[:100]}",
+        }

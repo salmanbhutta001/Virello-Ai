@@ -28,6 +28,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   List<DiscoveryItem> _feed = [];
   // Phase 2: sponsored units — always labeled, never mixed into organic.
   List<SponsoredAdUnit> _sponsored = [];
+  // Real Google Trends data — honestly labeled, never fake posts.
+  List<Map<String, dynamic>> _trends = [];
   // Placement ids already confirmed as genuinely rendered (impression).
   final Set<String> _impressioned = {};
   bool _loading = true;
@@ -93,6 +95,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         apiClient.getInterests(),
         apiClient.getDiscoveryFeed(limit: 20),
         apiClient.getSponsoredAds(limit: 2),
+        apiClient.getTrending(limit: 10).catchError((_) => {'trends': []}),
       ]);
       if (!mounted) return;
       setState(() {
@@ -100,6 +103,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         _interests = results[1] as Set<String>;
         _feed = results[2] as List<DiscoveryItem>;
         _sponsored = results[3] as List<SponsoredAdUnit>;
+        _trends = List<Map<String, dynamic>>.from(
+            (results[4] as Map<String, dynamic>)['trends'] as List? ?? []);
         _loading = false;
       });
     } on AuthException {
@@ -400,53 +405,64 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  // ---- Trending Now: horizontal cards, top-5 by match score ----
+  // ---- Trending Now: real Google Trends data, honestly labeled ----
   Widget _trendingRow() {
-    if (_feed.isEmpty) {
+    if (_trends.isEmpty) {
       return Text(s.nothingHere,
           style: const TextStyle(color: VirelloColors.muted));
     }
-    final top = List<DiscoveryItem>.from(_feed)
-      ..sort((a, b) => b.matchScore.compareTo(a.matchScore));
-    final shown = top.take(5).toList();
-    return SizedBox(
-      height: 176,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: shown.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          final item = shown[i];
-          final title = item.title.isEmpty ? item.postUrl : item.title;
-          return GestureDetector(
-            onTap: () => _openItem(item),
-            child: SizedBox(
-              width: 150,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: _cardThumb(item, 150, 110),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text('✦ ${(item.matchScore * 100).round()}%',
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: VirelloColors.violet)),
-                ],
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Honest label: these are Google search trends, not Virello posts
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text(
+            '🔥 Real-time from Google Trends',
+            style: TextStyle(
+              fontSize: 11,
+              color: VirelloColors.muted,
+              fontStyle: FontStyle.italic,
             ),
-          );
-        },
-      ),
+          ),
+        ),
+        SizedBox(
+          height: 100,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _trends.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final trend = _trends[i];
+              final query = trend['query'] as String? ?? '';
+              return Container(
+                width: 160,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: VirelloColors.brandGradient,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.trending_up,
+                        color: Colors.white, size: 20),
+                    const SizedBox(height: 6),
+                    Text(query,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
