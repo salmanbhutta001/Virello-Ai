@@ -329,10 +329,138 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   icon: const Icon(Icons.pause_outlined, size: 18),
                   label: Text(s.pause),
                 ),
+                TextButton.icon(
+                  onPressed: () => _shareCampaign(cp),
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  label: const Text('Share'),
+                ),
               ],
             ),
           ],
         ]),
+      );
+
+  /// Show the trackable share link with copy + share options.
+  Future<void> _shareCampaign(Campaign cp) async {
+    try {
+      final res = await apiClient.getCampaignShareLink(cp.id);
+      final shareUrl = res['share_url'] as String? ?? '';
+      if (!mounted || shareUrl.isEmpty) return;
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Share Campaign',
+                  style:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              const Text(
+                'Share this trackable link. Every real person who opens it is counted as a genuine click.',
+                style: TextStyle(fontSize: 13, color: VirelloColors.muted),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: VirelloColors.chipBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(shareUrl,
+                          style: const TextStyle(fontSize: 13),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 20),
+                      onPressed: () {
+                        // Copy to clipboard
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Link copied! Share it anywhere.')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _loadShareStats(cp.id, ctx),
+                  icon: const Icon(Icons.analytics_outlined, size: 18),
+                  label: const Text('View Real Stats'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load share link')),
+      );
+    }
+  }
+
+  /// Load and show real campaign stats.
+  Future<void> _loadShareStats(String campaignId, BuildContext ctx) async {
+    try {
+      final stats = await apiClient.getCampaignStats(campaignId);
+      if (!mounted) return;
+      Navigator.of(ctx).pop();
+      showDialog(
+        context: context,
+        builder: (dctx) => AlertDialog(
+          title: const Text('Real Campaign Stats'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _statRow('Reach', '${stats['reach'] ?? 0}'),
+              _statRow('Clicks', '${stats['clicks'] ?? 0}'),
+              _statRow('Impressions', '${stats['impressions'] ?? 0}'),
+              const SizedBox(height: 8),
+              const Text(
+                'Only genuine visits are counted. Zero means no one has opened your link yet — share it!',
+                style: TextStyle(fontSize: 12, color: VirelloColors.muted),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dctx).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Widget _statRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 14)),
+            Text(value,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w800)),
+          ],
+        ),
       );
 
   Widget _miniStat(String label, String value) => Column(children: [

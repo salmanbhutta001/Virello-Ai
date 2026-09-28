@@ -160,6 +160,16 @@ class ApiClient {
     return Campaign.fromJson(j);
   }
 
+  /// Get the public trackable share link for a campaign.
+  Future<Map<String, dynamic>> getCampaignShareLink(String id) async {
+    return await _getJson('/api/v1/campaigns/$id/share-link');
+  }
+
+  /// Real campaign stats from genuine tracked events only.
+  Future<Map<String, dynamic>> getCampaignStats(String id) async {
+    return await _getJson('/api/v1/campaigns/$id/stats');
+  }
+
   // ------------------------------ analytics ------------------------------
   /// Backend aggregates (reach, engagement_rate, clicks, conversions).
   Future<Map<String, dynamic>> analyticsOverview() =>
