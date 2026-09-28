@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
@@ -8,17 +9,19 @@ import '../../main.dart';
 import '../ask_virello/ask_virello_screen.dart';
 import 'affiliate_disclosure.dart';
 
-/// Phase 4 — Product detail: image, price, description, stock, related.
+/// Lavish POST DETAILS screen (dark-first).
 ///
-/// Honesty contract:
-/// - The [AffiliateDisclosure] widget is ALWAYS rendered under the Buy
-///   button when product.is_affiliate (FTC + Amazon Associates rule).
-/// - Affiliate products: Buy opens the merchant URL in the external
-///   browser — Virello never takes payment for affiliate items.
-/// - Non-affiliate products: provider checkout is not wired yet, so the
-///   Buy button shows an honest "coming soon" message — never a fake
-///   purchase flow.
-/// - No ratings, reviews, or sales counts anywhere (they don't exist).
+/// - Back + "POST DETAILS" header (cart omitted: no cart backend).
+/// - Creator header pill: honestly "Virello Shop" + real listing age
+///   from created_at — never a fake person.
+/// - Hero image with floating like / share buttons (no fake comment
+///   counts — no comments exist).
+/// - Title + provider pill (real affiliate_provider only) — no brand
+///   pill, no rating: the backend returns neither.
+/// - Description + more/less, hashtag from the real category.
+/// - Sticky bottom bar: real price (or "Check price on Amazon" when
+///   unverified) + "Shop this →" → existing honest buy flow.
+/// - [AffiliateDisclosure] stays mandatory under the buy area.
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
   const ProductDetailScreen({super.key, required this.productId});
@@ -27,13 +30,27 @@ class ProductDetailScreen extends StatefulWidget {
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
+class _LavishDetail {
+  static const bgDark = Color(0xFF0A0A0A);
+  static const cardDark = Color(0xFF161616);
+  static const mutedDark = Color(0xFF9A9AA5);
+  static const salmon = Color(0xFFF0A8A8);
+  static const red = VirelloColors.danger;
+}
+
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   AppStrings get s => AppStrings(appState.localeCode);
+  bool get _dark => Theme.of(context).brightness == Brightness.dark;
+  Color get _bg => _dark ? _LavishDetail.bgDark : VirelloColors.pageBg;
+  Color get _card => _dark ? _LavishDetail.cardDark : VirelloColors.cardBg;
+  Color get _ink => _dark ? Colors.white : VirelloColors.ink;
+  Color get _muted => _dark ? _LavishDetail.mutedDark : VirelloColors.muted;
 
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _product;
-  List<Map<String, dynamic>> _related = [];
+  bool _liked = false;
+  bool _expanded = false;
 
   @override
   void initState() {
@@ -51,16 +68,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (!mounted) return;
       setState(() {
         _product = Map<String, dynamic>.from(data['product'] as Map);
-        _related = ((data['related'] as List?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList();
       });
-      // Genuine interest signal (server dedupes per user per day).
       try {
         await apiClient.recordLead(widget.productId, source: 'product_page');
-      } catch (_) {
-        // Lead capture is best-effort; the page must still render.
-      }
+      } catch (_) {}
     } on AuthException {
       if (!mounted) return;
       handleAuthFailure(s.sessionExpired);
@@ -70,6 +81,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  int _priceCents(Map<String, dynamic> p) =>
+      (p['price_cents'] as num?)?.toInt() ?? 0;
+
+  String _timeAgo(String iso) {
+    if (iso.isEmpty) return '';
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    final d = DateTime.now().difference(dt);
+    if (d.inMinutes < 1) return s.timeNow;
+    if (d.inMinutes < 60) return s.timeMinAgo(d.inMinutes);
+    if (d.inHours < 24) return s.timeHoursAgo(d.inHours);
+    return s.timeDaysAgo(d.inDays);
+  }
+
+  Future<void> _share(Map<String, dynamic> p) async {
+    final url = '${p['affiliate_url'] ?? ''}';
+    final text =
+        url.isNotEmpty ? '${p['title'] ?? ''}\n$url' : '${p['title'] ?? ''}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(s.shopLinkCopied)));
   }
 
   Future<void> _onBuy(Map<String, dynamic> p) async {
@@ -84,12 +119,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             .showSnackBar(SnackBar(content: Text(s.askFailed)));
         return;
       }
-      // Affiliate purchase happens on the merchant's site.
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       return;
     }
-    // Provider checkout (PayPal/Payoneer/Google Pay) is not wired yet —
-    // say so honestly instead of faking a payment flow.
     if (!mounted) return;
     showDialog(
       context: context,
@@ -108,7 +140,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _askVirello(Map<String, dynamic> p) {
     final title = '${p['title'] ?? ''}';
-    final price = '${p['price_display'] ?? ''}';
+    final price = _priceCents(p) > 0
+        ? '${p['price_display'] ?? ''}'
+        : s.shopCheckPriceAmazon;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AskVirelloScreen(
@@ -121,19 +155,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: Text(
-          _product == null ? s.shop : '${_product!['title'] ?? ''}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+        backgroundColor: _bg,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: _ink),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        centerTitle: true,
+        title: Text(s.shopPostDetails,
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: _ink)),
       ),
       body: _loading
-          ? _loadingView()
+          ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _errorView()
               : _detail(_product!),
+      bottomNavigationBar:
+          (_loading || _error != null || _product == null)
+              ? null
+              : _stickyBar(_product!),
     );
   }
 
@@ -143,266 +188,365 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final isAffiliate = p['is_affiliate'] == true;
     final stockQty = (p['stock_qty'] as num?)?.toInt() ?? 0;
     final desc = '${p['description'] ?? ''}';
+    final category = '${p['category'] ?? 'all'}';
+    final provider = '${p['affiliate_provider'] ?? ''}';
+    final cents = _priceCents(p);
 
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          // Image.
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: images.isNotEmpty
-                ? Image.network(
-                    images.first,
-                    height: 260,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _imagePlaceholder(),
-                  )
-                : _imagePlaceholder(),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              if (isAffiliate)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade700,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(s.affiliateBadge,
-                      style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
-                ),
-              if (isAffiliate) const SizedBox(width: 8),
-              Chip(
-                label: Text('${p['category'] ?? 'all'}',
-                    style: const TextStyle(fontSize: 12)),
-                backgroundColor: VirelloColors.chipBg,
-              ),
-              const Spacer(),
-              _stockChip(stockQty),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text('${p['title'] ?? ''}',
-              style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text('${p['price_display'] ?? ''}',
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: VirelloColors.violet)),
-          if (desc.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(desc,
-                style: const TextStyle(fontSize: 14.5, height: 1.6)),
-          ],
-          const SizedBox(height: 18),
-          // Buy button.
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: stockQty <= 0 && !isAffiliate
-                  ? null
-                  : () => _onBuy(p),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-              ),
-              icon: Icon(
-                  isAffiliate
-                      ? Icons.open_in_new_rounded
-                      : Icons.shopping_bag_outlined,
-                  size: 18),
-              label: Text(
-                  stockQty <= 0 && !isAffiliate
-                      ? s.shopOutOfStock
-                      : s.shopBuyNow),
-            ),
-          ),
-          // MANDATORY disclosure directly under the Buy button.
-          if (isAffiliate) ...[
-            const SizedBox(height: 10),
-            const AffiliateDisclosure(),
-          ],
-          const SizedBox(height: 10),
-          // Ask Virello about this product.
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _askVirello(p),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-              ),
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(s.shopAskVirelloAbout),
-            ),
-          ),
-          if (_related.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Text(s.shopRelated,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 190,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _related.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) =>
-                    _relatedCard(_related[i]),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _stockChip(int qty) {
-    final label =
-        qty <= 0 ? s.shopOutOfStock : qty <= 5 ? s.shopLimitedStock : s.shopInStock;
-    final color = qty <= 0
-        ? VirelloColors.danger
-        : qty <= 5
-            ? VirelloColors.amber
-            : VirelloColors.success;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
-    );
-  }
-
-  Widget _relatedCard(Map<String, dynamic> p) {
-    final images =
-        (p['image_urls'] as List? ?? []).map((e) => '$e').toList();
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(productId: '${p['id']}'),
-          ),
-        );
-      },
-      child: Container(
-        width: 140,
-        decoration: BoxDecoration(
-          color: VirelloColors.cardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.divider),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      children: [
+        // Hero image + creator pill + floating actions.
+        Stack(
+          clipBehavior: Clip.none,
           children: [
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: BorderRadius.circular(28),
               child: images.isNotEmpty
                   ? Image.network(images.first,
-                      height: 100,
-                      width: 140,
+                      height: 360,
+                      width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
-                          _imagePlaceholderSmall())
-                  : _imagePlaceholderSmall(),
+                          _imgPlaceholder(360))
+                  : _imgPlaceholder(360),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Creator pill (top): honest publisher + real listing age.
+            Positioned(
+              top: 14,
+              left: 14,
+              right: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF7C5CFF),
+                            Color(0xFF9D4EDD)
+                          ],
+                        ),
+                      ),
+                      child: const Center(
+                        child: Text('V',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(s.shopVirelloShop,
+                              style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black)),
+                          Text(
+                              _timeAgo(
+                                  '${p['created_at'] ?? ''}'),
+                              style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Colors.black54)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Floating like / share (bottom, overlapping).
+            Positioned(
+              bottom: -26,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('${p['title'] ?? ''}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text('${p['price_display'] ?? ''}',
-                      style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: VirelloColors.violet)),
+                  _floatBtn(
+                    icon: _liked
+                        ? Icons.thumb_up_rounded
+                        : Icons.thumb_up_outlined,
+                    active: _liked,
+                    onTap: () =>
+                        setState(() => _liked = !_liked),
+                  ),
+                  const SizedBox(width: 12),
+                  _floatBtn(
+                    icon: Icons.send_outlined,
+                    onTap: () => _share(p),
+                  ),
                 ],
               ),
             ),
           ],
         ),
+        const SizedBox(height: 38),
+        // Title + provider pill (real provider only).
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text('${p['title'] ?? ''}',
+                  style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: _ink)),
+            ),
+            if (provider.isNotEmpty) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _LavishDetail.salmon,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(provider,
+                    style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF3A1F1F))),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Stock chip (real).
+        _stockChip(stockQty),
+        if (desc.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: RichText(
+              maxLines: _expanded ? null : 3,
+              overflow: _expanded
+                  ? TextOverflow.visible
+                  : TextOverflow.ellipsis,
+              text: TextSpan(
+                style: TextStyle(
+                    fontSize: 14.5, height: 1.6, color: _ink),
+                children: [
+                  TextSpan(
+                      text: _expanded
+                          ? desc
+                          : '$desc '),
+                  if (!_expanded)
+                    TextSpan(
+                      text: s.shopMore,
+                      style: TextStyle(
+                          color: _muted,
+                          fontWeight: FontWeight.w600),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+        if (category != 'all') ...[
+          const SizedBox(height: 8),
+          Text('#$category',
+              style: const TextStyle(
+                  fontSize: 13.5,
+                  color: _LavishDetail.red,
+                  fontWeight: FontWeight.w600)),
+        ],
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () => _askVirello(p),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            side: BorderSide(
+                color: _muted.withValues(alpha: 0.5)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
+          icon: Icon(Icons.auto_awesome,
+              size: 18, color: _ink),
+          label: Text(s.shopAskVirelloAbout,
+              style: TextStyle(color: _ink)),
+        ),
+        if (isAffiliate) ...[
+          const SizedBox(height: 12),
+          const AffiliateDisclosure(),
+        ],
+      ],
+    );
+  }
+
+  Widget _floatBtn(
+      {required IconData icon,
+      bool active = false,
+      required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 58,
+        height: 58,
+        decoration: BoxDecoration(
+          color: _LavishDetail.salmon.withValues(
+              alpha: _dark ? 0.9 : 1.0),
+          borderRadius: BorderRadius.circular(19),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(icon,
+            size: 24,
+            color: active
+                ? _LavishDetail.red
+                : const Color(0xFF3A1F1F)),
       ),
     );
   }
 
-  Widget _imagePlaceholder() {
+  /// Sticky bottom bar: real price (or "Check price on Amazon") +
+  /// "Shop this →".
+  Widget _stickyBar(Map<String, dynamic> p) {
+    final cents = _priceCents(p);
+    final isAffiliate = p['is_affiliate'] == true;
+    final stockQty = (p['stock_qty'] as num?)?.toInt() ?? 0;
+    final disabled = stockQty <= 0 && !isAffiliate;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 10, 14),
+          decoration: BoxDecoration(
+            color: _card,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  cents > 0
+                      ? '${p['price_display'] ?? ''}'
+                      : s.shopCheckPriceAmazon,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: cents > 0 ? 24 : 15,
+                      fontWeight: FontWeight.w800,
+                      color: _ink),
+                ),
+              ),
+              GestureDetector(
+                onTap: disabled ? null : () => _onBuy(p),
+                child: Opacity(
+                  opacity: disabled ? 0.4 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
+                    decoration: BoxDecoration(
+                      color: _LavishDetail.red,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                            disabled
+                                ? s.shopOutOfStock
+                                : s.shopThis,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white)),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _stockChip(int qty) {
+    final label = qty <= 0
+        ? s.shopOutOfStock
+        : qty <= 5
+            ? s.shopLimitedStock
+            : s.shopInStock;
+    final color = qty <= 0
+        ? VirelloColors.danger
+        : qty <= 5
+            ? VirelloColors.amber
+            : VirelloColors.success;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: color.withValues(alpha: 0.45)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color)),
+      ),
+    );
+  }
+
+  Widget _imgPlaceholder(double h) {
     return Container(
-      height: 260,
+      height: h,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFE9E6FB), Color(0xFFD9D4F5)],
+          colors: [Color(0xFF2A2A2E), Color(0xFF3A3A40)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: const Center(
         child: Icon(Icons.shopping_bag_outlined,
-            color: VirelloColors.muted, size: 52),
+            color: _LavishDetail.mutedDark, size: 52),
       ),
-    );
-  }
-
-  Widget _imagePlaceholderSmall() {
-    return Container(
-      height: 100,
-      width: 140,
-      color: VirelloColors.chipBg,
-      child: const Center(
-        child: Icon(Icons.shopping_bag_outlined,
-            color: VirelloColors.muted, size: 28),
-      ),
-    );
-  }
-
-  Widget _loadingView() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          height: 260,
-          decoration: BoxDecoration(
-            color: VirelloColors.chipBg,
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(
-            height: 18,
-            width: 200,
-            decoration: BoxDecoration(
-                color: VirelloColors.chipBg,
-                borderRadius: BorderRadius.circular(9))),
-        const SizedBox(height: 8),
-        Container(
-            height: 14,
-            decoration: BoxDecoration(
-                color: VirelloColors.chipBg,
-                borderRadius: BorderRadius.circular(7))),
-      ],
     );
   }
 
@@ -413,17 +557,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 48,
-                color: VirelloColors.muted),
+            Icon(Icons.cloud_off_outlined, size: 48, color: _muted),
             const SizedBox(height: 12),
             Text(s.askFailed,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: VirelloColors.muted)),
+                style: TextStyle(color: _muted)),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _load,
               icon: const Icon(Icons.refresh_rounded),
-              label: Text(s.shop),
+              label: Text(s.tryAgain),
             ),
           ],
         ),

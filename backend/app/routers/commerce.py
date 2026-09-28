@@ -701,7 +701,7 @@ class CurateProductIn(BaseModel):
 
 
 class CurateIn(BaseModel):
-    products: list[CurateProductIn] = Field(..., min_length=1, max_length=20)
+    products: list[CurateProductIn] = Field(..., min_length=1, max_length=25)
     # Products are attributed to this account (Hafiz's — his affiliate tag).
     creator_email: str = Field(..., max_length=320)
 

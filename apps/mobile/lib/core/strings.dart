@@ -1973,4 +1973,59 @@ class AppStrings {
         'پروڈکٹ پیج ویوز کے حساب سے ترتیب (سیلز ٹریکنگ جلد آ رہی ہے)',
         'مرتّبة حسب مشاهدات صفحة المنتج (تتبّع المبيعات قريبًا)',
       );
+
+  // ---- Lavish Shop rebuild (Phase 4 UI refresh) ----
+  String get shopTitleBar => _get('Shop', 'شاپ', 'المتجر');
+  String get shopCatalogTitle => _get('SHOP', 'شاپ', 'المتجر');
+  String get shopYouMightLike =>
+      _get('You might like', 'آپ کو پسند آ سکتا ہے', 'قد يعجبك');
+  String get shopViewAll => _get('view all', 'سب دیکھیں', 'عرض الكل');
+  String get shopTrending => _get('Trending', 'ٹرینڈنگ', 'الرائج');
+  String get shopRecommendedForYou => _get(
+      'Recommended for you', 'آپ کے لیے تجویز کردہ', 'موصى به لك');
+  String get shopPostDetails =>
+      _get('POST DETAILS', 'پوسٹ کی تفصیلات', 'تفاصيل المنشور');
+  String get shopMore => _get('more', 'مزید', 'المزيد');
+  String get shopVirelloShop =>
+      _get('Virello Shop', 'وائریلو شاپ', 'متجر فيريلو');
+  String get shopSortBy => _get('Sort by', 'ترتیب دیں', 'ترتيب حسب');
+  String get shopSortNewest => _get('Newest', 'جدید ترین', 'الأحدث');
+  String get shopSortPriceAsc => _get(
+      'Price: Low to High', 'قیمت: کم سے زیادہ', 'السعر: من الأقل إلى الأعلى');
+  String get shopSortPriceDesc => _get(
+      'Price: High to Low', 'قیمت: زیادہ سے کم', 'السعر: من الأعلى إلى الأقل');
+  String get shopSortPopular =>
+      _get('Most popular', 'مقبول ترین', 'الأكثر شعبية');
+  String get shopCheckPriceAmazon => _get(
+      'Check price on Amazon', 'ایمیزون پر قیمت دیکھیں', 'تحقق من السعر على أمازون');
+  String get shopLinkCopied =>
+      _get('Link copied', 'لنک کاپی ہو گیا', 'تم نسخ الرابط');
+  String get shopClearFilters =>
+      _get('Clear filters', 'فلٹر صاف کریں', 'مسح المرشحات');
+  String get shopCatTech => _get('Tech', 'ٹیک', 'تقنية');
+  String get shopCatFashion => _get('Fashion', 'فیشن', 'أزياء');
+  String get shopCatHome => _get('Home', 'گھر', 'المنزل');
+  String get shopCatFitness => _get('Fitness', 'فٹنس', 'لياقة');
+  String get shopCatBeauty => _get('Beauty', 'بیوٹی', 'جمال');
+  String get shopListYours =>
+      _get('List yours', 'اپنا لسٹ کریں', 'اعرض منتجك');
+  String get timeNow => _get('now', 'ابھی', 'الآن');
+  String timeMinAgo(int n) => _get('$n min ago', '$n منٹ پہلے', 'منذ $n دقيقة');
+  String timeHoursAgo(int n) =>
+      _get('$n hr ago', '$n گھنٹے پہلے', 'منذ $n ساعة');
+  String timeDaysAgo(int n) => _get('$n days ago', '$n دن پہلے', 'منذ $n يوم');
+
+  // ---- Discover feed rebuild ----
+  String get discoverForYou => _get('For You', 'آپ کے لیے', 'لك');
+  String get discoverSearchHint =>
+      _get('Search posts…', 'پوسٹس تلاش کریں…', 'ابحث في المنشورات…');
+  String get discoverNotifications =>
+      _get('Notifications', 'اطلاعات', 'الإشعارات');
+  String get discoverNoNotifications => _get(
+      'No notifications yet', 'ابھی کوئی اطلاع نہیں', 'لا توجد إشعارات بعد');
+  String get discoverAskVirello =>
+      _get('Ask Virello', 'وائریلو سے پوچھیں', 'اسأل فيريلو');
+  String get discoverSavedTitle => _get('Saved', 'محفوظ شدہ', 'المحفوظة');
+  String get discoverLearnPlay =>
+      _get('Learn & Play', 'سیکھیں اور کھیلیں', 'تعلّم والعب');
 }
