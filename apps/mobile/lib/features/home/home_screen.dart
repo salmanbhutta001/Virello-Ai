@@ -22,17 +22,29 @@ class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
   late Future<List<DiscoveryItem>> _future;
   Future<List<Map<String, dynamic>>>? _followingFuture;
+  Future<List<Map<String, dynamic>>>? _trendsFuture;
 
   @override
   void initState() {
     super.initState();
     _future = apiClient.getDiscoveryFeed(limit: 20);
     _followingFuture = apiClient.getFollowing();
+    _trendsFuture = _loadTrends();
+  }
+
+  Future<List<Map<String, dynamic>>> _loadTrends() async {
+    try {
+      final res = await apiClient.getTrending(limit: 10);
+      return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<void> _refresh() async {
     setState(() {
       _future = apiClient.getDiscoveryFeed(limit: 20);
+      if (_tab == 1) _trendsFuture = _loadTrends();
       if (_tab == 2) _followingFuture = apiClient.getFollowing();
     });
     try {
@@ -92,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: (i) => setState(() {
                   _tab = i;
                   // Keep the following list fresh whenever the tab opens.
+                  if (i == 1) _trendsFuture = _loadTrends();
                   if (i == 2) _followingFuture = apiClient.getFollowing();
                 }),
               ),
@@ -122,21 +135,28 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _tabBody(AppStrings s, List<DiscoveryItem> feed) {
     switch (_tab) {
       case 1:
-        final sorted = List<DiscoveryItem>.from(feed)
-          ..sort((a, b) => b.matchScore.compareTo(a.matchScore));
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(s.rankedByScore,
-                    style: const TextStyle(
-                        fontSize: 12, color: VirelloColors.muted)),
-              ),
-            ),
-            Expanded(child: _masonry(s, sorted)),
-          ],
+        // Trending tab: real public trends (Wikipedia + News), tappable.
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: _trendsFuture,
+          builder: (c, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final trends = snap.data ?? const <Map<String, dynamic>>[];
+            if (trends.isEmpty) {
+              return _emptyState(
+                icon: Icons.trending_up_outlined,
+                message: s.nothingHere,
+              );
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: trends.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (_, i) => _trendRow(trends[i]),
+            );
+          },
         );
       case 2:
         return FutureBuilder<List<Map<String, dynamic>>>(
@@ -328,6 +348,84 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// One followed creator: avatar initial, name/handle, Unfollow button.
+  /// Tappable trend row: opens the trend's content in the in-app reader.
+  Widget _trendRow(Map<String, dynamic> t) {
+    final query = '${t['query'] ?? ''}';
+    final source = '${t['source'] ?? ''}';
+    final detail = '${t['detail'] ?? ''}';
+    return GestureDetector(
+      onTap: () => _openTrend(t),
+      child: VCard(
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: VirelloColors.brandGradient,
+              ),
+              child: const Icon(Icons.trending_up,
+                  color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(query,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                  if (source.isNotEmpty || detail.isNotEmpty)
+                    Text(
+                        [if (source.isNotEmpty) source, if (detail.isNotEmpty) detail]
+                            .join(' • '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: VirelloColors.muted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: VirelloColors.muted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Open a trend inside the app via the in-app reader.
+  void _openTrend(Map<String, dynamic> trend) {
+    final query = ('${trend['query'] ?? ''}').trim();
+    final source = ('${trend['source'] ?? ''}').trim();
+    if (query.isEmpty) return;
+
+    String url;
+    if (source.toLowerCase() == 'wikipedia') {
+      final slug = query.replaceAll(' ', '_');
+      url = 'https://en.wikipedia.org/wiki/$slug';
+    } else {
+      url = 'https://news.google.com/search?q=${Uri.encodeComponent(query)}&hl=en-US&gl=US&ceid=US:en';
+    }
+    final item = DiscoveryItem(
+      campaignId: '',
+      title: query,
+      platform: 'link',
+      goal: '',
+      postUrl: url,
+      thumbnailUrl: '',
+      matchScore: 1.0,
+      matchReasons: ['Trending on $source'],
+      postType: 'link',
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)),
+    );
+  }
+
   Widget _followingRow(Map<String, dynamic> f) {
     final s = AppStrings(appState.localeCode);
     final handle = '${f['creator_handle'] ?? ''}';
