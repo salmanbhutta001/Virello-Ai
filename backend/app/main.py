@@ -8,6 +8,8 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws
 from app.routers import analysis as analysis_router
+from app.routers import viral_lab as viral_lab_router
+from app.routers import create as create_router
 from app.routers import audience as audience_router
 from app.routers import languages as languages_router
 from app.routers import ads as ads_router
@@ -22,7 +24,10 @@ from app.routers import communities as communities_router
 from app.routers import collab as collab_router
 from app.routers import referrals as referrals_router
 from app.routers import ai_core as ai_core_router
+from app.routers import commerce as commerce_router
 from app.routers import ctr as ctr_router
+from app.routers import academy as academy_router
+from app.routers import entertain as entertain_router
 
 
 @asynccontextmanager
@@ -54,6 +59,8 @@ app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(analysis_router.router, prefix="/api/v1/analysis", tags=["analysis"])
+app.include_router(viral_lab_router.router, prefix="/api/v1/analysis", tags=["viral-lab"])
+app.include_router(create_router.router, prefix="/api/v1/create", tags=["create"])
 app.include_router(discovery_router.router, prefix="/api/v1/discovery", tags=["discovery"])
 app.include_router(audience_router.router, prefix="/api/v1/audience", tags=["audience"])
 app.include_router(languages_router.router, prefix="/api/v1/languages", tags=["languages"])
@@ -70,6 +77,9 @@ app.include_router(communities_router.router, prefix="/api/v1", tags=["communiti
 app.include_router(collab_router.router, prefix="/api/v1/collab", tags=["collab"])
 app.include_router(referrals_router.router, prefix="/api/v1/referrals", tags=["referrals"])
 app.include_router(ai_core_router.router, prefix="/api/v1", tags=["ai-core"])
+app.include_router(academy_router.router, prefix="/api/v1", tags=["academy"])
+app.include_router(entertain_router.router, prefix="/api/v1", tags=["entertain"])
+app.include_router(commerce_router.router, prefix="/api/v1", tags=["commerce"])
 app.include_router(ctr_router.router, prefix="/api/v1/content", tags=["content"])
 app.include_router(ws.router, prefix="/api/v1")  # WebSocket: /api/v1/campaigns/{id}/stream
 

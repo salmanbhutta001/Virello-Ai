@@ -4,9 +4,9 @@ Multilingual (EN/UR/AR). Matching is done on word tokens (not substrings)
 to avoid false positives like "building" matching "build". Every result is
 labeled with the method name so callers can mark output as heuristic.
 
-Intents map onto existing Virello modules; unbuilt vision modules
-(commerce, academy, entertainment) are routed to an honest "coming soon"
-response — never faked.
+Intents map onto existing Virello modules; the unbuilt vision module
+(commerce) is routed to an honest "coming soon" response — never faked.
+(Academy and entertainment went live in Phases 5 and 6.)
 """
 from __future__ import annotations
 
@@ -71,15 +71,15 @@ MODULES: dict[str, dict] = {
     },
     LEARN: {
         "module": "academy",
-        "status": "coming_soon",
-        "phase": 5,
-        "served_by": None,
+        "status": "live",
+        "endpoint": "GET /api/v1/academy/lessons",
+        "served_by": "AI Academy (lessons, quizzes, progress)",
     },
     ENTERTAIN: {
         "module": "entertainment",
-        "status": "coming_soon",
-        "phase": 6,
-        "served_by": None,
+        "status": "live",
+        "endpoint": "POST /api/v1/entertain/story",
+        "served_by": "AI story/comic generator (dev-labeled)",
     },
     SUPPORT: {
         "module": "support",

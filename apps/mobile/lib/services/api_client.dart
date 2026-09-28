@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../core/config.dart';
 import '../data/models.dart';
 import '../data/discovery_models.dart';
@@ -49,7 +51,9 @@ class ApiClient {
   /// OAuth sign-in (google | apple): backend verifies the provider id_token
   /// via JWKS and returns the Virello JWT pair. We never see any password.
   Future<Map<String, dynamic>> oauthCallback(
-      String provider, String idToken) async {
+    String provider,
+    String idToken,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/v1/auth/oauth/$provider/callback'),
       headers: {'Content-Type': 'application/json'},
@@ -62,19 +66,27 @@ class ApiClient {
   // --------------------- email + password auth ---------------------
   /// Returns the token pair on success.
   Future<Map<String, dynamic>> passwordSignup(
-      String email, String password, String? name) async {
+    String email,
+    String password,
+    String? name,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/v1/auth/password/signup'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(
-          {'email': email, 'password': password, if (name != null) 'name': name}),
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        if (name != null) 'name': name,
+      }),
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> passwordLogin(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/v1/auth/password/login'),
       headers: {'Content-Type': 'application/json'},
@@ -95,12 +107,18 @@ class ApiClient {
 
   /// Returns the token pair (user is signed in after a successful reset).
   Future<Map<String, dynamic>> passwordResetConfirm(
-      String email, String code, String newPassword) async {
+    String email,
+    String code,
+    String newPassword,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/v1/auth/password/reset/confirm'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(
-          {'email': email, 'code': code, 'new_password': newPassword}),
+      body: jsonEncode({
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      }),
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
@@ -109,12 +127,16 @@ class ApiClient {
   /// Signed-in password change: current + new password (Bearer token is
   /// attached automatically via _headers when a tokenProvider is set).
   Future<void> passwordChange(
-      String currentPassword, String newPassword) async {
+    String currentPassword,
+    String newPassword,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/v1/auth/password/change'),
       headers: _headers,
-      body: jsonEncode(
-          {'current_password': currentPassword, 'new_password': newPassword}),
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      }),
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
   }
@@ -147,7 +169,9 @@ class ApiClient {
   Future<List<Campaign>> listCampaigns() async {
     final data = await _getDynamic('/api/v1/campaigns');
     final list = data is List ? data : (data['items'] as List? ?? []);
-    return list.map((e) => Campaign.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Campaign.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Campaign> getCampaign(String id) async {
@@ -187,8 +211,10 @@ class ApiClient {
         .toList();
   }
 
-  Future<Map<String, dynamic>> followCreator(String handle,
-      [String? creatorName]) async {
+  Future<Map<String, dynamic>> followCreator(
+    String handle, [
+    String? creatorName,
+  ]) async {
     final j = await _postJson('/api/v1/social/following', {
       'creator_handle': handle,
       if (creatorName != null && creatorName.isNotEmpty)
@@ -198,8 +224,10 @@ class ApiClient {
   }
 
   Future<void> unfollowCreator(String handle) async {
-    final res = await http
-        .delete(Uri.parse('$baseUrl/api/v1/social/following/$handle'), headers: _headers);
+    final res = await http.delete(
+      Uri.parse('$baseUrl/api/v1/social/following/$handle'),
+      headers: _headers,
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
   }
@@ -207,17 +235,24 @@ class ApiClient {
   // ------------------------------ ai support ------------------------------
   /// Virello's automated support assistant.
   Future<Map<String, dynamic>> aiSupportChat(
-          String question, String language) =>
-      _postJson('/api/v1/ai/support',
-          {'question': question, 'language': language});
+    String question,
+    String language,
+  ) =>
+      _postJson('/api/v1/ai/support', {
+        'question': question,
+        'language': language,
+      });
 
   // ------------------------------ ai-core (Ask Virello) ------------------------------
   /// Ask Virello: natural-language → intent → module → response.
   /// Response: {intent, confidence, module, module_status, method, reply,
   /// reply_language, dev, provider, actions, plan, conversation_id,
   /// context_updated}. Honest about dev/heuristic output.
-  Future<Map<String, dynamic>> askVirello(String text,
-          {String? conversationId, String? language}) =>
+  Future<Map<String, dynamic>> askVirello(
+    String text, {
+    String? conversationId,
+    String? language,
+  }) =>
       _postJson('/api/v1/ai-core/ask', {
         'text': text,
         if (conversationId != null) 'conversation_id': conversationId,
@@ -240,11 +275,167 @@ class ApiClient {
 
   /// Reset the user's AI context/memory.
   Future<void> resetAiContext() async {
-    final res = await http.delete(Uri.parse('$baseUrl/api/v1/ai-core/context'),
-        headers: _headers);
+    final res = await http.delete(
+      Uri.parse('$baseUrl/api/v1/ai-core/context'),
+      headers: _headers,
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
   }
+
+  // ------------------------------ academy (Phase 5) ------------------------------
+  /// GET /api/v1/academy/lessons — list lessons, optionally filtered.
+  /// Returns List[{id,title,description,category,level,language,
+  /// order_index,has_quiz}].
+  Future<List<dynamic>> getAcademyLessons({
+    String? category,
+    String? level,
+    String? language,
+  }) async {
+    final q = <String, String>{};
+    if (category != null && category.isNotEmpty) q['category'] = category;
+    if (level != null && level.isNotEmpty) q['level'] = level;
+    if (language != null && language.isNotEmpty) q['language'] = language;
+    final query = q.entries
+        .map(
+          (e) => '${Uri.encodeComponent(e.key)}='
+              '${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
+    final data = await _getDynamic(
+      '/api/v1/academy/lessons${query.isEmpty ? '' : '?$query'}',
+    );
+    return (data as List).toList();
+  }
+
+  /// GET /api/v1/academy/lessons/{id} — full lesson with sections + quiz
+  /// (answers stay server-side).
+  Future<Map<String, dynamic>> getAcademyLesson(String id) =>
+      _getJson('/api/v1/academy/lessons/$id');
+
+  /// POST /api/v1/academy/lessons/{id}/start — marks the lesson started.
+  Future<Map<String, dynamic>> startAcademyLesson(String id) =>
+      _postJson('/api/v1/academy/lessons/$id/start', {});
+
+  /// POST /api/v1/academy/lessons/{id}/quiz — grades the quiz.
+  /// Response: {score,total,passed,results:[{question_index,correct,
+  /// correct_option,explanation}]}.
+  Future<Map<String, dynamic>> submitAcademyQuiz(
+    String id,
+    List<int> answers,
+  ) =>
+      _postJson('/api/v1/academy/lessons/$id/quiz', {'answers': answers});
+
+  /// POST /api/v1/academy/lessons/{id}/complete — marks the lesson done.
+  Future<Map<String, dynamic>> completeAcademyLesson(String id) =>
+      _postJson('/api/v1/academy/lessons/$id/complete', {});
+
+  /// GET /api/v1/academy/my/progress — per-lesson status + totals.
+  Future<Map<String, dynamic>> getAcademyProgress() =>
+      _getJson('/api/v1/academy/my/progress');
+
+  // ------------------------------ entertain (Phase 6) ------------------------------
+  /// POST /api/v1/entertain/story — AI-generated short story.
+  /// Response: {story:{title,body},dev,provider}.
+  Future<Map<String, dynamic>> generateStory({
+    String? topic,
+    String? prompt,
+    String? length,
+    String? language,
+  }) =>
+      _postJson('/api/v1/entertain/story', {
+        if (topic != null && topic.isNotEmpty) 'topic': topic,
+        if (prompt != null && prompt.isNotEmpty) 'prompt': prompt,
+        if (length != null && length.isNotEmpty) 'length': length,
+        if (language != null && language.isNotEmpty) 'language': language,
+      });
+
+  /// POST /api/v1/entertain/comic-idea — AI-generated comic strip outline.
+  /// Response: {comic:{title,panels:[{panel,description,caption}]},dev,provider}.
+  Future<Map<String, dynamic>> generateComicIdea({
+    required String topic,
+    int? panels,
+    String? language,
+  }) =>
+      _postJson('/api/v1/entertain/comic-idea', {
+        'topic': topic,
+        if (panels != null) 'panels': panels,
+        if (language != null && language.isNotEmpty) 'language': language,
+      });
+
+  // ------------------------------ viral lab (Phase 2) ------------------------------
+  /// Improvement suggestions for a post URL or pasted text.
+  /// Response: {score, components, improvements[], rewritten_hook, dev, ...}.
+  Future<Map<String, dynamic>> improveContent({
+    String? postUrl,
+    String? text,
+  }) =>
+      _postJson('/api/v1/analysis/improve', {
+        if (postUrl != null) 'post_url': postUrl,
+        if (text != null) 'text': text,
+      });
+
+  /// Original content variations at different angles.
+  /// Response: {variations[{text, angle, why_it_works}], count, dev, ...}.
+  Future<Map<String, dynamic>> getContentVariations({
+    String? postUrl,
+    String? text,
+    int count = 3,
+  }) =>
+      _postJson('/api/v1/analysis/variations', {
+        if (postUrl != null) 'post_url': postUrl,
+        if (text != null) 'text': text,
+        'count': count,
+      });
+
+  // ------------------------------ creator studio (Phase 3) ------------------------------
+  /// Content ideas for a topic.
+  Future<Map<String, dynamic>> createIdeas(
+    String topic, {
+    int count = 5,
+    String? language,
+  }) =>
+      _postJson('/api/v1/create/ideas', {
+        'topic': topic,
+        'count': count,
+        if (language != null) 'language': language,
+      });
+
+  /// Script with hook/body/cta sections.
+  Future<Map<String, dynamic>> createScript(
+    String topic, {
+    String format = 'video',
+    String? language,
+  }) =>
+      _postJson('/api/v1/create/scripts', {
+        'topic': topic,
+        'format': format,
+        if (language != null) 'language': language,
+      });
+
+  /// Captions with hashtags and tones.
+  Future<Map<String, dynamic>> createCaptions(
+    String topic, {
+    String? platform,
+    String? language,
+  }) =>
+      _postJson('/api/v1/create/captions', {
+        'topic': topic,
+        if (platform != null) 'platform': platform,
+        if (language != null) 'language': language,
+      });
+
+  /// Opening hooks for a topic.
+  Future<Map<String, dynamic>> createHooks(
+    String topic, {
+    int count = 5,
+    String? language,
+  }) =>
+      _postJson('/api/v1/create/hooks', {
+        'topic': topic,
+        'count': count,
+        if (language != null) 'language': language,
+      });
 
   // ------------------------------ billing ------------------------------
   Future<Map<String, dynamic>> credits() => _getJson('/api/v1/billing/credits');
@@ -259,8 +450,7 @@ class ApiClient {
   Future<Map<String, dynamic>> billingProviders() =>
       _getJson('/api/v1/billing/providers');
 
-  Future<Map<String, dynamic>> me() =>
-      _getJson('/api/v1/users/me');
+  Future<Map<String, dynamic>> me() => _getJson('/api/v1/users/me');
 
   /// PATCH /api/v1/users/me — update the display name.
   Future<Map<String, dynamic>> updateName(String name) =>
@@ -276,10 +466,15 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> adminPost(String path,
-      [Map<String, dynamic>? body]) async {
-    final res = await http.post(Uri.parse('$baseUrl$path'),
-        headers: _headers, body: jsonEncode(body ?? {}));
+  Future<Map<String, dynamic>> adminPost(
+    String path, [
+    Map<String, dynamic>? body,
+  ]) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body ?? {}),
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode == 403) throw const AdminForbiddenException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
@@ -287,9 +482,14 @@ class ApiClient {
   }
 
   Future<Map<String, dynamic>> adminPut(
-      String path, Map<String, dynamic> body) async {
-    final res = await http.put(Uri.parse('$baseUrl$path'),
-        headers: _headers, body: jsonEncode(body));
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode == 403) throw const AdminForbiddenException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
@@ -309,15 +509,30 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  Future<Map<String, dynamic>> _postJson(String path, Map<String, dynamic> body) async {
-    final res = await http.post(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body));
+  Future<Map<String, dynamic>> _postJson(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
     if (res.statusCode == 401) throw const AuthException();
-    if (res.statusCode != 200 && res.statusCode != 201) throw ApiException(res.statusCode, res.body);
+    if (res.statusCode != 200 && res.statusCode != 201)
+      throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> _putJson(String path, Map<String, dynamic> body) async {
-    final res = await http.put(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body));
+  Future<Map<String, dynamic>> _putJson(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
@@ -325,8 +540,7 @@ class ApiClient {
 
   // ------------------------------ languages ------------------------------
   /// GET /api/v1/languages — all supported language packs with statuses.
-  Future<Map<String, dynamic>> listLanguages() =>
-      _getJson('/api/v1/languages');
+  Future<Map<String, dynamic>> listLanguages() => _getJson('/api/v1/languages');
 
   /// GET /api/v1/users/notifications — broadcasts localized to the user's
   /// preferred language, with honest fallback flags.
@@ -348,22 +562,30 @@ class ApiClient {
 
   /// POST /api/v1/languages/expand — AI-suggested extra language audiences.
   Future<Map<String, dynamic>> expandLanguages(
-          List<String> languages, List<String> concepts) =>
-      _postJson('/api/v1/languages/expand',
-          {'languages': languages, 'concepts': concepts});
+    List<String> languages,
+    List<String> concepts,
+  ) =>
+      _postJson('/api/v1/languages/expand', {
+        'languages': languages,
+        'concepts': concepts,
+      });
 
   /// PATCH /api/v1/ads/campaigns/{id} — language targeting mode.
   Future<Map<String, dynamic>> updateCampaignLanguageTargeting(
-          String campaignId,
-          {required String mode,
-          List<String>? targetLanguages}) =>
+    String campaignId, {
+    required String mode,
+    List<String>? targetLanguages,
+  }) =>
       _patchJson('/api/v1/ads/campaigns/$campaignId', {
         'language_targeting_mode': mode,
         if (targetLanguages != null) 'target_languages': targetLanguages,
       });
 
   /// POST /api/v1/analysis/analyze — deep post/link analysis.
-  Future<PostAnalysisResult> analyzePost(String url, {String? campaignId}) async {
+  Future<PostAnalysisResult> analyzePost(
+    String url, {
+    String? campaignId,
+  }) async {
     final j = await _postJson('/api/v1/analysis/analyze', {'url': url});
     return PostAnalysisResult.fromJson(j, campaignId: campaignId);
   }
@@ -371,7 +593,9 @@ class ApiClient {
   // ------------------------------ discovery ------------------------------
   Future<List<Topic>> getTopics() async {
     final j = await _getJson('/api/v1/discovery/topics');
-    return (j['topics'] as List? ?? []).map((t) => Topic.fromJson(t as Map<String, dynamic>)).toList();
+    return (j['topics'] as List? ?? [])
+        .map((t) => Topic.fromJson(t as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Set<String>> getInterests() async {
@@ -380,39 +604,57 @@ class ApiClient {
   }
 
   Future<Set<String>> setInterests(Set<String> topics) async {
-    final j = await _putJson('/api/v1/discovery/interests', {'topics': topics.toList()});
+    final j = await _putJson('/api/v1/discovery/interests', {
+      'topics': topics.toList(),
+    });
     return (j['topics'] as List? ?? []).map((e) => '$e').toSet();
   }
 
   /// In-app reader: transformed, copyright-safe preview of a post.
   Future<Map<String, dynamic>> readerContent(String url, String language) =>
-      _postJson('/api/v1/discovery/reader',
-          {'url': url, 'language': language});
+      _postJson('/api/v1/discovery/reader', {'url': url, 'language': language});
 
-  Future<List<DiscoveryItem>> getDiscoveryFeed({int limit = 20, int offset = 0}) async {
-    final j = await _getJson('/api/v1/discovery/feed?limit=$limit&offset=$offset');
-    return (j['items'] as List? ?? []).map((e) => DiscoveryItem.fromJson(e as Map<String, dynamic>)).toList();
+  Future<List<DiscoveryItem>> getDiscoveryFeed({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final j = await _getJson(
+      '/api/v1/discovery/feed?limit=$limit&offset=$offset',
+    );
+    return (j['items'] as List? ?? [])
+        .map((e) => DiscoveryItem.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// GET /api/v1/discovery/trending — real Google Trends data.
   /// Returns honestly-labeled trends (search data, not Virello posts).
-  Future<Map<String, dynamic>> getTrending(
-      {String geo = 'US', int limit = 10, String lang = 'en'}) async {
+  Future<Map<String, dynamic>> getTrending({
+    String geo = 'US',
+    int limit = 10,
+    String lang = 'en',
+  }) async {
     return await _getJson(
-        '/api/v1/discovery/trending?geo=$geo&limit=$limit&lang=$lang');
+      '/api/v1/discovery/trending?geo=$geo&limit=$limit&lang=$lang',
+    );
   }
 
   /// AI-matched trends based on the user's selected interests.
-  Future<Map<String, dynamic>> getRecommended(
-      {int limit = 5, String lang = 'en'}) async {
+  Future<Map<String, dynamic>> getRecommended({
+    int limit = 5,
+    String lang = 'en',
+  }) async {
     return await _getJson(
-        '/api/v1/discovery/recommended?limit=$limit&lang=$lang');
+      '/api/v1/discovery/recommended?limit=$limit&lang=$lang',
+    );
   }
 
   /// kind: view | save | visit | dismiss.
   /// [variantId] echoes the growth-engine variant the feed actually displayed.
-  Future<void> recordInteraction(
-      {required String campaignId, required String kind, String? variantId}) async {
+  Future<void> recordInteraction({
+    required String campaignId,
+    required String kind,
+    String? variantId,
+  }) async {
     await _postJson('/api/v1/discovery/interactions', {
       'campaign_id': campaignId,
       'kind': kind,
@@ -422,8 +664,9 @@ class ApiClient {
 
   // ---------------- AI Growth Engine ----------------
   Future<Map<String, dynamic>> startGrowthLoop(String campaignId) async {
-    final j = await _postJson(
-        '/api/v1/growth/loops', {'campaign_id': campaignId});
+    final j = await _postJson('/api/v1/growth/loops', {
+      'campaign_id': campaignId,
+    });
     return Map<String, dynamic>.from(j['loop'] as Map);
   }
 
@@ -443,11 +686,17 @@ class ApiClient {
     return GrowthLoopDetail.fromJson(m);
   }
 
-  Future<List<GrowthDecision>> getGrowthDecisions(String loopId,
-      {int limit = 100}) async {
-    final j = await _getJson('/api/v1/growth/loops/$loopId/decisions?limit=$limit');
+  Future<List<GrowthDecision>> getGrowthDecisions(
+    String loopId, {
+    int limit = 100,
+  }) async {
+    final j = await _getJson(
+      '/api/v1/growth/loops/$loopId/decisions?limit=$limit',
+    );
     return (j['decisions'] as List? ?? [])
-        .map((e) => GrowthDecision.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => GrowthDecision.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -470,9 +719,14 @@ class ApiClient {
 
   // ------------------------------ ads phase 1 ------------------------------
   Future<Map<String, dynamic>> _patchJson(
-      String path, Map<String, dynamic> body) async {
-    final res = await http.patch(Uri.parse('$baseUrl$path'),
-        headers: _headers, body: jsonEncode(body));
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await http.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
@@ -482,8 +736,9 @@ class ApiClient {
   Future<List<AudienceSegment>> listAudienceSegments() async {
     final j = await _getJson('/api/v1/audience/segments');
     return ((j['segments'] as List?) ?? [])
-        .map((e) => AudienceSegment.fromJson(
-            Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => AudienceSegment.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -498,8 +753,11 @@ class ApiClient {
   }
 
   /// Build an audience fingerprint for a post/link.
-  Future<Map<String, dynamic>> fingerprintAudience(
-      {String? text, String? title, String? url}) async {
+  Future<Map<String, dynamic>> fingerprintAudience({
+    String? text,
+    String? title,
+    String? url,
+  }) async {
     final body = <String, dynamic>{};
     if (text != null && text.isNotEmpty) body['text'] = text;
     if (title != null && title.isNotEmpty) body['title'] = title;
@@ -508,8 +766,12 @@ class ApiClient {
   }
 
   /// Explainable v2 segment matching for a fingerprint/post.
-  Future<Map<String, dynamic>> matchAudience(
-      {String? text, String? title, String? url, String geography = ''}) async {
+  Future<Map<String, dynamic>> matchAudience({
+    String? text,
+    String? title,
+    String? url,
+    String geography = '',
+  }) async {
     final body = <String, dynamic>{'geography': geography, 'limit': 10};
     if (text != null && text.isNotEmpty) body['text'] = text;
     if (title != null && title.isNotEmpty) body['title'] = title;
@@ -518,14 +780,15 @@ class ApiClient {
   }
 
   /// AI Campaign Builder: post/link -> analysis + proposals + draft campaign.
-  Future<AdBuildResult> buildAdCampaign(
-      {String? url,
-      String? content,
-      double? budgetCap,
-      String? geoMode,
-      List<String>? geoCountries,
-      String? plan,
-      String? packageId}) async {
+  Future<AdBuildResult> buildAdCampaign({
+    String? url,
+    String? content,
+    double? budgetCap,
+    String? geoMode,
+    List<String>? geoCountries,
+    String? plan,
+    String? packageId,
+  }) async {
     final body = <String, dynamic>{};
     if (url != null && url.isNotEmpty) body['url'] = url;
     if (content != null && content.isNotEmpty) body['content'] = content;
@@ -593,15 +856,13 @@ class ApiClient {
         : '/api/v1/ads/campaigns?plan=$plan';
     final j = await _getJson(path);
     return ((j['campaigns'] as List?) ?? [])
-        .map((e) =>
-            AdCampaign.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) => AdCampaign.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
 
   Future<AdCampaign> getAdCampaign(String id) async {
     final j = await _getJson('/api/v1/ads/campaigns/$id');
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   /// Full detail: campaign + current ranked segment matches + decisions.
@@ -613,22 +874,21 @@ class ApiClient {
   /// Edit the draft (objective/budget/duration/topics/segments) or submit
   /// it for approval with {'status': 'pending_approval'}.
   Future<AdCampaign> patchAdCampaign(
-      String id, Map<String, dynamic> patch) async {
+    String id,
+    Map<String, dynamic> patch,
+  ) async {
     final j = await _patchJson('/api/v1/ads/campaigns/$id', patch);
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   Future<AdCampaign> approveAdCampaign(String id) async {
     final j = await _postJson('/api/v1/ads/campaigns/$id/approve', {});
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   Future<AdCampaign> rejectAdCampaign(String id) async {
     final j = await _postJson('/api/v1/ads/campaigns/$id/reject', {});
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   // ------------------------------ ads phase 2 ------------------------------
@@ -638,22 +898,19 @@ class ApiClient {
     final body = <String, dynamic>{};
     if (freqCap != null) body['freq_cap'] = freqCap;
     final j = await _postJson('/api/v1/ads/campaigns/$id/launch', body);
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   /// Pause delivery: active -> paused. Paused campaigns are never served.
   Future<AdCampaign> pauseAdCampaign(String id) async {
     final j = await _postJson('/api/v1/ads/campaigns/$id/pause', {});
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   /// Resume delivery: paused -> active.
   Future<AdCampaign> resumeAdCampaign(String id) async {
     final j = await _postJson('/api/v1/ads/campaigns/$id/resume', {});
-    return AdCampaign.fromJson(
-        Map<String, dynamic>.from(j['campaign'] as Map));
+    return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
   }
 
   /// Eligible sponsored units for the caller. Every unit carries
@@ -661,8 +918,9 @@ class ApiClient {
   Future<List<SponsoredAdUnit>> getSponsoredAds({int limit = 2}) async {
     final j = await _getJson('/api/v1/ads/serve?limit=$limit');
     return ((j['units'] as List?) ?? [])
-        .map((e) => SponsoredAdUnit.fromJson(
-            Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => SponsoredAdUnit.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -730,6 +988,7 @@ class ApiClient {
     final j = await _getJson('/api/v1/ads/campaigns/$id/attribution');
     return Map<String, dynamic>.from(j);
   }
+
   // ------------------------------ uploads ------------------------------
   /// Upload a phone file (photo/video/audio/document). Returns
   /// {id, filename, mime, size, kind, url}.
@@ -751,13 +1010,75 @@ class ApiClient {
   }
 
   /// Honest heuristic media-readiness report for an uploaded file + caption.
-  Future<Map<String, dynamic>> analyzeUpload(
-          String uploadId, String caption) =>
-      _postJson('/api/v1/uploads/analyze',
-          {'upload_id': uploadId, 'caption': caption});
+  Future<Map<String, dynamic>> analyzeUpload(String uploadId, String caption) =>
+      _postJson('/api/v1/uploads/analyze', {
+        'upload_id': uploadId,
+        'caption': caption,
+      });
 
   /// Direct URL for a stored upload (served by the backend).
   String uploadUrl(String uploadId) => '$baseUrl/api/v1/uploads/$uploadId';
+
+  // ------------------------------ commerce (Phase 4) ------------------------------
+  /// GET /api/v1/commerce/products — browse the catalog.
+  /// Returns {products:[{id,title,description,price_cents,price_display,
+  /// currency,category,image_urls,stock_qty,is_active,views,is_affiliate,
+  /// affiliate_url,affiliate_provider,creator_id,created_at}], total,
+  /// limit, offset, sort_note}. Empty catalog → honest empty list.
+  Future<Map<String, dynamic>> listProducts({
+    String? search,
+    String? category,
+    String? sort,
+    int limit = 24,
+    int offset = 0,
+  }) {
+    final q = <String, String>{'limit': '$limit', 'offset': '$offset'};
+    if (search != null && search.trim().isNotEmpty) q['q'] = search.trim();
+    if (category != null && category.isNotEmpty) q['category'] = category;
+    if (sort != null && sort.isNotEmpty) q['sort'] = sort;
+    final query = q.entries
+        .map(
+          (e) => '${Uri.encodeComponent(e.key)}='
+              '${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
+    return _getJson('/api/v1/commerce/products?$query');
+  }
+
+  /// GET /api/v1/commerce/products/{id} — product + related + share slug.
+  Future<Map<String, dynamic>> getProduct(String id) =>
+      _getJson('/api/v1/commerce/products/$id');
+
+  /// POST /api/v1/commerce/products — creator lists a product.
+  /// data: {title, description, price_cents, currency, category,
+  /// image_urls[], stock_qty, is_affiliate, affiliate_url,
+  /// affiliate_provider}.
+  Future<Map<String, dynamic>> createProduct(Map<String, dynamic> data) =>
+      _postJson('/api/v1/commerce/products', data);
+
+  /// POST /api/v1/commerce/products/compare — 2-4 products side by side.
+  /// Real stored data only; no ratings/reviews yet.
+  Future<Map<String, dynamic>> compareProducts(List<String> ids) =>
+      _postJson('/api/v1/commerce/products/compare', {'product_ids': ids});
+
+  /// POST /api/v1/commerce/products/{id}/lead — genuine interest signal
+  /// (server dedupes per user per day).
+  Future<Map<String, dynamic>> recordLead(String productId,
+          {String source = 'shop'}) =>
+      _postJson('/api/v1/commerce/products/$productId/lead',
+          {'source': source});
+
+  /// GET /api/v1/commerce/my/products — the signed-in creator's listings.
+  Future<List<dynamic>> myProducts() async {
+    final data = await _getDynamic('/api/v1/commerce/my/products');
+    return (data as List).toList();
+  }
+
+  /// POST /api/v1/commerce/products/{id}/sync — re-sync affiliate
+  /// price/stock. Returns status:"not_configured" until provider API
+  /// credentials are connected; nothing is fabricated.
+  Future<Map<String, dynamic>> syncProduct(String id) =>
+      _postJson('/api/v1/commerce/products/$id/sync', {});
 }
 
 class ApiException implements Exception {

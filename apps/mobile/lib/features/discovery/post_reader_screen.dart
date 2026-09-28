@@ -9,6 +9,7 @@ import '../../main.dart';
 import '../../services/api_client.dart';
 import '../audience/audience_intelligence_screen.dart';
 import '../discovery/analyze_screen.dart';
+import '../shop/product_detail_screen.dart';
 
 /// In-app post reader: every post card in Home (For You / Trending /
 /// AI Picks) and Discovery opens here — never kicks the user out to a
@@ -28,6 +29,12 @@ class PostReaderScreen extends StatefulWidget {
 class _PostReaderScreenState extends State<PostReaderScreen> {
   late Future<Map<String, dynamic>> _future;
   bool _saving = false;
+
+  /// "Shop this" — real catalog results for the post's topic. Loaded once
+  /// per query; the section hides entirely when there are no results
+  /// (never faked).
+  Future<List<Map<String, dynamic>>>? _shopFuture;
+  String _shopQuery = '';
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -51,6 +58,23 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
   void _load() {
     _future = apiClient.readerContent(
         widget.item.postUrl, appState.localeCode);
+    _shopFuture = null;
+    _shopQuery = '';
+  }
+
+  /// Kick off the "Shop this" catalog query once per post. Called from
+  /// _reader() after the topics/title are known; guarded so it never
+  /// refetches on rebuilds and never calls setState during build.
+  void _maybeLoadShop(String query) {
+    final q = query.trim();
+    if (q.isEmpty || q == _shopQuery) return;
+    _shopQuery = q;
+    _shopFuture = apiClient
+        .listProducts(search: q, limit: 6)
+        .then((d) => ((d['products'] as List?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList())
+        .catchError((_) => <Map<String, dynamic>>[]);
   }
 
   Future<void> _retry() async {
@@ -63,6 +87,100 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     if (uri == null) return;
     // Clearly labeled: this is the one action that leaves the app.
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  /// Horizontal product card for the "Shop this" section.
+  Widget _shopThisCard(Map<String, dynamic> p) {
+    final images =
+        (p['image_urls'] as List? ?? []).map((e) => '$e').toList();
+    final isAffiliate = p['is_affiliate'] == true;
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(productId: '${p['id']}'),
+        ),
+      ),
+      child: Container(
+        width: 150,
+        decoration: BoxDecoration(
+          color: VirelloColors.cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: VirelloColors.divider),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
+              child: Stack(
+                children: [
+                  images.isNotEmpty
+                      ? Image.network(
+                          images.first,
+                          height: 104,
+                          width: 150,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              _shopCardPlaceholder(),
+                        )
+                      : _shopCardPlaceholder(),
+                  if (isAffiliate)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade700,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(s.affiliateBadge,
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${p['title'] ?? ''}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text('${p['price_display'] ?? ''}',
+                      style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: VirelloColors.violet)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _shopCardPlaceholder() {
+    return Container(
+      height: 104,
+      width: 150,
+      color: VirelloColors.chipBg,
+      child: const Center(
+        child: Icon(Icons.shopping_bag_outlined,
+            color: VirelloColors.muted, size: 28),
+      ),
+    );
   }
 
   Future<void> _toggleSave() async {
@@ -330,6 +448,56 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             ],
           ),
         ],
+        // "Shop this" — real catalog matches only; hidden when empty.
+        Builder(
+          builder: (context) {
+            _maybeLoadShop(
+                topics.isNotEmpty ? topics.first : item.title);
+            if (_shopFuture == null) return const SizedBox.shrink();
+            return FutureBuilder<List<Map<String, dynamic>>>(
+              future: _shopFuture,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: SizedBox(
+                      height: 120,
+                      child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                    ),
+                  );
+                }
+                final items = snap.data ?? [];
+                // No fake "related products" — hide the section entirely.
+                if (items.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    VSectionHeader(title: s.shopThis),
+                    const SizedBox(height: 4),
+                    Text(s.shopThisDesc,
+                        style: const TextStyle(
+                            fontSize: 12.5,
+                            color: VirelloColors.muted)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 196,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: items.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(width: 10),
+                        itemBuilder: (_, i) =>
+                            _shopThisCard(items[i]),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
         if (item.matchReasons.isNotEmpty) ...[
           const SizedBox(height: 16),
           VSectionHeader(title: s.readerWhyPicked),

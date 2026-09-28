@@ -9,7 +9,10 @@ import '../../main.dart';
 /// Dev/heuristic output is always labeled; unbuilt modules answer honestly
 /// with their target phase instead of faking functionality.
 class AskVirelloScreen extends StatefulWidget {
-  const AskVirelloScreen({super.key});
+  /// Optional text to send automatically when the screen opens
+  /// (e.g. "Tell me about this product: <title>" from the Shop).
+  final String? initialText;
+  const AskVirelloScreen({super.key, this.initialText});
   @override
   State<AskVirelloScreen> createState() => _AskVirelloScreenState();
 }
@@ -45,6 +48,14 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
   void initState() {
     super.initState();
     _messages.add(_AskMsg(fromUser: false, text: s.askVirelloWelcome));
+    // Auto-send a prefilled question (e.g. from the Shop's "Ask Virello
+    // about this") after the first frame so context is available.
+    final initial = widget.initialText;
+    if (initial != null && initial.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _send(initial);
+      });
+    }
   }
 
   @override

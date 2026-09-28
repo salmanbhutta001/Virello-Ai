@@ -5,8 +5,9 @@ The main flow:
   2. load/create conversation + per-user AIContext
   3. dispatch to the mapped module:
      - live modules call REAL existing services/endpoints
-     - unbuilt vision modules (commerce/academy/entertainment) return an
-       honest "coming soon in Phase N" message — functionality is NEVER faked
+     - unbuilt vision modules (commerce) return an honest "coming soon"
+       message — functionality is NEVER faked (academy and entertainment
+       went live in Phases 5 and 6 and now dispatch to real services)
   4. persist user + assistant messages, log the intent, merge context
   5. return a structured response
 
@@ -20,9 +21,11 @@ from __future__ import annotations
 import logging
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.core import User
+from app.models.academy import Lesson
 from app.models.ai_core import AIIntentLog
 from app.services.ai.base import AIProvider, AIRequest, get_ai_provider
 from app.services.ai_core import router as intent_router
@@ -107,6 +110,27 @@ _T: dict[str, dict[str, str]] = {
                "(مختبر الانتشار)، التخطيط لنمو حملة، عرض اختيارات الاكتشاف، أو الإجابة "
                "عن أسئلة الدعم. ماذا تريد أن تفعل؟"),
     },
+    "learn_intro": {
+        "en": ("🎓 Welcome to the AI Academy! Here are the lessons available right now — "
+               "open one to learn, take the quiz, and I'll track your progress:"),
+        "ur": ("🎓 AI Academy me khush aamdeed! Ye lessons abhi available hain — "
+               "koi aik kholo, quiz do, aur main aapki progress track karunga:"),
+        "ar": ("🎓 مرحبًا بك في أكاديمية الذكاء الاصطناعي! هذه الدروس متاحة الآن — "
+               "افتح واحدًا وتعلّم وأجب عن الاختبار وسأتتبع تقدمك:"),
+    },
+    "learn_no_lessons": {
+        "en": "🎓 The AI Academy is ready, but no lessons are published yet — check back soon.",
+        "ur": "🎓 AI Academy tayyar hai, lekin abhi koi lesson publish nahi hua — jald wapas check karein.",
+        "ar": "🎓 أكاديمية الذكاء الاصطناعي جاهزة، لكن لا توجد دروس منشورة بعد — عُد قريبًا.",
+    },
+    "entertain_intro": {
+        "en": ("🎭 Ready for a break? I can write you an original uplifting short story "
+               "or dream up a comic strip idea — just give me a topic."),
+        "ur": ("🎭 Break ka waqt? Main aapke liye aik original achhi kahani likh sakta hoon "
+               "ya comic strip ka idea bana sakta hoon — bas topic batao."),
+        "ar": ("🎭 مستعد لاستراحة؟ يمكنني كتابة قصة قصيرة أصلية مبهجة لك أو ابتكار "
+               "فكرة شريط مصور — فقط أعطني موضوعًا."),
+    },
     "dev_note": {
         "en": "\n\n_(Development preview — heuristic output. Connect a production AI provider for final results.)_",
         "ur": "\n\n_(Development preview — heuristic output. Hatmi nataij ke liye production AI provider connect karein.)_",
@@ -142,6 +166,8 @@ _ACTION_LABELS = {
     "build_campaign": {"en": "Draft a campaign (approval required)", "ur": "Campaign ka draft (approval zaroori)", "ar": "مسودة حملة (تتطلب موافقة)"},
     "growth_loops": {"en": "View growth loops", "ur": "Growth loops dekho", "ar": "عرض حلقات النمو"},
     "support": {"en": "Ask support", "ur": "Support se poocho", "ar": "اسأل الدعم"},
+    "open_academy": {"en": "Open Academy", "ur": "Academy kholo", "ar": "فتح الأكاديمية"},
+    "open_entertain": {"en": "Open Entertainment", "ur": "Entertainment kholo", "ar": "فتح الترفيه"},
 }
 
 
@@ -314,6 +340,51 @@ def _dispatch_coming_soon(intent: str, lang: str) -> tuple[str, list[dict], bool
     return reply, [], True, None
 
 
+async def _dispatch_learn(
+    db: AsyncSession, lang: str
+) -> tuple[str, list[dict], bool, str | None]:
+    """AI Academy: list REAL published lessons grouped by category.
+
+    Real DB data only — an honest empty message when nothing is seeded.
+    """
+    lang = lang if lang in ("en", "ur", "ar") else "en"
+    actions = [{
+        "type": "open",
+        "target": "academy",
+        "label": _label("open_academy", lang),
+    }]
+    rows = (
+        (await db.execute(
+            select(Lesson.title, Lesson.category)
+            .where(Lesson.is_published.is_(True))
+            .order_by(Lesson.order_index.asc(), Lesson.created_at.asc())
+            .limit(30)
+        ))
+        .all()
+    )
+    if not rows:
+        return _t("learn_no_lessons", lang), actions, True, None
+    grouped: dict[str, list[str]] = {}
+    for title, category in rows:
+        grouped.setdefault(category or "general", []).append(title)
+    lines = [f"• {cat}: " + "; ".join(titles[:5])
+             for cat, titles in sorted(grouped.items())]
+    reply = _t("learn_intro", lang) + "\n" + "\n".join(lines)
+    return reply, actions, True, None
+
+
+def _dispatch_entertain(lang: str) -> tuple[str, list[dict], bool, str | None]:
+    """AI Entertainment: short invite; the real generation lives in
+    POST /api/v1/entertain/story and /comic-idea (dev-labeled)."""
+    lang = lang if lang in ("en", "ur", "ar") else "en"
+    actions = [{
+        "type": "open",
+        "target": "entertain",
+        "label": _label("open_entertain", lang),
+    }]
+    return _t("entertain_intro", lang), actions, True, None
+
+
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
@@ -352,7 +423,11 @@ async def handle_ask(
         reply, actions, dev, provider_name = _dispatch_discover(lang)
     elif intent == intent_router.SUPPORT:
         reply, actions, dev, provider_name = await _dispatch_support(text, lang, provider)
-    elif intent in (intent_router.SHOP, intent_router.LEARN, intent_router.ENTERTAIN):
+    elif intent == intent_router.LEARN:
+        reply, actions, dev, provider_name = await _dispatch_learn(db, lang)
+    elif intent == intent_router.ENTERTAIN:
+        reply, actions, dev, provider_name = _dispatch_entertain(lang)
+    elif intent == intent_router.SHOP:
         reply, actions, dev, provider_name = _dispatch_coming_soon(intent, lang)
     else:  # unknown
         reply, actions, dev, provider_name = _t("unknown", lang), [], True, None

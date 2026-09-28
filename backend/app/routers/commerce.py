@@ -1,0 +1,681 @@
+"""AI Commerce API (Phase 4): product catalog, shareable product pages,
+leads, comparison, orders.
+
+Honesty contract:
+- No fake products, prices, ratings, or sales. Empty catalog → empty list.
+- There is no review/rating system yet, so the API never returns ratings.
+- ``best_sellers`` sorts by real product-page views until order volume
+  exists (documented in the response as ``sort_note``).
+
+Money movement:
+- This router NEVER touches provider payment APIs. Checkout goes through
+  the existing billing pipeline:
+    1. Buyer: POST /api/v1/commerce/orders {product_id, provider}
+       → CommerceOrder(status="created").
+    2. Buyer: POST /api/v1/billing/orders {provider, kind:"commerce",
+       idempotency_key, metadata:{commerce_order_id}} → provider approval.
+       (Billing's OrderIn.kind currently accepts subscription|credits; the
+       commerce kind is carried in metadata and resolved by the verify
+       hook below — billing code change is NOT required for listing and
+       lead flows, only for live checkout.)
+    3. After payer approval: POST /api/v1/billing/verify →
+       on verified completion the commerce hook links the Transaction and
+       flips the CommerceOrder to "paid".
+  Until the billing "commerce" kind ships, /commerce/orders returns the
+  order with ``checkout_ready: false`` and an honest message — the Shop
+  UI surfaces "Checkout via provider — coming soon" instead of a fake
+  buy button that takes money nowhere.
+"""
+from __future__ import annotations
+
+import re
+import secrets
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
+from sqlalchemy import desc, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.deps import get_current_user, get_db
+from app.models.commerce import (
+    PRODUCT_CATEGORIES,
+    CommerceLead,
+    CommerceOrder,
+    Product,
+    ProductPage,
+)
+from app.models.core import User
+
+router = APIRouter(prefix="/commerce", tags=["commerce"])
+
+_optional_bearer = HTTPBearer(auto_error=False)
+
+
+async def _optional_user(
+    db: AsyncSession = Depends(get_db),
+    creds: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
+) -> User | None:
+    """Best-effort auth: returns the user or None (for public lead capture)."""
+    from app.core.config import settings
+
+    if creds is None:
+        if settings.dev_noauth:
+            # DEV ONLY — mirror get_current_user's dev bypass.
+            res = await db.execute(
+                select(User).where(User.email == "dev@virello.app"))
+            user = res.scalar_one_or_none()
+            if user is None:
+                user = User(email="dev@virello.app", name="Dev", locale="en")
+                db.add(user)
+                await db.commit()
+                await db.refresh(user)
+            return user
+        return None
+    try:
+        from app.core.security import decode_token
+
+        user_id = decode_token(creds.credentials)
+        res = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        return res.scalar_one_or_none()
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------- schemas
+
+class ProductIn(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = Field(default="", max_length=5000)
+    price_cents: int = Field(..., ge=0, le=100_000_000)
+    currency: str = Field(default="USD", max_length=8)
+    category: str = Field(default="all", max_length=64)
+    image_urls: list[str] = Field(default_factory=list, max_length=10)
+    stock_qty: int = Field(default=0, ge=0)
+    # Affiliate (e.g. Amazon Associates): outbound merchant link. Virello
+    # never takes payment for affiliate products; the UI must show the
+    # "Affiliate link — we may earn a commission" disclosure.
+    is_affiliate: bool = False
+    affiliate_url: str = Field(default="", max_length=2000)
+    affiliate_provider: str = Field(default="", max_length=32)
+
+
+class ProductPatch(BaseModel):
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=5000)
+    price_cents: int | None = Field(default=None, ge=0, le=100_000_000)
+    currency: str | None = Field(default=None, max_length=8)
+    category: str | None = Field(default=None, max_length=64)
+    image_urls: list[str] | None = Field(default=None, max_length=10)
+    stock_qty: int | None = Field(default=None, ge=0)
+    is_active: bool | None = None
+    is_affiliate: bool | None = None
+    affiliate_url: str | None = Field(default=None, max_length=2000)
+    affiliate_provider: str | None = Field(default=None, max_length=32)
+
+
+class ProductOut(BaseModel):
+    id: str
+    creator_id: str
+    title: str
+    description: str
+    price_cents: int
+    price_display: str
+    currency: str
+    category: str
+    image_urls: list[str]
+    stock_qty: int
+    is_active: bool
+    views: int
+    is_affiliate: bool
+    affiliate_url: str | None = None
+    affiliate_provider: str | None = None
+    created_at: str
+
+
+class CompareIn(BaseModel):
+    product_ids: list[str] = Field(..., min_length=2, max_length=4)
+
+
+class LeadIn(BaseModel):
+    source: str = Field(default="shop", max_length=32)
+
+
+class OrderIn(BaseModel):
+    product_id: str
+    provider: str = Field(default="", max_length=32)  # paypal|payoneer|google_pay
+
+
+# ---------------------------------------------------------------- helpers
+
+def _slugify(title: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60]
+    return f"{slug or 'product'}-{secrets.token_hex(3)}"
+
+
+def _price_display(price_cents: int, currency: str) -> str:
+    symbols = {"USD": "$", "EUR": "€", "GBP": "£", "PKR": "Rs ", "INR": "₹", "AED": "د.إ "}
+    sym = symbols.get(currency.upper(), f"{currency.upper()} ")
+    return f"{sym}{price_cents / 100:,.2f}"
+
+
+def _to_out(p: Product) -> ProductOut:
+    return ProductOut(
+        id=str(p.id),
+        creator_id=str(p.creator_id),
+        title=p.title,
+        description=p.description or "",
+        price_cents=p.price_cents,
+        price_display=_price_display(p.price_cents, p.currency),
+        currency=p.currency,
+        category=p.category,
+        image_urls=list(p.image_urls or []),
+        stock_qty=p.stock_qty,
+        is_active=p.is_active,
+        views=p.views or 0,
+        is_affiliate=bool(p.is_affiliate),
+        affiliate_url=p.affiliate_url,
+        affiliate_provider=p.affiliate_provider,
+        created_at=p.created_at.isoformat() if p.created_at else "",
+    )
+
+
+def _validate_affiliate_fields(is_affiliate: bool, affiliate_url: str,
+                               affiliate_provider: str) -> tuple[str, str]:
+    """Normalize + validate affiliate fields. Raises 400 on bad input."""
+    from app.services.affiliate.base import supported_affiliate_providers
+
+    url = (affiliate_url or "").strip()
+    provider = (affiliate_provider or "").strip().lower()
+    if is_affiliate:
+        if not url:
+            raise HTTPException(400, "affiliate_url is required for affiliate products")
+        if not (url.startswith("http://") or url.startswith("https://")):
+            raise HTTPException(400, "affiliate_url must be an http(s) URL")
+        if provider and provider not in supported_affiliate_providers():
+            raise HTTPException(
+                400, f"affiliate_provider must be one of {supported_affiliate_providers()}")
+        if not provider:
+            provider = "amazon"  # default until more providers land
+    else:
+        url, provider = "", ""
+    return url, provider
+
+
+def _parse_uuid(value: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(value)
+    except (ValueError, AttributeError):
+        raise HTTPException(400, "Invalid id")
+
+
+async def _get_product(db: AsyncSession, product_id: uuid.UUID) -> Product:
+    res = await db.execute(select(Product).where(Product.id == product_id))
+    product = res.scalar_one_or_none()
+    if product is None:
+        raise HTTPException(404, "Product not found")
+    return product
+
+
+# ---------------------------------------------------------------- endpoints
+
+@router.post("/products", response_model=ProductOut, status_code=201)
+async def create_product(
+    body: ProductIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Creator lists a product. Creates the shareable ProductPage too."""
+    category = (body.category or "all").lower()
+    if category not in PRODUCT_CATEGORIES:
+        raise HTTPException(400, f"category must be one of {PRODUCT_CATEGORIES}")
+    image_urls = [u.strip() for u in body.image_urls if u.strip()][:10]
+    for u in image_urls:
+        if not (u.startswith("http://") or u.startswith("https://")):
+            raise HTTPException(400, "image_urls must be http(s) URLs")
+    affiliate_url, affiliate_provider = _validate_affiliate_fields(
+        body.is_affiliate, body.affiliate_url, body.affiliate_provider)
+    product = Product(
+        creator_id=user.id,
+        title=body.title.strip(),
+        description=body.description.strip(),
+        price_cents=body.price_cents,
+        currency=body.currency.upper(),
+        category=category,
+        image_urls=image_urls,
+        stock_qty=body.stock_qty,
+        is_active=True,
+        is_affiliate=body.is_affiliate,
+        affiliate_url=affiliate_url or None,
+        affiliate_provider=affiliate_provider or None,
+    )
+    db.add(product)
+    await db.flush()
+    # Shareable page: /p/{slug}
+    slug = _slugify(product.title)
+    for _ in range(3):  # tiny collision retry
+        exists = (
+            await db.execute(select(ProductPage.id).where(ProductPage.slug == slug))
+        ).scalar_one_or_none()
+        if exists is None:
+            break
+        slug = _slugify(product.title)
+    db.add(ProductPage(product_id=product.id, slug=slug))
+    await db.commit()
+    await db.refresh(product)
+    return _to_out(product)
+
+
+@router.get("/products", response_model=dict)
+async def list_products(
+    category: str | None = Query(default=None),
+    q: str | None = Query(default=None, max_length=120),
+    sort: str = Query(default="newest", pattern="^(newest|price_asc|price_desc|popular)$"),
+    limit: int = Query(default=24, ge=1, le=60),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Browse the catalog. Empty catalog → {"products": [], "total": 0}."""
+    stmt = select(Product).where(Product.is_active.is_(True))
+    sort_note = ""
+    if category and category != "all":
+        cat = category.lower()
+        if cat == "best_sellers":
+            # No order volume yet: rank by real page views, labeled honestly.
+            sort = "popular"
+            sort_note = "Ranked by product page views (sales tracking coming soon)"
+        elif cat in PRODUCT_CATEGORIES:
+            stmt = stmt.where(Product.category == cat)
+    if q:
+        like = f"%{q.strip()}%"
+        stmt = stmt.where(
+            or_(Product.title.ilike(like), Product.description.ilike(like))
+        )
+    if sort == "price_asc":
+        stmt = stmt.order_by(Product.price_cents.asc())
+    elif sort == "price_desc":
+        stmt = stmt.order_by(Product.price_cents.desc())
+    elif sort == "popular":
+        stmt = stmt.order_by(desc(Product.views))
+    else:
+        stmt = stmt.order_by(desc(Product.created_at))
+    total = (await db.execute(
+        select(func.count()).select_from(stmt.subquery()))).scalar() or 0
+    rows = (await db.execute(stmt.offset(offset).limit(limit))).scalars().all()
+    return {
+        "products": [_to_out(p).model_dump() for p in rows],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "sort_note": sort_note,
+    }
+
+
+@router.get("/products/slug/{slug}", response_model=dict)
+async def product_page_by_slug(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Public shareable product page (for /p/{slug} links). Counts a view —
+    a genuine event, never fabricated."""
+    res = await db.execute(
+        select(ProductPage, Product)
+        .join(Product, Product.id == ProductPage.product_id)
+        .where(ProductPage.slug == slug, Product.is_active.is_(True))
+    )
+    row = res.one_or_none()
+    if row is None:
+        raise HTTPException(404, "Product page not found")
+    page, product = row
+    page.views = (page.views or 0) + 1
+    product.views = (product.views or 0) + 1
+    await db.commit()
+    return {"product": _to_out(product).model_dump(), "page_views": page.views}
+
+
+@router.get("/products/{product_id}", response_model=dict)
+async def product_detail(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    product = await _get_product(db, _parse_uuid(product_id))
+    if not product.is_active:
+        raise HTTPException(404, "Product not found")
+    related = (
+        await db.execute(
+            select(Product)
+            .where(Product.is_active.is_(True), Product.id != product.id,
+                   Product.category == product.category)
+            .order_by(desc(Product.views)).limit(6)
+        )
+    ).scalars().all()
+    if not related:
+        related = (
+            await db.execute(
+                select(Product)
+                .where(Product.is_active.is_(True), Product.id != product.id)
+                .order_by(desc(Product.views)).limit(6)
+            )
+        ).scalars().all()
+    page = (
+        await db.execute(
+            select(ProductPage).where(ProductPage.product_id == product.id))
+    ).scalar_one_or_none()
+    return {
+        "product": _to_out(product).model_dump(),
+        "related": [_to_out(p).model_dump() for p in related],
+        "share_slug": page.slug if page else None,
+        "is_owner": str(product.creator_id) == str(user.id),
+    }
+
+
+@router.patch("/products/{product_id}", response_model=ProductOut)
+async def update_product(
+    product_id: str,
+    body: ProductPatch,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    product = await _get_product(db, _parse_uuid(product_id))
+    if str(product.creator_id) != str(user.id):
+        raise HTTPException(403, "Only the creator can update this product")
+    data = body.model_dump(exclude_unset=True)
+    if "category" in data and data["category"] not in PRODUCT_CATEGORIES:
+        raise HTTPException(400, f"category must be one of {PRODUCT_CATEGORIES}")
+    if "image_urls" in data and data["image_urls"] is not None:
+        urls = [u.strip() for u in data["image_urls"] if u.strip()][:10]
+        for u in urls:
+            if not (u.startswith("http://") or u.startswith("https://")):
+                raise HTTPException(400, "image_urls must be http(s) URLs")
+        data["image_urls"] = urls
+    # Affiliate fields: validate as a group against the final is_affiliate.
+    aff_keys = {"is_affiliate", "affiliate_url", "affiliate_provider"}
+    if aff_keys & set(data.keys()):
+        is_aff = data.get("is_affiliate", product.is_affiliate)
+        url, provider = _validate_affiliate_fields(
+            bool(is_aff),
+            data.get("affiliate_url", product.affiliate_url or ""),
+            data.get("affiliate_provider", product.affiliate_provider or ""),
+        )
+        data["is_affiliate"] = bool(is_aff)
+        data["affiliate_url"] = url or None
+        data["affiliate_provider"] = provider or None
+    for key, value in data.items():
+        if key == "title" and isinstance(value, str):
+            value = value.strip()
+        setattr(product, key, value)
+    await db.commit()
+    await db.refresh(product)
+    return _to_out(product)
+
+
+@router.delete("/products/{product_id}")
+async def deactivate_product(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Soft-delete: deactivates the listing (orders/leads history preserved)."""
+    product = await _get_product(db, _parse_uuid(product_id))
+    if str(product.creator_id) != str(user.id):
+        raise HTTPException(403, "Only the creator can remove this product")
+    product.is_active = False
+    await db.commit()
+    return {"ok": True, "deactivated": True}
+
+
+@router.post("/products/{product_id}/sync", response_model=dict)
+async def sync_affiliate_product(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Re-sync an affiliate product's price/stock from the provider API.
+
+    Honest placeholder: real sync needs the provider's official API
+    credentials (e.g. Amazon PA-API 5.0 via Secure Vault). Without them the
+    provider reports ``status="not_configured"`` and NOTHING is changed —
+    no synthetic prices, ever.
+    """
+    from app.services.affiliate.base import get_affiliate_provider
+
+    product = await _get_product(db, _parse_uuid(product_id))
+    if str(product.creator_id) != str(user.id):
+        raise HTTPException(403, "Only the creator can sync this product")
+    if not product.is_affiliate:
+        raise HTTPException(400, "Only affiliate products can be synced")
+    provider = get_affiliate_provider(product.affiliate_provider or "amazon")
+    # External id is the last path segment of the affiliate URL when it
+    # looks like an ASIN; otherwise we can't sync without PA-API search.
+    external_id = (product.affiliate_url or "").rstrip("/").split("/")[-1].split("?")[0]
+    result = await provider.sync_product(str(product.id), external_id)
+    return {
+        "status": result.status,
+        "product_id": str(product.id),
+        "message": result.message,
+        "price_changed": False,
+        "stock_changed": False,
+    }
+
+
+@router.post("/products/compare", response_model=dict)
+async def compare_products(
+    body: CompareIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Side-by-side comparison of 2–4 products. Real stored data only."""
+    ids = [_parse_uuid(pid) for pid in dict.fromkeys(body.product_ids)]
+    rows = (await db.execute(
+        select(Product).where(Product.id.in_(ids), Product.is_active.is_(True))
+    )).scalars().all()
+    found = {str(p.id): p for p in rows}
+    missing = [pid for pid in body.product_ids if pid not in found]
+    products = [_to_out(found[pid]).model_dump()
+                for pid in body.product_ids if pid in found]
+    # Honest comparison table: only fields that exist.
+    table = [
+        {"field": "Price", "values": [p["price_display"] for p in products]},
+        {"field": "Category", "values": [p["category"] for p in products]},
+        {"field": "In stock", "values": [str(p["stock_qty"]) for p in products]},
+        {"field": "Views", "values": [str(p["views"]) for p in products]},
+    ]
+    return {"products": products, "comparison": table, "missing": missing,
+            "note": "Ratings & reviews are not available yet"}
+
+
+@router.post("/products/{product_id}/lead")
+async def record_lead(
+    product_id: str,
+    body: LeadIn,
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(_optional_user),
+):
+    """Record genuine interest in a product. One lead per user per product
+    per day (dedupe) — repeated taps don't inflate counts."""
+    product = await _get_product(db, _parse_uuid(product_id))
+    if not product.is_active:
+        raise HTTPException(404, "Product not found")
+    source = (body.source or "shop")[:32]
+    if user is not None:
+        # Dedupe: same user + product within the last 24h.
+        from datetime import datetime, timedelta, timezone
+
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        dup = (
+            await db.execute(
+                select(CommerceLead.id).where(
+                    CommerceLead.product_id == product.id,
+                    CommerceLead.user_id == user.id,
+                    CommerceLead.created_at >= cutoff,
+                ).limit(1)
+            )
+        ).scalar_one_or_none()
+        if dup is not None:
+            return {"ok": True, "deduped": True}
+    lead = CommerceLead(
+        product_id=product.id,
+        user_id=user.id if user else None,
+        source=source,
+        status="new",
+    )
+    db.add(lead)
+    await db.commit()
+    return {"ok": True, "lead_id": str(lead.id)}
+
+
+@router.get("/my/products", response_model=list[ProductOut])
+async def my_products(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    rows = (
+        await db.execute(
+            select(Product).where(Product.creator_id == user.id)
+            .order_by(desc(Product.created_at))
+        )
+    ).scalars().all()
+    return [_to_out(p) for p in rows]
+
+
+@router.get("/my/leads", response_model=dict)
+async def my_leads(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Leads on the creator's own products (genuine events only)."""
+    my_ids = select(Product.id).where(Product.creator_id == user.id)
+    rows = (
+        await db.execute(
+            select(CommerceLead, Product.title)
+            .join(Product, Product.id == CommerceLead.product_id)
+            .where(CommerceLead.product_id.in_(my_ids))
+            .order_by(desc(CommerceLead.created_at)).limit(200)
+        )
+    ).all()
+    return {
+        "leads": [
+            {"id": str(lead.id), "product_id": str(lead.product_id),
+             "product_title": title, "source": lead.source,
+             "status": lead.status,
+             "created_at": lead.created_at.isoformat() if lead.created_at else ""}
+            for lead, title in rows
+        ],
+        "total": len(rows),
+    }
+
+
+@router.post("/orders", response_model=dict, status_code=201)
+async def create_commerce_order(
+    body: OrderIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Start a purchase: creates the CommerceOrder (status="created").
+
+    Live provider checkout is NOT wired yet — the response carries
+    ``checkout_ready: false`` with next-step guidance. When the billing
+    "commerce" kind ships, the client will call POST /billing/orders with
+    metadata {"commerce_order_id": id}; the verify hook will then link the
+    Transaction and flip this order to "paid". No money moves here.
+    """
+    from app.services.payments.base import supported_providers
+
+    product = await _get_product(db, _parse_uuid(body.product_id))
+    if not product.is_active:
+        raise HTTPException(404, "Product not found")
+    if str(product.creator_id) == str(user.id):
+        raise HTTPException(400, "You can't buy your own product")
+    if product.stock_qty <= 0:
+        raise HTTPException(400, "Out of stock")
+    provider = (body.provider or "").lower()
+    if provider and provider not in supported_providers():
+        raise HTTPException(400, f"Unsupported provider: {body.provider}")
+    order = CommerceOrder(
+        product_id=product.id,
+        buyer_id=user.id,
+        amount_cents=product.price_cents,
+        currency=product.currency,
+        payment_provider=provider,
+        status="created",
+    )
+    db.add(order)
+    await db.commit()
+    await db.refresh(order)
+    return {
+        "order_id": str(order.id),
+        "product_id": str(product.id),
+        "amount_cents": order.amount_cents,
+        "price_display": _price_display(order.amount_cents, order.currency),
+        "currency": order.currency,
+        "status": order.status,
+        "checkout_ready": False,
+        "message": ("Checkout via PayPal / Payoneer / Google Pay is being "
+                    "connected. Your order is saved — you'll be notified "
+                    "when payment opens."),
+    }
+
+
+@router.get("/orders/{order_id}", response_model=dict)
+async def order_status(
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    res = await db.execute(
+        select(CommerceOrder).where(CommerceOrder.id == _parse_uuid(order_id)))
+    order = res.scalar_one_or_none()
+    if order is None:
+        raise HTTPException(404, "Order not found")
+    product = await _get_product(db, order.product_id)
+    if str(order.buyer_id) != str(user.id) and \
+            str(product.creator_id) != str(user.id):
+        raise HTTPException(403, "Not your order")
+    return {
+        "order_id": str(order.id),
+        "product": _to_out(product).model_dump(),
+        "amount_cents": order.amount_cents,
+        "price_display": _price_display(order.amount_cents, order.currency),
+        "currency": order.currency,
+        "status": order.status,
+        "payment_provider": order.payment_provider,
+        "checkout_ready": False,
+    }
+
+
+async def link_transaction_to_order(
+    db: AsyncSession,
+    order_id: uuid.UUID,
+    transaction_id: uuid.UUID,
+    provider_txn_id: str = "",
+) -> CommerceOrder | None:
+    """Hook for the billing verify flow. When billing ships kind="commerce",
+    its verify endpoint should (lazily) import this and call it after a
+    verified "completed" payment:
+
+        from app.routers.commerce import link_transaction_to_order
+        await link_transaction_to_order(db, commerce_order_id, transaction.id,
+                                        provider_ref)
+
+    Links the Transaction, flips the order to "paid", and decrements stock.
+    Returns the updated order, or None if the order id is unknown.
+    """
+    res = await db.execute(
+        select(CommerceOrder).where(CommerceOrder.id == order_id))
+    order = res.scalar_one_or_none()
+    if order is None:
+        return None
+    if order.status == "paid":
+        return order  # idempotent — webhooks/retries can't double-apply
+    order.transaction_id = transaction_id
+    order.provider_txn_id = provider_txn_id
+    order.status = "paid"
+    product = await _get_product(db, order.product_id)
+    if product.stock_qty > 0:
+        product.stock_qty -= 1
+    await db.commit()
+    await db.refresh(order)
+    return order

@@ -9,6 +9,8 @@ import '../audience/audience_intelligence_screen.dart';
 import '../collab/collab_screen.dart';
 import '../ctr/ctr_audit_screen.dart';
 import '../discovery/analyze_screen.dart';
+import '../viral_lab/viral_lab_screen.dart';
+import '../creator_studio/creator_studio_screen.dart';
 import '../discovery/discovery_screen.dart';
 import '../grow/grow_flow.dart';
 import '../referrals/referral_screen.dart';
@@ -77,10 +79,7 @@ class CreateHubScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: VirelloColors.muted,
-            ),
+            const Icon(Icons.chevron_right, color: VirelloColors.muted),
           ],
         ),
       ),
@@ -104,10 +103,7 @@ class CreateHubScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               s.whatToDoToday,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
           ),
           _row(
@@ -119,6 +115,28 @@ class CreateHubScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AnalyzeScreen()),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.science_outlined,
+            iconColor: VirelloColors.violetDeep,
+            title: s.viralLab,
+            desc: s.viralLabDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ViralLabScreen()),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.auto_awesome,
+            iconColor: _cyan,
+            title: s.creatorStudio,
+            desc: s.creatorStudioDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatorStudioScreen()),
             ),
           ),
           _row(
@@ -150,9 +168,7 @@ class CreateHubScreen extends StatelessWidget {
             desc: s.promoteWithAIDesc,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const CampaignBuilderScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const CampaignBuilderScreen()),
             ),
           ),
 
@@ -161,10 +177,7 @@ class CreateHubScreen extends StatelessWidget {
             padding: const EdgeInsets.only(top: 12, bottom: 8),
             child: Text(
               s.freeGrowthTools,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
           ),
           _row(

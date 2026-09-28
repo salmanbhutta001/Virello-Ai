@@ -3,6 +3,7 @@ import uuid
 
 import httpx
 import pytest
+import pytest_asyncio
 from sqlalchemy import func, select
 
 from app.core.database import SessionLocal
@@ -19,7 +20,7 @@ from app.services.ai_core.context import (
 from app.services.ai_core.coordinator import handle_ask
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
@@ -27,7 +28,7 @@ async def client():
         yield c
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def user():
     async with SessionLocal() as db:
         u = User(

@@ -6,6 +6,8 @@ import '../../data/ads_models.dart';
 import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../academy/academy_screen.dart';
+import '../entertain/entertain_screen.dart';
 import 'analyze_screen.dart';
 import 'language_trends_screen.dart';
 import 'link_card.dart';
@@ -222,10 +224,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// Feed items whose post type is a generic link: rendered as native
   /// LinkCards (organic growth strategy #2). Each card fetches its own
   /// reader preview lazily — one request per card, failures swallowed.
-  List<DiscoveryItem> _linkItems() =>
-      _feed.where(LinkCard.isLinkPost).toList();
+  List<DiscoveryItem> _linkItems() => _feed.where(LinkCard.isLinkPost).toList();
 
-  Future<void> _dismissItem(DiscoveryItem item) async {    try {
+  Future<void> _dismissItem(DiscoveryItem item) async {
+    try {
       await apiClient.recordInteraction(
           campaignId: item.campaignId,
           kind: 'dismiss',
@@ -315,14 +317,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   VSectionHeader(title: s.aiRecommendedForYou),
                   const SizedBox(height: 10),
                   _recommendedCard(),
+                  // Phase 5/6: Academy (Learn) + Entertainment (Stories).
+                  const SizedBox(height: 20),
+                  VSectionHeader(title: s.learnAndPlay),
+                  const SizedBox(height: 10),
+                  _learnPlayRow(),
                   // Link posts: link-type feed items rendered as native
                   // in-app LinkCards (thumbnail + plain-text domain + AI
                   // summary + Read). No fake metrics anywhere on the card.
                   if (_linkItems().isNotEmpty) ...[
                     const SizedBox(height: 20),
                     VSectionHeader(
-                        title: LinkCardStrings.linkPosts(
-                            appState.localeCode)),
+                        title: LinkCardStrings.linkPosts(appState.localeCode)),
                     const SizedBox(height: 10),
                     for (final item in _linkItems())
                       Padding(
@@ -445,7 +451,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       url = 'https://en.wikipedia.org/wiki/$slug';
     } else {
       // News headline -> Google News search for the topic
-      url = 'https://news.google.com/search?q=${Uri.encodeComponent(query)}&hl=en-US&gl=US&ceid=US:en';
+      url =
+          'https://news.google.com/search?q=${Uri.encodeComponent(query)}&hl=en-US&gl=US&ceid=US:en';
     }
     final item = DiscoveryItem(
       campaignId: '',
@@ -498,37 +505,36 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               return GestureDetector(
                 onTap: () => _openTrend(trend),
                 child: Container(
-                width: 160,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: VirelloColors.brandGradient,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.trending_up,
-                        color: Colors.white, size: 20),
-                    const SizedBox(height: 6),
-                    Text(query,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white)),
-                    if (source.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(source,
-                          maxLines: 1,
+                  width: 160,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: VirelloColors.brandGradient,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.trending_up,
+                          color: Colors.white, size: 20),
+                      const SizedBox(height: 6),
+                      Text(query,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white70)),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
+                      if (source.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.white70)),
+                      ],
                     ],
-                  ],
-                ),
+                  ),
                 ),
               );
             },
@@ -591,20 +597,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return GestureDetector(
       onTap: () => _openLanguageTrends(code, nameEn),
       child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        VGlassLangBadge(code: code),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: 64,
-          child: Text(nameEn,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 11, color: VirelloColors.mutedDark)),
-        ),
-      ],
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          VGlassLangBadge(code: code),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 64,
+            child: Text(nameEn,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11, color: VirelloColors.mutedDark)),
+          ),
+        ],
       ),
     );
   }
@@ -613,8 +619,26 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   void _openLanguageTrends(String code, String name) {
     // Map common codes; fallback to 'en' for unsupported
     final wikiLangs = {
-      'en', 'ur', 'ar', 'es', 'fr', 'de', 'hi', 'bn', 'pa', 'tr',
-      'fa', 'ru', 'zh', 'ja', 'pt', 'it', 'nl', 'pl', 'id', 'ms',
+      'en',
+      'ur',
+      'ar',
+      'es',
+      'fr',
+      'de',
+      'hi',
+      'bn',
+      'pa',
+      'tr',
+      'fa',
+      'ru',
+      'zh',
+      'ja',
+      'pt',
+      'it',
+      'nl',
+      'pl',
+      'id',
+      'ms',
     };
     final lang = wikiLangs.contains(code) ? code : 'en';
     Navigator.of(context).push(
@@ -625,6 +649,83 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   // ---- AI Recommended For You: interest-matched real trends ----
+  // ---- Learn & Play: Academy + Entertainment entry tiles (Phase 5/6) ----
+  Widget _learnPlayRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _learnPlayTile(
+            icon: Icons.school_outlined,
+            tint: VirelloColors.violet.withValues(alpha: 0.12),
+            iconColor: VirelloColors.violet,
+            title: s.openAcademy,
+            subtitle: s.openAcademyDesc,
+            onTap: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const AcademyScreen())),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _learnPlayTile(
+            icon: Icons.auto_stories_outlined,
+            tint: VirelloColors.amber.withValues(alpha: 0.15),
+            iconColor: VirelloColors.amber,
+            title: s.openStories,
+            subtitle: s.openStoriesDesc,
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EntertainScreen())),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _learnPlayTile({
+    required IconData icon,
+    required Color tint,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: VirelloColors.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: VirelloColors.divider),
+          boxShadow: VirelloColors.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: tint,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, size: 22, color: iconColor),
+            ),
+            const SizedBox(height: 10),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 12, color: VirelloColors.muted, height: 1.4)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _recommendedCard() {
     if (_recommended.isEmpty) {
       return Column(
@@ -656,9 +757,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     final detail = '${t['detail'] ?? ''}';
     final thumb = '${t['thumbnail_url'] ?? ''}';
     final desc = '${t['description'] ?? ''}';
-    final matched = (t['matched_interests'] as List? ?? [])
-        .map((e) => '$e')
-        .toList();
+    final matched =
+        (t['matched_interests'] as List? ?? []).map((e) => '$e').toList();
     return GestureDetector(
       onTap: () => _openTrend(t),
       child: Container(
@@ -690,8 +790,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   decoration: const BoxDecoration(
                     gradient: VirelloColors.brandGradient,
                   ),
-                  child: const Icon(Icons.auto_awesome,
-                      color: Colors.white),
+                  child: const Icon(Icons.auto_awesome, color: Colors.white),
                 ),
               )
             else
@@ -701,8 +800,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 decoration: const BoxDecoration(
                   gradient: VirelloColors.brandGradient,
                 ),
-                child: const Icon(Icons.auto_awesome,
-                    color: Colors.white),
+                child: const Icon(Icons.auto_awesome, color: Colors.white),
               ),
             Expanded(
               child: Padding(
@@ -751,8 +849,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ),
             const Padding(
               padding: EdgeInsets.only(right: 12),
-              child:
-                  Icon(Icons.chevron_right, color: VirelloColors.muted),
+              child: Icon(Icons.chevron_right, color: VirelloColors.muted),
             ),
           ],
         ),
