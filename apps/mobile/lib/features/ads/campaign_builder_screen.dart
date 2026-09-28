@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -78,12 +79,43 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
     super.initState();
     if (widget.initialContent != null && widget.initialContent!.isNotEmpty) {
       _inputCtrl.text = widget.initialContent!;
+    } else {
+      // Auto-paste link from clipboard if available
+      _autoPasteFromClipboard();
     }
     if (widget.campaignId != null) {
       _loadCampaign();
     } else {
       _loadPlans();
     }
+  }
+
+  /// Auto-fill the input from clipboard if it contains a URL.
+  Future<void> _autoPasteFromClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (text.isEmpty) return;
+      // Only auto-paste if it looks like a URL
+      if ((text.startsWith('http://') || text.startsWith('https://')) &&
+          _inputCtrl.text.isEmpty &&
+          mounted) {
+        setState(() => _inputCtrl.text = text);
+      }
+    } catch (_) {
+      // Clipboard unavailable — user can paste manually
+    }
+  }
+
+  /// Manual paste button handler.
+  Future<void> _pasteFromClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (text.isNotEmpty && mounted) {
+        setState(() => _inputCtrl.text = text);
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadPlans() async {
@@ -240,6 +272,55 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(s.adBuildFailed)));
+    }
+  }
+
+  /// One-tap flow: build → submit → approve → launch.
+  /// For users who want to go live immediately from this screen.
+  Future<void> _buildAndLaunch() async {
+    final input = _inputCtrl.text.trim();
+    if (input.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Paste a link or text first')),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      // Step 1: Build
+      await _build();
+      final c = _campaign;
+      if (c == null || !mounted) {
+        setState(() => _busy = false);
+        return;
+      }
+      // Step 2: Submit for approval (draft -> pending_approval)
+      if (c.isDraft) {
+        final submitted = await apiClient.patchAdCampaign(
+            c.id, {'status': 'pending_approval'});
+        if (!mounted) return;
+        setState(() => _campaign = submitted);
+      }
+      // Step 3: Approve
+      final approved = await apiClient.approveAdCampaign(_campaign!.id);
+      if (!mounted) return;
+      setState(() => _campaign = approved);
+      // Step 4: Launch
+      final launched = await apiClient.launchAdCampaign(_campaign!.id);
+      if (!mounted) return;
+      setState(() {
+        _campaign = launched;
+        _busy = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Campaign is now Live!')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Launch failed. Try step by step.')),
+      );
     }
   }
 
@@ -518,6 +599,11 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.content_paste_outlined),
+                  tooltip: 'Paste from clipboard',
+                  onPressed: _pasteFromClipboard,
+                ),
               ),
             ),
             // Media carried over from Upload Studio (optional; shown only).
@@ -546,6 +632,13 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               label: s.adAnalyzeBuild,
               icon: Icons.auto_awesome_outlined,
               onPressed: _busy ? null : _build,
+            ),
+            const SizedBox(height: 8),
+            // Quick launch: build + approve + launch in one tap.
+            VGradientButton(
+              label: 'Build & Launch Now',
+              icon: Icons.rocket_launch_outlined,
+              onPressed: _busy ? null : _buildAndLaunch,
             ),
             const SizedBox(height: 12),
             // Two fully separate modules: switching plans swaps everything
