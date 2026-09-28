@@ -211,6 +211,41 @@ class ApiClient {
       _postJson('/api/v1/ai/support',
           {'question': question, 'language': language});
 
+  // ------------------------------ ai-core (Ask Virello) ------------------------------
+  /// Ask Virello: natural-language → intent → module → response.
+  /// Response: {intent, confidence, module, module_status, method, reply,
+  /// reply_language, dev, provider, actions, plan, conversation_id,
+  /// context_updated}. Honest about dev/heuristic output.
+  Future<Map<String, dynamic>> askVirello(String text,
+          {String? conversationId, String? language}) =>
+      _postJson('/api/v1/ai-core/ask', {
+        'text': text,
+        if (conversationId != null) 'conversation_id': conversationId,
+        if (language != null) 'language': language,
+      });
+
+  /// List the user's AI conversations (most recent first).
+  Future<List<dynamic>> getAiConversations() async {
+    final data = await _getDynamic('/api/v1/ai-core/conversations');
+    return (data as List).toList();
+  }
+
+  /// Get one conversation with its messages (ownership-verified server-side).
+  Future<Map<String, dynamic>> getAiConversation(String id) =>
+      _getJson('/api/v1/ai-core/conversations/$id');
+
+  /// Get the user's cross-module AI context/memory.
+  Future<Map<String, dynamic>> getAiContext() =>
+      _getJson('/api/v1/ai-core/context');
+
+  /// Reset the user's AI context/memory.
+  Future<void> resetAiContext() async {
+    final res = await http.delete(Uri.parse('$baseUrl/api/v1/ai-core/context'),
+        headers: _headers);
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+  }
+
   // ------------------------------ billing ------------------------------
   Future<Map<String, dynamic>> credits() => _getJson('/api/v1/billing/credits');
 

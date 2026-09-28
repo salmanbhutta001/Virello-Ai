@@ -103,7 +103,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.campaigns),
+        title: Text(s.grow),
         actions: [
           IconButton(
             tooltip: s.freeServices,

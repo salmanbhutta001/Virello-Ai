@@ -1250,4 +1250,97 @@ class AppStrings {
       'Your links render as rich native cards in the feed',
       'آپ کے لنکس فیڈ میں خوبصورت نیٹو کارڈز بن کر دکھیں',
       'تظهر روابطك كبطاقات أصلية غنية في الموجز');
+
+
+  // ------------------------------ Ask Virello (Phase 1) ------------------------------
+  String get askVirello =>
+      _get('Ask Virello', 'وائریلو سے پوچھیں', 'اسأل فيريلو');
+  String get askVirelloHint => _get(
+      'Ask anything — create, grow, sell, learn…',
+      'کچھ بھی پوچھیں — بنائیں، بڑھائیں، بیچیں، سیکھیں…',
+      'اسأل أي شيء — أنشئ، نمِّ، بِع، تعلَّم…');
+  String get askVirelloWelcome => _get(
+      'Hi! I\'m Virello, your AI assistant. Just tell me what you want — "create a video", "grow this post", "sell this product" — and I\'ll route it to the right tool.',
+      'ہیلو! میں وائریلو ہوں، آپ کا AI اسسٹنٹ۔ بس بتائیں کیا چاہیے — "ویڈیو بنائیں"، "یہ پوسٹ بڑھائیں"، "یہ پروڈکٹ بیچیں" — میں صحیح ٹول تک پہنچا دوں گا۔',
+      'مرحبًا! أنا فيريلو، مساعدك الذكي. أخبرني فقط بما تريد — "أنشئ فيديو"، "نمِّ هذا المنشور"، "بِع هذا المنتج" — وسأوجّهك إلى الأداة المناسبة.');
+  String get newChat => _get('New chat', 'نئی چیٹ', 'محادثة جديدة');
+  String get devPreviewNote => _get(
+      'Development preview — heuristic output',
+      'ڈیولپمنٹ پیش نظارہ — ہیورسٹک آؤٹ پٹ',
+      'معاينة تطويرية — مخرجات استكشافية');
+  String get comingSoonPhase => _get('Coming in a later phase',
+      'اگلے مرحلے میں آ رہا ہے', 'قادم في مرحلة لاحقة');
+  String get askFailed => _get(
+      'Couldn\'t reach Virello AI. Check your connection and try again.',
+      'وائریلو AI سے رابطہ نہ ہو سکا۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+      'تعذّر الوصول إلى فيريلو. تحقق من الاتصال وحاول مجددًا.');
+
+  // ------------------------------ Shop (Phase 1 placeholder) ------------------------------
+  String get shop => _get('Shop', 'شاپ', 'المتجر');
+  String get shopComingSoon =>
+      _get('Shop is coming soon', 'شاپ جلد آ رہی ہے', 'المتجر قادم قريبًا');
+  String get shopComingSoonDesc => _get(
+      'Product discovery, price comparison and creator storefronts arrive in Phase 4. Ask Virello about your product in the meantime!',
+      'پروڈکٹ ڈسکوری، قیمت کا موازنہ اور کریئیٹر اسٹورز فیز 4 میں آئیں گے۔ تب تک وائریلو سے اپنے پروڈکٹ کے بارے میں پوچھیں!',
+      'اكتشاف المنتجات ومقارنة الأسعار وواجهات المبدعين قادمة في المرحلة 4. اسأل فيريلو عن منتجك في هذه الأثناء!');
+
+  // ------------------------------ Home next actions (Phase 1) ------------------------------
+  String get nextActions => _get(
+      'AI suggested next actions',
+      'AI کی تجویز کردہ اگلے اقدامات',
+      'الخطوات التالية المقترحة بالذكاء الاصطناعي');
+  String get actionAnalyzePost =>
+      _get('Analyze a post', 'پوسٹ کا تجزیہ کریں', 'حلِّل منشورًا');
+  String get actionAskVirello =>
+      _get('Ask Virello', 'وائریلو سے پوچھیں', 'اسأل فيريلو');
+  String get actionViewCampaigns =>
+      _get('View campaigns', 'مہمات دیکھیں', 'عرض الحملات');
+
+  /// Human label for an AI Core intent code.
+  String intentLabel(String intent) {
+    switch (intent) {
+      case 'create_content':
+        return _get('Create', 'تخلیق', 'إنشاء');
+      case 'analyze_content':
+        return _get('Analyze', 'تجزیہ', 'تحليل');
+      case 'grow':
+        return _get('Grow', 'گرو', 'نمِّ');
+      case 'discover':
+        return _get('Discover', 'دریافت', 'اكتشف');
+      case 'shop':
+        return _get('Shop', 'شاپ', 'المتجر');
+      case 'learn':
+        return _get('Learn', 'سیکھیں', 'تعلَّم');
+      case 'entertain':
+        return _get('Entertain', 'تفریح', 'ترفيه');
+      case 'support':
+        return _get('Support', 'سپورٹ', 'الدعم');
+      default:
+        return _get('Assistant', 'اسسٹنٹ', 'المساعد');
+    }
+  }
+
+  /// Emoji for an AI Core intent code.
+  String intentEmoji(String intent) {
+    switch (intent) {
+      case 'create_content':
+        return '🎨';
+      case 'analyze_content':
+        return '🔍';
+      case 'grow':
+        return '📈';
+      case 'discover':
+        return '🧭';
+      case 'shop':
+        return '🛍️';
+      case 'learn':
+        return '🎓';
+      case 'entertain':
+        return '🎭';
+      case 'support':
+        return '💬';
+      default:
+        return '✨';
+    }
+}
 }

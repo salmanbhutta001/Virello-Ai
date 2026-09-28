@@ -12,6 +12,8 @@ import 'features/home/home_screen.dart';
 import 'features/discovery/discovery_screen.dart';
 import 'features/create/create_hub_screen.dart';
 import 'features/campaigns/campaigns_screen.dart';
+import 'features/ask_virello/ask_virello_screen.dart';
+import 'features/shop/shop_screen.dart';
 import 'features/profile/profile_screen.dart';
 
 /// Shared app services.
@@ -21,7 +23,7 @@ final savedStore = SavedStore();
 
 /// Cross-tab navigation: set [requestedTab] to jump the bottom nav,
 /// [pendingGrowUrl] to pre-fill the Grow flow with a post URL.
-/// Tab indices: 0 Home · 1 Discover · 2 Create · 3 Campaigns · 4 Profile.
+/// Tab indices: 0 Home · 1 Discover · 2 Create · 3 Grow · 4 Shop · 5 Profile.
 final requestedTab = ValueNotifier<int?>(null);
 final pendingGrowUrl = ValueNotifier<String?>(null);
 
@@ -137,8 +139,9 @@ class _VirelloAppState extends State<VirelloApp> {
   }
 }
 
-/// Bottom-nav shell per the approved board:
-/// Home · Discover · [+] (Create hub) · Campaigns · Profile.
+/// Bottom-nav shell per the approved board (Phase 1 evolution):
+/// Home · Discover · [+] (Create hub) · Grow · Shop · Profile.
+/// Ask Virello FAB floats above the bar on Home/Discover/Grow tabs.
 /// The center + button is a raised violet circle opening the Create hub.
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
@@ -213,6 +216,9 @@ class _RootShellState extends State<RootShell> {
         page = const CampaignsScreen();
         break;
       case 4:
+        page = const ShopScreen();
+        break;
+      case 5:
         page = const ProfileScreen();
         break;
       default:
@@ -220,14 +226,53 @@ class _RootShellState extends State<RootShell> {
     }
     // NOTE: Using Material+Column instead of Scaffold to avoid nested
     // Scaffold issues. Each tab screen has its own Scaffold.
+    // Stack overlays the Ask Virello FAB above the bottom bar.
     return Material(
       child: SafeArea(
         bottom: false,
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(child: page),
-            _bottomBar(),
+            Column(
+              children: [
+                Expanded(child: page),
+                _bottomBar(),
+              ],
+            ),
+            if (_showAskFab) _askFab(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Ask Virello FAB: visible on Home, Discover and Grow tabs.
+  bool get _showAskFab => _index == 0 || _index == 1 || _index == 3;
+
+  Widget _askFab() {
+    return Positioned(
+      right: 16,
+      bottom: 96,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AskVirelloScreen()),
+          );
+        },
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: VirelloColors.brandGradient,
+            boxShadow: [
+              BoxShadow(
+                color: VirelloColors.violet.withValues(alpha: 0.45),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26),
         ),
       ),
     );
@@ -238,8 +283,9 @@ class _RootShellState extends State<RootShell> {
       _NavItem(Icons.home_outlined, Icons.home, s.home, 0),
       _NavItem(Icons.explore_outlined, Icons.explore, s.discover, 1),
       null, // center + button
-      _NavItem(Icons.campaign_outlined, Icons.campaign, s.campaigns, 3),
-      _NavItem(Icons.person_outlined, Icons.person, s.profile, 4),
+      _NavItem(Icons.trending_up_outlined, Icons.trending_up, s.grow, 3),
+      _NavItem(Icons.shopping_bag_outlined, Icons.shopping_bag, s.shop, 4),
+      _NavItem(Icons.person_outlined, Icons.person, s.profile, 5),
     ];
     return Container(
       decoration: BoxDecoration(
