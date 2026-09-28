@@ -415,7 +415,41 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  // ---- Trending Now: real Google Trends data, honestly labeled ----
+  // ---- Trending Now: real public trends, honestly labeled ----
+  /// Open a trend's content inside the app via the in-app reader.
+  /// Wikipedia trends -> the article; news trends -> Google News search.
+  void _openTrend(Map<String, dynamic> trend) {
+    final query = (trend['query'] as String? ?? '').trim();
+    final source = (trend['source'] as String? ?? '').trim();
+    if (query.isEmpty) return;
+
+    String url;
+    if (source.toLowerCase() == 'wikipedia') {
+      // Direct Wikipedia article URL
+      final slug = query.replaceAll(' ', '_');
+      url = 'https://en.wikipedia.org/wiki/$slug';
+    } else {
+      // News headline -> Google News search for the topic
+      url = 'https://news.google.com/search?q=${Uri.encodeComponent(query)}&hl=en-US&gl=US&ceid=US:en';
+    }
+    final item = DiscoveryItem(
+      campaignId: '',
+      title: query,
+      platform: 'link',
+      goal: '',
+      postUrl: url,
+      thumbnailUrl: '',
+      matchScore: 1.0,
+      matchReasons: ['Trending on $source'],
+      postType: 'link',
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PostReaderScreen(item: item),
+      ),
+    );
+  }
+
   Widget _trendingRow() {
     if (_trends.isEmpty) {
       return Text(s.nothingHere,
@@ -424,11 +458,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Honest label: these are Google search trends, not Virello posts
+        // Honest label: these are public trends, not Virello posts
         const Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
-            '🔥 Real-time from Google Trends',
+            '🔥 Real trends from Wikipedia & News',
             style: TextStyle(
               fontSize: 11,
               color: VirelloColors.muted,
@@ -445,7 +479,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             itemBuilder: (context, i) {
               final trend = _trends[i];
               final query = trend['query'] as String? ?? '';
-              return Container(
+              final source = trend['source'] as String? ?? '';
+              return GestureDetector(
+                onTap: () => _openTrend(trend),
+                child: Container(
                 width: 160,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -466,7 +503,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: Colors.white)),
+                    if (source.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(source,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white70)),
+                    ],
                   ],
+                ),
                 ),
               );
             },
