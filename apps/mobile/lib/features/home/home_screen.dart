@@ -149,13 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 message: s.nothingHere,
               );
             }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: trends.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (_, i) => _trendRow(trends[i]),
-            );
+            // Pinterest-style 2-column masonry with images
+            return _trendsMasonry(trends);
           },
         );
       case 2:
@@ -348,7 +343,133 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// One followed creator: avatar initial, name/handle, Unfollow button.
+  /// Pinterest-style 2-column masonry for trends with images.
+  Widget _trendsMasonry(List<Map<String, dynamic>> trends) {
+    final left = <Map<String, dynamic>>[];
+    final right = <Map<String, dynamic>>[];
+    for (var i = 0; i < trends.length; i++) {
+      (i.isEven ? left : right).add(trends[i]);
+    }
+    Widget column(List<Map<String, dynamic>> items) {
+      return Column(
+        children: [
+          for (var t in items) ...[
+            _trendPin(t),
+            const SizedBox(height: 12),
+          ],
+        ],
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: column(left)),
+            const SizedBox(width: 12),
+            Expanded(child: column(right)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Pinterest-style pin card: image on top, title + source below.
+  /// Tappable -> opens content in the in-app reader.
+  Widget _trendPin(Map<String, dynamic> t) {
+    final query = '${t['query'] ?? ''}';
+    final source = '${t['source'] ?? ''}';
+    final detail = '${t['detail'] ?? ''}';
+    final thumb = '${t['thumbnail_url'] ?? ''}';
+    final desc = '${t['description'] ?? ''}';
+    return GestureDetector(
+      onTap: () => _openTrend(t),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image (or gradient placeholder)
+            if (thumb.isNotEmpty)
+              Image.network(
+                thumb,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (_, __, ___) => _trendPlaceholder(),
+              )
+            else
+              _trendPlaceholder(),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(query,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700)),
+                  if (desc.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(desc,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: VirelloColors.muted)),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.trending_up,
+                          size: 12, color: VirelloColors.muted),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                            detail.isNotEmpty ? detail : source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 10, color: VirelloColors.muted)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Gradient placeholder when no thumbnail is available.
+  Widget _trendPlaceholder() {
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: VirelloColors.brandGradient,
+      ),
+      alignment: Alignment.center,
+      child: const Icon(Icons.trending_up, color: Colors.white, size: 32),
+    );
+  }
+
   /// Tappable trend row: opens the trend's content in the in-app reader.
+  /// (Legacy list style - kept for reference, masonry is used now)
   Widget _trendRow(Map<String, dynamic> t) {
     final query = '${t['query'] ?? ''}';
     final source = '${t['source'] ?? ''}';
