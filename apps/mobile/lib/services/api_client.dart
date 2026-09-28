@@ -170,6 +170,46 @@ class ApiClient {
     return await _getJson('/api/v1/campaigns/$id/stats');
   }
 
+  // ------------------------------ communities ------------------------------
+  /// Curated public communities directory (read-only discovery).
+  Future<List<dynamic>> getCommunityCategories() async {
+    final d = await _getJson('/api/v1/communities/categories');
+    return d is List ? d : [];
+  }
+
+  Future<List<dynamic>> browseCommunities({
+    String? category,
+    String? platform,
+    String? q,
+  }) async {
+    final params = <String, String>{};
+    if (category != null) params['category'] = category;
+    if (platform != null) params['platform'] = platform;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+    final qs = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final d = await _getJson('/api/v1/communities${qs.isEmpty ? '' : '?$qs'}');
+    return d is List ? d : [];
+  }
+
+  /// AI-matched community suggestions for post content.
+  Future<List<dynamic>> suggestCommunities({
+    required String content,
+    List<String> topics = const [],
+    String? category,
+  }) async {
+    final d = await _postJson('/api/v1/communities/suggest', {
+      'content': content,
+      'topics': topics,
+      if (category != null) 'category': category,
+    });
+    return d is List ? d : [];
+  }
+
+  /// Which social platforms the user has connected.
+  Future<Map<String, dynamic>> getConnectedAccounts() async {
+    return await _getJson('/api/v1/communities/connected-accounts');
+  }
+
   // ------------------------------ analytics ------------------------------
   /// Backend aggregates (reach, engagement_rate, clicks, conversions).
   Future<Map<String, dynamic>> analyticsOverview() =>

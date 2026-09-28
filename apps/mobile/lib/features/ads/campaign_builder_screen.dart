@@ -6,6 +6,7 @@ import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../communities/communities_screen.dart';
 
 /// AI Ad Builder (Phase 1): paste post/link → AI analysis + proposals →
 /// edit → submit for approval → status view. Board-styled (2026-09-26):
@@ -70,6 +71,14 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
   List<GrowthAgent> _agents = const [];
   bool _plansLoading = false;
 
+  /// Where-to-share: AI-suggested communities for the current post.
+  List<dynamic> _suggestedCommunities = [];
+  bool _suggestLoading = false;
+
+  /// Connected social accounts gate.
+  List<String> _connectedPlatforms = [];
+  bool _accountsLoading = false;
+
   /// Board objective cards → the exact API objective values.
   static const _objectiveValues = ['sales', 'leads', 'engagement', 'followers'];
   static const _durationValues = [1, 3, 7, 14];
@@ -87,6 +96,40 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       _loadCampaign();
     } else {
       _loadPlans();
+    }
+    _loadConnectedAccounts();
+  }
+
+  /// Load which social platforms the user has connected (account gate).
+  Future<void> _loadConnectedAccounts() async {
+    setState(() => _accountsLoading = true);
+    try {
+      final d = await apiClient.getConnectedAccounts();
+      if (!mounted) return;
+      setState(() {
+        _connectedPlatforms =
+            ((d['connected'] ?? []) as List).map((e) => e.toString()).toList();
+        _accountsLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _accountsLoading = false);
+    }
+  }
+
+  /// AI-suggest communities matching the current post input.
+  Future<void> _suggestWhereToShare() async {
+    final input = _inputCtrl.text.trim();
+    if (input.isEmpty) return;
+    setState(() => _suggestLoading = true);
+    try {
+      final suggestions = await apiClient.suggestCommunities(content: input);
+      if (!mounted) return;
+      setState(() {
+        _suggestedCommunities = suggestions;
+        _suggestLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _suggestLoading = false);
     }
   }
 
@@ -227,6 +270,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       });
       _loadLangNames();
       _loadGeoData();
+      _suggestWhereToShare(); // Auto-suggest communities for this post.
     } on AuthException {
       if (!mounted) return;
       handleAuthFailure(s.sessionExpired);
@@ -277,12 +321,44 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
 
   /// One-tap flow: build → submit → approve → launch.
   /// For users who want to go live immediately from this screen.
+  /// Requires at least one connected social account (account gate).
   Future<void> _buildAndLaunch() async {
     final input = _inputCtrl.text.trim();
     if (input.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Paste a link or text first')),
       );
+      return;
+    }
+    // Account gate: must connect at least one social account first.
+    if (_connectedPlatforms.isEmpty && !_accountsLoading) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Connect social account'),
+          content: const Text(
+            'Connect at least one social media account before launching '
+            'a campaign, so Virello can attribute and distribute your post.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Later'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Connect now'),
+            ),
+          ],
+        ),
+      );
+      if (go == true && mounted) {
+        // Navigate to social connections (profile → connect accounts).
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Connect accounts from Profile → Settings')),
+        );
+      }
       return;
     }
     setState(() => _busy = true);
@@ -641,6 +717,9 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               onPressed: _busy ? null : _buildAndLaunch,
             ),
             const SizedBox(height: 12),
+            _whereToShareCard(),
+            const SizedBox(height: 12),
+            const SizedBox(height: 12),
             // Two fully separate modules: switching plans swaps everything
             // below — Free Grow has no packages; Paid Boost is package-driven.
             if (_plan == 'free') _freeModule() else _paidModule(),
@@ -650,6 +729,151 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
 
   /// Free Grow vs Paid Boost — two clearly separate cards, immutable after
   /// the campaign is created.
+
+  /// Where-to-share: AI-suggested communities for this post.
+  /// Users share manually — Virello never auto-posts.
+  Widget _whereToShareCard() {
+    return VCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.groups_outlined,
+                  color: VirelloColors.primary, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('Where to Share',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              ),
+              TextButton.icon(
+                onPressed: _suggestLoading ? null : _suggestWhereToShare,
+                icon: _suggestLoading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.auto_awesome_outlined, size: 16),
+                label: const Text('Suggest'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'AI finds public communities where your audience hangs out. '
+            'You share manually — Virello never auto-posts.',
+            style: TextStyle(fontSize: 12, color: VirelloColors.muted),
+          ),
+          if (_suggestedCommunities.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            for (final c in _suggestedCommunities.take(5))
+              _suggestedCommunityRow(c),
+          ],
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const CommunitiesScreen()),
+              );
+            },
+            icon: const Icon(Icons.explore_outlined, size: 18),
+            label: const Text('Browse all communities'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _suggestedCommunityRow(dynamic c) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.forum_outlined,
+              size: 18, color: VirelloColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(c['name'] ?? '',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                if ((c['match_reason'] ?? '').toString().isNotEmpty)
+                  Text(c['match_reason'],
+                      style: const TextStyle(
+                          fontSize: 11, color: VirelloColors.muted)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => _shareToCommunity(c),
+            child: const Text('Share'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// One-tap share sheet — user reviews and posts manually.
+  Future<void> _shareToCommunity(dynamic c) async {
+    final name = c['name'] ?? 'community';
+    final url = c['url'] ?? '';
+    final input = _inputCtrl.text.trim();
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Share to $name',
+                  style: const TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(
+                'Open $name and share your post there manually. '
+                'Always follow the community rules — no spam.',
+                style: const TextStyle(
+                    fontSize: 13, color: VirelloColors.muted),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final uri = Uri.tryParse(url);
+                  if (uri != null) {
+                    // ignore: avoid_print
+                    debugPrint('Opening community: $url');
+                  }
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Open $name in your browser and paste:\n$input')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.open_in_new_outlined),
+                label: const Text('Open community'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   Widget _planPicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
