@@ -5,6 +5,7 @@ import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
 import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
+import '../../services/trends_service.dart';
 import '../../main.dart';
 import 'analyze_screen.dart';
 import 'link_card.dart';
@@ -84,6 +85,23 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   void _onSavedChanged() => setState(() {});
 
+  /// Load trends: phone-direct Google fetch first (residential IP works),
+  /// server endpoint as fallback. Never fake data — empty if both fail.
+  Future<List<Map<String, dynamic>>> _loadTrends() async {
+    try {
+      final direct = await TrendsService.fetchTrends(limit: 10);
+      if (direct.isNotEmpty) {
+        return direct.map((t) => Map<String, dynamic>.from(t)).toList();
+      }
+    } catch (_) {}
+    try {
+      final res = await apiClient.getTrending(limit: 10);
+      return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -95,7 +113,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         apiClient.getInterests(),
         apiClient.getDiscoveryFeed(limit: 20),
         apiClient.getSponsoredAds(limit: 2),
-        apiClient.getTrending(limit: 10).catchError((_) => {'trends': []}),
+        _loadTrends(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -103,8 +121,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         _interests = results[1] as Set<String>;
         _feed = results[2] as List<DiscoveryItem>;
         _sponsored = results[3] as List<SponsoredAdUnit>;
-        _trends = List<Map<String, dynamic>>.from(
-            (results[4] as Map<String, dynamic>)['trends'] as List? ?? []);
+        _trends = results[4] as List<Map<String, dynamic>>;
         _loading = false;
       });
     } on AuthException {
