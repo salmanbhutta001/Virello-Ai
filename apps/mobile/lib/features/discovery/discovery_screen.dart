@@ -88,7 +88,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// Never fake data — empty if the server has none.
   Future<List<Map<String, dynamic>>> _loadTrends() async {
     try {
-      final res = await apiClient.getTrending(limit: 10);
+      final res = await apiClient.getTrending(limit: 20);
       return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
     } catch (_) {
       return [];

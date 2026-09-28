@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<Map<String, dynamic>>> _loadTrends() async {
     try {
-      final res = await apiClient.getTrending(limit: 10);
+      final res = await apiClient.getTrending(limit: 20);
       return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
     } catch (_) {
       return [];
