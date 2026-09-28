@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../services/api_client.dart';
 import '../../main.dart';
 import 'affiliate_disclosure.dart';
 import 'product_detail_screen.dart';

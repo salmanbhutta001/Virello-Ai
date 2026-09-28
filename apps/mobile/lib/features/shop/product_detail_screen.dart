@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../services/api_client.dart';
 import '../../main.dart';
 import '../ask_virello/ask_virello_screen.dart';
 import 'affiliate_disclosure.dart';

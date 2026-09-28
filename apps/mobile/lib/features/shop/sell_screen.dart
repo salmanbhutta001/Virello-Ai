@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../services/api_client.dart';
 import '../../main.dart';
 
 /// Phase 4 — Creator product listing form.
