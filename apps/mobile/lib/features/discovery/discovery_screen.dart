@@ -5,7 +5,6 @@ import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
 import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
-import '../../services/trends_service.dart';
 import '../../main.dart';
 import 'analyze_screen.dart';
 import 'link_card.dart';
@@ -85,15 +84,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   void _onSavedChanged() => setState(() {});
 
-  /// Load trends: phone-direct Google fetch first (residential IP works),
-  /// server endpoint as fallback. Never fake data — empty if both fail.
+  /// Load trends from the server (aggregates Wikipedia + News).
+  /// Never fake data — empty if the server has none.
   Future<List<Map<String, dynamic>>> _loadTrends() async {
-    try {
-      final direct = await TrendsService.fetchTrends(limit: 10);
-      if (direct.isNotEmpty) {
-        return direct.map((t) => Map<String, dynamic>.from(t)).toList();
-      }
-    } catch (_) {}
     try {
       final res = await apiClient.getTrending(limit: 10);
       return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
