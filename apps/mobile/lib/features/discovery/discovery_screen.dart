@@ -7,6 +7,7 @@ import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import 'analyze_screen.dart';
+import 'language_trends_screen.dart';
 import 'link_card.dart';
 import 'post_reader_screen.dart';
 import 'result_screen.dart';
@@ -30,6 +31,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   List<SponsoredAdUnit> _sponsored = [];
   // Real Google Trends data — honestly labeled, never fake posts.
   List<Map<String, dynamic>> _trends = [];
+  List<Map<String, dynamic>> _recommended = [];
   // Placement ids already confirmed as genuinely rendered (impression).
   final Set<String> _impressioned = {};
   bool _loading = true;
@@ -95,6 +97,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }
   }
 
+  /// Load AI-matched recommendations based on user interests.
+  Future<List<Map<String, dynamic>>> _loadRecommended() async {
+    try {
+      final res = await apiClient.getRecommended(limit: 5);
+      return List<Map<String, dynamic>>.from(
+          res['recommendations'] as List? ?? []);
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -107,6 +120,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         apiClient.getDiscoveryFeed(limit: 20),
         apiClient.getSponsoredAds(limit: 2),
         _loadTrends(),
+        _loadRecommended(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -115,6 +129,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         _feed = results[2] as List<DiscoveryItem>;
         _sponsored = results[3] as List<SponsoredAdUnit>;
         _trends = results[4] as List<Map<String, dynamic>>;
+        _recommended = results[5] as List<Map<String, dynamic>>;
         _loading = false;
       });
     } on AuthException {
@@ -573,7 +588,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget _langBadgeGlass(Map<String, dynamic> lang) {
     final code = (lang['code'] as String? ?? '').toLowerCase();
     final nameEn = lang['name_en'] as String? ?? code.toUpperCase();
-    return Column(
+    return GestureDetector(
+      onTap: () => _openLanguageTrends(code, nameEn),
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         VGlassLangBadge(code: code),
@@ -588,105 +605,154 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   fontSize: 11, color: VirelloColors.mutedDark)),
         ),
       ],
+      ),
     );
   }
 
-  // ---- AI Recommended For You card ----
+  /// Open trending topics for a specific Wikipedia language edition.
+  void _openLanguageTrends(String code, String name) {
+    // Map common codes; fallback to 'en' for unsupported
+    final wikiLangs = {
+      'en', 'ur', 'ar', 'es', 'fr', 'de', 'hi', 'bn', 'pa', 'tr',
+      'fa', 'ru', 'zh', 'ja', 'pt', 'it', 'nl', 'pl', 'id', 'ms',
+    };
+    final lang = wikiLangs.contains(code) ? code : 'en';
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LanguageTrendsScreen(langCode: lang, langName: name),
+      ),
+    );
+  }
+
+  // ---- AI Recommended For You: interest-matched real trends ----
   Widget _recommendedCard() {
-    final item = _recommendedItem();
-    if (item == null) {
-      return Text(s.nothingHere,
-          style: const TextStyle(color: VirelloColors.muted));
+    if (_recommended.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(s.nothingHere,
+              style: const TextStyle(color: VirelloColors.muted)),
+          const SizedBox(height: 4),
+          const Text(
+            'Select interests above to get personalized picks.',
+            style: TextStyle(fontSize: 11, color: VirelloColors.muted),
+          ),
+        ],
+      );
     }
-    final saved = _isSaved(item);
-    final title = item.title.isEmpty ? item.postUrl : item.title;
-    return VCard(
-      padding: EdgeInsets.zero,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () => _openItem(item),
-              child: Stack(
-                children: [
-                  _cardThumb(item, double.infinity, 160),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: VirelloColors.violet,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Text('✦ ${s.aiPicks}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: IconButton(
-                      icon: const Icon(Icons.close,
-                          size: 18, color: Colors.white),
-                      onPressed: () => _dismissItem(item),
-                    ),
-                  ),
-                ],
-              ),
+    return Column(
+      children: [
+        for (var i = 0; i < _recommended.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _recommendedRow(_recommended[i]),
+        ],
+      ],
+    );
+  }
+
+  /// AI-matched trend row with match reasons.
+  Widget _recommendedRow(Map<String, dynamic> t) {
+    final query = '${t['query'] ?? ''}';
+    final detail = '${t['detail'] ?? ''}';
+    final thumb = '${t['thumbnail_url'] ?? ''}';
+    final desc = '${t['description'] ?? ''}';
+    final matched = (t['matched_interests'] as List? ?? [])
+        .map((e) => '$e')
+        .toList();
+    return GestureDetector(
+      onTap: () => _openTrend(t),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: VirelloColors.violet.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800)),
-                  if (item.matchReasons.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text('✓ ${item.matchReasons.first}',
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            if (thumb.isNotEmpty)
+              Image.network(
+                thumb,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    gradient: VirelloColors.brandGradient,
+                  ),
+                  child: const Icon(Icons.auto_awesome,
+                      color: Colors.white),
+                ),
+              )
+            else
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  gradient: VirelloColors.brandGradient,
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    color: Colors.white),
+              ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: VirelloColors.violet,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text('✦ AI Pick',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(query,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 12.5, color: VirelloColors.violet)),
+                            fontSize: 14, fontWeight: FontWeight.w700)),
+                    if (matched.isNotEmpty)
+                      Text('Matches: ${matched.join(', ')}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: VirelloColors.violet,
+                              fontWeight: FontWeight.w600)),
+                    if (detail.isNotEmpty)
+                      Text(detail,
+                          style: const TextStyle(
+                              fontSize: 11, color: VirelloColors.muted)),
                   ],
-                  const SizedBox(height: 8),
-                  Wrap(spacing: 6, runSpacing: 6, children: [
-                    _miniChip('✦ ${(item.matchScore * 100).round()}%'),
-                    if (item.contentLanguage.isNotEmpty) _langBadge(item),
-                  ]),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: saved ? null : () => _quickSave(item),
-                      style: FilledButton.styleFrom(
-                        backgroundColor:
-                            saved ? VirelloColors.chipBg : VirelloColors.violet,
-                        foregroundColor:
-                            saved ? VirelloColors.mutedDark : Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: Icon(
-                          saved
-                              ? Icons.bookmark_added
-                              : Icons.bookmark_add_outlined,
-                          size: 18),
-                      label: Text(saved ? s.saved : s.save),
-                    ),
-                  ),
-                ],
+                ),
               ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child:
+                  Icon(Icons.chevron_right, color: VirelloColors.muted),
             ),
           ],
         ),

@@ -351,8 +351,17 @@ class ApiClient {
 
   /// GET /api/v1/discovery/trending — real Google Trends data.
   /// Returns honestly-labeled trends (search data, not Virello posts).
-  Future<Map<String, dynamic>> getTrending({String geo = 'US', int limit = 10}) async {
-    return await _getJson('/api/v1/discovery/trending?geo=$geo&limit=$limit');
+  Future<Map<String, dynamic>> getTrending(
+      {String geo = 'US', int limit = 10, String lang = 'en'}) async {
+    return await _getJson(
+        '/api/v1/discovery/trending?geo=$geo&limit=$limit&lang=$lang');
+  }
+
+  /// AI-matched trends based on the user's selected interests.
+  Future<Map<String, dynamic>> getRecommended(
+      {int limit = 5, String lang = 'en'}) async {
+    return await _getJson(
+        '/api/v1/discovery/recommended?limit=$limit&lang=$lang');
   }
 
   /// kind: view | save | visit | dismiss.
