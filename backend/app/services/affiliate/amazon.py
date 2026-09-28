@@ -28,7 +28,9 @@ def _creds() -> dict[str, str]:
     return {
         "access_key": os.environ.get("VIRELLO_AMAZON_PAAPI_KEY", ""),
         "secret_key": os.environ.get("VIRELLO_AMAZON_PAAPI_SECRET", ""),
-        "partner_tag": os.environ.get("VIRELLO_AMAZON_PARTNER_TAG", ""),
+        # Partner Tag (Store ID) — public identifier, safe as env default.
+        # Hafiz's approved Associate tag.
+        "partner_tag": os.environ.get("VIRELLO_AMAZON_PARTNER_TAG", "topitems0c1-20"),
         "region": os.environ.get("VIRELLO_AMAZON_PAAPI_REGION", "us-east-1"),
     }
 
@@ -37,8 +39,13 @@ class AmazonAffiliateProvider(AffiliateProvider):
     name = "amazon"
 
     def is_configured(self) -> bool:
+        """Full PA-API data access needs all three credentials."""
         c = _creds()
         return bool(c["access_key"] and c["secret_key"] and c["partner_tag"])
+
+    def can_build_links(self) -> bool:
+        """Affiliate link building needs only the Partner Tag."""
+        return bool(_creds()["partner_tag"])
 
     async def search_products(self, query: str, limit: int = 10) -> list[AffiliateProduct]:
         # Key-gated: no credentials → zero results, never synthetic.
@@ -48,15 +55,17 @@ class AmazonAffiliateProvider(AffiliateProvider):
         return None
 
     def build_affiliate_url(self, external_id: str) -> str:
+        # Link building needs only the Partner Tag — no PA-API keys required.
+        # Format: https://www.amazon.com/dp/{ASIN}?tag={partner_tag}
         c = _creds()
-        if not self.is_configured():
+        if not c["partner_tag"]:
             raise AffiliateNotConfigured(
-                "Amazon PA-API credentials missing. Configure "
-                "VIRELLO_AMAZON_PAAPI_KEY / VIRELLO_AMAZON_PAAPI_SECRET / "
+                "Amazon Partner Tag missing. Configure "
                 "VIRELLO_AMAZON_PARTNER_TAG via Secure Vault."
             )
         tag = c["partner_tag"]
-        return f"https://www.amazon.com/dp/{external_id}?tag={tag}"
+        asin = external_id.strip().upper()
+        return f"https://www.amazon.com/dp/{asin}?tag={tag}"
 
     async def sync_product(self, product_id: str, external_id: str) -> AffiliateSyncResult:
         if not self.is_configured():

@@ -32,7 +32,7 @@ import re
 import secrets
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func, or_, select
@@ -679,3 +679,116 @@ async def link_transaction_to_order(
     await db.commit()
     await db.refresh(order)
     return order
+
+
+# ---------------------------------------------------------------------------
+# AI Curator (daily affiliate product curation)
+# ---------------------------------------------------------------------------
+
+class CurateProductIn(BaseModel):
+    """One product found by the AI curator. ASIN is the Amazon product ID
+    (10-char alphanumeric, e.g. B08N5WRWNW). The affiliate URL is built
+    server-side from the ASIN + partner tag — the curator never invents URLs."""
+    asin: str = Field(..., min_length=10, max_length=10, pattern=r"^[A-Z0-9]{10}$")
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = Field(default="", max_length=5000)
+    category: str = Field(default="all", max_length=64)
+    # price_cents=0 means "price not verified — check on Amazon".
+    # The Shop UI shows "Check price on Amazon" instead of $0.00.
+    price_cents: int = Field(default=0, ge=0, le=100_000_000)
+    currency: str = Field(default="USD", max_length=8)
+    image_urls: list[str] = Field(default_factory=list, max_length=10)
+
+
+class CurateIn(BaseModel):
+    products: list[CurateProductIn] = Field(..., min_length=1, max_length=20)
+    # Products are attributed to this account (Hafiz's — his affiliate tag).
+    creator_email: str = Field(..., max_length=320)
+
+
+def _check_curator_token(request_token: str) -> None:
+    """Service-to-service auth for the AI curator. Token lives in the
+    Secure Vault / env, never in code or chat."""
+    import os
+    expected = os.environ.get("VIRELLO_CURATOR_TOKEN", "")
+    if not expected or not request_token or not secrets.compare_digest(request_token, expected):
+        raise HTTPException(401, "Invalid curator token")
+
+
+@router.post("/products/curate", response_model=dict, status_code=201)
+async def curate_products(
+    body: CurateIn,
+    db: AsyncSession = Depends(get_db),
+    x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
+):
+    """AI curator bulk-imports affiliate products.
+
+    Auth: X-Curator-Token header (service token, not user JWT).
+    For each product: validates ASIN, builds the affiliate URL server-side
+    from the partner tag, creates the Product (is_affiliate=true) + ProductPage.
+    Skips ASINs already in the catalog (idempotent — safe to re-run daily).
+    """
+    _check_curator_token(x_curator_token or "")
+
+    from app.services.affiliate.amazon import AmazonAffiliateProvider
+    provider = AmazonAffiliateProvider()
+    if not provider.can_build_links():
+        raise HTTPException(503, "Amazon partner tag not configured")
+
+    # Attribute to the curator account (Hafiz's).
+    res = await db.execute(select(User).where(User.email == body.creator_email.strip().lower()))
+    creator = res.scalar_one_or_none()
+    if creator is None:
+        raise HTTPException(404, f"Creator account not found: {body.creator_email}")
+
+    created: list[dict] = []
+    skipped: list[str] = []
+    for item in body.products:
+        asin = item.asin.strip().upper()
+        affiliate_url = provider.build_affiliate_url(asin)
+        # Idempotent: skip ASINs already curated.
+        existing = (
+            await db.execute(
+                select(Product.id).where(Product.affiliate_url == affiliate_url)
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            skipped.append(asin)
+            continue
+        category = (item.category or "all").lower()
+        if category not in PRODUCT_CATEGORIES:
+            category = "all"
+        image_urls = [u.strip() for u in item.image_urls if u.strip()][:10]
+        product = Product(
+            creator_id=creator.id,
+            title=item.title.strip(),
+            description=item.description.strip(),
+            price_cents=item.price_cents,
+            currency=item.currency.upper(),
+            category=category,
+            image_urls=image_urls,
+            stock_qty=0,  # affiliate: stock tracked by Amazon, not us
+            is_active=True,
+            is_affiliate=True,
+            affiliate_url=affiliate_url,
+            affiliate_provider="amazon",
+        )
+        db.add(product)
+        await db.flush()
+        slug = _slugify(product.title)
+        for _ in range(3):
+            exists = (
+                await db.execute(select(ProductPage.id).where(ProductPage.slug == slug))
+            ).scalar_one_or_none()
+            if exists is None:
+                break
+            slug = _slugify(product.title)
+        db.add(ProductPage(product_id=product.id, slug=slug))
+        created.append({"asin": asin, "product_id": str(product.id), "title": product.title})
+    await db.commit()
+    return {
+        "created": created,
+        "skipped_duplicate": skipped,
+        "total_created": len(created),
+        "disclosure": "All products carry the affiliate disclosure in the Shop UI.",
+    }
