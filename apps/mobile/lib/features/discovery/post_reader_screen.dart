@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
@@ -10,6 +11,7 @@ import '../../services/api_client.dart';
 import '../audience/audience_intelligence_screen.dart';
 import '../discovery/analyze_screen.dart';
 import '../shop/product_detail_screen.dart';
+import '../social/comments_screen.dart';
 
 /// In-app post reader: every post card in Home (For You / Trending /
 /// AI Picks) and Discovery opens here — never kicks the user out to a
@@ -29,6 +31,11 @@ class PostReaderScreen extends StatefulWidget {
 class _PostReaderScreenState extends State<PostReaderScreen> {
   late Future<Map<String, dynamic>> _future;
   bool _saving = false;
+
+  /// Board 14 action row state.
+  bool _liked = false;
+  bool _likeBusy = false;
+  Future<int>? _commentCountFuture;
 
   /// "Shop this" — real catalog results for the post's topic. Loaded once
   /// per query; the section hides entirely when there are no results
@@ -56,10 +63,14 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
   }
 
   void _load() {
-    _future = apiClient.readerContent(
-        widget.item.postUrl, appState.localeCode);
+    _future = apiClient.readerContent(widget.item.postUrl, appState.localeCode);
     _shopFuture = null;
     _shopQuery = '';
+    // Real comment count for the board action row; -1 = failed (hidden).
+    _commentCountFuture = apiClient
+        .getComments(widget.item.postUrl)
+        .then((l) => l.length)
+        .catchError((_) => -1);
   }
 
   /// Kick off the "Shop this" catalog query once per post. Called from
@@ -71,9 +82,11 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     _shopQuery = q;
     _shopFuture = apiClient
         .listProducts(search: q, limit: 6)
-        .then((d) => ((d['products'] as List?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList())
+        .then(
+          (d) => ((d['products'] as List?) ?? [])
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList(),
+        )
         .catchError((_) => <Map<String, dynamic>>[]);
   }
 
@@ -91,8 +104,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
 
   /// Horizontal product card for the "Shop this" section.
   Widget _shopThisCard(Map<String, dynamic> p) {
-    final images =
-        (p['image_urls'] as List? ?? []).map((e) => '$e').toList();
+    final images = (p['image_urls'] as List? ?? []).map((e) => '$e').toList();
     final isAffiliate = p['is_affiliate'] == true;
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -103,16 +115,17 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
       child: Container(
         width: 150,
         decoration: BoxDecoration(
-          color: VirelloColors.cardBg,
+          color: VirelloColors.boardSurface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.divider),
+          border: Border.all(color: VirelloColors.boardBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
               child: Stack(
                 children: [
                   images.isNotEmpty
@@ -121,8 +134,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                           height: 104,
                           width: 150,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              _shopCardPlaceholder(),
+                          errorBuilder: (_, __, ___) => _shopCardPlaceholder(),
                         )
                       : _shopCardPlaceholder(),
                   if (isAffiliate)
@@ -131,16 +143,21 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                       left: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.amber.shade700,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(s.affiliateBadge,
-                            style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white)),
+                        child: Text(
+                          s.affiliateBadge,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -151,17 +168,24 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${p['title'] ?? ''}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text(
+                    '${p['title'] ?? ''}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${p['price_display'] ?? ''}',
-                      style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: VirelloColors.violet)),
+                  Text(
+                    '${p['price_display'] ?? ''}',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: VirelloColors.violet,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -175,10 +199,13 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     return Container(
       height: 104,
       width: 150,
-      color: VirelloColors.chipBg,
+      color: VirelloColors.boardField,
       child: const Center(
-        child: Icon(Icons.shopping_bag_outlined,
-            color: VirelloColors.muted, size: 28),
+        child: Icon(
+          Icons.shopping_bag_outlined,
+          color: VirelloColors.muted,
+          size: 28,
+        ),
       ),
     );
   }
@@ -191,8 +218,10 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
       if (savedStore.contains(item.postUrl)) {
         await savedStore.remove(item.postUrl);
       } else {
-        final analyzed = await apiClient.analyzePost(item.postUrl,
-            campaignId: item.campaignId);
+        final analyzed = await apiClient.analyzePost(
+          item.postUrl,
+          campaignId: item.campaignId,
+        );
         await apiClient.recordInteraction(
           campaignId: item.campaignId,
           kind: 'save',
@@ -215,14 +244,70 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     }
   }
 
+  /// Board 14 heart: personal like toggle. Recorded as a genuine
+  /// discovery interaction when the item has a real campaign id;
+  /// fire-and-forget so the tap always works.
+  Future<void> _toggleLike() async {
+    if (_likeBusy) return;
+    setState(() {
+      _likeBusy = true;
+      _liked = !_liked;
+    });
+    try {
+      final item = widget.item;
+      if (_liked && item.campaignId.isNotEmpty) {
+        await apiClient.recordInteraction(
+          campaignId: item.campaignId,
+          kind: 'like',
+          variantId: item.growthVariant?.variantId,
+        );
+      }
+    } catch (_) {
+      // Local toggle still stands; the backend echo is best-effort.
+    } finally {
+      if (mounted) setState(() => _likeBusy = false);
+    }
+  }
+
+  /// Board 14 share: copy the post link (no share-sheet plugin in the
+  /// app; clipboard is honest and dependency-free).
+  Future<void> _share(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(s.boardLinkCopied)));
+  }
+
+  void _openComments() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => CommentsScreen(
+              postUrl: widget.item.postUrl,
+              postTitle: widget.item.title,
+            ),
+          ),
+        )
+        .then((_) {
+          // Refresh the real comment count when returning.
+          if (mounted) {
+            setState(() {
+              _commentCountFuture = apiClient
+                  .getComments(widget.item.postUrl)
+                  .then((l) => l.length)
+                  .catchError((_) => -1);
+            });
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
     final saved = savedStore.contains(item.postUrl);
     return Scaffold(
       appBar: AppBar(
-        title: Text(item.title,
-            maxLines: 1, overflow: TextOverflow.ellipsis),
+        title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             tooltip: saved ? s.readerSaved : s.readerSave,
@@ -249,6 +334,89 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     );
   }
 
+  /// Board 14 action row: heart (personal like), comments with the real
+  /// comment count, bookmark (save), share (copy link). No counts are
+  /// ever invented — the comment badge hides when the count fails.
+  Widget _actionRow(String originalUrl) {
+    final item = widget.item;
+    final saved = savedStore.contains(item.postUrl);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: VirelloColors.boardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VirelloColors.boardBorder),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _actionBtn(
+            icon: _liked
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
+            color: _liked ? VirelloColors.pink : VirelloColors.boardTextSec,
+            label: _liked ? s.boardLiked : s.boardLike,
+            onTap: _toggleLike,
+          ),
+          FutureBuilder<int>(
+            future: _commentCountFuture,
+            builder: (c, snap) {
+              final count = snap.data ?? -1;
+              return _actionBtn(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: count >= 0 ? '$count' : s.boardComments,
+                onTap: _openComments,
+              );
+            },
+          ),
+          _actionBtn(
+            icon: saved
+                ? Icons.bookmark_rounded
+                : Icons.bookmark_border_rounded,
+            color: saved ? VirelloColors.pink : VirelloColors.boardTextSec,
+            label: saved ? s.readerSaved : s.readerSave,
+            onTap: _toggleSave,
+          ),
+          _actionBtn(
+            icon: Icons.share_outlined,
+            label: s.boardShare,
+            onTap: () => _share(originalUrl),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionBtn({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: color ?? VirelloColors.boardTextSec),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color ?? VirelloColors.boardTextSec,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _loading() {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -256,7 +424,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         Container(
           height: 200,
           decoration: BoxDecoration(
-            color: VirelloColors.chipBg,
+            color: VirelloColors.boardField,
             borderRadius: BorderRadius.circular(20),
           ),
         ),
@@ -279,7 +447,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
       width: width,
       height: 14,
       decoration: BoxDecoration(
-        color: VirelloColors.chipBg,
+        color: VirelloColors.boardField,
         borderRadius: BorderRadius.circular(7),
       ),
     );
@@ -292,12 +460,17 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 48,
-                color: VirelloColors.muted),
+            const Icon(
+              Icons.cloud_off_outlined,
+              size: 48,
+              color: VirelloColors.muted,
+            ),
             const SizedBox(height: 12),
-            Text(s.readerLoadError,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: VirelloColors.muted)),
+            Text(
+              s.readerLoadError,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: VirelloColors.muted),
+            ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _retry,
@@ -338,21 +511,28 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             ),
           ),
         if (thumb.isNotEmpty) const SizedBox(height: 14),
-        Text(title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 6),
         // Source attribution as PLAIN TEXT — never a logo.
         if (source.isNotEmpty)
           Row(
             children: [
-              const Icon(Icons.public_rounded,
-                  size: 14, color: VirelloColors.muted),
+              const Icon(
+                Icons.public_rounded,
+                size: 14,
+                color: VirelloColors.muted,
+              ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   '${s.readerVia} $source${author.isNotEmpty ? ' · $author' : ''}',
                   style: const TextStyle(
-                      fontSize: 12.5, color: VirelloColors.muted),
+                    fontSize: 12.5,
+                    color: VirelloColors.muted,
+                  ),
                 ),
               ),
               if (item.contentLanguage.isNotEmpty) ...[
@@ -361,6 +541,9 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               ],
             ],
           ),
+        const SizedBox(height: 12),
+        // Board 14 action row: like / comments (real count) / save / share.
+        _actionRow(originalUrl),
         const SizedBox(height: 14),
         // AI summary card — honestly labeled as automated.
         VCard(
@@ -369,19 +552,28 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.auto_awesome,
-                      size: 16, color: VirelloColors.violet),
+                  const Icon(
+                    Icons.auto_awesome,
+                    size: 16,
+                    color: VirelloColors.violet,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text(s.readerAiSummary,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13.5)),
+                    child: Text(
+                      s.readerAiSummary,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(summary.isNotEmpty ? summary : s.readerNoPreview,
-                  style: const TextStyle(fontSize: 14, height: 1.55)),
+              Text(
+                summary.isNotEmpty ? summary : s.readerNoPreview,
+                style: const TextStyle(fontSize: 14, height: 1.55),
+              ),
             ],
           ),
         ),
@@ -398,16 +590,22 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                     dense: true,
                     leading: CircleAvatar(
                       radius: 11,
-                      backgroundColor: VirelloColors.violet
-                          .withValues(alpha: 0.12),
-                      child: Text('${i + 1}',
-                          style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: VirelloColors.violet)),
+                      backgroundColor: VirelloColors.violet.withValues(
+                        alpha: 0.12,
+                      ),
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: VirelloColors.violet,
+                        ),
+                      ),
                     ),
-                    title: Text(points[i],
-                        style: const TextStyle(fontSize: 13.5, height: 1.45)),
+                    title: Text(
+                      points[i],
+                      style: const TextStyle(fontSize: 13.5, height: 1.45),
+                    ),
                   ),
               ],
             ),
@@ -422,16 +620,20 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
-                    color: VirelloColors.violet.withValues(alpha: 0.5),
-                    width: 3),
+                  color: VirelloColors.violet.withValues(alpha: 0.5),
+                  width: 3,
+                ),
               ),
             ),
-            child: Text('“$excerpt”',
-                style: const TextStyle(
-                    fontSize: 13.5,
-                    fontStyle: FontStyle.italic,
-                    height: 1.55,
-                    color: VirelloColors.muted)),
+            child: Text(
+              '“$excerpt”',
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontStyle: FontStyle.italic,
+                height: 1.55,
+                color: VirelloColors.muted,
+              ),
+            ),
           ),
         ],
         if (topics.isNotEmpty) ...[
@@ -443,7 +645,8 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               for (final t in topics)
                 Chip(
                   label: Text(t, style: const TextStyle(fontSize: 12)),
-                  backgroundColor: VirelloColors.chipBg,
+                  backgroundColor: VirelloColors.boardField,
+                  side: const BorderSide(color: VirelloColors.boardBorder),
                 ),
             ],
           ),
@@ -451,8 +654,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         // "Shop this" — real catalog matches only; hidden when empty.
         Builder(
           builder: (context) {
-            _maybeLoadShop(
-                topics.isNotEmpty ? topics.first : item.title);
+            _maybeLoadShop(topics.isNotEmpty ? topics.first : item.title);
             if (_shopFuture == null) return const SizedBox.shrink();
             return FutureBuilder<List<Map<String, dynamic>>>(
               future: _shopFuture,
@@ -463,7 +665,8 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                     child: SizedBox(
                       height: 120,
                       child: Center(
-                          child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ),
                   );
                 }
@@ -476,20 +679,21 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                     const SizedBox(height: 16),
                     VSectionHeader(title: s.shopThis),
                     const SizedBox(height: 4),
-                    Text(s.shopThisDesc,
-                        style: const TextStyle(
-                            fontSize: 12.5,
-                            color: VirelloColors.muted)),
+                    Text(
+                      s.shopThisDesc,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: VirelloColors.muted,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     SizedBox(
                       height: 196,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: items.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(width: 10),
-                        itemBuilder: (_, i) =>
-                            _shopThisCard(items[i]),
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (_, i) => _shopThisCard(items[i]),
                       ),
                     ),
                   ],
@@ -508,21 +712,31 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle_outline,
-                      size: 16, color: VirelloColors.violet),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: VirelloColors.violet,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                      child: Text(r,
-                          style: const TextStyle(
-                              fontSize: 13, color: VirelloColors.muted))),
+                    child: Text(
+                      r,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: VirelloColors.muted,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
         ],
         const SizedBox(height: 8),
-        Text(s.readerAutomatedNote,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11.5, color: VirelloColors.muted)),
+        Text(
+          s.readerAutomatedNote,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11.5, color: VirelloColors.muted),
+        ),
         const SizedBox(height: 16),
         // Actions
         Row(
@@ -546,14 +760,15 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => AudienceIntelligenceScreen(
-                        initialQuery: item.title),
+                    builder: (_) =>
+                        AudienceIntelligenceScreen(initialQuery: item.title),
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: Text(s.readerFindAudience),
               ),

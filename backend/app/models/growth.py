@@ -95,7 +95,7 @@ class DiscoveryInteraction(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     campaign_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("campaigns.id"), index=True)
     kind: Mapped[str] = mapped_column(String(16), index=True)
-    # view | save | visit | dismiss
+    # view | save | visit | dismiss | like
     variant_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("growth_variants.id"), nullable=True, index=True)
     # which Growth Engine content variant was displayed when the user acted

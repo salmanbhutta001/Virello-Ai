@@ -75,7 +75,7 @@ async def feed(limit: int = 20, offset: int = 0,
 
 class InteractionIn(BaseModel):
     campaign_id: str
-    kind: str  # view | save | visit | dismiss
+    kind: str  # view | save | visit | dismiss | like
     variant_id: str | None = None  # growth-engine variant actually displayed
 
 

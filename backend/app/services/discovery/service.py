@@ -14,7 +14,7 @@ from app.models.growth import (
 from .matcher import score_candidate
 from .topics_seed import seed_topics
 
-INTERACTION_KINDS = {"view", "save", "visit", "dismiss"}
+INTERACTION_KINDS = {"view", "save", "visit", "dismiss", "like"}
 
 
 async def get_my_interests(db: AsyncSession, user_id: uuid.UUID) -> list[str]:

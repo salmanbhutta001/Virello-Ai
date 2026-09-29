@@ -2160,4 +2160,75 @@ class AppStrings {
   String get liveLabel => _get('Live', 'لائیو', 'مباشر');
   String get campaignFallbackTitle =>
       _get('Untitled campaign', 'بغیر عنوان مہم', 'حملة بلا عنوان');
+
+  // ---- 2026-09-29 master board: phase 4 social screens (13-18) ----
+  String get boardFollowing => _get('Following', 'فالوونگ', 'مُتابَعون');
+  String get boardCreators => _get('Creators', 'تخلیق کار', 'المبدعون');
+  String get boardTopics => _get('Topics', 'موضوعات', 'المواضيع');
+  String get boardFollow => _get('Follow', 'فالو کریں', 'تابِع');
+  String get boardFollowingBtn =>
+      _get('Following', 'فالو کر رہے ہیں', 'تتابعه');
+  String get boardUnfollow => _get('Unfollow', 'ان فالو', 'إلغاء المتابعة');
+  String get boardNoFollowing => _get(
+    'You are not following anyone yet',
+    'آپ ابھی کسی کو فالو نہیں کر رہے',
+    'أنت لا تتابع أحداً بعد',
+  );
+  String get boardNoTopics => _get(
+    'No topics saved yet',
+    'ابھی کوئی موضوع محفوظ نہیں',
+    'لا مواضيع محفوظة بعد',
+  );
+  String get boardPostDetail =>
+      _get('Post Detail', 'پوسٹ کی تفصیل', 'تفاصيل المنشور');
+  String get boardComments => _get('Comments', 'تبصرے', 'التعليقات');
+  String get boardWriteComment =>
+      _get('Write a comment…', 'تبصرہ لکھیں…', 'اكتب تعليقاً…');
+  String get boardNoComments => _get(
+    'No comments yet — be the first',
+    'ابھی کوئی تبصرہ نہیں — پہلے آپ کریں',
+    'لا تعليقات بعد — كن الأول',
+  );
+  String get boardCommentPosted =>
+      _get('Comment posted', 'تبصرہ پوسٹ ہو گیا', 'تم نشر التعليق');
+  String get boardCommentDeleted =>
+      _get('Comment deleted', 'تبصرہ حذف ہو گیا', 'تم حذف التعليق');
+  String get boardDeleteCommentConfirm =>
+      _get('Delete this comment?', 'یہ تبصرہ حذف کریں؟', 'حذف هذا التعليق؟');
+  String get boardActivity => _get('Activity', 'سرگرمی', 'النشاط');
+  String get boardAll => _get('All', 'سب', 'الكل');
+  String get boardLikes => _get('Likes', 'لائکس', 'الإعجابات');
+  String get boardFollows => _get('Follows', 'فالوز', 'المتابَعات');
+  String get boardNoActivity =>
+      _get('Nothing here yet', 'یہاں ابھی کچھ نہیں', 'لا شيء هنا بعد');
+  String get boardCommentedOn =>
+      _get('commented on a post', 'نے ایک پوسٹ پر تبصرہ کیا', 'علّق على منشور');
+  String get boardStartedFollowing =>
+      _get('You started following', 'آپ نے فالو کرنا شروع کیا', 'بدأت بمتابعة');
+  String get boardCreatorDashboard =>
+      _get('Creator Dashboard', 'کریئیٹر ڈیش بورڈ', 'لوحة المبدع');
+  String get boardTotalReach =>
+      _get('Total Reach', 'کل رسائی', 'إجمالي الوصول');
+  String get boardEngagement => _get('Engagement', 'انگیجمنٹ', 'التفاعل');
+  String get boardEngagementRate =>
+      _get('Engagement Rate', 'انگیجمنٹ ریٹ', 'معدل التفاعل');
+  String get boardClicks => _get('Clicks', 'کلکس', 'النقرات');
+  String get boardConversions => _get('Conversions', 'کنورژنز', 'التحويلات');
+  String get boardNoStatsYet => _get(
+    'No stats yet — launch a campaign to see real numbers',
+    'ابھی کوئی اعداد نہیں — اصل نمبر دیکھنے کے لیے مہم شروع کریں',
+    'لا إحصاءات بعد — أطلق حملة لرؤية أرقام حقيقية',
+  );
+  String get boardFollowedSince =>
+      _get('Following since', 'سے فالو کر رہے ہیں', 'تتابعه منذ');
+  String get boardLike => _get('Like', 'لائک', 'أعجبني');
+  String get boardLiked => _get('Liked', 'لائک کیا', 'أعجبك');
+  String get boardShare => _get('Share', 'شیئر', 'شارك');
+  String get boardLinkCopied =>
+      _get('Link copied to clipboard', 'لنک کاپی ہو گیا', 'تم نسخ الرابط');
+  String get boardJustNow => _get('just now', 'ابھی', 'الآن');
+  String get boardMinutesAgo => _get('min ago', 'منٹ پہلے', 'منذ دقائق');
+  String get boardHoursAgo => _get('h ago', 'گھنٹے پہلے', 'منذ ساعات');
+  String get boardDaysAgo => _get('d ago', 'دن پہلے', 'منذ أيام');
+  String get boardDelete => _get('Delete', 'حذف کریں', 'احذف');
 }
