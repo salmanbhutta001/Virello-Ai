@@ -2719,6 +2719,18 @@ class AppStrings {
         'AI sedang menganalisis kontenmu…',
         'AI আপনার কনটেন্ট বিশ্লেষণ করছে…'
       );
+  String get campInsightsTitle => _get(
+        'AI Campaign Insights',
+        'AI مہم کی تجاویز',
+      );
+  String get campInsightsEmpty => _get(
+        'AI could not generate insights right now. Try refreshing.',
+        'AI اس وقت تجاویز نہیں بنا سکا۔ دوبارہ کوشش کریں۔',
+      );
+  String get campInsightsRefresh => _get(
+        'Refresh insights',
+        'تجاویز تازہ کریں',
+      );
   String get adCopyTitle => _get(
         'AI Ad Copy',
         'AI اشتہاری متن',

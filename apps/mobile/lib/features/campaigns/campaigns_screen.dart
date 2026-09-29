@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -31,6 +32,9 @@ class CampaignsScreen extends StatefulWidget {
 class _CampaignsScreenState extends State<CampaignsScreen> {
   late Future<List<Campaign>> _future;
   int _tab = 0;
+  bool _insightWorking = false;
+  bool _insightTried = false;
+  List<String> _insights = [];
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -52,7 +56,11 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() => _future = _loadCampaigns());
+    setState(() {
+      _future = _loadCampaigns();
+      _insights = [];
+      _insightTried = false;
+    });
     await _future;
   }
 
@@ -226,6 +234,11 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             final all = snap.data ?? [];
             if (all.isEmpty) return _emptyList();
             final items = _bucket(all, _tab);
+            if (!_insightTried && all.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _generateInsights(all);
+              });
+            }
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
@@ -239,6 +252,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   onTap: (i) => setState(() => _tab = i),
                 ),
                 const SizedBox(height: 14),
+                _insightsCard(),
+                const SizedBox(height: 12),
                 if (items.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -400,6 +415,177 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
         ],
       ),
+    );
+  }
+
+  /// AI intelligence: reads the user's REAL campaign list and produces
+  /// 3 short actionable insights (pause/draft winners, underperformers,
+  /// completion nudges) — grounded in actual counts and metrics, never
+  /// fabricated.
+  Future<void> _generateInsights(List<Campaign> all) async {
+    _insightTried = true;
+    if (_insightWorking || !mounted) return;
+    setState(() => _insightWorking = true);
+    try {
+      int live = 0, paused = 0, drafts = 0, completed = 0;
+      for (final c in all) {
+        switch (c.status) {
+          case CampaignStatus.live:
+          case CampaignStatus.optimizing:
+            live++;
+          case CampaignStatus.paused:
+            paused++;
+          case CampaignStatus.completed:
+            completed++;
+          default:
+            drafts++;
+        }
+      }
+      Campaign? top;
+      double best = 0;
+      for (final c in all) {
+        if (c.hasMetrics && c.engagementRate > best) {
+          best = c.engagementRate;
+          top = c;
+        }
+      }
+      final langNote = appState.localeCode == 'ur'
+          ? 'Write in Roman Urdu.'
+          : appState.localeCode == 'ar'
+              ? 'Write in Arabic.'
+              : 'Write in English.';
+      final topName = top != null
+          ? (top.title.isEmpty ? top.postUrl : top.title)
+          : '';
+      final data =
+          'Live: $live, Paused: $paused, Drafts: $drafts, Completed: $completed'
+          '${top != null ? ', best performer "$topName" with ${best.toStringAsFixed(1)}% engagement rate' : ''}';
+      final prompt =
+          'You are Virello AI. Based on this real campaign data, give exactly 3 short actionable insights, each under 20 words. $langNote '
+          'Data: $data '
+          'Format: one insight per line, no numbering, no extra commentary.';
+      final url =
+          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+      final res =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+      if (!mounted) return;
+      final lines = res.statusCode == 200
+          ? res.body
+              .split('\n')
+              .map((l) => l
+                  .trim()
+                  .replaceAll(RegExp(r'^[\d]+[.)]\s*'), '')
+                  .replaceAll(RegExp(r'^[-•]\s*'), ''))
+              .where((l) => l.isNotEmpty)
+              .take(3)
+              .toList()
+          : <String>[];
+      setState(() {
+        _insights = lines;
+        _insightWorking = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _insightWorking = false);
+    }
+  }
+
+  /// Collapsible AI insights card pinned above the campaign list.
+  Widget _insightsCard() {
+    return VBoardCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: VirelloColors.pink.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.auto_awesome_outlined,
+                color: VirelloColors.pink, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(s.campInsightsTitle,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white)),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: VirelloColors.pink.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              s.boardImageAiLabel,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: VirelloColors.pink,
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        if (_insightWorking)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: VirelloColors.pink),
+              ),
+            ),
+          )
+        else if (_insights.isNotEmpty)
+          for (final ins in _insights)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(Icons.bolt_outlined,
+                        size: 15, color: VirelloColors.pink),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(ins,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+            )
+        else
+          Text(s.campInsightsEmpty,
+              style: const TextStyle(
+                  fontSize: 12.5, color: VirelloColors.boardTextSec)),
+        const SizedBox(height: 4),
+        TextButton.icon(
+          onPressed: _insightWorking
+              ? null
+              : () async {
+                  setState(() => _insights = []);
+                  _insightTried = false;
+                  await _refresh();
+                },
+          icon: const Icon(Icons.refresh, size: 16),
+          label: Text(s.campInsightsRefresh,
+              style: const TextStyle(fontSize: 12.5)),
+          style: TextButton.styleFrom(
+              foregroundColor: VirelloColors.pink,
+              padding: EdgeInsets.zero),
+        ),
+      ]),
     );
   }
 
