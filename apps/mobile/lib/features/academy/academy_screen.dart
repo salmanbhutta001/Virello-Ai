@@ -31,12 +31,6 @@ class _AcademyScreenState extends State<AcademyScreen> {
     _load();
   }
 
-  @override
-  void dispose() {
-    _askCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -345,6 +339,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _askCtrl.dispose();
+    super.dispose();
+  }
+
   /// AI intelligence: ask anything about this lesson. The AI answers
   /// using the lesson's own content as context (never invented beyond it).
   bool _askAiOpen = false;
@@ -478,7 +478,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       hintStyle:
                           TextStyle(color: VTheme.textSec(context)),
                       filled: true,
-                      fillColor: VTheme.field(context),
+                      fillColor: VTheme.chip(context),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none),
