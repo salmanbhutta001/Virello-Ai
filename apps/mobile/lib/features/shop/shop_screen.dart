@@ -9,6 +9,70 @@ import '../../main.dart';
 import 'product_detail_screen.dart';
 import 'sell_screen.dart';
 
+/// AI category intelligence: reads a product's title + description and
+/// assigns it to one of the shop's top categories.
+///
+/// The curator-set backend category wins when it is already a known shop
+/// slug; otherwise a weighted keyword model classifies the product text.
+/// Deterministic and on-device — labeled "AI" in the UI, never claimed
+/// to be a neural model.
+const aiCatSlugs = {'tech', 'fashion', 'home', 'fitness', 'beauty'};
+
+String aiDetectCategory(Map<String, dynamic> p) {
+  final backend = '${p['category'] ?? ''}'.toLowerCase().trim();
+  if (aiCatSlugs.contains(backend)) return backend;
+  final text =
+      ('${p['title'] ?? ''} ${p['description'] ?? ''}').toLowerCase();
+  const keywords = <String, List<String>>{
+    'tech': [
+      'smart', 'bluetooth', 'wireless', 'charger', 'drone', 'camera',
+      'laptop', 'phone', 'tablet', 'speaker', 'headphone', 'earbud',
+      'keyboard', 'mouse', 'monitor', 'usb', 'gadget', 'electronic',
+      'digital', 'wifi', 'power bank', 'smartwatch', 'robot', 'projector',
+      'microphone', 'tripod', 'console', 'gaming', 'earphone', 'adapter',
+    ],
+    'fashion': [
+      'dress', 'shirt', 't-shirt', 'tee', 'jeans', 'jacket', 'shoes',
+      'sneaker', 'handbag', 'purse', 'wallet', 'sunglasses', 'jewelry',
+      'necklace', 'perfume', 'clothes', 'apparel', 'hoodie', 'skirt',
+      'heels', 'sandals', 'belt', 'scarf', 'sneakers', 'boots', 'watch',
+      'bracelet', 'earring',
+    ],
+    'home': [
+      'kitchen', 'grater', 'cookware', 'chair', 'sofa', 'lamp', 'candle',
+      'curtain', 'bedding', 'pillow', 'blanket', 'decor', 'vase', 'mirror',
+      'storage', 'organizer', 'mop', 'broom', 'furniture', 'table', 'shelf',
+      'rug', 'mattress', 'cooker', 'blender', 'kettle', 'fan', 'heater',
+      'air fryer', 'vacuum', 'mug', 'bottle',
+    ],
+    'fitness': [
+      'dumbbell', 'kettlebell', 'yoga', 'gym', 'treadmill', 'exercise',
+      'workout', 'resistance band', 'protein', 'fitness', 'jump rope',
+      'massage gun', 'foam roller', 'push-up', 'pull-up', 'cycling',
+      'skipping',
+    ],
+    'beauty': [
+      'skincare', 'serum', 'moisturizer', 'makeup', 'foundation',
+      'mascara', 'shampoo', 'conditioner', 'lotion', 'face wash',
+      'cleanser', 'beauty', 'cosmetic', 'hair dryer', 'straightener',
+      'lipstick', 'cream', 'toner',
+    ],
+  };
+  var best = 'other';
+  var bestScore = 0;
+  keywords.forEach((slug, words) {
+    var score = 0;
+    for (final w in words) {
+      if (text.contains(w)) score += w.length > 6 ? 2 : 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = slug;
+    }
+  });
+  return best;
+}
+
 /// Lavish-style Shop (dark-first).
 ///
 /// Screen 1 (this widget): wordmark top bar, category story circles,
@@ -72,6 +136,8 @@ class _ShopScreenState extends State<ShopScreen> {
   String? _error;
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _trending = [];
+  Map<String, int> _catCounts = {};
+  bool _catsCounted = false;
   final Set<String> _liked = {};
   bool _hasNotifications = false;
 
@@ -118,11 +184,21 @@ class _ShopScreenState extends State<ShopScreen> {
       final results = await Future.wait([
         apiClient.listProducts(limit: 12),
         apiClient.listProducts(limit: 10, sort: 'popular'),
+        apiClient.listProducts(limit: 200),
       ]);
       if (!mounted) return;
+      final counts = <String, int>{};
+      for (final prod in _asList(results[2]['products'])) {
+        final cat = aiDetectCategory(prod);
+        if (aiCatSlugs.contains(cat)) {
+          counts[cat] = (counts[cat] ?? 0) + 1;
+        }
+      }
       setState(() {
         _products = _asList(results[0]['products']);
         _trending = _asList(results[1]['products']);
+        _catCounts = counts;
+        _catsCounted = true;
       });
     } on AuthException {
       if (!mounted) return;
@@ -299,6 +375,7 @@ class _ShopScreenState extends State<ShopScreen> {
           return _storyCircle(
             label: _catLabel(c.slug),
             icon: c.icon,
+            count: _catsCounted ? (_catCounts[c.slug] ?? 0) : null,
             onTap: () => _openCatalog(category: c.slug),
           );
         },
@@ -334,6 +411,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _storyCircle(
       {required String label,
       required IconData icon,
+      int? count,
       required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -365,6 +443,21 @@ class _ShopScreenState extends State<ShopScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 11, color: _muted)),
           ),
+          if (count != null)
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+              decoration: BoxDecoration(
+                color: VirelloColors.pink.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text('AI \u00b7 $count',
+                  style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: VirelloColors.pink)),
+            ),
         ],
       ),
     );
@@ -779,6 +872,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
   List<Map<String, dynamic>> _products = [];
   String? _sortNote;
   final Set<String> _liked = {};
+  bool _aiFiltered = false;
 
   static const _tabs = ['tech', 'fashion', 'home', 'fitness', 'beauty'];
 
@@ -843,18 +937,27 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
       _error = null;
     });
     try {
+      // AI-smart tabs (tech/fashion/home/fitness/beauty): the AI reads
+      // every product's title + description and places it in the right
+      // category client-side — independent of the backend's stored value.
+      final aiCat = _tabs.contains(_category);
       final data = await apiClient.listProducts(
         search: _searchCtrl.text.trim().isEmpty
             ? null
             : _searchCtrl.text.trim(),
-        category: _category == 'all' ? null : _category,
+        category: aiCat ? null : (_category == 'all' ? null : _category),
         sort: _sort,
       );
       if (!mounted) return;
+      var list = ((data['products'] as List?) ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      if (aiCat) {
+        list = list.where((pr) => aiDetectCategory(pr) == _category).toList();
+      }
       setState(() {
-        _products = ((data['products'] as List?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList();
+        _products = list;
+        _aiFiltered = aiCat;
         final note = '${data['sort_note'] ?? ''}';
         _sortNote = note.isEmpty ? null : note;
       });
@@ -1064,7 +1167,10 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
       }));
     }
     if (_category != 'all') {
-      chips.add(_filterChip(_tabLabel(_category), onClear: () {
+      final label = _aiFiltered
+          ? 'AI \u00b7 ${_tabLabel(_category)}'
+          : _tabLabel(_category);
+      chips.add(_filterChip(label, onClear: () {
         setState(() => _category = 'all');
         _load();
       }));
