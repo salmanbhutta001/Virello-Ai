@@ -29,6 +29,16 @@ async def get_db() -> AsyncIterator[AsyncSession]:
 
 
 async def init_db() -> None:
-    """Create tables. Dev bootstrap — production uses Alembic migrations."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    """Create tables. Dev bootstrap — production uses Alembic migrations.
+
+    Tolerant of "already exists" errors (e.g. orphaned PG enum types from
+    partial runs): production must never crash on startup because a type
+    or table is already there. Alembic owns the schema in prod.
+    """
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        # Log and continue — tables/types may already exist. Alembic
+        # migrations are the source of truth in production.
+        print(f"init_db: non-fatal ({type(e).__name__}): {e}")
