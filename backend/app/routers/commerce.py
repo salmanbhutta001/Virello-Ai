@@ -746,14 +746,25 @@ async def curate_products(
     for item in body.products:
         asin = item.asin.strip().upper()
         affiliate_url = provider.build_affiliate_url(asin)
-        # Idempotent: skip ASINs already curated.
+        # Idempotent: update existing products (e.g. backfill missing images)
+        # instead of skipping them silently.
         existing = (
             await db.execute(
-                select(Product.id).where(Product.affiliate_url == affiliate_url)
+                select(Product).where(Product.affiliate_url == affiliate_url)
             )
         ).scalar_one_or_none()
         if existing is not None:
-            skipped.append(asin)
+            image_urls = [u.strip() for u in item.image_urls if u.strip()][:10]
+            updated_fields = []
+            if image_urls and not (existing.image_urls or []):
+                existing.image_urls = image_urls
+                updated_fields.append("image_urls")
+            if updated_fields:
+                await db.commit()
+                created.append({"asin": asin, "product_id": str(existing.id),
+                                "title": existing.title, "updated": updated_fields})
+            else:
+                skipped.append(asin)
             continue
         category = (item.category or "all").lower()
         if category not in PRODUCT_CATEGORIES:
