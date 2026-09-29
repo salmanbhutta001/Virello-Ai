@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../services/api_client.dart';
@@ -28,6 +29,12 @@ class _AcademyScreenState extends State<AcademyScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _askCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -338,6 +345,187 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     _load();
   }
 
+  /// AI intelligence: ask anything about this lesson. The AI answers
+  /// using the lesson's own content as context (never invented beyond it).
+  bool _askAiOpen = false;
+  bool _asking = false;
+  final _askCtrl = TextEditingController();
+  final List<Map<String, String>> _qa = [];
+
+  Future<void> _askAi() async {
+    final q = _askCtrl.text.trim();
+    if (q.isEmpty || _asking) return;
+    setState(() {
+      _asking = true;
+      _qa.add({'q': q, 'a': ''});
+      _askCtrl.clear();
+    });
+    try {
+      final content = _lesson['content'] as Map?;
+      final sections = (content?['sections'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      final contextText = sections
+          .map((sec) => '${sec['heading']}\n${sec['body']}')
+          .join('\n\n');
+      final langNote = appState.localeCode == 'ur'
+          ? 'Answer in Roman Urdu.'
+          : appState.localeCode == 'ar'
+              ? 'Answer in Arabic.'
+              : 'Answer in English.';
+      final prompt =
+          'You are Virello AI, a friendly teacher. Answer the student\'s question using ONLY the lesson below. Keep it short (under 80 words). $langNote\n\n'
+          'Lesson: ${_lesson['title']}\n$contextText\n\nQuestion: $q';
+      final url =
+          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+      final res =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 60));
+      if (!mounted) return;
+      final answer = res.statusCode == 200 && res.body.trim().isNotEmpty
+          ? res.body.trim()
+          : s.askFailed;
+      setState(() {
+        _qa.last['a'] = answer;
+        _asking = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _qa.last['a'] = s.askFailed;
+        _asking = false;
+      });
+    }
+  }
+
+  Widget _askAiCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.auto_awesome_outlined,
+                  color: VirelloColors.pink, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(s.academyAskAi,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w800)),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: VirelloColors.pink.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  s.boardImageAiLabel,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: VirelloColors.pink,
+                  ),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 4),
+            Text(s.academyAskDesc,
+                style: const TextStyle(
+                    fontSize: 12.5, color: VirelloColors.muted)),
+            if (_askAiOpen) ...[
+              const SizedBox(height: 10),
+              for (final pair in _qa) ...[
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: VirelloColors.pink.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(pair['q']!,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: VTheme.chip(context),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: pair['a']!.isEmpty
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: VirelloColors.pink))
+                      : Text(pair['a']!,
+                          style: const TextStyle(fontSize: 13, height: 1.5)),
+                ),
+              ],
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _askCtrl,
+                    style: TextStyle(color: VTheme.text(context)),
+                    decoration: InputDecoration(
+                      hintText: s.academyAskHint,
+                      hintStyle:
+                          TextStyle(color: VTheme.textSec(context)),
+                      filled: true,
+                      fillColor: VTheme.field(context),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                    ),
+                    onSubmitted: (_) => _askAi(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: _asking ? null : _askAi,
+                  icon: _asking
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.send_outlined, size: 18),
+                  style: IconButton.styleFrom(
+                      backgroundColor: VirelloColors.pink),
+                ),
+              ]),
+            ] else ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => setState(() => _askAiOpen = true),
+                  icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  label: Text(s.academyAskOpen),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VirelloColors.pink,
+                    side: const BorderSide(color: VirelloColors.pink),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -482,6 +670,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ),
               ),
             ),
+          _askAiCard(),
+          const SizedBox(height: 12),
           const SizedBox(height: 8),
           if (!_started && !_completed)
             FilledButton.icon(

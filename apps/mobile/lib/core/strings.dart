@@ -2719,6 +2719,22 @@ class AppStrings {
         'AI sedang menganalisis kontenmu…',
         'AI আপনার কনটেন্ট বিশ্লেষণ করছে…'
       );
+  String get academyAskAi => _get(
+        'Ask AI about this lesson',
+        'اس سبق کے بارے میں AI سے پوچھیں',
+      );
+  String get academyAskDesc => _get(
+        'Stuck on something? The AI answers from this lesson\u2019s content.',
+        'کچھ سمجھ نہیں آیا؟ AI اسی سبق کے مواد سے جواب دے گا۔',
+      );
+  String get academyAskOpen => _get(
+        'Ask a question',
+        'سوال پوچھیں',
+      );
+  String get academyAskHint => _get(
+        'Type your question\u2026',
+        'اپنا سوال لکھیں\u2026',
+      );
   String get campInsightsTitle => _get(
         'AI Campaign Insights',
         'AI مہم کی تجاویز',
