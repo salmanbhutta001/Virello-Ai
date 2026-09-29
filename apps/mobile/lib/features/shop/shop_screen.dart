@@ -486,12 +486,14 @@ class _ShopScreenState extends State<ShopScreen> {
                 child: Stack(
                   children: [
                     images.isNotEmpty
-                        ? Image.network(images.first,
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                        ? Container(
+                          height: 180,
+                          width: double.infinity,
+                          color: Colors.white,
+                          child: Image.network(images.first,
+                            fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
-                                _imgPlaceholder(180))
+                            _imgPlaceholder(180)))
                         : _imgPlaceholder(180),
                     if (cents > 0)
                       Positioned(
@@ -630,12 +632,14 @@ class _ShopScreenState extends State<ShopScreen> {
               child: Stack(
                 children: [
                   images.isNotEmpty
-                      ? Image.network(images.first,
-                          height: 132,
-                          width: 190,
-                          fit: BoxFit.cover,
+                      ? Container(
+                        height: 132,
+                        width: 190,
+                        color: Colors.white,
+                        child: Image.network(images.first,
+                          fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) =>
-                              _imgPlaceholder(132, w: 190))
+                          _imgPlaceholder(132, w: 190)))
                       : _imgPlaceholder(132, w: 190),
                   if (cents > 0)
                     Positioned(
@@ -1261,10 +1265,12 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                   fit: StackFit.expand,
                   children: [
                     images.isNotEmpty
-                        ? Image.network(images.first,
-                            fit: BoxFit.cover,
+                        ? Container(
+                          color: Colors.white,
+                          child: Image.network(images.first,
+                            fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
-                                _gridPlaceholder())
+                            _gridPlaceholder()))
                         : _gridPlaceholder(),
                     Positioned(
                       top: 10,
