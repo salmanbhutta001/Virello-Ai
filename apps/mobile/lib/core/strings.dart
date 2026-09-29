@@ -9799,6 +9799,26 @@ class AppStrings {
         'Image generation failed. Please try again.',
         'تصویر بنانے میں ناکامی۔ دوبارہ کوشش کریں۔',
       );
+  String get boardSceneEstablishing => _get(
+        'Establishing shot',
+        'افتتاحی منظر',
+      );
+  String get boardSceneAction => _get(
+        'Action moment',
+        'ایکشن لمحہ',
+      );
+  String get boardSceneFinale => _get(
+        'Finale',
+        'اختتام',
+      );
+  String get boardStoryboardTitle => _get(
+        'AI Storyboard',
+        'AI اسٹوری بورڈ',
+      );
+  String get boardStoryboardNote => _get(
+        'Storyboard preview — full AI video rendering needs a provider key.',
+        'اسٹوری بورڈ پیش نظارہ — مکمل AI ویڈیو کے لیے فراہم کنندہ کی کنجی درکار ہے۔',
+      );
   String get boardImageRetry => _get(
         'Retry',
         'دوبارہ کوشش',
