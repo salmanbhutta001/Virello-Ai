@@ -10089,6 +10089,30 @@ class AppStrings {
         'Buat Caption',
         'ক্যাপশন তৈরি করুন'
       );
+  String get boardTemplateStructure => _get(
+        'Structure',
+        'ساخت',
+      );
+  String get boardTemplateExample => _get(
+        'Example',
+        'مثال',
+      );
+  String get boardTemplateCopy => _get(
+        'Copy',
+        'کاپی',
+      );
+  String get boardTemplateAiFill => _get(
+        'AI Fill',
+        'AI سے بھرو',
+      );
+  String get boardTemplateMatchHint => _get(
+        'Describe your content idea…',
+        'اپنے مواد کا آئیڈیا لکھیں…',
+      );
+  String get boardTemplateNeedIdea => _get(
+        'Type your content idea above first, then AI Fill.',
+        'پہلے اوپر اپنا آئیڈیا لکھیں، پھر AI Fill دبائیں۔',
+      );
   String get boardSuggestCaptions => _get(
         'Suggest captions with AI',
         'AI سے کیپشن تجویز کروائیں',
