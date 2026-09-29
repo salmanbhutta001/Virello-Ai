@@ -8856,6 +8856,14 @@ class AppStrings {
         'Kecantikan',
         'বিউটি'
       );
+  String get shopTrendingProducts => _get('Trending Products', 'ٹرینڈنگ پروڈکٹس', 'منتجات رائجة',
+        'ट्रेंडिंग उत्पाद', 'Produits tendance', 'Productos en tendencia',
+        'Produtos em alta', 'Trendprodukte', 'Trend Ürünler',
+        'Produk Tren', 'ট্রেন্ডিং পণ্য');
+  String get boardTrendingTopics => _get('Trending Topics', 'ٹرینڈنگ موضوعات', 'مواضيع رائجة',
+        'ट्रेंडिंग विषय', 'Sujets tendance', 'Temas en tendencia',
+        'Tópicos em alta', 'Trendthemen', 'Trend Konular',
+        'Topik Tren', 'ট্রেন্ডিং বিষয়');
   String get shopListYours => _get('List yours', 'اپنا لسٹ کریں', 'اعرض منتجك',
         'अपना लिस्ट करें',
         'Mettez le vôtre en vente',

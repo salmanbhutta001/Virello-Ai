@@ -6,6 +6,7 @@ import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../main.dart';
 import '../settings/notifications_screen.dart';
+import '../shop/product_detail_screen.dart';
 import 'categories_screen.dart';
 import 'post_reader_screen.dart';
 import 'search_screen.dart';
@@ -52,7 +53,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       final res = await apiClient.getTrending(limit: 20);
       trends = List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
     } catch (_) {}
-    return _DiscoverData(feed: feed, trends: trends);
+    List<Map<String, dynamic>> products = const [];
+    try {
+      final res = await apiClient.listProducts(limit: 10, sort: 'newest');
+      products = List<Map<String, dynamic>>.from(
+          (res['products'] as List? ?? []).map((e) => Map<String, dynamic>.from(e as Map)));
+    } catch (_) {}
+    return _DiscoverData(feed: feed, trends: trends, products: products);
   }
 
   Future<void> _refresh() async {
@@ -113,7 +120,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       return _errorState();
                     }
                     final data = snap.data ?? const _DiscoverData();
-                    if (_tab == 1) return _trendsMasonry(data.trends);
+                    if (_tab == 1) return _trendsWithProducts(data);
                     final feed = _filtered(data.feed);
                     if (feed.isEmpty) return _emptyState();
                     return _masonry(feed);
@@ -397,6 +404,131 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   /// Trending tab: real Google-Trends cards in masonry.
+  /// Trending tab: trending products rail on top, Google Trends below.
+  Widget _trendsWithProducts(_DiscoverData data) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        if (data.products.isNotEmpty) ...[
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department_outlined,
+                  size: 18, color: VirelloColors.pink),
+              const SizedBox(width: 6),
+              Text(s.shopTrendingProducts,
+                  style: const TextStyle(fontSize: 17,
+                      fontWeight: FontWeight.w800, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 210,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: data.products.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _trendingProductCard(data.products[i]),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Icon(Icons.trending_up_rounded,
+                  size: 18, color: VirelloColors.pink),
+              const SizedBox(width: 6),
+              Text(s.boardTrendingTopics,
+                  style: const TextStyle(fontSize: 17,
+                      fontWeight: FontWeight.w800, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+        _trendsMasonryInner(data.trends),
+      ],
+    );
+  }
+
+  Widget _trendingProductCard(Map<String, dynamic> p) {
+    final title = '${p['title'] ?? ''}';
+    final images = (p['image_urls'] as List?) ?? [];
+    final imgUrl = images.isNotEmpty ? '${images[0]}' : '';
+    final category = '${p['category'] ?? ''}';
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(productId: '${p['id']}')));
+      },
+      child: Container(
+        width: 150,
+        decoration: BoxDecoration(
+          color: VirelloColors.boardSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: VirelloColors.boardBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
+              child: imgUrl.isNotEmpty
+                  ? Image.network(imgUrl,
+                      width: 150, height: 120, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                          width: 150, height: 120,
+                          color: VirelloColors.boardField,
+                          child: const Icon(Icons.shopping_bag_outlined,
+                              color: VirelloColors.boardTextSec)))
+                  : Container(
+                      width: 150, height: 120,
+                      color: VirelloColors.boardField,
+                      child: const Icon(Icons.shopping_bag_outlined,
+                          color: VirelloColors.boardTextSec)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (category.isNotEmpty && category != 'all')
+                    Text('#$category',
+                        style: const TextStyle(fontSize: 10,
+                            color: VirelloColors.pink,
+                            fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(title,
+                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12,
+                          color: Colors.white, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _trendsMasonryInner(List<Map<String, dynamic>> trends) {
+    if (trends.isEmpty) return _emptyState();
+    final left = <Map<String, dynamic>>[];
+    final right = <Map<String, dynamic>>[];
+    for (var i = 0; i < trends.length; i++) {
+      (i.isEven ? left : right).add(trends[i]);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: Column(
+            children: [for (final t in left) _trendCard(t)])),
+        const SizedBox(width: 12),
+        Expanded(child: Column(
+            children: [for (final t in right) _trendCard(t)])),
+      ],
+    );
+  }
+
   Widget _trendsMasonry(List<Map<String, dynamic>> trends) {
     if (trends.isEmpty) return _emptyState();
     final left = <Map<String, dynamic>>[];
@@ -638,5 +770,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 class _DiscoverData {
   final List<DiscoveryItem> feed;
   final List<Map<String, dynamic>> trends;
-  const _DiscoverData({this.feed = const [], this.trends = const []});
+  final List<Map<String, dynamic>> products;
+  const _DiscoverData({this.feed = const [], this.trends = const [], this.products = const []});
 }
