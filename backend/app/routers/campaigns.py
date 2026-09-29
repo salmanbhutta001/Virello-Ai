@@ -118,6 +118,20 @@ async def pause_campaign(
     return CampaignOut.from_row(campaign)
 
 
+@router.delete("/{campaign_id}")
+async def delete_campaign(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Owner deletes a campaign permanently. Audit-logged."""
+    campaign = await _owned(db, user, campaign_id)
+    db.add(AuditLog(user_id=user.id, action="campaign.delete", details=str(campaign_id)))
+    await db.delete(campaign)
+    await db.commit()
+    return {"deleted": True, "campaign_id": str(campaign_id)}
+
+
 async def _owned(db: AsyncSession, user: User, campaign_id: uuid.UUID) -> Campaign:
     res = await db.execute(
         select(Campaign).where(Campaign.id == campaign_id, Campaign.user_id == user.id)

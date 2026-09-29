@@ -498,6 +498,24 @@ async def resume(campaign_id: str, db: AsyncSession = Depends(get_db),
     return {"campaign": _campaign_json(c)}
 
 
+@router.delete("/campaigns/{campaign_id}")
+async def delete_campaign(campaign_id: str, db: AsyncSession = Depends(get_db),
+                          user: User = Depends(get_current_user)) -> dict:
+    """Owner delete: permanently removes the campaign and its placements,
+    budgets, and decision log. Only the owning advertiser can delete."""
+    c = await _owned(db, user, campaign_id)
+    # Clean up related rows first.
+    for model, col in ((AdPlacement, AdPlacement.campaign_id),
+                       (AdDecision, AdDecision.campaign_id),
+                       (AdBudget, AdBudget.campaign_id)):
+        rows = (await db.execute(select(model).where(col == c.id))).scalars().all()
+        for r in rows:
+            await db.delete(r)
+    await db.delete(c)
+    await db.commit()
+    return {"deleted": True, "campaign_id": campaign_id}
+
+
 @router.get("/serve")
 async def serve(limit: int = 2, db: AsyncSession = Depends(get_db),
                 user: User = Depends(get_current_user)) -> dict:

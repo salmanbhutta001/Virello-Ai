@@ -184,6 +184,12 @@ class ApiClient {
     return Campaign.fromJson(j);
   }
 
+  /// Permanently delete a campaign (owner only).
+  Future<bool> deleteCampaign(String id) async {
+    final j = await _deleteJson('/api/v1/campaigns/$id');
+    return j['deleted'] == true;
+  }
+
   /// Get the public trackable share link for a campaign.
   Future<Map<String, dynamic>> getCampaignShareLink(String id) async {
     return await _getJson('/api/v1/campaigns/$id/share-link');
@@ -587,6 +593,16 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> _deleteJson(String path) async {
+    final res = await http.delete(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+    );
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   // ------------------------------ languages ------------------------------
   /// GET /api/v1/languages — all supported language packs with statuses.
   Future<Map<String, dynamic>> listLanguages() => _getJson('/api/v1/languages');
@@ -960,6 +976,12 @@ class ApiClient {
   Future<AdCampaign> resumeAdCampaign(String id) async {
     final j = await _postJson('/api/v1/ads/campaigns/$id/resume', {});
     return AdCampaign.fromJson(Map<String, dynamic>.from(j['campaign'] as Map));
+  }
+
+  /// Permanently delete a campaign (owner only). Returns true on success.
+  Future<bool> deleteAdCampaign(String id) async {
+    final j = await _deleteJson('/api/v1/ads/campaigns/$id');
+    return j['deleted'] == true;
   }
 
   /// Eligible sponsored units for the caller. Every unit carries

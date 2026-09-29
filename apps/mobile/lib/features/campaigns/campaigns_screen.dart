@@ -73,6 +73,48 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     }
   }
 
+  /// Delete with confirmation — permanent, owner only.
+  Future<void> _confirmDelete(Campaign cp) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        backgroundColor: VirelloColors.boardSurface,
+        title: Text(s.delete, style: const TextStyle(color: Colors.white)),
+        content: Text(
+          s.deleteCampaignConfirm,
+          style: const TextStyle(color: VirelloColors.boardTextSec),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dctx).pop(false),
+            child: Text(s.cancel,
+                style: const TextStyle(color: VirelloColors.boardTextSec)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dctx).pop(true),
+            child: Text(s.delete,
+                style: const TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await apiClient.deleteCampaign(cp.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.deletedToast)));
+      _refresh();
+    } on AuthException {
+      if (!mounted) return;
+      handleAuthFailure(s.sessionExpired);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.growFailed)));
+    }
+  }
+
   List<Campaign> _bucket(List<Campaign> all, int tab) => switch (tab) {
         0 => all
             .where((c) =>
@@ -442,6 +484,17 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     _pause(cp);
                   },
                 ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(Icons.delete_outline, color: Colors.redAccent),
+                title: Text(s.delete,
+                    style: const TextStyle(color: Colors.redAccent)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _confirmDelete(cp);
+                },
+              ),
             ],
           ),
         ),
