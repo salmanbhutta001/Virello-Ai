@@ -103,16 +103,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final url = '${p['affiliate_url'] ?? ''}';
     final title = '${p['title'] ?? ''}';
     final text = url.isNotEmpty
-        ? '$title
-$url
-
-via Virello Shop'
-        : '$title
-via Virello Shop';
+        ? '$title\n$url\n\nvia Virello Shop'
+        : '$title\nvia Virello Shop';
     await Share.share(text, subject: title);
   }
 
-    /// Wishlist: save/remove product.
+  /// Wishlist: save/remove product.
   Future<void> _toggleWishlist(Map<String, dynamic> p) async {
     setState(() => _liked = !_liked);
     if (!mounted) return;
@@ -121,13 +117,12 @@ via Virello Shop';
     try {
       final id = p['id'];
       if (id != null) {
-        await api.post('/api/v1/commerce/wishlist',
-            body: {'product_id': id, 'saved': _liked});
+        await apiClient.toggleWishlist(id.toString(), _liked);
       }
     } catch (_) {}
   }
 
-Future<void> _onBuy(Map<String, dynamic> p) async {
+  Future<void> _onBuy(Map<String, dynamic> p) async {
     final isAffiliate = p['is_affiliate'] == true;
     if (isAffiliate) {
       final url = '${p['affiliate_url'] ?? ''}';
@@ -294,7 +289,6 @@ Future<void> _onBuy(Map<String, dynamic> p) async {
                   : _imgPlaceholder(360),
             ),
             // Creator pill (top): honest publisher + real listing age.
-            ,
             // Floating like / share (bottom, overlapping).
             Positioned(
               bottom: -26,

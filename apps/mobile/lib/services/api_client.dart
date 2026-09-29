@@ -1191,6 +1191,13 @@ class ApiClient {
         'source': source,
       });
 
+  /// POST /api/v1/commerce/wishlist — save/remove product (heart button).
+  Future<Map<String, dynamic>> toggleWishlist(String productId, bool saved) =>
+      _postJson('/api/v1/commerce/wishlist', {
+        'product_id': productId,
+        'saved': saved,
+      });
+
   /// GET /api/v1/commerce/my/products — the signed-in creator's listings.
   Future<List<dynamic>> myProducts() async {
     final data = await _getDynamic('/api/v1/commerce/my/products');
