@@ -528,6 +528,22 @@ class ApiClient {
         'provider_ref': providerRef,
       });
 
+  /// POST /api/v1/billing/play/verify — Google Play purchase token.
+  Future<Map<String, dynamic>> verifyPlayPurchase({
+    required String productId,
+    required String purchaseToken,
+    required String kind,
+    String? planSlug,
+    String? creditPack,
+  }) =>
+      _postJson('/api/v1/billing/play/verify', {
+        'product_id': productId,
+        'purchase_token': purchaseToken,
+        'kind': kind,
+        if (planSlug != null) 'plan_slug': planSlug,
+        if (creditPack != null) 'credit_pack': creditPack,
+      });
+
   /// GET /api/v1/billing/transactions — payment history.
   Future<Map<String, dynamic>> billingTransactions({int limit = 20}) =>
       _getJson('/api/v1/billing/transactions?limit=$limit');

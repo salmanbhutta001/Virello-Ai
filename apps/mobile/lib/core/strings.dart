@@ -5423,6 +5423,98 @@ class AppStrings {
         'Penagihan & langganan',
         'বিলিং ও সাবস্ক্রিপশন'
       );
+  String get playBillingTitle => _get(
+        'Buy with Google Play',
+        'گوگل پلے سے خریدیں',
+        'اشترِ عبر Google Play',
+        'Google Play से खरीदें',
+        'Acheter avec Google Play',
+        'Comprar con Google Play',
+        'Comprar com o Google Play',
+        'Mit Google Play kaufen',
+        'Google Play ile satın al',
+        'Beli dengan Google Play',
+        'Google Play দিয়ে কিনুন',
+      );
+  String get playBillingSecureNote => _get(
+        'Secure payment via Google Play',
+        'گوگل پلے کے ذریعے محفوظ ادائیگی',
+        'دفع آمن عبر Google Play',
+        'Google Play के माध्यम से सुरक्षित भुगतान',
+        'Paiement sécurisé via Google Play',
+        'Pago seguro a través de Google Play',
+        'Pagamento seguro via Google Play',
+        'Sichere Zahlung über Google Play',
+        'Google Play ile güvenli ödeme',
+        'Pembayaran aman melalui Google Play',
+        'Google Play এর মাধ্যমে নিরাপদ পেমেন্ট',
+      );
+  String get playBillingNotAvailable => _get(
+        'Google Play billing is not available on this device.',
+        'اس ڈیوائس پر گوگل پلے بلنگ دستیاب نہیں ہے۔',
+        'فوترة Google Play غير متاحة على هذا الجهاز.',
+        'इस डिवाइस पर Google Play बिलिंग उपलब्ध नहीं है।',
+        "La facturation Google Play n'est pas disponible sur cet appareil.",
+        'La facturación de Google Play no está disponible en este dispositivo.',
+        'O faturamento do Google Play não está disponível neste dispositivo.',
+        'Die Google Play-Abrechnung ist auf diesem Gerät nicht verfügbar.',
+        'Bu cihazda Google Play faturalandırma kullanılamıyor.',
+        'Penagihan Google Play tidak tersedia di perangkat ini.',
+        'এই ডিভাইসে Google Play বিলিং উপলব্ধ নয়।',
+      );
+  String get playBillingPending => _get(
+        'Payment pending — complete it in the Play Store.',
+        'ادائیگی زیرِ التواء ہے — پلے اسٹور میں مکمل کریں۔',
+        'الدفع معلّق — أكمله في متجر Play.',
+        'भुगतान लंबित है — Play Store में पूरा करें।',
+        'Paiement en attente — terminez-le dans le Play Store.',
+        'Pago pendiente — complétalo en Play Store.',
+        'Pagamento pendente — conclua-o na Play Store.',
+        'Zahlung ausstehend — im Play Store abschließen.',
+        "Ödeme bekliyor — Play Store'da tamamlayın.",
+        'Pembayaran tertunda — selesaikan di Play Store.',
+        'পেমেন্ট মুলতুবি — Play Store-এ সম্পূর্ণ করুন।',
+      );
+  String get playBillingRestored => _get(
+        'Previous purchases restored.',
+        'پچھلی خریداریاں بحال ہو گئیں۔',
+        'تمت استعادة المشتريات السابقة.',
+        'पिछली खरीदारी बहाल हो गई।',
+        'Achats précédents restaurés.',
+        'Compras anteriores restauradas.',
+        'Compras anteriores restauradas.',
+        'Frühere Käufe wiederhergestellt.',
+        'Önceki satın alımlar geri yüklendi.',
+        'Pembelian sebelumnya dipulihkan.',
+        'পূর্ববর্তী ক্রয় পুনরুদ্ধার করা হয়েছে।',
+      );
+  String get playBillingStoreOnly => _get(
+        'Purchases are available in the Google Play version of Virello.',
+        'خریداریاں وائرلو کے گوگل پلے ورژن میں دستیاب ہیں۔',
+        'المشتريات متاحة في نسخة Google Play من Virello.',
+        'खरीदारी Virello के Google Play संस्करण में उपलब्ध है।',
+        'Les achats sont disponibles dans la version Google Play de Virello.',
+        'Las compras están disponibles en la versión de Google Play de Virello.',
+        'As compras estão disponíveis na versão Google Play do Virello.',
+        'Käufe sind in der Google Play-Version von Virello verfügbar.',
+        "Satın alımlar Virello'nun Google Play sürümünde mevcuttur.",
+        'Pembelian tersedia di versi Google Play Virello.',
+        'ক্রয় Virello-এর Google Play সংস্করণে উপলব্ধ।',
+      );
+  String get playBillingOpenStore => _get(
+        'Open in Play Store',
+        'پلے اسٹور میں کھولیں',
+        'افتح في متجر Play',
+        'Play Store में खोलें',
+        'Ouvrir dans le Play Store',
+        'Abrir en Play Store',
+        'Abrir na Play Store',
+        'Im Play Store öffnen',
+        "Play Store'da aç",
+        'Buka di Play Store',
+        'Play Store-এ খুলুন',
+      );
+
   String get aiSupport =>
       _get('AI Support', 'AI معاونت', 'دعم الذكاء الاصطناعي',
         'AI सपोर्ट',

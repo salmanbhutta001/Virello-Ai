@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     google_pay_merchant_id: str = ""
     google_pay_gateway: str = ""  # operator's payment processor for capture
     google_pay_gateway_merchant_id: str = ""
+    play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON (service-account JSON text)
+    play_package_name: str = "com.virello.virello"  # VIRELLO_PLAY_PACKAGE_NAME
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
     celery_eager: bool = True  # dev: run Celery tasks inline, no Redis needed
     dev_noauth: bool = False  # dev only: bypass JWT, use demo user

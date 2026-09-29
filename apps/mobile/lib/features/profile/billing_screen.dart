@@ -1,22 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
+import '../../services/play_billing_service.dart';
 
-/// Billing & subscriptions — plans, credit packs, and a real purchase flow.
+/// Billing & subscriptions — current plan, plans, credit packs, and a real
+/// purchase flow, all through Google Play Billing ([PlayBillingService]).
 ///
 /// Purchase flow (all server-verified, no fake success):
 /// 1. User taps Subscribe / Buy Now on a plan or credit pack.
-/// 2. Bottom sheet: order summary + provider choice (PayPal, Payoneer,
-///    Google Pay — the list comes from /billing/providers).
-/// 3. POST /api/v1/billing/orders → approval_url opens in the external
-///    browser via url_launcher.
-/// 4. "I've Completed Payment" dialog → POST /api/v1/billing/verify with the
-///    provider_order_id. Only a successful verify counts as a purchase.
+/// 2. Bottom sheet: order summary + the matching Google Play product with
+///    its real Play price.
+/// 3. Google Play purchase sheet → purchase token is sent to the server.
+/// 4. POST /api/v1/billing/play/verify verifies the token with Google Play.
+///    The purchase is completed/acknowledged only after the server confirms.
 /// 5. Transaction history at the bottom lists real server records.
+///
+/// On installs without Google Play (sideloaded APK), purchases are blocked:
+/// an honest "get the Play Store version" state is shown, with a button that
+/// opens the Play Store listing via url_launcher.
 class BillingScreen extends StatefulWidget {
   const BillingScreen({super.key});
   @override
@@ -28,10 +36,49 @@ class _BillingScreenState extends State<BillingScreen> {
 
   AppStrings get s => AppStrings(appState.localeCode);
 
+  /// Google Play Billing state. null = not checked yet.
+  bool? _playAvailable;
+  List<ProductDetails>? _playProducts;
+  StreamSubscription<List<PurchaseDetails>>? _playSub;
+  /// Purchase tokens currently being server-verified (avoid double handling).
+  final Set<String> _verifyingTokens = {};
+
   @override
   void initState() {
     super.initState();
     _future = _load();
+    _initPlayBilling();
+  }
+
+  @override
+  void dispose() {
+    _playSub?.cancel();
+    super.dispose();
+  }
+
+  /// Check Play availability once and listen for purchase updates.
+  Future<void> _initPlayBilling() async {
+    bool available = false;
+    List<ProductDetails>? products;
+    try {
+      available = await PlayBillingService.instance.isAvailable();
+      if (available) {
+        products = await PlayBillingService.instance.queryProducts();
+      }
+    } catch (_) {
+      available = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _playAvailable = available;
+      _playProducts = products;
+    });
+    _playSub = PlayBillingService.instance.purchaseStream.listen(
+      _handlePlayPurchases,
+      onError: (_) {},
+    );
+    // Also drain any purchases that completed while we were away.
+    // (The stream emits the current queue on listen for most stores.)
   }
 
   Future<_BillingData> _load() async {
@@ -88,55 +135,42 @@ class _BillingScreenState extends State<BillingScreen> {
               children: [
                 _currentPlanCard(d),
                 const SizedBox(height: 16),
-                VSectionHeader(title: s.plansTitle),
-                const SizedBox(height: 8),
-                for (final p in d.plans) _planCard(p, d.plan),
-                const SizedBox(height: 16),
-                VSectionHeader(title: s.creditPacksTitle),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (final e in d.packs.entries) _packCard(e.key, e.value),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                VSectionHeader(title: s.acceptedPayments),
-                const SizedBox(height: 8),
-                VCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                if (_playAvailable == false) ...[
+                  _playBlockedCard(),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  VSectionHeader(title: s.plansTitle),
+                  const SizedBox(height: 8),
+                  for (final p in d.plans) _planCard(p, d.plan),
+                  const SizedBox(height: 16),
+                  VSectionHeader(title: s.creditPacksTitle),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
                     children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final p in d.providers)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: VirelloColors.chipBg,
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Text(_providerName(p),
-                                  style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700)),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(s.paymentsNote,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              color: VirelloColors.muted,
-                              height: 1.5)),
+                      for (final e in d.packs.entries) _packCard(e.key, e.value),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                  VCard(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_outline,
+                            color: VirelloColors.violet, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(s.playBillingSecureNote,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: VirelloColors.muted,
+                                  height: 1.5)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 VSectionHeader(title: s.billingTransactionHistory),
                 const SizedBox(height: 8),
                 _transactionHistory(d),
@@ -151,15 +185,51 @@ class _BillingScreenState extends State<BillingScreen> {
 
   // ------------------------- purchase flow -------------------------
 
-  /// Step 1: order summary + provider choice.
-  void _showProviderSheet({
+  /// Purchase tap: Google Play is the only payment method. Without Play
+  /// (sideloaded APK), show the honest "get the Play Store version" dialog.
+  void _onPurchaseTap({
     required String kind, // "subscription" | "credits"
     String? planSlug,
     String? creditPack,
     required String itemTitle,
     required String priceLabel,
   }) {
-    // Providers are read from the latest loaded snapshot via _future.
+    if (_playAvailable != true) {
+      _showPlayUnavailableDialog();
+      return;
+    }
+    _showPlaySheet(
+      kind: kind,
+      planSlug: planSlug,
+      creditPack: creditPack,
+      itemTitle: itemTitle,
+      priceLabel: priceLabel,
+    );
+  }
+
+  /// Google Play sheet: shows the matching Play product (real Play price)
+  /// with a "Buy via Google Play" button. The purchase result arrives on
+  /// the purchase stream and is verified server-side before completion.
+  void _showPlaySheet({
+    required String kind,
+    String? planSlug,
+    String? creditPack,
+    required String itemTitle,
+    required String priceLabel,
+  }) {
+    final productId = PlayBillingService.productIdForPurchase(
+      kind: kind,
+      planSlug: planSlug,
+      creditPack: creditPack,
+    );
+    final products = _playProducts ?? const <ProductDetails>[];
+    final match = products.where((p) => p.id == productId).toList();
+    if (productId == null || match.isEmpty) {
+      // No Play counterpart (e.g. Free plan, or product missing in Console):
+      // say so honestly instead of a dead sheet.
+      _showPlayUnavailableDialog();
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -167,172 +237,163 @@ class _BillingScreenState extends State<BillingScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return FutureBuilder<_BillingData>(
-          future: _future,
-          builder: (c, snap) {
-            final list = snap.data?.providers ?? const <String>[];
-            return _ProviderSheet(
-              itemTitle: itemTitle,
-              priceLabel: priceLabel,
-              providers: list,
-              onPick: (provider) =>
-                  _createOrderAndLaunch(ctx, provider, kind, planSlug, creditPack),
-            );
+        final s = AppStrings(appState.localeCode);
+        return _PlaySheet(
+          s: s,
+          itemTitle: itemTitle,
+          fallbackPriceLabel: priceLabel,
+          product: match.first,
+          isCredits: kind == 'credits',
+          onBuy: (product) async {
+            final ok = kind == 'credits'
+                ? await PlayBillingService.instance.buyCredits(product)
+                : await PlayBillingService.instance.buySubscription(product);
+            if (!ok && ctx.mounted) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(
+                  content: Text(s.billingProviderError),
+                  backgroundColor: VirelloColors.danger,
+                ),
+              );
+            }
           },
         );
       },
     );
   }
 
-  /// Steps 2–3: create the order server-side, then open the browser.
-  Future<void> _createOrderAndLaunch(
-    BuildContext sheetCtx,
-    String provider,
-    String kind,
-    String? planSlug,
-    String? creditPack,
-  ) async {
-    // Capture before any async gap: the sheet may close while we wait.
-    final sheetNavigator = Navigator.of(sheetCtx);
-    Map<String, dynamic> order;
-    try {
-      order = await apiClient.createBillingOrder(
-        provider: provider,
-        kind: kind,
-        planSlug: planSlug,
-        creditPack: creditPack,
-      );
-    } on AuthException {
-      if (mounted) handleAuthFailure(s.sessionExpired);
-      return;
-    } on ApiException catch (e) {
-      _snack(_orderErrorMessage(e, _providerName(provider)), error: true);
-      return;
-    } catch (_) {
-      _snack(s.growFailed, error: true);
-      return;
-    }
-    final approvalUrl = '${order['approval_url'] ?? ''}';
-    final providerOrderId = '${order['provider_order_id'] ?? ''}';
-    if (approvalUrl.isEmpty || providerOrderId.isEmpty) {
-      _snack(s.billingProviderError, error: true);
-      return;
-    }
-    sheetNavigator.pop(); // close the provider sheet before browser
-    final uri = Uri.tryParse(approvalUrl);
-    final opened = uri != null &&
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened) {
-      _snack(s.billingCouldNotOpenBrowser, error: true);
-      return;
-    }
-    if (!mounted) return;
-    _showVerifyDialog(provider: provider, providerOrderId: providerOrderId);
-  }
-
-  /// Step 4: the user confirms in-app; the server verifies with the provider.
-  void _showVerifyDialog({
-    required String provider,
-    required String providerOrderId,
-  }) {
-    final providerName = _providerName(provider);
-    var verifying = false;
+  /// Honest blocked state when Google Play Billing is unavailable
+  /// (sideloaded APK, no Play Store): purchases only work in the
+  /// Google Play version of Virello. Offers to open the Play Store listing.
+  void _showPlayUnavailableDialog() {
+    final s = AppStrings(appState.localeCode);
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (c, setState) => AlertDialog(
-          title: Text(s.billingPayWith(providerName)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(s.billingCompleteInBrowser,
-                  style: const TextStyle(
-                      fontSize: 14, color: VirelloColors.muted, height: 1.5)),
-              if (verifying) ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2)),
-                    const SizedBox(width: 12),
-                    Text(s.billingVerifying,
-                        style: const TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ],
-            ],
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(s.playBillingNotAvailable,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(s.playBillingStoreOnly,
+            style: const TextStyle(
+                fontSize: 14, color: VirelloColors.muted, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(s.billingCancel),
           ),
-          actions: [
-            TextButton(
-              onPressed: verifying ? null : () => Navigator.of(ctx).pop(),
-              child: Text(s.billingCancel),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _openPlayStore();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VirelloColors.violet,
+              foregroundColor: Colors.white,
             ),
-            ElevatedButton(
-              onPressed: verifying
-                  ? null
-                  : () async {
-                      final dialogNavigator = Navigator.of(ctx);
-                      setState(() => verifying = true);
-                      bool ok = false;
-                      String? err;
-                      try {
-                        final res = await apiClient.verifyBillingPayment(
-                          provider: provider,
-                          providerRef: providerOrderId,
-                        );
-                        ok = _verifyOk(res);
-                      } on AuthException {
-                        dialogNavigator.pop();
-                        if (mounted) handleAuthFailure(s.sessionExpired);
-                        return;
-                      } on ApiException catch (e) {
-                        err = _orderErrorMessage(e, providerName);
-                      } catch (_) {
-                        err = s.growFailed;
-                      }
-                      dialogNavigator.pop();
-                      if (!mounted) return;
-                      if (ok) {
-                        _snack(s.billingPaymentSuccess);
-                        await _refresh();
-                      } else {
-                        _snack(err ?? s.billingPaymentFailed, error: true);
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: VirelloColors.violet,
-                foregroundColor: Colors.white,
-              ),
-              child: Text(s.billingIvePaid),
-            ),
-          ],
-        ),
+            child: Text(s.playBillingOpenStore),
+          ),
+        ],
       ),
     );
   }
 
-  /// A verify only counts when the server says so.
+  /// Opens the Google Play Store listing for the Play version of Virello.
+  Future<void> _openPlayStore() async {
+    final uri = Uri.parse(
+        'https://play.google.com/store/apps/details?id=com.virello.virello');
+    final opened =
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      _snack(s.billingCouldNotOpenBrowser, error: true);
+    }
+  }
+
+  /// Server-verified Play purchase handling. A purchase only counts after
+  /// POST /api/v1/billing/play/verify succeeds — we do NOT complete (and
+  /// therefore do not acknowledge/consume) unverified purchases, so Play
+  /// can retry or the user can restore them later.
+  Future<void> _handlePlayPurchases(
+      List<PurchaseDetails> purchases) async {
+    for (final p in purchases) {
+      switch (p.status) {
+        case PurchaseStatus.pending:
+          _snack(s.playBillingPending);
+          break;
+        case PurchaseStatus.error:
+          // User-cancelled checkouts surface here too; stay quiet then.
+          if (p.error?.code != 'userCancelled') {
+            _snack(s.billingProviderError, error: true);
+          }
+          break;
+        case PurchaseStatus.canceled:
+          break;
+        case PurchaseStatus.purchased:
+        case PurchaseStatus.restored:
+          await _verifyPlayPurchase(p);
+          break;
+      }
+    }
+  }
+
+  Future<void> _verifyPlayPurchase(PurchaseDetails p) async {
+    final mapping = PlayBillingService.backendKindFor(p.productID);
+    if (mapping == null) return; // not one of our products — ignore
+    final token = p.verificationData.serverVerificationData;
+    if (token.isEmpty) {
+      _snack(s.billingPaymentFailed, error: true);
+      return;
+    }
+    if (!_verifyingTokens.add(token)) return; // already in flight
+    try {
+      final res = await apiClient.verifyPlayPurchase(
+        productId: p.productID,
+        purchaseToken: token,
+        kind: mapping['kind']!,
+        planSlug: mapping['planSlug'],
+        creditPack: mapping['creditPack'],
+      );
+      final ok = _verifyOk(res);
+      if (ok) {
+        // Server confirmed: now acknowledge/consume with Play.
+        try {
+          await PlayBillingService.instance.completePurchase(p);
+        } catch (_) {
+          // Already acknowledged elsewhere — the grant already happened.
+        }
+        if (p.status == PurchaseStatus.restored) {
+          _snack(s.playBillingRestored);
+        } else {
+          _snack(s.billingPaymentSuccess);
+        }
+        await _refresh();
+      } else {
+        // Do NOT complete: Play keeps it restorable/retryable.
+        _snack(s.billingPaymentFailed, error: true);
+      }
+    } on AuthException {
+      if (mounted) handleAuthFailure(s.sessionExpired);
+    } on ApiException catch (e) {
+      // 503 = Play billing not configured server-side: honest message,
+      // purchase stays uncompleted so it can be retried later.
+      _snack(
+          e.status == 503 ? s.playBillingNotAvailable : s.billingPaymentFailed,
+          error: true);
+    } catch (_) {
+      _snack(s.billingPaymentFailed, error: true);
+    } finally {
+      _verifyingTokens.remove(token);
+    }
+  }
+
+  /// A verify only counts when the server says so. The Play verify endpoint
+  /// answers {"ok": true, ...} on success — accept that explicitly, plus
+  /// the legacy verified/status shapes for compatibility.
   bool _verifyOk(Map<String, dynamic> res) {
+    if (res['ok'] == true) return true;
     final v = res['verified'];
     final st = '${res['status'] ?? ''}'.toLowerCase();
     return v == true || st == 'completed' || st == 'success' || st == 'paid';
-  }
-
-  String _orderErrorMessage(ApiException e, String providerName) {
-    switch (e.status) {
-      case 503:
-        return s.billingProviderUnavailable(providerName);
-      case 502:
-        return s.billingProviderError;
-      case 400:
-        return s.billingInvalidRequest;
-      default:
-        return s.growFailed;
-    }
   }
 
   void _snack(String msg, {bool error = false}) {
@@ -345,20 +406,59 @@ class _BillingScreenState extends State<BillingScreen> {
     );
   }
 
-  String _providerName(String slug) {
-    switch (slug) {
-      case 'paypal':
-        return 'PayPal';
-      case 'payoneer':
-        return 'Payoneer';
-      case 'google_pay':
-        return 'Google Pay';
-      default:
-        return slug;
-    }
-  }
-
   // ------------------------- existing display -------------------------
+
+  /// Blocked state shown when Google Play Billing is unavailable
+  /// (sideloaded APK): purchases only work in the Play Store version.
+  Widget _playBlockedCard() {
+    return VCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: VirelloColors.violet.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.storefront,
+                    color: VirelloColors.violet, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(s.playBillingNotAvailable,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w800)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(s.playBillingStoreOnly,
+              style: const TextStyle(
+                  fontSize: 13, color: VirelloColors.muted, height: 1.5)),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openPlayStore,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(s.playBillingOpenStore,
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VirelloColors.violet,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _currentPlanCard(_BillingData d) {
     final label =
@@ -475,7 +575,7 @@ class _BillingScreenState extends State<BillingScreen> {
             if (!isCurrent) ...[
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => _showProviderSheet(
+                onPressed: () => _onPurchaseTap(
                   kind: 'subscription',
                   planSlug: slug,
                   itemTitle: '$name Plan',
@@ -526,7 +626,7 @@ class _BillingScreenState extends State<BillingScreen> {
                   color: VirelloColors.violet)),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: () => _showProviderSheet(
+            onPressed: () => _onPurchaseTap(
               kind: 'credits',
               creditPack: key,
               itemTitle: '$credits ${s.creditsUnit}',
@@ -668,56 +768,36 @@ class _BillingScreenState extends State<BillingScreen> {
   }
 }
 
-/// Bottom sheet: order summary + payment provider choice.
-class _ProviderSheet extends StatefulWidget {
+/// Bottom sheet: Google Play purchase — real Play product + Play price.
+class _PlaySheet extends StatefulWidget {
+  final AppStrings s;
   final String itemTitle;
-  final String priceLabel;
-  final List<String> providers;
-  final Future<void> Function(String provider) onPick;
-  const _ProviderSheet({
+  final String fallbackPriceLabel;
+  final ProductDetails product;
+  final bool isCredits;
+  final Future<void> Function(ProductDetails product) onBuy;
+  const _PlaySheet({
+    required this.s,
     required this.itemTitle,
-    required this.priceLabel,
-    required this.providers,
-    required this.onPick,
+    required this.fallbackPriceLabel,
+    required this.product,
+    required this.isCredits,
+    required this.onBuy,
   });
 
   @override
-  State<_ProviderSheet> createState() => _ProviderSheetState();
+  State<_PlaySheet> createState() => _PlaySheetState();
 }
 
-class _ProviderSheetState extends State<_ProviderSheet> {
-  String? _busy;
-
-  AppStrings get s => AppStrings(appState.localeCode);
-
-  String _providerName(String slug) {
-    switch (slug) {
-      case 'paypal':
-        return 'PayPal';
-      case 'payoneer':
-        return 'Payoneer';
-      case 'google_pay':
-        return 'Google Pay';
-      default:
-        return slug;
-    }
-  }
-
-  IconData _providerIcon(String slug) {
-    switch (slug) {
-      case 'paypal':
-        return Icons.account_balance_wallet_outlined;
-      case 'payoneer':
-        return Icons.payments_outlined;
-      case 'google_pay':
-        return Icons.g_mobiledata_rounded;
-      default:
-        return Icons.payment_outlined;
-    }
-  }
+class _PlaySheetState extends State<_PlaySheet> {
+  bool _busy = false;
 
   @override
   Widget build(BuildContext context) {
+    final s = widget.s;
+    final price = widget.product.price.isNotEmpty
+        ? widget.product.price
+        : widget.fallbackPriceLabel;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -741,11 +821,10 @@ class _ProviderSheetState extends State<_ProviderSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(s.billingChooseProvider,
+            Text(s.playBillingTitle,
                 style: const TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
-            // Order summary (real prices from the backend catalog).
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -768,7 +847,7 @@ class _ProviderSheetState extends State<_ProviderSheet> {
                             style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w800)),
                       ),
-                      Text(widget.priceLabel,
+                      Text(price,
                           style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -778,60 +857,51 @@ class _ProviderSheetState extends State<_ProviderSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            if (widget.providers.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(s.growFailed,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: VirelloColors.muted)),
-              ),
-            for (final p in widget.providers)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: OutlinedButton(
-                  onPressed: _busy != null
-                      ? null
-                      : () async {
-                          setState(() => _busy = p);
-                          try {
-                            await widget.onPick(p);
-                          } finally {
-                            if (mounted) setState(() => _busy = null);
-                          }
-                        },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    side: const BorderSide(color: VirelloColors.divider),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(_providerIcon(p), color: VirelloColors.violet),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(s.billingPayWith(_providerName(p)),
-                            style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: VirelloColors.ink)),
-                      ),
-                      if (_busy == p)
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                    ],
-                  ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.lock_outline,
+                    size: 14, color: VirelloColors.muted),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(s.playBillingSecureNote,
+                      style: const TextStyle(
+                          fontSize: 12, color: VirelloColors.muted)),
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      try {
+                        await widget.onBuy(widget.product);
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VirelloColors.violet,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
+              child: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(s.playBillingTitle,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w800)),
+            ),
             TextButton(
-              onPressed:
-                  _busy != null ? null : () => Navigator.of(context).pop(),
+              onPressed: _busy ? null : () => Navigator.of(context).pop(),
               child: Text(s.billingCancel),
             ),
           ],
@@ -840,7 +910,6 @@ class _ProviderSheetState extends State<_ProviderSheet> {
     );
   }
 }
-
 class _BillingData {
   final String plan;
   final int credits;

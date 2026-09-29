@@ -19,3 +19,5 @@ langdetect==1.0.9
 pyyaml>=6.0
 pytrends>=4.9.2
 pillow
+google-auth>=2.0
+google-api-python-client>=2.0

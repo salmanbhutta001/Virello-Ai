@@ -10,6 +10,7 @@ Rules:
 from __future__ import annotations
 
 import uuid
+import json
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -281,3 +282,94 @@ async def my_credits(db: AsyncSession = Depends(get_db),
                      user: User = Depends(get_current_user)) -> dict:
     await db.refresh(user)
     return {"balance": user.credits or 0}
+
+
+# ---------------- Google Play Billing (in-app purchases) ----------------
+from app.services.payments.google_play import (
+    PLAY_PRODUCT_IDS, play_token_used, verify_play_token,
+)
+
+
+class PlayVerifyIn(BaseModel):
+    product_id: str
+    purchase_token: str
+    kind: str  # subscription | credits
+
+
+@router.post("/play/verify")
+async def verify_play_purchase(body: PlayVerifyIn,
+                               db: AsyncSession = Depends(get_db),
+                               user: User = Depends(get_current_user)) -> dict:
+    """Verify a Google Play purchase token server-side, then activate.
+
+    The Flutter app calls this after the Play Store purchase completes.
+    Money movement and plan/credit activation flow through the shared
+    ledger (apply_verified_purchase) — credits/plans are NEVER granted
+    locally before this endpoint returns ok.
+    """
+    expected = PLAY_PRODUCT_IDS.get(body.product_id)
+    if not expected:
+        raise HTTPException(400, "Unknown Play product id")
+    exp_kind, exp_slug = expected
+    if body.kind not in ("subscription", "credits") or body.kind != exp_kind:
+        raise HTTPException(400, "kind does not match Play product id")
+    plan_slug = exp_slug if body.kind == "subscription" else ""
+    credit_pack = exp_slug if body.kind == "credits" else ""
+
+    # Money comes from OUR catalog, never from the client.
+    if body.kind == "credits":
+        pack = CREDIT_PACKS.get(credit_pack)
+        if not pack:
+            raise HTTPException(400, "Unknown credit pack")
+        money = Money(pack["price_usd"], settings.billing_currency)
+    else:
+        plan = next((p for p in await _plans(db)
+                     if p.slug == plan_slug and p.active), None)
+        if not plan:
+            raise HTTPException(400, "Unknown plan")
+        money = Money(Decimal(str(plan.price_usd)), plan.currency)
+
+    # Idempotency: one token = one grant, ever.
+    existing = (await db.execute(select(Transaction).where(
+        Transaction.provider_ref == body.purchase_token))).scalar_one_or_none()
+    if existing is not None:
+        if existing.user_id != user.id:
+            raise HTTPException(409, "purchase token already used")
+        if existing.status == "completed":
+            return {"ok": True, "already_applied": True,
+                    "transaction_id": str(existing.id)}
+        txn = existing
+    else:
+        txn = None
+
+    play = verify_play_token(body.product_id, body.purchase_token, body.kind)
+    if txn is None and play_token_used(play, body.kind):
+        # Fresh token that Google already marks consumed/acknowledged
+        # and we have no local record: it was used elsewhere.
+        raise HTTPException(409, "purchase token already used")
+
+    if txn is None:
+        txn = await record_transaction(
+            db, user_id=user.id, provider="google_play",
+            provider_ref=body.purchase_token, kind=body.kind,
+            money=money, status="pending",
+            idempotency_key=f"google_play:{body.purchase_token}",
+            raw={"product_id": body.product_id, "plan_slug": plan_slug,
+                 "credit_pack": credit_pack})
+
+    verification = Verification(
+        provider="google_play", provider_ref=body.purchase_token,
+        status="completed", money=money,
+        payer_id=(play.get("obfuscatedExternalAccountId") or ""),
+        raw={"play": play, "product_id": body.product_id})
+    try:
+        result = await apply_verified_purchase(
+            db, txn, verification,
+            plan_slug=plan_slug, credit_pack=credit_pack)
+    except ValueError as exc:
+        raise HTTPException(402, str(exc))
+    await db.refresh(txn)
+    if not result.get("already_applied"):
+        item_name = await _receipt_item_name(db, plan_slug, credit_pack)
+        await send_payment_receipt(user, txn, item_name)
+    return {"ok": True, **result}
