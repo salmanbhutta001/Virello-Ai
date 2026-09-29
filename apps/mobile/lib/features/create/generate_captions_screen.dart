@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Board screen 31: "Generate Captions".
+/// Board screen 31: "Generate Captions" — fully functional AI caption studio.
 ///
-/// Board layout: header "Generate Captions", tabs Discover / Trending (pink
-/// active pill), topic field, caption rows with checkboxes, pink
-/// "Generate Captions" button at the bottom.
+/// Uses a free text-AI provider (Pollinations.ai, no key) to write REAL
+/// captions with hashtags. Discover tab = fresh creative variety; Trending
+/// tab = viral-style hooks. Checkbox rows, copy/share selected, regenerate.
+/// Backend heuristic endpoint stays as fallback.
 ///
-/// Wires to the REAL POST /api/v1/create/captions endpoint (dev-labeled
-/// until a production provider is configured — never claimed otherwise).
+/// HONEST: AI output labeled as such; fallback labeled basic draft.
 class GenerateCaptionsScreen extends StatefulWidget {
   const GenerateCaptionsScreen({super.key});
 
@@ -21,13 +23,20 @@ class GenerateCaptionsScreen extends StatefulWidget {
   State<GenerateCaptionsScreen> createState() => _GenerateCaptionsScreenState();
 }
 
+class _Caption {
+  final String text;
+  final String hashtags;
+  _Caption(this.text, this.hashtags);
+}
+
 class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
   final _topicCtrl = TextEditingController();
-  int _tab = 0;
+  int _tab = 0; // 0 discover, 1 trending
   bool _working = false;
-  List<Map<String, dynamic>> _captions = [];
+  List<_Caption> _captions = [];
   final Set<int> _selected = {};
-  bool _dev = false;
+  bool _isAi = false;
+  bool _sharing = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -35,6 +44,49 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
   void dispose() {
     _topicCtrl.dispose();
     super.dispose();
+  }
+
+  String _buildAiPrompt(String topic, bool trending, String lang) {
+    final langNote = lang == 'ur'
+        ? 'Write the captions in Roman Urdu.'
+        : lang == 'ar'
+            ? 'Write the captions in Arabic.'
+            : 'Write the captions in English.';
+    final style = trending
+        ? 'Use viral-style hooks: bold claims, curiosity gaps, trending formats.'
+        : 'Use fresh creative variety: one funny, one inspiring, one minimal, one bold, one question-style.';
+    return 'Write 5 social media captions about: $topic\n'
+        '$langNote $style\n'
+        'Format: for each caption write the caption on one line, then on the next line write "TAGS: " followed by 3-5 relevant hashtags. '
+        'Separate captions with a blank line. No numbering, no extra commentary.';
+  }
+
+  Future<List<_Caption>?> _askAi(String prompt) async {
+    final url =
+        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+    final res = await http.get(Uri.parse(url)).timeout(
+          const Duration(seconds: 60),
+        );
+    if (res.statusCode != 200 || res.body.trim().isEmpty) return null;
+    final blocks = res.body.split(RegExp(r'\n\s*\n'));
+    final out = <_Caption>[];
+    for (final b in blocks) {
+      final lines =
+          b.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+      if (lines.isEmpty) continue;
+      String text = '';
+      String tags = '';
+      for (final l in lines) {
+        if (l.toUpperCase().startsWith('TAGS:')) {
+          tags = l.replaceFirst(RegExp(r'(?i)^tags:\s*'), '').trim();
+        } else if (text.isEmpty) {
+          text = l.replaceAll(RegExp(r'^[\d]+[.)]\s*'), '').trim();
+        }
+      }
+      if (text.isNotEmpty) out.add(_Caption(text, tags));
+      if (out.length >= 5) break;
+    }
+    return out.isEmpty ? null : out;
   }
 
   Future<void> _generate() async {
@@ -50,22 +102,38 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
       _captions = [];
       _selected.clear();
     });
+    List<_Caption>? captions;
+    bool ai = false;
+    // 1) Real AI.
     try {
-      final r = await apiClient.createCaptions(
-        topic,
-        language: appState.localeCode,
+      captions = await _askAi(
+        _buildAiPrompt(topic, _tab == 1, appState.localeCode),
       );
-      if (!mounted) return;
-      setState(() {
-        _captions = ((r['captions'] as List?) ?? [])
-            .map((e) => (e as Map).cast<String, dynamic>())
+      ai = captions != null;
+    } catch (_) {}
+    // 2) Backend fallback.
+    if (captions == null) {
+      try {
+        final r = await apiClient.createCaptions(
+          topic,
+          language: appState.localeCode,
+        );
+        captions = (((r['captions'] as List?) ?? [])
+                .map((e) => (e as Map).cast<String, dynamic>())
+                .toList())
+            .map((c) => _Caption(
+                '${c['text'] ?? ''}', '${c['hashtags'] ?? ''}'))
             .toList();
-        _dev = r['dev'] == true;
-        _working = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _working = false);
+        ai = false;
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _captions = captions ?? [];
+      _isAi = ai;
+    });
+    if (_captions.isEmpty && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(s.askFailed)),
       );
@@ -73,12 +141,27 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
   }
 
   void _copySelected() {
-    final texts = _selected.map((i) => '${_captions[i]['text'] ?? ''}').join(
-          '\n\n',
-        );
+    final texts = _selected
+        .map((i) =>
+            '${_captions[i].text}\n${_captions[i].hashtags}'.trim())
+        .join('\n\n');
     Clipboard.setData(ClipboardData(text: texts));
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(s.boardCopied)));
+  }
+
+  Future<void> _shareSelected() async {
+    if (_selected.isEmpty || _sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final texts = _selected
+          .map((i) =>
+              '${_captions[i].text}\n${_captions[i].hashtags}'.trim())
+          .join('\n\n');
+      await Share.share('$texts\n\nvia Virello');
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
   }
 
   @override
@@ -92,7 +175,11 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
             child: VPillTabs(
               tabs: [s.boardTabDiscover, s.boardTabTrending],
               selected: _tab,
-              onTap: (i) => setState(() => _tab = i),
+              onTap: (i) => setState(() {
+                _tab = i;
+                _captions = [];
+                _selected.clear();
+              }),
             ),
           ),
           Expanded(
@@ -110,6 +197,7 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                       hintStyle: TextStyle(color: VTheme.textSec(context)),
                       border: InputBorder.none,
                     ),
+                    onSubmitted: (_) => _generate(),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -142,15 +230,49 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                           ),
                   ),
                 ),
-                if (_dev && _captions.isNotEmpty) ...[
+                if (_captions.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(
-                    s.boardDevHeuristic,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontStyle: FontStyle.italic,
-                      color: VTheme.textSec(context),
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: VirelloColors.pink.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _isAi
+                              ? s.boardImageAiLabel
+                              : s.boardScriptDraftLabel,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: VirelloColors.pink,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          if (_selected.length == _captions.length) {
+                            _selected.clear();
+                          } else {
+                            _selected.addAll(
+                                List.generate(_captions.length, (i) => i));
+                          }
+                        }),
+                        child: Text(
+                          _selected.length == _captions.length
+                              ? s.boardDeselectAll
+                              : s.boardSelectAll,
+                          style: const TextStyle(
+                            color: VirelloColors.pink,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
                 ..._captions.asMap().entries.map((entry) {
@@ -198,18 +320,18 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  '${cap['text'] ?? ''}',
+                                SelectableText(
+                                  cap.text,
                                   style: TextStyle(
                                     fontSize: 13.5,
                                     height: 1.6,
                                     color: VTheme.text(context),
                                   ),
                                 ),
-                                if ('${cap['hashtags'] ?? ''}'.isNotEmpty) ...[
+                                if (cap.hashtags.isNotEmpty) ...[
                                   const SizedBox(height: 6),
                                   Text(
-                                    '${cap['hashtags']}',
+                                    cap.hashtags,
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: VirelloColors.pink,
@@ -226,25 +348,66 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                 }),
                 if (_selected.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      onPressed: _copySelected,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: VirelloColors.pink,
-                        side: const BorderSide(
-                          color: VirelloColors.pink,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: _copySelected,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: VirelloColors.pink,
+                              side: const BorderSide(
+                                color: VirelloColors.pink,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Text(
+                              '${s.boardCopy} (${_selected.length})',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        '${s.boardCopy} (${_selected.length})',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: _sharing ? null : _shareSelected,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: VirelloColors.pink,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: _sharing
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.share_outlined, size: 18),
+                            label: Text(s.boardImageShare),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+                ],
+                if (_captions.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _working ? null : _generate,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(s.boardImageRegenerate),
                   ),
                 ],
               ],

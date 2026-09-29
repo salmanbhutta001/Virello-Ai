@@ -10089,6 +10089,14 @@ class AppStrings {
         'Buat Caption',
         'ক্যাপশন তৈরি করুন'
       );
+  String get boardSelectAll => _get(
+        'Select all',
+        'سب منتخب کریں',
+      );
+  String get boardDeselectAll => _get(
+        'Deselect all',
+        'سب غیر منتخب کریں',
+      );
   String get boardFormatVideoScript => _get(
         'Video Script',
         'ویڈیو اسکرپٹ',
