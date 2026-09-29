@@ -125,8 +125,8 @@ class VScoreRing extends StatelessWidget {
     final color = s >= 70
         ? VirelloColors.success
         : s >= 45
-        ? VirelloColors.amber
-        : VirelloColors.pink;
+            ? VirelloColors.amber
+            : VirelloColors.pink;
     return SizedBox(
       width: size,
       height: size,
@@ -247,8 +247,8 @@ class VDonutChart extends StatelessWidget {
         SizedBox(
           width: size,
           height: size,
-          child: CustomPaint(
-              painter: _DonutPainter(slices, VTheme.text(context))),
+          child:
+              CustomPaint(painter: _DonutPainter(slices, VTheme.text(context))),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -742,6 +742,18 @@ class VGlassLangBadge extends StatelessWidget {
         return 'ع';
       case 'hi':
         return 'हिं';
+      case 'fr':
+        return 'FR';
+      case 'pt':
+        return 'PT';
+      case 'de':
+        return 'DE';
+      case 'tr':
+        return 'TR';
+      case 'id':
+        return 'ID';
+      case 'bn':
+        return 'বাং';
       case 'es':
         return 'Ñ';
       case '':
@@ -763,6 +775,18 @@ class VGlassLangBadge extends StatelessWidget {
         return const Color(0xFF8A5A2B);
       case 'hi':
         return const Color(0xFFE8930C);
+      case 'fr':
+        return const Color(0xFF2B5FA6);
+      case 'pt':
+        return const Color(0xFF1F8A5B);
+      case 'de':
+        return const Color(0xFF8A8A2B);
+      case 'tr':
+        return const Color(0xFFC0392B);
+      case 'id':
+        return const Color(0xFFB03A5B);
+      case 'bn':
+        return const Color(0xFF6A3DB5);
       case 'es':
         return const Color(0xFFC0392B);
       default:

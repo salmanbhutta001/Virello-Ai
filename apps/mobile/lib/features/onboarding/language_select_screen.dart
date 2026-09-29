@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
-import '../../services/api_client.dart';
 import '../../main.dart';
 
 /// Board screen 05 — Select Language: rows with language name + radio,
-/// pink Continue. English / اردو / العربية switch the app locale
-/// immediately (and persist as the backend preferred language);
-/// Français / Español / हिन्दी are shown as "soon" per the board.
+/// pink Continue. All 11 languages switch the app locale immediately
+/// (and persist as the backend preferred language).
 class LanguageSelectScreen extends StatefulWidget {
   const LanguageSelectScreen({super.key, required this.onDone});
   final VoidCallback onDone;
@@ -22,12 +20,17 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
   AppStrings get s => AppStrings(appState.localeCode);
 
   static const _langs = [
-    ('en', 'English', true),
-    ('ur', 'اردو', true),
-    ('ar', 'العربية', true),
-    ('fr', 'Français', false),
-    ('es', 'Español', false),
-    ('hi', 'हिन्दी', false),
+    ('en', 'English'),
+    ('ur', 'اردو'),
+    ('ar', 'العربية'),
+    ('hi', 'हिन्दी'),
+    ('fr', 'Français'),
+    ('es', 'Español'),
+    ('pt', 'Português'),
+    ('de', 'Deutsch'),
+    ('tr', 'Türkçe'),
+    ('id', 'Bahasa Indonesia'),
+    ('bn', 'বাংলা'),
   ];
 
   String _selected = 'en';
@@ -37,7 +40,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
   void initState() {
     super.initState();
     _selected = appState.localeCode;
-    if (!_langs.any((l) => l.$1 == _selected && l.$3)) {
+    if (!_langs.any((l) => l.$1 == _selected)) {
       _selected = 'en';
     }
   }
@@ -51,11 +54,6 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
     } catch (_) {}
     if (mounted) setState(() => _working = false);
     widget.onDone();
-  }
-
-  void _soon() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.policySoon)));
   }
 
   @override
@@ -86,12 +84,9 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                   itemBuilder: (_, i) {
                     final code = _langs[i].$1;
                     final name = _langs[i].$2;
-                    final supported = _langs[i].$3;
                     final selected = _selected == code;
                     return InkWell(
-                      onTap: supported
-                          ? () => setState(() => _selected = code)
-                          : _soon,
+                      onTap: () => setState(() => _selected = code),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -122,33 +117,14 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                                 ),
                               ),
                             ),
-                            if (!supported)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: VirelloColors.boardBg,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: const Text(
-                                  'Soon',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: VirelloColors.boardTextSec,
-                                  ),
-                                ),
-                              )
-                            else
-                              Icon(
-                                selected
-                                    ? Icons.radio_button_checked
-                                    : Icons.radio_button_unchecked,
-                                color: selected
-                                    ? VirelloColors.pink
-                                    : VirelloColors.boardTextSec,
-                              ),
+                            Icon(
+                              selected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: selected
+                                  ? VirelloColors.pink
+                                  : VirelloColors.boardTextSec,
+                            ),
                           ],
                         ),
                       ),

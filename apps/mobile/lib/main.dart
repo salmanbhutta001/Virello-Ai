@@ -64,7 +64,8 @@ void main() async {
 /// swap for Riverpod providers as the app grows.
 class AppState extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.light;
-  String localeCode = 'en'; // 'en' | 'ur' | 'ar' (RTL-ready)
+  String localeCode =
+      'en'; // 11 full UI langs: en ur ar hi fr es pt de tr id bn (ur/ar RTL)
 
   void toggleTheme() {
     themeMode = themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
@@ -395,18 +396,16 @@ class _RootShellState extends State<RootShell> {
                         margin: const EdgeInsets.only(bottom: 3),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: active
-                              ? VirelloColors.pink
-                              : Colors.transparent,
+                          color:
+                              active ? VirelloColors.pink : Colors.transparent,
                         ),
                       ),
                       Text(
                         it.label,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: active
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight:
+                              active ? FontWeight.w700 : FontWeight.w500,
                           color: active
                               ? VirelloColors.pink
                               : VirelloColors.boardTextSec,

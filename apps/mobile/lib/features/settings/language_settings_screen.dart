@@ -24,7 +24,19 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
   String _query = '';
   String? _error;
 
-  static const _fullUi = {'en', 'ur', 'ar'};
+  static const _fullUi = {
+    'en',
+    'ur',
+    'ar',
+    'hi',
+    'fr',
+    'es',
+    'pt',
+    'de',
+    'tr',
+    'id',
+    'bn'
+  };
 
   @override
   void initState() {
@@ -39,8 +51,8 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
       final packs = (langs['languages'] as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      packs.sort((a, b) =>
-          (a['name_en'] as String).compareTo(b['name_en'] as String));
+      packs.sort(
+          (a, b) => (a['name_en'] as String).compareTo(b['name_en'] as String));
       if (!mounted) return;
       setState(() {
         _packs = packs;
@@ -96,8 +108,7 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
                     },
                     child: Column(
                       children: _fullUi.map((code) {
-                        final pack = _packs.firstWhere(
-                            (p) => p['code'] == code,
+                        final pack = _packs.firstWhere((p) => p['code'] == code,
                             orElse: () => {'code': code, 'name_en': code});
                         final native = pack['name_native'] as String? ?? '';
                         return RadioListTile<String>(
@@ -160,8 +171,8 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
                           _contentLangs.remove(code);
                         }
                       }),
-                      title: Text(
-                          '${p['name_en']} · ${p['name_native'] ?? ''}'),
+                      title:
+                          Text('${p['name_en']} · ${p['name_native'] ?? ''}'),
                       subtitle: Text(fullUi
                           ? s.langUiFullNote
                           : (p['ui_status'] == 'full'
@@ -208,9 +219,8 @@ class _PreferredPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      initialValue: value != null && packs.any((p) => p['code'] == value)
-          ? value
-          : null,
+      initialValue:
+          value != null && packs.any((p) => p['code'] == value) ? value : null,
       decoration: const InputDecoration(border: OutlineInputBorder()),
       hint: const Text('—'),
       items: packs

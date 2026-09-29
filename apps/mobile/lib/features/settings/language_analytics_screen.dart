@@ -27,7 +27,19 @@ class _LanguageAnalyticsScreenState extends State<LanguageAnalyticsScreen> {
   String? _error;
 
   /// Codes with a complete app interface in the shipped Flutter UI.
-  static const _fullUi = {'en', 'ur', 'ar'};
+  static const _fullUi = {
+    'en',
+    'ur',
+    'ar',
+    'hi',
+    'fr',
+    'es',
+    'pt',
+    'de',
+    'tr',
+    'id',
+    'bn'
+  };
 
   @override
   void initState() {
