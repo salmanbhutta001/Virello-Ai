@@ -2071,4 +2071,93 @@ class AppStrings {
   );
   String get boardWelcomeBack =>
       _get('Welcome Back', 'واپس خوش آمدید', 'مرحباً بعودتك');
+
+  // ---- 2026-09-29 master board: phase 3 home + main tabs (07-12, 21/22) ----
+  String get boardGoodMorning => _get('Good morning', 'صبح بخیر', 'صباح الخير');
+  String get boardGoodAfternoon =>
+      _get('Good afternoon', 'دوپہر بخیر', 'طاب يومك');
+  String get boardGoodEvening => _get('Good evening', 'شام بخیر', 'مساء الخير');
+  String get boardActiveCampaigns =>
+      _get('Active Campaigns', 'فعال مہمات', 'الحملات النشطة');
+  String get boardAiRecommendations =>
+      _get('AI Recommendations', 'AI تجاویز', 'توصيات الذكاء الاصطناعي');
+  String get boardViewAll => _get('View all', 'سب دیکھیں', 'عرض الكل');
+  String get boardQuickCreate => _get('Create', 'تخلیق', 'أنشئ');
+  String get boardQuickCreateDesc =>
+      _get('Make content', 'مواد بنائیں', 'أنشئ محتوى');
+  String get boardQuickGrow => _get('Grow', 'گرو', 'نمِّ');
+  String get boardQuickGrowDesc =>
+      _get('Boost reach', 'رسائی بڑھائیں', 'عزّز الوصول');
+  String get boardQuickShop => _get('Shop', 'شاپ', 'تسوّق');
+  String get boardQuickShopDesc =>
+      _get('Buy & sell', 'خریدیں و بیچیں', 'اشترِ وبِع');
+  String get boardQuickLearn => _get('Learn', 'سیکھیں', 'تعلَّم');
+  String get boardQuickLearnDesc =>
+      _get('AI Academy', 'AI اکیڈمی', 'أكاديمية الذكاء الاصطناعي');
+  String get boardNoActiveCampaigns => _get(
+    'No active campaigns yet',
+    'ابھی کوئی فعال مہم نہیں',
+    'لا توجد حملات نشطة بعد',
+  );
+  String get boardStartCampaign =>
+      _get('Start a campaign', 'مہم شروع کریں', 'ابدأ حملة');
+  String get boardWhatToCreate => _get(
+    'What do you want to create?',
+    'آپ کیا بنانا چاہتے ہیں؟',
+    'ماذا تريد أن تنشئ؟',
+  );
+  String get boardAiImage =>
+      _get('AI Image', 'AI تصویر', 'صورة بالذكاء الاصطناعي');
+  String get boardAiImageDesc => _get(
+    'Generate images with AI',
+    'AI سے تصاویر بنائیں',
+    'ولّد صوراً بالذكاء الاصطناعي',
+  );
+  String get boardAiVideo =>
+      _get('AI Video', 'AI ویڈیو', 'فيديو بالذكاء الاصطناعي');
+  String get boardAiVideoDesc => _get(
+    'Generate videos with AI',
+    'AI سے ویڈیو بنائیں',
+    'ولّد فيديو بالذكاء الاصطناعي',
+  );
+  String get boardWriteScript =>
+      _get('Write Script', 'اسکرپٹ لکھیں', 'اكتب سيناريو');
+  String get boardWriteScriptDesc => _get(
+    'Scripts, hooks & captions',
+    'اسکرپٹس، ہکس اور کیپشنز',
+    'سيناريوهات وخطّافات وتسميات',
+  );
+  String get boardAiStory =>
+      _get('AI Story', 'AI کہانی', 'قصة بالذكاء الاصطناعي');
+  String get boardAiStoryDesc =>
+      _get('Stories & comics', 'کہانیاں اور کامکس', 'قصص ومصوَّرات');
+  String get boardUploadContent =>
+      _get('Upload Content', 'مواد اپ لوڈ کریں', 'ارفع المحتوى');
+  String get boardUploadContentDesc => _get(
+    'Review & improve media',
+    'میڈیا کا جائزہ و بہتری',
+    'راجع وحسِّن الوسائط',
+  );
+  String get boardUseTemplate =>
+      _get('Use Template', 'ٹیمپلیٹ استعمال کریں', 'استخدم قالباً');
+  String get boardUseTemplateDesc => _get(
+    'Start from proven formats',
+    'آزمودہ فارمیٹس سے شروع کریں',
+    'ابدأ من صيغ مُجرَّبة',
+  );
+  String get boardProviderKeyNeeded => _get(
+    'Needs an AI provider key — coming soon',
+    'AI فراہم کنندہ کی کنجی درکار — جلد آ رہا ہے',
+    'يحتاج مفتاح مزوِّد ذكاء اصطناعي — قريباً',
+  );
+  String get boardNoRecommendations => _get(
+    'No recommendations yet — explore Discover',
+    'ابھی کوئی تجویز نہیں — Discover دیکھیں',
+    'لا توصيات بعد — استكشف ديسكفر',
+  );
+  String get reachLabel => _get('reach', 'رسائی', 'وصول');
+  String get clicksLabel => _get('clicks', 'کلکس', 'نقرات');
+  String get liveLabel => _get('Live', 'لائیو', 'مباشر');
+  String get campaignFallbackTitle =>
+      _get('Untitled campaign', 'بغیر عنوان مہم', 'حملة بلا عنوان');
 }

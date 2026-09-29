@@ -7,24 +7,26 @@ import '../../main.dart';
 import '../ads/campaign_builder_screen.dart';
 import '../audience/audience_intelligence_screen.dart';
 import '../collab/collab_screen.dart';
+import '../creator_studio/creator_studio_screen.dart';
 import '../ctr/ctr_audit_screen.dart';
 import '../discovery/analyze_screen.dart';
-import '../viral_lab/viral_lab_screen.dart';
-import '../creator_studio/creator_studio_screen.dart';
 import '../discovery/discovery_screen.dart';
+import '../entertain/entertain_screen.dart';
 import '../grow/grow_flow.dart';
 import '../referrals/referral_screen.dart';
 import '../seeding/seeding_screen.dart';
 import '../transform/transform_screen.dart';
+import '../viral_lab/viral_lab_screen.dart';
 import 'upload_review_screen.dart';
 
-/// Board screen "Create": the central action hub — Analyze, Upload, Find
-/// Audience, Promote with AI, plus the "Let AI Grow Your Content" card.
+/// Board screens 21/22: "Create Hub" — "What do you want to create?"
+///
+/// Board menu: AI Image, AI Video, Write Script, AI Story, Upload Content,
+/// Use Template → mapped to the real existing features. AI Image/Video have
+/// no provider key configured, so they show an honest "coming soon" state —
+/// never fake generation. Everything else routes to real screens.
 class CreateHubScreen extends StatelessWidget {
   const CreateHubScreen({super.key});
-
-  static const _cyan = Color(0xFF22B8CF);
-  static const _orange = Color(0xFFF59E0B);
 
   void _openUploadStudio(BuildContext context) {
     Navigator.push(
@@ -33,17 +35,51 @@ class CreateHubScreen extends StatelessWidget {
     );
   }
 
+  /// Honest "coming soon" — AI Image/Video need a provider key.
+  void _showProviderNeeded(BuildContext context, String title) {
+    final s = AppStrings(appState.localeCode);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VirelloColors.boardSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: VirelloColors.boardBorder),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Text(
+          s.boardProviderKeyNeeded,
+          style: const TextStyle(color: VirelloColors.boardTextSec),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: VirelloColors.pink),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _row({
     required BuildContext context,
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String desc,
     required VoidCallback onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: VCard(
+      child: VBoardCard(
         onTap: onTap,
         child: Row(
           children: [
@@ -51,10 +87,10 @@ class CreateHubScreen extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
+                color: VirelloColors.pink.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: iconColor, size: 26),
+              child: Icon(icon, color: VirelloColors.pink, size: 26),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -66,6 +102,7 @@ class CreateHubScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -73,13 +110,13 @@ class CreateHubScreen extends StatelessWidget {
                     desc,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: VirelloColors.muted,
+                      color: VirelloColors.boardTextSec,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: VirelloColors.muted),
+            const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
           ],
         ),
       ),
@@ -90,26 +127,99 @@ class CreateHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
     return Scaffold(
+      backgroundColor: VirelloColors.boardBg,
       appBar: AppBar(
+        backgroundColor: VirelloColors.boardBg,
         title: Text(
           s.createTitle,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
+          // ── Board 21/22: "What do you want to create?" ──
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
+              s.boardWhatToCreate,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.image_outlined,
+            title: s.boardAiImage,
+            desc: s.boardAiImageDesc,
+            onTap: () => _showProviderNeeded(context, s.boardAiImage),
+          ),
+          _row(
+            context: context,
+            icon: Icons.videocam_outlined,
+            title: s.boardAiVideo,
+            desc: s.boardAiVideoDesc,
+            onTap: () => _showProviderNeeded(context, s.boardAiVideo),
+          ),
+          _row(
+            context: context,
+            icon: Icons.edit_note_outlined,
+            title: s.boardWriteScript,
+            desc: s.boardWriteScriptDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatorStudioScreen()),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.auto_stories_outlined,
+            title: s.boardAiStory,
+            desc: s.boardAiStoryDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EntertainScreen()),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.upload_outlined,
+            title: s.boardUploadContent,
+            desc: s.boardUploadContentDesc,
+            onTap: () => _openUploadStudio(context),
+          ),
+          _row(
+            context: context,
+            icon: Icons.dashboard_customize_outlined,
+            title: s.boardUseTemplate,
+            desc: s.boardUseTemplateDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatorStudioScreen()),
+            ),
+          ),
+
+          // ── AI growth tools (existing features) ──
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Text(
               s.whatToDoToday,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
           ),
           _row(
             context: context,
             icon: Icons.link,
-            iconColor: VirelloColors.violet,
             title: s.analyzePost,
             desc: s.analyzePostDesc,
             onTap: () => Navigator.push(
@@ -120,7 +230,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.science_outlined,
-            iconColor: VirelloColors.violetDeep,
             title: s.viralLab,
             desc: s.viralLabDesc,
             onTap: () => Navigator.push(
@@ -130,27 +239,7 @@ class CreateHubScreen extends StatelessWidget {
           ),
           _row(
             context: context,
-            icon: Icons.auto_awesome,
-            iconColor: _cyan,
-            title: s.creatorStudio,
-            desc: s.creatorStudioDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreatorStudioScreen()),
-            ),
-          ),
-          _row(
-            context: context,
-            icon: Icons.image_outlined,
-            iconColor: _cyan,
-            title: s.uploadContent,
-            desc: s.uploadContentDesc,
-            onTap: () => _openUploadStudio(context),
-          ),
-          _row(
-            context: context,
             icon: Icons.track_changes,
-            iconColor: _orange,
             title: s.findAudience,
             desc: s.findAudienceDesc,
             onTap: () => Navigator.push(
@@ -163,7 +252,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.rocket_launch_outlined,
-            iconColor: VirelloColors.violet,
             title: s.promoteWithAI,
             desc: s.promoteWithAIDesc,
             onTap: () => Navigator.push(
@@ -172,18 +260,21 @@ class CreateHubScreen extends StatelessWidget {
             ),
           ),
 
-          // Free Growth Tools section.
+          // ── Free Growth Tools ──
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 8),
             child: Text(
               s.freeGrowthTools,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
           ),
           _row(
             context: context,
             icon: Icons.transform_outlined,
-            iconColor: VirelloColors.violet,
             title: s.toolTransform,
             desc: s.toolTransformDesc,
             onTap: () => Navigator.push(
@@ -197,7 +288,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.fact_check_outlined,
-            iconColor: _cyan,
             title: s.toolCtrAudit,
             desc: s.toolCtrAuditDesc,
             onTap: () => Navigator.push(
@@ -208,7 +298,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.groups_outlined,
-            iconColor: _orange,
             title: s.toolSeeding,
             desc: s.toolSeedingDesc,
             onTap: () => Navigator.push(
@@ -219,7 +308,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.handshake_outlined,
-            iconColor: VirelloColors.violet,
             title: s.toolCollab,
             desc: s.toolCollabDesc,
             onTap: () => Navigator.push(
@@ -230,7 +318,6 @@ class CreateHubScreen extends StatelessWidget {
           _row(
             context: context,
             icon: Icons.card_giftcard_outlined,
-            iconColor: _cyan,
             title: s.toolReferral,
             desc: s.toolReferralDesc,
             onTap: () => Navigator.push(
@@ -238,19 +325,8 @@ class CreateHubScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const ReferralScreen()),
             ),
           ),
-          _row(
-            context: context,
-            icon: Icons.view_agenda_outlined,
-            iconColor: _orange,
-            title: s.toolLinkCards,
-            desc: s.toolLinkCardsDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DiscoveryScreen()),
-            ),
-          ),
 
-          // Gradient "Let AI Grow Your Content" card.
+          // Gradient "Let AI Grow Your Content" card — board pink.
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: InkWell(
@@ -265,11 +341,15 @@ class CreateHubScreen extends StatelessWidget {
                   vertical: 22,
                 ),
                 decoration: BoxDecoration(
-                  gradient: VirelloColors.brandGradient,
+                  gradient: const LinearGradient(
+                    colors: [VirelloColors.pink, Color(0xFFC2274E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: VirelloColors.violet.withValues(alpha: 0.35),
+                      color: VirelloColors.pink.withValues(alpha: 0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -309,71 +389,6 @@ class CreateHubScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ),
-
-          // Footer strip.
-          Padding(
-            padding: const EdgeInsets.only(top: 28, bottom: 8),
-            child: Column(
-              children: [
-                const Text(
-                  'Virello AI',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: VirelloColors.violet,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${s.smartContent} • ${s.rightAudience} • ${s.realGrowth}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: VirelloColors.muted,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _badge(Icons.auto_awesome, s.aiPoweredIntelligence),
-                    _badge(Icons.public, s.globalAudience),
-                    _badge(Icons.translate, s.multiLanguageSupport),
-                    _badge(Icons.verified_user, s.secureTransparent),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _badge(IconData icon, String label) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: VirelloColors.violet.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: VirelloColors.violet, size: 20),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: VirelloColors.muted,
-              fontWeight: FontWeight.w600,
-              height: 1.35,
             ),
           ),
         ],

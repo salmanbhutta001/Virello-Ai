@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
+
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
+import '../../data/models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../academy/academy_screen.dart';
 import '../discovery/post_reader_screen.dart';
 import '../settings/notifications_screen.dart';
 
-/// Board screen 2: "Home Feed".
-/// Header with logo + notifications, search bar (jumps to Discover), pill
-/// tabs (For You / Trending / Following / AI Picks), staggered pin feed
-/// from the real Discovery API. Never shows fake posts or numbers.
+/// Board screen 07: "Home Feed".
+///
+/// - Time-aware greeting with the REAL user name from /users/me.
+/// - Search bar (jumps to the Discover tab).
+/// - 4 quick-action cards: Create / Grow / Shop / Learn → real tabs/screens.
+/// - "Active Campaigns": real campaigns from the API, real stats only.
+/// - "AI Recommendations": top real discovery items by match score.
+/// Never shows fake stats, counts, or content.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -19,283 +26,295 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _tab = 0;
-  late Future<List<DiscoveryItem>> _future;
-  Future<List<Map<String, dynamic>>>? _followingFuture;
-  Future<List<Map<String, dynamic>>>? _trendsFuture;
+  AppStrings get s => AppStrings(appState.localeCode);
+
+  late Future<_HomeData> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = apiClient.getDiscoveryFeed(limit: 20);
-    _followingFuture = apiClient.getFollowing();
-    _trendsFuture = _loadTrends();
+    _future = _load();
   }
 
-  Future<List<Map<String, dynamic>>> _loadTrends() async {
+  Future<_HomeData> _load() async {
+    String name = '';
+    List<Campaign> campaigns = const [];
+    List<DiscoveryItem> recs = const [];
     try {
-      final res = await apiClient.getTrending(limit: 20);
-      return List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
-    } catch (_) {
-      return [];
-    }
+      final me = await apiClient.me();
+      final raw = '${me['display_name'] ?? me['name'] ?? me['email'] ?? ''}'
+          .trim();
+      // Prefer a display name; fall back to the email prefix, never blank.
+      name = raw.contains('@') ? raw.split('@').first : raw;
+    } catch (_) {}
+    try {
+      final all = await apiClient.listCampaigns();
+      campaigns = all
+          .where(
+            (c) =>
+                c.status == CampaignStatus.live ||
+                c.status == CampaignStatus.optimizing ||
+                c.status == CampaignStatus.launching,
+          )
+          .toList();
+    } catch (_) {}
+    try {
+      final feed = await apiClient.getDiscoveryFeed(limit: 10);
+      feed.sort((a, b) => b.matchScore.compareTo(a.matchScore));
+      recs = feed.take(6).toList();
+    } catch (_) {}
+    return _HomeData(name: name, campaigns: campaigns, recs: recs);
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _future = apiClient.getDiscoveryFeed(limit: 20);
-      if (_tab == 1) _trendsFuture = _loadTrends();
-      if (_tab == 2) _followingFuture = apiClient.getFollowing();
-    });
+    setState(() => _future = _load());
     try {
       await _future;
-    } catch (_) {
-      // Error state renders below; nothing to do here.
-    }
+    } catch (_) {}
   }
 
-  Future<void> _openItem(DiscoveryItem item) async {
-    // A genuine view: the user actually opened this pin. Fire-and-forget so
-    // the tap always works even if the accounting call fails.
-    try {
-      await apiClient.recordInteraction(
-        campaignId: item.campaignId,
-        kind: 'view',
-        variantId: item.growthVariant?.variantId,
-      );
-    } catch (_) {}
-    if (!mounted) return;
-    // Open in the native in-app reader — never kick the user out to a
-    // third-party site unexpectedly. The full original is available from
-    // inside the reader via a clearly labeled button.
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PostReaderScreen(item: item),
-      ),
-    );
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return s.boardGoodMorning;
+    if (h < 17) return s.boardGoodAfternoon;
+    return s.boardGoodEvening;
   }
 
   @override
   Widget build(BuildContext context) {
-    final s = AppStrings(appState.localeCode);
     return Scaffold(
+      backgroundColor: VirelloColors.boardBg,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _Header(
-              s: s,
-              showFollowAction: _tab == 2,
-              onFollowTap: _showFollowSheet,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: VSearchBar(
-                hint: s.searchAnything,
-                readOnly: true,
-                onTap: () => requestedTab.value = 1,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: VPillTabs(
-                tabs: [s.forYou, s.trending, s.following, s.aiPicks],
-                selected: _tab,
-                onTap: (i) => setState(() {
-                  _tab = i;
-                  // Keep the following list fresh whenever the tab opens.
-                  if (i == 1) _trendsFuture = _loadTrends();
-                  if (i == 2) _followingFuture = apiClient.getFollowing();
-                }),
-              ),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refresh,
-                child: FutureBuilder<List<DiscoveryItem>>(
-                  future: _future,
-                  builder: (context, snap) {
-                    if (snap.connectionState == ConnectionState.waiting) {
-                      return _loadingGrid();
-                    }
-                    if (snap.hasError) {
-                      return _errorState(s);
-                    }
-                    return _tabBody(s, snap.data ?? const <DiscoveryItem>[]);
-                  },
-                ),
-              ),
-            ),
-          ],
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          color: VirelloColors.pink,
+          backgroundColor: VirelloColors.boardSurface,
+          child: FutureBuilder<_HomeData>(
+            future: _future,
+            builder: (context, snap) {
+              final data = snap.data ?? const _HomeData();
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                children: [
+                  _header(data.name),
+                  const SizedBox(height: 16),
+                  _searchBar(),
+                  const SizedBox(height: 18),
+                  _quickActions(),
+                  const SizedBox(height: 22),
+                  _campaignsSection(data.campaigns, snap),
+                  const SizedBox(height: 22),
+                  _recsSection(data.recs, snap),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _tabBody(AppStrings s, List<DiscoveryItem> feed) {
-    switch (_tab) {
-      case 1:
-        // Trending tab: real public trends (Wikipedia + News), tappable.
-        return FutureBuilder<List<Map<String, dynamic>>>(
-          future: _trendsFuture,
-          builder: (c, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final trends = snap.data ?? const <Map<String, dynamic>>[];
-            if (trends.isEmpty) {
-              return _emptyState(
-                icon: Icons.trending_up_outlined,
-                message: s.nothingHere,
-              );
-            }
-            // Pinterest-style 2-column masonry with images
-            return _trendsMasonry(trends);
-          },
-        );
-      case 2:
-        return FutureBuilder<List<Map<String, dynamic>>>(
-          future: _followingFuture,
-          builder: (c, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return _emptyState(
-                  icon: Icons.wifi_off_outlined, message: s.analyzeFailed);
-            }
-            final list = snap.data ?? const <Map<String, dynamic>>[];
-            if (list.isEmpty) {
-              return _emptyState(
-                icon: Icons.people_outline,
-                message: s.followingEmpty,
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: list.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (_, i) => _followingRow(list[i]),
-            );
-          },
-        );
-      case 3:
-        final picks = feed.where((i) => i.growthVariant != null).toList();
-        if (picks.isEmpty) {
-          return _emptyState(
-            icon: Icons.auto_awesome_outlined,
-            message: s.nothingHere,
-          );
-        }
-        return _masonry(s, picks);
-      case 0:
-      default:
-        if (feed.isEmpty) {
-          return _emptyState(
-            icon: Icons.explore_outlined,
-            message: s.nothingHere,
-          );
-        }
-        return _masonry(s, feed);
-    }
-  }
-
-  /// 2-column staggered masonry: even/odd index split into two columns.
-  Widget _masonry(AppStrings s, List<DiscoveryItem> feed) {
-    final left = <DiscoveryItem>[];
-    final right = <DiscoveryItem>[];
-    for (var i = 0; i < feed.length; i++) {
-      (i.isEven ? left : right).add(feed[i]);
-    }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      physics: const AlwaysScrollableScrollPhysics(),
+  /// Avatar + time-aware greeting + real user name + notifications bell.
+  Widget _header(String name) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'V';
+    return Row(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                children: [
-                  for (final item in left) _pinCard(s, item),
-                ],
-              ),
+        Container(
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [VirelloColors.pink, Color(0xFFC2274E)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                children: [
-                  for (final item in right) _pinCard(s, item),
-                ],
-              ),
+          ),
+          child: Text(
+            initial,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
             ),
-          ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _greeting(),
+                style: const TextStyle(
+                  color: VirelloColors.boardTextSec,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                name.isEmpty ? 'Virello AI' : name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        _iconBtn(
+          Icons.notifications_outlined,
+          () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          ),
         ),
       ],
     );
   }
 
-  Widget _pinCard(AppStrings s, DiscoveryItem item) {
-    final title = item.title.isEmpty ? item.postUrl : item.title;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: VCard(
-        padding: EdgeInsets.zero,
-        onTap: () => _openItem(item),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Thumbnail: real image, or a brand-gradient box fallback.
-              Stack(
-                children: [
-                  _pinThumb(title, item.thumbnailUrl),
-                  if (item.matchReasons.isNotEmpty)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: VirelloColors.violet,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text('✦ ${s.whyThis}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
-                      ),
-                    ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _chip('✦ ${(item.matchScore * 100).round()}%',
-                            VirelloColors.violet),
-                        if (item.contentLanguage.isNotEmpty)
-                          _chip('🌐 ${item.contentLanguage.toUpperCase()}',
-                              VirelloColors.mutedDark),
-                      ],
-                    ),
-                  ],
+  Widget _iconBtn(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: VirelloColors.boardField,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: VirelloColors.boardBorder),
+        ),
+        child: const Icon(
+          Icons.notifications_outlined,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  /// Board search field → jumps to the Discover tab.
+  Widget _searchBar() {
+    return InkWell(
+      onTap: () => requestedTab.value = 1,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: VirelloColors.boardField,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: VirelloColors.boardBorder),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.search,
+              color: VirelloColors.boardTextSec,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                s.searchAnything,
+                style: const TextStyle(
+                  color: VirelloColors.boardTextSec,
+                  fontSize: 14,
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 4 quick-action cards → real tabs. Board order: Create / Grow / Shop / Learn.
+  Widget _quickActions() {
+    return Row(
+      children: [
+        _quickCard(
+          icon: Icons.add_rounded,
+          label: s.boardQuickCreate,
+          desc: s.boardQuickCreateDesc,
+          onTap: () => requestedTab.value = 2,
+        ),
+        const SizedBox(width: 10),
+        _quickCard(
+          icon: Icons.trending_up_rounded,
+          label: s.boardQuickGrow,
+          desc: s.boardQuickGrowDesc,
+          onTap: () => requestedTab.value = 3,
+        ),
+        const SizedBox(width: 10),
+        _quickCard(
+          icon: Icons.shopping_bag_outlined,
+          label: s.boardQuickShop,
+          desc: s.boardQuickShopDesc,
+          onTap: () => requestedTab.value = 4,
+        ),
+        const SizedBox(width: 10),
+        _quickCard(
+          icon: Icons.school_outlined,
+          label: s.boardQuickLearn,
+          desc: s.boardQuickLearnDesc,
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const AcademyScreen())),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickCard({
+    required IconData icon,
+    required String label,
+    required String desc,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+          decoration: BoxDecoration(
+            color: VirelloColors.boardSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: VirelloColors.boardBorder),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: VirelloColors.pink.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: VirelloColors.pink, size: 24),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: const TextStyle(
+                  color: VirelloColors.boardTextSec,
+                  fontSize: 10.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -304,147 +323,214 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _pinThumb(String title, String url) {
-    if (url.isEmpty) return _thumbFallback(title);
-    return Image.network(
-      url,
-      height: 170,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _thumbFallback(title),
-    );
-  }
-
-  Widget _thumbFallback(String title) {
-    return Container(
-      height: 170,
-      decoration: const BoxDecoration(gradient: VirelloColors.brandGradient),
-      alignment: Alignment.center,
-      padding: const EdgeInsets.all(16),
-      child: Text(title,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
-    );
-  }
-
-  Widget _chip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-    );
-  }
-
-  /// One followed creator: avatar initial, name/handle, Unfollow button.
-  /// Pinterest-style 2-column masonry for trends with images.
-  Widget _trendsMasonry(List<Map<String, dynamic>> trends) {
-    final left = <Map<String, dynamic>>[];
-    final right = <Map<String, dynamic>>[];
-    for (var i = 0; i < trends.length; i++) {
-      (i.isEven ? left : right).add(trends[i]);
-    }
-    Widget column(List<Map<String, dynamic>> items) {
-      return Column(
-        children: [
-          for (var t in items) ...[
-            _trendPin(t),
-            const SizedBox(height: 12),
-          ],
-        ],
-      );
-    }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      physics: const AlwaysScrollableScrollPhysics(),
+  /// Active Campaigns — real campaigns, real numbers only.
+  Widget _campaignsSection(List<Campaign> campaigns, AsyncSnapshot snap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: column(left)),
-            const SizedBox(width: 12),
-            Expanded(child: column(right)),
-          ],
+        _sectionHeader(s.boardActiveCampaigns, () => requestedTab.value = 3),
+        const SizedBox(height: 12),
+        if (snap.connectionState == ConnectionState.waiting)
+          const VShimmerBox(height: 120, radius: 18)
+        else if (campaigns.isEmpty)
+          _emptyCard(
+            icon: Icons.rocket_launch_outlined,
+            message: s.boardNoActiveCampaigns,
+            cta: s.boardStartCampaign,
+            onCta: () => requestedTab.value = 3,
+          )
+        else
+          VBoardCard(
+            onTap: () => requestedTab.value = 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < campaigns.length && i < 3; i++) ...[
+                  if (i > 0)
+                    const Divider(color: VirelloColors.boardBorder, height: 20),
+                  _campaignRow(campaigns[i]),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _campaignRow(Campaign c) {
+    final stats = <String>[];
+    if (c.reach > 0) stats.add('${_fmtNum(c.reach)} ${s.reachLabel}');
+    if (c.clicks > 0) stats.add('${_fmtNum(c.clicks)} ${s.clicksLabel}');
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: VirelloColors.pink.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.campaign_outlined,
+            color: VirelloColors.pink,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                c.title.isEmpty ? s.campaignFallbackTitle : c.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                stats.isEmpty ? s.boardActiveCampaigns : stats.join(' • '),
+                style: const TextStyle(
+                  color: VirelloColors.boardTextSec,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: VirelloColors.pink.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            s.liveLabel,
+            style: const TextStyle(
+              color: VirelloColors.pink,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  /// Pinterest-style pin card: image on top, title + source below.
-  /// Tappable -> opens content in the in-app reader.
-  Widget _trendPin(Map<String, dynamic> t) {
-    final query = '${t['query'] ?? ''}';
-    final source = '${t['source'] ?? ''}';
-    final detail = '${t['detail'] ?? ''}';
-    final thumb = '${t['thumbnail_url'] ?? ''}';
-    final desc = '${t['description'] ?? ''}';
-    return GestureDetector(
-      onTap: () => _openTrend(t),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+  /// AI Recommendations — top real discovery items by match score.
+  Widget _recsSection(List<DiscoveryItem> recs, AsyncSnapshot snap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(s.boardAiRecommendations, () => requestedTab.value = 1),
+        const SizedBox(height: 12),
+        if (snap.connectionState == ConnectionState.waiting)
+          const SizedBox(
+            height: 190,
+            child: Row(
+              children: [
+                Expanded(child: VShimmerBox(height: 190, radius: 18)),
+                SizedBox(width: 12),
+                Expanded(child: VShimmerBox(height: 190, radius: 18)),
+              ],
             ),
-          ],
+          )
+        else if (recs.isEmpty)
+          _emptyCard(
+            icon: Icons.auto_awesome_outlined,
+            message: s.boardNoRecommendations,
+            cta: s.boardViewAll,
+            onCta: () => requestedTab.value = 1,
+          )
+        else
+          SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: recs.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _recCard(recs[i]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _recCard(DiscoveryItem item) {
+    final title = item.title.isEmpty ? item.postUrl : item.title;
+    return InkWell(
+      onTap: () {
+        try {
+          apiClient.recordInteraction(
+            campaignId: item.campaignId,
+            kind: 'view',
+            variantId: item.growthVariant?.variantId,
+          );
+        } catch (_) {}
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)));
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: 160,
+        decoration: BoxDecoration(
+          color: VirelloColors.boardSurface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: VirelloColors.boardBorder),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image (or gradient placeholder)
-            if (thumb.isNotEmpty)
-              Image.network(
-                thumb,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (_, __, ___) => _trendPlaceholder(),
-              )
-            else
-              _trendPlaceholder(),
+            SizedBox(
+              height: 110,
+              width: double.infinity,
+              child: item.thumbnailUrl.isNotEmpty
+                  ? Image.network(
+                      item.thumbnailUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _recThumbFallback(),
+                    )
+                  : _recThumbFallback(),
+            ),
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(query,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.pink.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '✦ ${(item.matchScore * 100).round()}%',
                       style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700)),
-                  if (desc.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(desc,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 11, color: VirelloColors.muted)),
-                  ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.trending_up,
-                          size: 12, color: VirelloColors.muted),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                            detail.isNotEmpty ? detail : source,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 10, color: VirelloColors.muted)),
+                        color: VirelloColors.pink,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -455,364 +541,98 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Gradient placeholder when no thumbnail is available.
-  Widget _trendPlaceholder() {
+  Widget _recThumbFallback() {
     return Container(
-      height: 120,
-      width: double.infinity,
       decoration: const BoxDecoration(
-        gradient: VirelloColors.brandGradient,
-      ),
-      alignment: Alignment.center,
-      child: const Icon(Icons.trending_up, color: Colors.white, size: 32),
-    );
-  }
-
-  /// Tappable trend row: opens the trend's content in the in-app reader.
-  /// (Legacy list style - kept for reference, masonry is used now)
-  Widget _trendRow(Map<String, dynamic> t) {
-    final query = '${t['query'] ?? ''}';
-    final source = '${t['source'] ?? ''}';
-    final detail = '${t['detail'] ?? ''}';
-    return GestureDetector(
-      onTap: () => _openTrend(t),
-      child: VCard(
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: VirelloColors.brandGradient,
-              ),
-              child: const Icon(Icons.trending_up,
-                  color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(query,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700)),
-                  if (source.isNotEmpty || detail.isNotEmpty)
-                    Text(
-                        [if (source.isNotEmpty) source, if (detail.isNotEmpty) detail]
-                            .join(' • '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 11, color: VirelloColors.muted)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: VirelloColors.muted),
-          ],
+        gradient: LinearGradient(
+          colors: [VirelloColors.pink, Color(0xFFC2274E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
+      child: const Center(
+        child: Icon(Icons.auto_awesome, color: Colors.white70, size: 30),
+      ),
     );
   }
 
-  /// Open a trend inside the app via the in-app reader.
-  void _openTrend(Map<String, dynamic> trend) {
-    final query = ('${trend['query'] ?? ''}').trim();
-    final source = ('${trend['source'] ?? ''}').trim();
-    if (query.isEmpty) return;
-
-    String url;
-    if (source.toLowerCase() == 'wikipedia') {
-      final slug = query.replaceAll(' ', '_');
-      url = 'https://en.wikipedia.org/wiki/$slug';
-    } else {
-      url = 'https://news.google.com/search?q=${Uri.encodeComponent(query)}&hl=en-US&gl=US&ceid=US:en';
-    }
-    final item = DiscoveryItem(
-      campaignId: '',
-      title: query,
-      platform: 'link',
-      goal: '',
-      postUrl: url,
-      thumbnailUrl: '',
-      matchScore: 1.0,
-      matchReasons: ['Trending on $source'],
-      postType: 'link',
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)),
+  Widget _sectionHeader(String title, VoidCallback onViewAll) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: onViewAll,
+          child: Text(
+            s.boardViewAll,
+            style: const TextStyle(
+              color: VirelloColors.pink,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _followingRow(Map<String, dynamic> f) {
-    final s = AppStrings(appState.localeCode);
-    final handle = '${f['creator_handle'] ?? ''}';
-    final name = '${f['creator_name'] ?? handle}';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
-    return VCard(
+  Widget _emptyCard({
+    required IconData icon,
+    required String message,
+    required String cta,
+    required VoidCallback onCta,
+  }) {
+    return VBoardCard(
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: VirelloColors.brandGradient,
-            ),
-            child: Text(initial,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18)),
-          ),
+          Icon(icon, color: VirelloColors.boardTextSec, size: 28),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14)),
-                Text('@$handle',
-                    style: const TextStyle(
-                        fontSize: 12, color: VirelloColors.muted)),
-              ],
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: VirelloColors.boardTextSec,
+                fontSize: 13,
+              ),
             ),
           ),
           TextButton(
-            onPressed: () => _unfollow(handle),
-            child: Text(s.unfollowBtn,
-                style: const TextStyle(color: Colors.red)),
+            onPressed: onCta,
+            child: Text(
+              cta,
+              style: const TextStyle(
+                color: VirelloColors.pink,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _unfollow(String handle) async {
-    final s = AppStrings(appState.localeCode);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await apiClient.unfollowCreator(handle);
-      if (!mounted) return;
-      setState(() => _followingFuture = apiClient.getFollowing());
-    } on AuthException {
-      if (!mounted) return;
-      handleAuthFailure(s.sessionExpired);
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(s.growFailed)));
-    }
-  }
-
-  /// "Follow a creator" sheet: handle + optional display name → POST → refresh.
-  void _showFollowSheet() {
-    final s = AppStrings(appState.localeCode);
-    final handleCtrl = TextEditingController();
-    final nameCtrl = TextEditingController();
-    var saving = false;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (sheetCtx) => StatefulBuilder(
-        builder: (ctx, setSheet) => SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-                20, 16, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(s.followCreatorTitle,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: handleCtrl,
-                  decoration: InputDecoration(
-                    labelText: s.creatorHandleLabel,
-                    prefixText: '@',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: InputDecoration(
-                    labelText: s.creatorNameLabel,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: saving
-                        ? null
-                        : () async {
-                            final handle =
-                                handleCtrl.text.trim().replaceFirst(
-                                    RegExp(r'^@'), '');
-                            if (handle.isEmpty) return;
-                            final messenger =
-                                ScaffoldMessenger.of(context);
-                            final sheetNav = Navigator.of(sheetCtx);
-                            setSheet(() => saving = true);
-                            try {
-                              await apiClient.followCreator(handle,
-                                  nameCtrl.text.trim());
-                              if (!mounted) return;
-                              sheetNav.pop();
-                              setState(() => _followingFuture =
-                                  apiClient.getFollowing());
-                            } on AuthException {
-                              if (!mounted) return;
-                              sheetNav.pop();
-                              handleAuthFailure(s.sessionExpired);
-                            } catch (_) {
-                              if (!mounted) return;
-                              setSheet(() => saving = false);
-                              messenger.showSnackBar(
-                                  SnackBar(content: Text(s.growFailed)));
-                            }
-                          },
-                    child: Text(s.followBtn),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).whenComplete(() {
-      handleCtrl.dispose();
-      nameCtrl.dispose();
-    });
-  }
-
-  Widget _emptyState({required IconData icon, required String message}) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.14),
-        Icon(icon, size: 56, color: VirelloColors.muted),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
-          child: Text(message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: VirelloColors.muted)),
-        ),
-      ],
-    );
-  }
-
-  Widget _loadingGrid() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      children: const [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                children: [
-                  VShimmerBox(height: 200, radius: 20),
-                  SizedBox(height: 12),
-                  VShimmerBox(height: 160, radius: 20),
-                  SizedBox(height: 12),
-                  VShimmerBox(height: 190, radius: 20),
-                ],
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                children: [
-                  VShimmerBox(height: 160, radius: 20),
-                  SizedBox(height: 12),
-                  VShimmerBox(height: 200, radius: 20),
-                  SizedBox(height: 12),
-                  VShimmerBox(height: 170, radius: 20),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _errorState(AppStrings s) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.14),
-        const Icon(Icons.wifi_off_outlined,
-            size: 56, color: VirelloColors.muted),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
-          child: Text(s.analyzeFailed,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: VirelloColors.muted)),
-        ),
-        const SizedBox(height: 16),
-        Center(
-          child: SizedBox(
-            width: 200,
-            child: VGradientButton(
-              label: s.continueBtn,
-              onPressed: _refresh,
-              height: 48,
-            ),
-          ),
-        ),
-      ],
-    );
+  String _fmtNum(double v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
+    return v.toStringAsFixed(0);
   }
 }
 
-class _Header extends StatelessWidget {
-  final AppStrings s;
-  final bool showFollowAction;
-  final VoidCallback? onFollowTap;
-  const _Header(
-      {required this.s, this.showFollowAction = false, this.onFollowTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
-      child: Row(
-        children: [
-          Image.asset('assets/images/logo-virello.png', height: 32),
-          const Spacer(),
-          if (showFollowAction)
-            IconButton(
-              icon: const Icon(Icons.person_add_outlined,
-                  color: VirelloColors.ink),
-              tooltip: s.followCreatorTitle,
-              onPressed: onFollowTap,
-            ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined,
-                color: VirelloColors.ink),
-            tooltip: s.notifications,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+class _HomeData {
+  final String name;
+  final List<Campaign> campaigns;
+  final List<DiscoveryItem> recs;
+  const _HomeData({
+    this.name = '',
+    this.campaigns = const [],
+    this.recs = const [],
+  });
 }

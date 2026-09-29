@@ -41,13 +41,14 @@ class DiscoveryScreen extends StatefulWidget {
 }
 
 class _FeedDark {
-  static const bg = Color(0xFF0A0A0A);
-  static const card = Color(0xFF141414);
-  static const chip = Color(0xFF1E1E1E);
-  static const muted = Color(0xFF9A9AA5);
-  static const red = Color(0xFFE05252);
+  static const bg = Color(0xFF0B0B0E);
+  static const card = Color(0xFF15151C);
+  static const chip = Color(0xFF1D1D26);
+  static const muted = Color(0xFF9CA3AF);
+  // Board pink accent — reskinned from the old red per the master board.
+  static const red = VirelloColors.pink;
   static const avatarGrad = LinearGradient(
-    colors: [Color(0xFF7C5CFF), Color(0xFF22D3EE)],
+    colors: [VirelloColors.pink, Color(0xFFC2274E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -145,9 +146,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     if (_searchQuery.trim().isNotEmpty) {
       final q = _searchQuery.trim().toLowerCase();
       list = list.where((i) {
-        final hay =
-            '${i.title} ${i.platform} ${i.matchReasons.join(' ')}'
-                .toLowerCase();
+        final hay = '${i.title} ${i.platform} ${i.matchReasons.join(' ')}'
+            .toLowerCase();
         return hay.contains(q);
       }).toList();
     }
@@ -157,14 +157,14 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Future<void> _openItem(DiscoveryItem item) async {
     try {
       await apiClient.recordInteraction(
-          campaignId: item.campaignId,
-          kind: 'view',
-          variantId: item.growthVariant?.variantId);
+        campaignId: item.campaignId,
+        kind: 'view',
+        variantId: item.growthVariant?.variantId,
+      );
     } catch (_) {}
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)));
   }
 
   Future<void> _toggleSave(DiscoveryItem item) async {
@@ -173,12 +173,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       return;
     }
     try {
-      final analyzed = await apiClient.analyzePost(item.postUrl,
-          campaignId: item.campaignId);
+      final analyzed = await apiClient.analyzePost(
+        item.postUrl,
+        campaignId: item.campaignId,
+      );
       await apiClient.recordInteraction(
-          campaignId: item.campaignId,
-          kind: 'save',
-          variantId: item.growthVariant?.variantId);
+        campaignId: item.campaignId,
+        kind: 'save',
+        variantId: item.growthVariant?.variantId,
+      );
       await savedStore.save(analyzed);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -193,7 +196,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }
   }
 
-  bool _isSaved(DiscoveryItem item) => item.postUrl.isNotEmpty &&
+  bool _isSaved(DiscoveryItem item) =>
+      item.postUrl.isNotEmpty &&
       savedStore.items.any((r) => r.url == item.postUrl);
 
   Future<void> _shareItem(DiscoveryItem item) async {
@@ -212,9 +216,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   void _openAskVirello() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AskVirelloScreen()),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const AskVirelloScreen()));
   }
 
   @override
@@ -257,8 +260,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       const SizedBox(height: 16),
                       _sectionLabel(s.discoverSavedTitle),
                       const SizedBox(height: 8),
-                      for (final r in savedStore.items)
-                        _savedTile(r),
+                      for (final r in savedStore.items) _savedTile(r),
                     ],
                     const SizedBox(height: 16),
                     _sectionLabel(s.discoverLearnPlay),
@@ -273,8 +275,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         onPressed: _openAskVirello,
         backgroundColor: _FeedDark.red,
         tooltip: s.discoverAskVirello,
-        child: const Icon(Icons.add_rounded,
-            color: Colors.white, size: 30),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
     );
   }
@@ -290,25 +291,34 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             shape: BoxShape.circle,
             gradient: _FeedDark.avatarGrad,
           ),
-          child: const Icon(Icons.person_rounded,
-              color: Colors.white, size: 26),
+          child: const Icon(
+            Icons.person_rounded,
+            color: Colors.white,
+            size: 26,
+          ),
         ),
         const SizedBox(width: 12),
-        Text(s.discover,
-            style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: _ink)),
+        Text(
+          s.discover,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: _ink,
+          ),
+        ),
         const Spacer(),
-        _headerBtn(Icons.search_outlined, onTap: () {
-          setState(() {
-            _searching = !_searching;
-            if (!_searching) {
-              _searchCtrl.clear();
-              _searchQuery = '';
-            }
-          });
-        }),
+        _headerBtn(
+          Icons.search_outlined,
+          onTap: () {
+            setState(() {
+              _searching = !_searching;
+              if (!_searching) {
+                _searchCtrl.clear();
+                _searchQuery = '';
+              }
+            });
+          },
+        ),
         const SizedBox(width: 8),
         _headerBtn(
           Icons.notifications_none_outlined,
@@ -319,8 +329,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Widget _headerBtn(IconData icon,
-      {bool dot = false, required VoidCallback onTap}) {
+  Widget _headerBtn(
+    IconData icon, {
+    bool dot = false,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Stack(
@@ -373,8 +386,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           suffixIcon: _searchQuery.isEmpty
               ? null
               : IconButton(
-                  icon: Icon(Icons.cancel_rounded,
-                      color: _muted, size: 20),
+                  icon: Icon(Icons.cancel_rounded, color: _muted, size: 20),
                   onPressed: () {
                     _searchCtrl.clear();
                     setState(() => _searchQuery = '');
@@ -402,8 +414,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               s.discoverForYou,
               selected: selected,
               selectedColor: _FeedDark.red,
-              onTap: () =>
-                  setState(() => _activeTopicSlug = null),
+              onTap: () => setState(() => _activeTopicSlug = null),
             );
           }
           final t = _topics[i - 1];
@@ -412,33 +423,37 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             t.name(appState.localeCode),
             selected: selected,
             selectedColor: _FeedDark.red,
-            onTap: () => setState(() => _activeTopicSlug =
-                selected ? null : t.slug),
+            onTap: () =>
+                setState(() => _activeTopicSlug = selected ? null : t.slug),
           );
         },
       ),
     );
   }
 
-  Widget _chip(String label,
-      {required bool selected,
-      required Color selectedColor,
-      required VoidCallback onTap}) {
+  Widget _chip(
+    String label, {
+    required bool selected,
+    required Color selectedColor,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? selectedColor : _chipBg,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child: Text(label,
-              style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : _muted)),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : _muted,
+            ),
+          ),
         ),
       ),
     );
@@ -474,22 +489,25 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   ),
                   child: Center(
                     child: Text(
-                        platform.isEmpty
-                            ? 'V'
-                            : platform[0].toUpperCase(),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18)),
+                      platform.isEmpty ? 'V' : platform[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(platform,
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _ink)),
+                  child: Text(
+                    platform,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -498,19 +516,21 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             Text(
               item.title.isEmpty ? s.noTitle : item.title,
               style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: _ink,
-                  height: 1.3),
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: _ink,
+                height: 1.3,
+              ),
             ),
             // Match reasons as the body (real, never invented).
             if (body.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(body,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 14, height: 1.5, color: _muted)),
+              Text(
+                body,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 14, height: 1.5, color: _muted),
+              ),
             ],
             const SizedBox(height: 10),
             // Topic chips: platform (grey) + AI match score (red tint).
@@ -519,9 +539,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 _tagChip(platform, _chipBg, _muted),
                 if (scorePct > 0) ...[
                   const SizedBox(width: 8),
-                  _tagChip('✦ $scorePct%',
-                      _FeedDark.red.withValues(alpha: 0.18),
-                      _FeedDark.red),
+                  _tagChip(
+                    '✦ $scorePct%',
+                    _FeedDark.red.withValues(alpha: 0.18),
+                    _FeedDark.red,
+                  ),
                 ],
               ],
             ),
@@ -530,12 +552,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: Image.network(item.thumbnailUrl,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const SizedBox.shrink()),
+                child: Image.network(
+                  item.thumbnailUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -551,8 +574,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   onTap: () => _toggleSave(item),
                 ),
                 const SizedBox(width: 8),
-                _cardIconBtn(Icons.ios_share_outlined,
-                    onTap: () => _shareItem(item)),
+                _cardIconBtn(
+                  Icons.ios_share_outlined,
+                  onTap: () => _shareItem(item),
+                ),
               ],
             ),
           ],
@@ -563,22 +588,27 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   Widget _tagChip(String label, Color bg, Color fg) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: fg)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
+      ),
     );
   }
 
-  Widget _cardIconBtn(IconData icon,
-      {bool active = false, required VoidCallback onTap}) {
+  Widget _cardIconBtn(
+    IconData icon, {
+    bool active = false,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -588,17 +618,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           color: _chipBg,
           borderRadius: BorderRadius.circular(13),
         ),
-        child: Icon(icon,
-            size: 21,
-            color: active ? _FeedDark.red : _ink),
+        child: Icon(icon, size: 21, color: active ? _FeedDark.red : _ink),
       ),
     );
   }
 
   Widget _sectionLabel(String title) {
-    return Text(title,
-        style: TextStyle(
-            fontSize: 17, fontWeight: FontWeight.w800, color: _ink));
+    return Text(
+      title,
+      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _ink),
+    );
   }
 
   Widget _errorCard() {
@@ -608,9 +637,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         children: [
           Icon(Icons.cloud_off_outlined, size: 44, color: _muted),
           const SizedBox(height: 10),
-          Text(s.analyzeFailed,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: _muted)),
+          Text(
+            s.analyzeFailed,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: _muted),
+          ),
           const SizedBox(height: 14),
           FilledButton.icon(
             onPressed: _load,
@@ -626,8 +657,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Center(
-        child: Text(s.nothingHere,
-            style: TextStyle(color: _muted, fontSize: 14)),
+        child: Text(
+          s.nothingHere,
+          style: TextStyle(color: _muted, fontSize: 14),
+        ),
       ),
     );
   }
@@ -655,51 +688,58 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       decoration: BoxDecoration(
         color: _card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-            color: _FeedDark.red.withValues(alpha: 0.35)),
+        border: Border.all(color: _FeedDark.red.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: _FeedDark.red.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                u.isSponsored ? u.label : s.sponsored,
-                style: const TextStyle(
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _FeedDark.red.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  u.isSponsored ? u.label : s.sponsored,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: _FeedDark.red),
+                    color: _FeedDark.red,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(u.segmentName,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  u.segmentName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: _muted)),
-            ),
-          ]),
+                  style: TextStyle(fontSize: 11, color: _muted),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
-          Text(title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: _ink)),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: _ink,
+            ),
+          ),
           if (u.matchReasons.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text('✓ ${u.matchReasons.first}',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style:
-                    TextStyle(fontSize: 12, color: _muted)),
+            Text(
+              '✓ ${u.matchReasons.first}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: _muted),
+            ),
           ],
         ],
       ),
@@ -715,27 +755,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ),
       child: ListTile(
         leading: _savedThumb(r),
-        title: Text(r.title.isEmpty ? s.noTitle : r.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: _ink)),
-        subtitle: Text(
-            '${s.contentScore}: ${r.score}/100 · ${r.platform}',
-            style: TextStyle(fontSize: 12, color: _muted)),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
-            color: _muted,
-            onPressed: () => savedStore.remove(r.url),
+        title: Text(
+          r.title.isEmpty ? s.noTitle : r.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: _ink,
           ),
-          Icon(Icons.chevron_right, color: _muted),
-        ]),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ResultScreen(result: r)),
         ),
+        subtitle: Text(
+          '${s.contentScore}: ${r.score}/100 · ${r.platform}',
+          style: TextStyle(fontSize: 12, color: _muted),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 20),
+              color: _muted,
+              onPressed: () => savedStore.remove(r.url),
+            ),
+            Icon(Icons.chevron_right, color: _muted),
+          ],
+        ),
+        onTap: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => ResultScreen(result: r))),
       ),
     );
   }
@@ -749,18 +795,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           color: _chipBg,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(Icons.analytics_outlined,
-            color: _muted),
+        child: Icon(Icons.analytics_outlined, color: _muted),
       );
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: Image.network(r.thumbnailUrl,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) =>
-              const Icon(Icons.broken_image_outlined)),
+      child: Image.network(
+        r.thumbnailUrl,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined),
+      ),
     );
   }
 
@@ -771,9 +817,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           child: _learnPlayTile(
             icon: Icons.school_outlined,
             title: s.openAcademy,
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const AcademyScreen())),
+            onTap: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const AcademyScreen())),
           ),
         ),
         const SizedBox(width: 12),
@@ -781,19 +826,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           child: _learnPlayTile(
             icon: Icons.auto_stories_outlined,
             title: s.openStories,
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const EntertainScreen())),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const EntertainScreen())),
           ),
         ),
       ],
     );
   }
 
-  Widget _learnPlayTile(
-      {required IconData icon,
-      required String title,
-      required VoidCallback onTap}) {
+  Widget _learnPlayTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -808,22 +854,23 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: VirelloColors.violet
-                    .withValues(alpha: 0.18),
+                color: VirelloColors.pink.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(icon,
-                  size: 22, color: VirelloColors.violet),
+              child: Icon(icon, size: 22, color: VirelloColors.pink),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: _ink)),
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _ink,
+                ),
+              ),
             ),
           ],
         ),

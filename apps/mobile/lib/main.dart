@@ -296,10 +296,14 @@ class _RootShellState extends State<RootShell> {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: VirelloColors.brandGradient,
+            gradient: const LinearGradient(
+              colors: [VirelloColors.pink, Color(0xFFC2274E)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             boxShadow: [
               BoxShadow(
-                color: VirelloColors.violet.withValues(alpha: 0.45),
+                color: VirelloColors.pink.withValues(alpha: 0.45),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -322,13 +326,13 @@ class _RootShellState extends State<RootShell> {
     ];
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VirelloColors.boardBg,
         border: const Border(
-          top: BorderSide(color: VirelloColors.divider, width: 1),
+          top: BorderSide(color: VirelloColors.boardBorder, width: 1),
         ),
         boxShadow: [
           BoxShadow(
-            color: VirelloColors.navy.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -351,11 +355,23 @@ class _RootShellState extends State<RootShell> {
                       Icon(
                         active ? it.activeIcon : it.icon,
                         color: active
-                            ? VirelloColors.violet
-                            : VirelloColors.muted,
+                            ? VirelloColors.pink
+                            : VirelloColors.boardTextSec,
                         size: 24,
                       ),
                       const SizedBox(height: 3),
+                      // Pink active indicator dot — board style.
+                      Container(
+                        width: 4,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: active
+                              ? VirelloColors.pink
+                              : Colors.transparent,
+                        ),
+                      ),
                       Text(
                         it.label,
                         style: TextStyle(
@@ -364,8 +380,8 @@ class _RootShellState extends State<RootShell> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: active
-                              ? VirelloColors.violet
-                              : VirelloColors.muted,
+                              ? VirelloColors.pink
+                              : VirelloColors.boardTextSec,
                         ),
                       ),
                     ],
@@ -390,10 +406,14 @@ class _RootShellState extends State<RootShell> {
             height: 58,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: VirelloColors.brandGradient,
+              gradient: const LinearGradient(
+                colors: [VirelloColors.pink, Color(0xFFC2274E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: VirelloColors.violet.withValues(alpha: 0.45),
+                  color: VirelloColors.pink.withValues(alpha: 0.45),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
