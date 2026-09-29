@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -276,9 +277,113 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   String _prettyStatus(String st) =>
       st.isEmpty ? st : '${st[0].toUpperCase()}${st.substring(1)}';
 
+  /// AI intelligence: narrates the actual growth plan in plain language —
+  /// real segment names, variant kinds, and the campaign content. Grounded
+  /// in _detail data, never invented.
+  bool _narrativeWorking = false;
+  bool _narrativeTried = false;
+  String? _narrative;
+
+  Future<void> _generatePlanNarrative() async {
+    final d = _detail;
+    _narrativeTried = true;
+    if (_narrativeWorking || d == null || !mounted) return;
+    setState(() => _narrativeWorking = true);
+    try {
+      final segNames = d.segments.map((sg) => sg.name).take(4).join(', ');
+      final varKinds =
+          d.variants.map((v) => v.kind.isEmpty ? v.label : v.kind).toSet().join(', ');
+      final langNote = appState.localeCode == 'ur'
+          ? 'Write in Roman Urdu.'
+          : appState.localeCode == 'ar'
+              ? 'Write in Arabic.'
+              : 'Write in English.';
+      final prompt =
+          'You are Virello AI. Summarize this growth plan for the advertiser in 2-3 short sentences, plain language, no hype. $langNote\n'
+          'Content: ${widget.campaignTitle}\n'
+          'Audience segments (${d.segments.length}): $segNames\n'
+          'Content variants (${d.variants.length}, kinds: $varKinds)\n'
+          'No numbering, no extra commentary.';
+      final url =
+          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+      final res =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+      if (!mounted) return;
+      setState(() {
+        _narrative = res.statusCode == 200 && res.body.trim().isNotEmpty
+            ? res.body.trim()
+            : null;
+        _narrativeWorking = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _narrativeWorking = false);
+    }
+  }
+
+  Widget _planNarrativeWidget() {
+    if (_narrativeWorking) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 6),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.amber),
+        ),
+      );
+    }
+    if (_narrative != null && _narrative!.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                s.boardImageAiLabel,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () {
+                setState(() => _narrative = null);
+                _narrativeTried = false;
+                _generatePlanNarrative();
+              },
+              child: const Icon(Icons.refresh,
+                  size: 16, color: Colors.white38),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Text(_narrative!,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 13.5, height: 1.6)),
+        ],
+      );
+    }
+    return Text(s.engineProposalBody,
+        style: const TextStyle(color: Colors.white60, fontSize: 13));
+  }
+
   /// Smart approval card: summarizes the real AI proposal, one tap to launch.
   Widget _approvalCard() {
     final d = _detail!;
+    if (!_narrativeTried) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _generatePlanNarrative();
+      });
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(18),
@@ -315,8 +420,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        Text(s.engineProposalBody,
-            style: const TextStyle(color: Colors.white60, fontSize: 13)),
+        _planNarrativeWidget(),
         const SizedBox(height: 10),
         // Real proposal facts — segments and variants the AI prepared.
         Wrap(spacing: 8, runSpacing: 8, children: [
