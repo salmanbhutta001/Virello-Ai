@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
@@ -35,6 +36,8 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
   String? _localPath;
   final _captionCtrl = TextEditingController();
   Map<String, dynamic>? _report;
+  bool _suggesting = false;
+  List<String> _suggestions = [];
 
   @override
   void dispose() {
@@ -115,6 +118,49 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         _analyzing = false;
         _error = s.askFailed;
       });
+    }
+  }
+
+  /// AI intelligence: suggests 3 punchy captions for the uploaded content.
+  Future<void> _suggestCaptions() async {
+    final hint = _captionCtrl.text.trim();
+    final filename = _meta?['filename']?.toString() ?? 'my post';
+    final topic = hint.isEmpty ? filename : hint;
+    setState(() {
+      _suggesting = true;
+      _suggestions = [];
+    });
+    try {
+      final langNote = appState.localeCode == 'ur'
+          ? 'Write them in Roman Urdu.'
+          : appState.localeCode == 'ar'
+              ? 'Write them in Arabic.'
+              : 'Write them in English.';
+      final prompt =
+          'Suggest 3 short punchy social media captions for a post about: $topic. '
+          '$langNote Each caption on its own line. No numbering, no hashtags, no quotes.';
+      final url =
+          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+      final res =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        final lines = res.body
+            .split('\n')
+            .map((l) => l.trim().replaceAll(RegExp(r'^[\d]+[.)]\s*'), ''))
+            .where((l) => l.isNotEmpty)
+            .take(3)
+            .toList();
+        setState(() {
+          _suggestions = lines;
+          _suggesting = false;
+        });
+      } else {
+        setState(() => _suggesting = false);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _suggesting = false);
     }
   }
 
@@ -220,6 +266,66 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 10),
+          // AI caption suggestions.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _suggesting ? null : _suggestCaptions,
+              icon: _suggesting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(
+                      Icons.auto_awesome_outlined,
+                      size: 18,
+                      color: VirelloColors.pink,
+                    ),
+              label: Text(
+                s.boardSuggestCaptions,
+                style: const TextStyle(
+                  color: VirelloColors.pink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          if (_suggestions.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            ..._suggestions.map(
+              (cap) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () =>
+                      setState(() => _captionCtrl.text = cap),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.pink.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            VirelloColors.pink.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      cap,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: VTheme.text(context),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,

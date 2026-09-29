@@ -10089,6 +10089,10 @@ class AppStrings {
         'Buat Caption',
         'ক্যাপশন তৈরি করুন'
       );
+  String get boardSuggestCaptions => _get(
+        'Suggest captions with AI',
+        'AI سے کیپشن تجویز کروائیں',
+      );
   String get boardCaptionTopicHint => _get(
         'What is the caption for…',
         'کیپشن کس کے لیے ہے…',
