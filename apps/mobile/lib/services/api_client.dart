@@ -504,6 +504,34 @@ class ApiClient {
   Future<Map<String, dynamic>> billingProviders() =>
       _getJson('/api/v1/billing/providers');
 
+  /// POST /api/v1/billing/orders — create a payment order.
+  Future<Map<String, dynamic>> createBillingOrder({
+    required String provider,
+    required String kind,
+    String? planSlug,
+    String? creditPack,
+  }) =>
+      _postJson('/api/v1/billing/orders', {
+        'provider': provider,
+        'kind': kind,
+        if (planSlug != null) 'plan_slug': planSlug,
+        if (creditPack != null) 'credit_pack': creditPack,
+      });
+
+  /// POST /api/v1/billing/verify — server verifies payment.
+  Future<Map<String, dynamic>> verifyBillingPayment({
+    required String provider,
+    required String providerRef,
+  }) =>
+      _postJson('/api/v1/billing/verify', {
+        'provider': provider,
+        'provider_ref': providerRef,
+      });
+
+  /// GET /api/v1/billing/transactions — payment history.
+  Future<Map<String, dynamic>> billingTransactions({int limit = 20}) =>
+      _getJson('/api/v1/billing/transactions?limit=$limit');
+
   Future<Map<String, dynamic>> me() => _getJson('/api/v1/users/me');
 
   /// PATCH /api/v1/users/me — update the display name.

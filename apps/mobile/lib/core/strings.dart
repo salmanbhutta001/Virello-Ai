@@ -8339,6 +8339,144 @@ class AppStrings {
         'Disponível na Amazon', 'Auf Amazon verfügbar', 'Amazon\'da mevcut',
         'Tersedia di Amazon', 'অ্যামাজনে উপলব্ধ'
       );
+  String get billingTitle => _get('Billing & subscriptions',
+        'بلنگ اور سبسکرپشنز', 'الفوترة والاشتراكات',
+        'बिलिंग और सदस्यता', 'Facturation et abonnements',
+        'Facturación y suscripciones', 'Faturamento e assinaturas',
+        'Abrechnung & Abonnements', 'Faturalandırma ve abonelikler',
+        'Penagihan & langganan', 'বিলিং ও সাবস্ক্রিপশন');
+  String billingPayWith(String p) => _get('Pay with $p', '$p سے ادائیگی کریں',
+        'ادفع عبر $p', '$p से भुगतान करें', 'Payer avec $p',
+        'Pagar con $p', 'Pagar com $p', 'Mit $p zahlen', '$p ile öde',
+        'Bayar dengan $p', '$p দিয়ে পেমেন্ট করুন');
+  String billingProviderUnavailable(String p) => _get(
+        '$p is not available right now. Try another method.',
+        '$p فی الحال دستیاب نہیں۔ کوئی اور طریقہ آزمائیں۔',
+        '$p غير متاح حالياً. جرّب طريقة أخرى.',
+        '$p अभी उपलब्ध नहीं है। कोई अन्य तरीका आज़माएं।',
+        '$p n\'est pas disponible pour le moment. Essayez un autre moyen.',
+        '$p no está disponible ahora. Prueba otro método.',
+        '$p não está disponível no momento. Tente outro método.',
+        '$p ist gerade nicht verfügbar. Versuchen Sie eine andere Methode.',
+        '$p şu anda kullanılamıyor. Başka bir yöntem deneyin.',
+        '$p tidak tersedia saat ini. Coba metode lain.',
+        '$p এখন উপলব্ধ নয়। অন্য পদ্ধতি চেষ্টা করুন।');
+  String get billingCouldNotOpenBrowser => _get(
+        'Could not open the browser. Please try again.',
+        'براؤزر نہیں کھل سکا۔ براہ کرم دوبارہ کوشش کریں۔',
+        'تعذر فتح المتصفح. حاول مرة أخرى.',
+        'ब्राउज़र नहीं खुल सका। कृपया पुनः प्रयास करें।',
+        'Impossible d\'ouvrir le navigateur. Veuillez réessayer.',
+        'No se pudo abrir el navegador. Inténtalo de nuevo.',
+        'Não foi possível abrir o navegador. Tente novamente.',
+        'Browser konnte nicht geöffnet werden. Bitte erneut versuchen.',
+        'Tarayıcı açılamadı. Lütfen tekrar deneyin.',
+        'Tidak dapat membuka browser. Silakan coba lagi.',
+        'ব্রাউজার খোলা যায়নি। আবার চেষ্টা করুন।');
+  String get billingProviderError => _get(
+        'The payment provider returned an error. Please try again.',
+        'ادائیگی فراہم کنندہ نے خرابی ظاہر کی۔ براہ کرم دوبارہ کوشش کریں۔',
+        'أعاد مزوّد الدفع خطأً. حاول مرة أخرى.',
+        'भुगतान प्रदाता ने त्रुटि दी। कृपया पुनः प्रयास करें।',
+        'Le prestataire de paiement a renvoyé une erreur. Veuillez réessayer.',
+        'El proveedor de pago devolvió un error. Inténtalo de nuevo.',
+        'O provedor de pagamento retornou um erro. Tente novamente.',
+        'Der Zahlungsanbieter hat einen Fehler zurückgegeben. Bitte erneut versuchen.',
+        'Ödeme sağlayıcı bir hata döndürdü. Lütfen tekrar deneyin.',
+        'Penyedia pembayaran mengembalikan kesalahan. Silakan coba lagi.',
+        'পেমেন্ট প্রদানকারী একটি ত্রুটি দিয়েছে। আবার চেষ্টা করুন।');
+  String get billingInvalidRequest => _get(
+        'This purchase could not be started. Please try again.',
+        'یہ خریداری شروع نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔',
+        'تعذر بدء هذه العملية. حاول مرة أخرى.',
+        'यह खरीदारी शुरू नहीं हो सकी। कृपया पुनः प्रयास करें।',
+        'Cet achat n\'a pas pu démarrer. Veuillez réessayer.',
+        'Esta compra no pudo iniciarse. Inténtalo de nuevo.',
+        'Esta compra não pôde ser iniciada. Tente novamente.',
+        'Dieser Kauf konnte nicht gestartet werden. Bitte erneut versuchen.',
+        'Bu satın alma başlatılamadı. Lütfen tekrar deneyin.',
+        'Pembelian ini tidak dapat dimulai. Silakan coba lagi.',
+        'এই ক্রয় শুরু করা যায়নি। আবার চেষ্টা করুন।');
+  String get billingSubscribe => _get('Subscribe', 'سبسکرائب کریں', 'اشترك',
+        'सब्सक्राइब करें', 'S\'abonner', 'Suscribirse', 'Assinar',
+        'Abonnieren', 'Abone ol', 'Berlangganan', 'সাবস্ক্রাইব করুন');
+  String get billingBuyNow => _get('Buy Now', 'ابھی خریدیں', 'اشترِ الآن',
+        'अभी खरीदें', 'Acheter', 'Comprar ahora', 'Comprar agora',
+        'Jetzt kaufen', 'Şimdi al', 'Beli sekarang', 'এখনই কিনুন');
+  String get billingChooseProvider => _get('Choose payment method',
+        'ادائیگی کا طریقہ منتخب کریں', 'اختر طريقة الدفع',
+        'भुगतान विधि चुनें', 'Choisir le mode de paiement',
+        'Elige método de pago', 'Escolha a forma de pagamento',
+        'Zahlungsmethode wählen', 'Ödeme yöntemi seçin',
+        'Pilih metode pembayaran', 'পেমেন্ট পদ্ধতি বেছে নিন');
+  String get billingOrderSummary => _get('Order summary', 'آرڈر کا خلاصہ', 'ملخص الطلب',
+        'ऑर्डर सारांश', 'Résumé de commande', 'Resumen del pedido',
+        'Resumo do pedido', 'Bestellübersicht', 'Sipariş özeti',
+        'Ringkasan pesanan', 'অর্ডারের সারাংশ');
+  String get billingCompleteInBrowser => _get(
+        'Complete your payment in the browser, then come back and tap below.',
+        'براؤزر میں اپنی ادائیگی مکمل کریں، پھر واپس آ کر نیچے دبائیں۔',
+        'أكمل الدفع في المتصفح، ثم عد واضغط أدناه.',
+        'ब्राउज़र में भुगतान पूरा करें, फिर वापस आकर नीचे दबाएं।',
+        'Terminez votre paiement dans le navigateur, puis revenez et appuyez ci-dessous.',
+        'Completa tu pago en el navegador, luego vuelve y toca abajo.',
+        'Conclua o pagamento no navegador e volte para tocar abaixo.',
+        'Schließen Sie die Zahlung im Browser ab und tippen Sie dann unten.',
+        'Ödemeyi tarayıcıda tamamlayın, ardından geri dönüp aşağıya dokunun.',
+        'Selesaikan pembayaran di browser, lalu kembali dan ketuk di bawah.',
+        'ব্রাউজারে পেমেন্ট সম্পূর্ণ করুন, তারপর ফিরে এসে নিচে চাপ দিন।');
+  String get billingIvePaid => _get('I\'ve Completed Payment',
+        'میں نے ادائیگی مکمل کر لی', 'لقد أكملت الدفع',
+        'मैंने भुगतान पूरा कर लिया', 'J\'ai terminé le paiement',
+        'He completado el pago', 'Concluí o pagamento',
+        'Ich habe die Zahlung abgeschlossen', 'Ödemeyi tamamladım',
+        'Saya telah menyelesaikan pembayaran', 'আমি পেমেন্ট সম্পন্ন করেছি');
+  String get billingVerifying => _get('Verifying payment...',
+        'ادائیگی کی تصدیق ہو رہی ہے...', 'جارٍ التحقق من الدفع...',
+        'भुगतान सत्यापित हो रहा है...', 'Vérification du paiement...',
+        'Verificando el pago...', 'Verificando pagamento...',
+        'Zahlung wird überprüft...', 'Ödeme doğrulanıyor...',
+        'Memverifikasi pembayaran...', 'পেমেন্ট যাচাই করা হচ্ছে...');
+  String get billingPaymentSuccess => _get(
+        'Payment successful! Your plan and credits have been updated.',
+        'ادائیگی کامیاب! آپ کا پلان اور کریڈٹس اپ ڈیٹ ہو گئے ہیں۔',
+        'تم الدفع بنجاح! تم تحديث خطتك واعتماداتك.',
+        'भुगतान सफल! आपकी योजना और क्रेडिट अपडेट हो गए हैं।',
+        'Paiement réussi ! Votre forfait et vos crédits ont été mis à jour.',
+        '¡Pago exitoso! Tu plan y créditos se han actualizado.',
+        'Pagamento bem-sucedido! Seu plano e créditos foram atualizados.',
+        'Zahlung erfolgreich! Ihr Plan und Ihre Credits wurden aktualisiert.',
+        'Ödeme başarılı! Planınız ve kredileriniz güncellendi.',
+        'Pembayaran berhasil! Paket dan kredit Anda telah diperbarui.',
+        'পেমেন্ট সফল! আপনার প্ল্যান এবং ক্রেডিট আপডেট হয়েছে।');
+  String get billingPaymentFailed => _get(
+        'Payment could not be verified. If you were charged, contact support.',
+        'ادائیگی کی تصدیق نہیں ہو سکی۔ اگر رقم کٹ گئی ہے تو سپورٹ سے رابطہ کریں۔',
+        'تعذر التحقق من الدفع. إذا تم الخصم منك، تواصل مع الدعم.',
+        'भुगतान सत्यापित नहीं हो सका। यदि शुल्क लिया गया है, तो सहायता से संपर्क करें।',
+        'Le paiement n\'a pas pu être vérifié. Si vous avez été débité, contactez l\'assistance.',
+        'No se pudo verificar el pago. Si se te cobró, contacta con soporte.',
+        'Não foi possível verificar o pagamento. Se foi cobrado, contacte o suporte.',
+        'Die Zahlung konnte nicht verifiziert werden. Bei Belastung wenden Sie sich an den Support.',
+        'Ödeme doğrulanamadı. Ücret alındıysa destek ile iletişime geçin.',
+        'Pembayaran tidak dapat diverifikasi. Jika Anda dikenakan biaya, hubungi dukungan.',
+        'পেমেন্ট যাচাই করা যায়নি। টাকা কাটা হলে সাপোর্টের সাথে যোগাযোগ করুন।');
+  String get billingTransactionHistory => _get('Transaction history',
+        'لین دین کی تاریخ', 'سجل المعاملات',
+        'लेनदेन इतिहास', 'Historique des transactions',
+        'Historial de transacciones', 'Histórico de transações',
+        'Transaktionsverlauf', 'İşlem geçmişi',
+        'Riwayat transaksi', 'লেনদেনের ইতিহাস');
+  String get billingNoTransactions => _get('No transactions yet.',
+        'ابھی کوئی لین دین نہیں۔', 'لا معاملات بعد.',
+        'अभी तक कोई लेनदेन नहीं।', 'Aucune transaction pour le moment.',
+        'Aún no hay transacciones.', 'Ainda não há transações.',
+        'Noch keine Transaktionen.', 'Henüz işlem yok.',
+        'Belum ada transaksi.', 'এখনও কোনো লেনদেন নেই।');
+  String get billingCancel => _get('Cancel', 'منسوخ کریں', 'إلغاء',
+        'रद्द करें', 'Annuler', 'Cancelar', 'Cancelar',
+        'Abbrechen', 'İptal', 'Batal', 'বাতিল করুন');
+
   String get shopLimitedStock =>
       _get('Limited stock', 'محدود اسٹاک', 'مخزون محدود',
         'सीमित स्टॉक',
