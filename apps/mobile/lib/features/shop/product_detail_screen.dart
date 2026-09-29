@@ -231,10 +231,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF7C5CFF),
-                            Color(0xFF9D4EDD)
-                          ],
+                          colors: [Color(0xFFF95177), Color(0xFFE63E63)],
                         ),
                       ),
                       child: const Center(

@@ -43,12 +43,12 @@ class _Lavish {
   static const salmon = Color(0xFFF0A8A8);
   static const red = VirelloColors.danger; // 0xFFE05252 — prices, hashtags
   static const ringGradient = LinearGradient(
-    colors: [Color(0xFFFFB020), Color(0xFFE05252), Color(0xFF7C5CFF)],
+    colors: [Color(0xFFFFB020), Color(0xFFE05252), Color(0xFFF95177)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   static const avatarGradient = LinearGradient(
-    colors: [Color(0xFF7C5CFF), Color(0xFF9D4EDD)],
+    colors: [Color(0xFFF95177), Color(0xFFE63E63)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
