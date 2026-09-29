@@ -2150,6 +2150,105 @@ class AppStrings {
         'AI فراہم کنندہ کی کنجی درکار — جلد آ رہا ہے',
         'يحتاج مفتاح مزوِّد ذكاء اصطناعي — قريباً',
       );
+  // ── Phase 9: Create flow (board 21-31) ──
+  String get boardCreateHub => _get('Create Hub', 'تخلیق مرکز', 'مركز الإنشاء');
+  String get boardCreateImage =>
+      _get('Create Image', 'تصویر بنائیں', 'إنشاء صورة');
+  String get boardCreateVideo =>
+      _get('Create Video', 'ویڈیو بنائیں', 'إنشاء فيديو');
+  String get boardImagePromptHint => _get(
+        'Describe your image… e.g. A cozy kitchen scene',
+        'اپنی تصویر بیان کریں… مثلاً آرام دہ باورچی خانہ',
+        'صِف صورتك… مثال: مشهد مطبخ مريح',
+      );
+  String get boardStyleRealistic => _get('Realistic', 'حقیقت پسندانہ', 'واقعي');
+  String get boardStyleCartoon => _get('Cartoon', 'کارٹون', 'كرتون');
+  String get boardStyle3d => _get('3D', '3D', 'ثلاثي الأبعاد');
+  String get boardGenerate => _get('Generate', 'بنائیں', 'ولّد');
+  String get boardImageComingSoon => _get(
+        'AI image generation needs a provider key — coming soon. Your prompt is saved below.',
+        'AI تصویر بنانے کے لیے فراہم کنندہ کی کنجی درکار ہے — جلد آ رہا ہے۔ آپ کا پرامپٹ نیچے محفوظ ہے۔',
+        'توليد الصور يحتاج مفتاح مزوِّد — قريباً. تم حفظ الوصف أدناه.',
+      );
+  String get boardVideoComingSoon => _get(
+        'AI video generation needs a provider key — coming soon. Your idea is saved below.',
+        'AI ویڈیو بنانے کے لیے فراہم کنندہ کی کنجی درکار ہے — جلد آ رہا ہے۔ آپ کا آئیڈیا نیچے محفوظ ہے۔',
+        'توليد الفيديو يحتاج مفتاح مزوِّد — قريباً. تم حفظ فكرتك أدناه.',
+      );
+  String get boardVideoIdeaHint => _get(
+        'Describe your video… e.g. Home Decor product',
+        'اپنی ویڈیو بیان کریں… مثلاً ہوم ڈیکور پروڈکٹ',
+        'صِف الفيديو… مثال: منتج ديكور منزلي',
+      );
+  String get boardScriptPromptHint => _get(
+        'e.g. Kitchen towel product script',
+        'مثلاً کچن تول پروڈکٹ اسکرپٹ',
+        'مثال: سيناريو منتج مناشف المطبخ',
+      );
+  String get boardToneLabel => _get('Tone', 'لہجہ', 'النبرة');
+  String get boardToneFriendly => _get('Friendly', 'دوستانہ', 'ودود');
+  String get boardToneProfessional =>
+      _get('Professional', 'پیشہ ورانہ', 'احترافي');
+  String get boardToneFunny => _get('مضحک', 'مزاحیہ', 'مضحك');
+  String get boardStoryPromptHint => _get(
+        'e.g. A short suspense story in Urdu',
+        'مثلاً اردو میں مختصر سسپنس کہانی',
+        'مثال: قصة تشويق قصيرة بالأردية',
+      );
+  String get boardStoryLength => _get('Length', 'لمبائی', 'الطول');
+  String get boardLengthShort => _get('Short', 'مختصر', 'قصيرة');
+  String get boardLengthMedium => _get('Medium', 'درمیانی', 'متوسطة');
+  String get boardLengthLong => _get('Long', 'طویل', 'طويلة');
+  String get boardUploadTitle => _get('Upload', 'اپ لوڈ', 'رفع');
+  String get boardTapToSelect => _get(
+        'Tap to select a photo or video',
+        'تصویر یا ویڈیو منتخب کرنے کے لیے ٹیپ کریں',
+        'انقر لاختيار صورة أو فيديو',
+      );
+  String get boardAnalyzeUpload =>
+      _get('Analyze & Improve', 'تجزیہ و بہتری', 'حلّل وحسِّن');
+  String get boardEditContent =>
+      _get('Edit Content', 'مواد میں ترمیم', 'تحرير المحتوى');
+  String get boardPreview => _get('Preview', 'پیش نظارہ', 'معاينة');
+  String get boardTemplates => _get('Templates', 'ٹیمپلیٹس', 'قوالب');
+  String get boardNoTemplates => _get(
+        'No templates yet — check back soon',
+        'ابھی کوئی ٹیمپلیٹ نہیں — جلد دوبارہ دیکھیں',
+        'لا قوالب بعد — عُد قريباً',
+      );
+  String get boardConversion => _get('Conversion', 'تبدیلی', 'تحويل');
+  String get boardConvertInputHint => _get(
+        'Paste a link or text to convert…',
+        'تبدیل کرنے کے لیے لنک یا متن پیسٹ کریں…',
+        'الصق رابطاً أو نصاً للتحويل…',
+      );
+  String get boardConvert => _get('Convert', 'تبدیل کریں', 'حوّل');
+  String get boardGenerateCaptions =>
+      _get('Generate Captions', 'کیپشنز بنائیں', 'توليد تسميات');
+  String get boardCaptionTopicHint => _get(
+        'What is the caption for…',
+        'کیپشن کس کے لیے ہے…',
+        'التسمية مخصصة لـ…',
+      );
+  String get boardTabCreators => _get('Creators', 'تخلیق کار', 'منشئون');
+  String get boardTabTopics => _get('Topics', 'موضوعات', 'مواضيع');
+  String get boardTabAll => _get('All', 'سب', 'الكل');
+  String get boardTabTrending => _get('Trending', 'ٹرینڈنگ', 'رائج');
+  String get boardTabData => _get('Data', 'ڈیٹا', 'البيانات');
+  String get boardTabComments => _get('Comments', 'تبصرے', 'تعليقات');
+  String get boardTabDiscover => _get('Discover', 'دریافت', 'اكتشف');
+  String get boardCopy => _get('Copy', 'کاپی', 'نسخ');
+  String get boardCopied => _get('Copied', 'کاپی ہو گیا', 'تم النسخ');
+  String get boardEnterTextFirst => _get(
+        'Type something first',
+        'پہلے کچھ لکھیں',
+        'اكتب شيئاً أولاً',
+      );
+  String get boardDevHeuristic => _get(
+        'Dev preview — heuristic draft',
+        'ڈیو پیش نظارہ — ابتدائی مسودہ',
+        'معاينة تطويرية — مسودة أولية',
+      );
   String get boardNoRecommendations => _get(
         'No recommendations yet — explore Discover',
         'ابھی کوئی تجویز نہیں — Discover دیکھیں',
@@ -2252,8 +2351,8 @@ class AppStrings {
   String get boardPosts => _get('Posts', 'پوسٹس', 'المنشورات');
   String get boardReels => _get('Reels', 'ریلز', 'ريلز');
   String get boardShop => _get('Shop', 'شاپ', 'المتجر');
-  String get boardNoCreatorPosts => _get(
-      'No posts from this creator yet', 'اس کریئیٹر کی ابھی کوئی پوسٹ نہیں', 'لا توجد منشورات لهذا المبدع بعد');
+  String get boardNoCreatorPosts => _get('No posts from this creator yet',
+      'اس کریئیٹر کی ابھی کوئی پوسٹ نہیں', 'لا توجد منشورات لهذا المبدع بعد');
   String get boardProductsTab => _get('Products', 'پراڈکٹس', 'المنتجات');
   String get boardUsers => _get('Users', 'صارفین', 'المستخدمون');
   String get boardCategories => _get('Categories', 'کیٹیگریز', 'الفئات');
