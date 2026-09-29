@@ -165,6 +165,19 @@ async def resume(loop_id: str, db: AsyncSession = Depends(get_db),
     return {"loop": _loop_json(loop)}
 
 
+@router.post("/loops/{loop_id}/approve")
+async def approve(loop_id: str, db: AsyncSession = Depends(get_db),
+                 user: User = Depends(get_current_user)) -> dict:
+    """Advertiser approves the AI's proposal: awaiting_approval -> running.
+    The advertiser's tap is the explicit approval — nothing launches without it."""
+    try:
+        loop = await engine.set_loop_status(db, user, uuid.UUID(loop_id), "running")
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+    await db.refresh(loop)
+    return {"loop": _loop_json(loop)}
+
+
 @router.post("/loops/{loop_id}/stop")
 async def stop(loop_id: str, db: AsyncSession = Depends(get_db),
                user: User = Depends(get_current_user)) -> dict:

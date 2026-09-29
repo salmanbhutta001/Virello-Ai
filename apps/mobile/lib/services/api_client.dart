@@ -773,6 +773,11 @@ class ApiClient {
     await _postJson('/api/v1/growth/loops/$loopId/resume', {});
   }
 
+  /// Advertiser approves the AI proposal: awaiting_approval -> running.
+  Future<void> approveGrowthLoop(String loopId) async {
+    await _postJson('/api/v1/growth/loops/$loopId/approve', {});
+  }
+
   Future<void> stopGrowthLoop(String loopId) async {
     await _postJson('/api/v1/growth/loops/$loopId/stop', {});
   }
