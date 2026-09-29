@@ -150,14 +150,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   if (_error != null) ...[
                     Text(_error!,
                         style: const TextStyle(
-                            color: Colors.red, fontSize: 13)),
+                            color: VirelloColors.danger, fontSize: 13)),
                     const SizedBox(height: 10),
                   ],
                   FilledButton(
                     onPressed: canSubmit ? _change : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: VirelloColors.violet,
-                      disabledBackgroundColor: Colors.grey.shade300,
+                      disabledBackgroundColor: VirelloColors.boardBorder,
                       padding:
                           const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(

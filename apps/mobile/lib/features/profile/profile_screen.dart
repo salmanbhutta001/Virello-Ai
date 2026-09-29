@@ -245,7 +245,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: VirelloColors.chipBg,
+                              color: VTheme.chip(context),
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Text(
@@ -414,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.block_outlined,
-                        iconColor: Colors.red,
+                        iconColor: VirelloColors.danger,
                         title: s.whatWeNeverDo,
                         onTap: () =>
                             _showDialog(s.whatWeNeverDo, s.neverDoList),
@@ -436,9 +436,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: EdgeInsets.zero,
                   child: _menuRow(
                     icon: Icons.logout_outlined,
-                    iconColor: Colors.red,
+                    iconColor: VirelloColors.danger,
                     title: s.signOut,
-                    titleColor: Colors.red,
+                    titleColor: VirelloColors.danger,
                     subtitle: _email.isEmpty ? null : _email,
                     onTap: () => authStore.signOut(),
                   ),

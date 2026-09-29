@@ -174,8 +174,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
     final bg = m.fromUser
         ? VirelloColors.violet
-        : VirelloColors.chipBg;
-    final fg = m.fromUser ? Colors.white : VirelloColors.ink;
+        : VTheme.chip(context);
+    final fg = m.fromUser ? Colors.white : VTheme.text(context);
     return Align(
       alignment: align,
       child: Container(

@@ -127,10 +127,10 @@ class _AudienceIntelligenceScreenState
   Widget _sourceCard(Map<String, dynamic> src) {
     final status = '${src['status'] ?? ''}';
     final chipColor = status == 'ready'
-        ? Colors.green
+        ? VirelloColors.success
         : status == 'not_configured'
-            ? Colors.grey
-            : Colors.orange;
+            ? VirelloColors.boardTextSec
+            : VirelloColors.amber;
     final chipLabel = status == 'ready'
         ? s.aiSourceStatusReady
         : status == 'not_configured'
@@ -176,7 +176,7 @@ class _AudienceIntelligenceScreenState
                     child: LinearProgressIndicator(
                       value: conf.clamp(0.0, 1.0),
                       minHeight: 8,
-                      backgroundColor: Colors.grey.shade300,
+                      backgroundColor: VTheme.chip(context),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -330,7 +330,7 @@ class _AudienceIntelligenceScreenState
         ),
         if (_matchError != null) ...[
           const SizedBox(height: 8),
-          Text(_matchError!, style: const TextStyle(color: Colors.red)),
+          Text(_matchError!, style: const TextStyle(color: VirelloColors.danger)),
         ],
         if (_matchResult != null) ...[
           const SizedBox(height: 16),
@@ -455,13 +455,13 @@ class _AudienceIntelligenceScreenState
           LinearProgressIndicator(
             value: score,
             minHeight: 8,
-            backgroundColor: Colors.grey.shade300,
+            backgroundColor: VTheme.chip(context),
           ),
           Text('${c['reason'] ?? ''}',
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: Colors.grey.shade600)),
+                  ?.copyWith(color: VTheme.textSec(context))),
         ],
       ),
     );

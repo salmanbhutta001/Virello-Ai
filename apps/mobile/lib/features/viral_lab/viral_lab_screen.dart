@@ -151,7 +151,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
       child: VCard(
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.red),
+            const Icon(Icons.error_outline, color: VirelloColors.danger),
             const SizedBox(width: 10),
             Expanded(child: Text(_error!)),
           ],
@@ -241,10 +241,10 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
 
   Widget _scoreRing(int score) {
     final color = score >= 70
-        ? Colors.green
+        ? VirelloColors.success
         : score >= 40
-        ? Colors.orange
-        : Colors.red;
+        ? VirelloColors.amber
+        : VirelloColors.danger;
     return SizedBox(
       width: 64,
       height: 64,
@@ -296,7 +296,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                         Icon(
                           high ? Icons.priority_high : Icons.lightbulb_outline,
                           size: 18,
-                          color: high ? Colors.red : Colors.orange,
+                          color: high ? VirelloColors.danger : VirelloColors.amber,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -314,7 +314,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: (high ? Colors.red : Colors.orange)
+                            color: (high ? VirelloColors.danger : VirelloColors.amber)
                                 .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -323,7 +323,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: high ? Colors.red : Colors.orange,
+                              color: high ? VirelloColors.danger : VirelloColors.amber,
                             ),
                           ),
                         ),

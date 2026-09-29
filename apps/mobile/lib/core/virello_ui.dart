@@ -93,13 +93,13 @@ class VPillTabs extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: active ? VirelloColors.violet : VirelloColors.chipBg,
+                  color: active ? VirelloColors.violet : VTheme.chip(context),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   tabs[i],
                   style: TextStyle(
-                    color: active ? Colors.white : VirelloColors.mutedDark,
+                    color: active ? Colors.white : VTheme.textSec(context),
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -139,7 +139,7 @@ class VScoreRing extends StatelessWidget {
             child: CircularProgressIndicator(
               value: s / 100,
               strokeWidth: 13,
-              backgroundColor: VirelloColors.chipBg,
+              backgroundColor: VTheme.chip(context),
               color: color,
               strokeCap: StrokeCap.round,
             ),
@@ -214,7 +214,7 @@ class _VShimmerBoxState extends State<VShimmerBox>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: VirelloColors.chipBg,
+            color: VTheme.chip(context),
             borderRadius: BorderRadius.circular(widget.radius),
           ),
         ),
@@ -247,7 +247,8 @@ class VDonutChart extends StatelessWidget {
         SizedBox(
           width: size,
           height: size,
-          child: CustomPaint(painter: _DonutPainter(slices)),
+          child: CustomPaint(
+              painter: _DonutPainter(slices, VTheme.text(context))),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -295,7 +296,8 @@ class VDonutChart extends StatelessWidget {
 
 class _DonutPainter extends CustomPainter {
   final List<VDonutSlice> slices;
-  _DonutPainter(this.slices);
+  final Color labelColor;
+  _DonutPainter(this.slices, this.labelColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -323,10 +325,10 @@ class _DonutPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: '${(slices.first.value * 100).round()}%',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: VirelloColors.ink,
+            color: labelColor,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -351,7 +353,7 @@ class VStatTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: VirelloColors.chipBg,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -404,7 +406,7 @@ class VSearchBar extends StatelessWidget {
           size: 22,
         ),
         filled: true,
-        fillColor: VirelloColors.chipBg,
+        fillColor: VTheme.chip(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide.none,
@@ -474,7 +476,7 @@ class VCard extends StatelessWidget {
     final card = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: VirelloColors.cardBg,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: VirelloColors.cardShadow,
       ),

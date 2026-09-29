@@ -382,12 +382,12 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       };
 
   Color _statusColor(String status) => switch (status) {
-        'approved' => Colors.green,
-        'active' => Colors.green,
-        'pending_approval' => Colors.orange,
-        'paused' => Colors.orange,
-        'rejected' => Colors.red,
-        _ => Colors.blueGrey,
+        'approved' => VirelloColors.success,
+        'active' => VirelloColors.success,
+        'pending_approval' => VirelloColors.amber,
+        'paused' => VirelloColors.amber,
+        'rejected' => VirelloColors.danger,
+        _ => VirelloColors.boardTextSec,
       };
 
   /// Phase 2: refresh delivery stats for delivering campaigns.
@@ -2454,7 +2454,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             if (latest.wasSafetyPaused) ...[
               const SizedBox(height: 4),
               Text(s.adSafetyPausedNote,
-                  style: const TextStyle(fontSize: 12, color: Colors.orange)),
+                  style: const TextStyle(fontSize: 12, color: VirelloColors.amber)),
             ],
           ],
           if (ins != null && ins.segments.isNotEmpty) ...[
@@ -2648,8 +2648,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: m.isEstimate
-                  ? Colors.orange.withValues(alpha: 0.15)
-                  : Colors.green.withValues(alpha: 0.15),
+                  ? VirelloColors.amber.withValues(alpha: 0.15)
+                  : VirelloColors.success.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(

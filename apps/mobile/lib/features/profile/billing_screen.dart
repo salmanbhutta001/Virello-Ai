@@ -102,7 +102,7 @@ class _BillingScreenState extends State<BillingScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: VirelloColors.chipBg,
+                                color: VTheme.chip(context),
                                 borderRadius: BorderRadius.circular(18),
                               ),
                               child: Text(p,
@@ -164,7 +164,7 @@ class _BillingScreenState extends State<BillingScreen> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: VirelloColors.chipBg,
+              color: VTheme.chip(context),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text('${d.credits} ${s.creditsMonthly}',
@@ -247,7 +247,7 @@ class _BillingScreenState extends State<BillingScreen> {
       width: 150,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VirelloColors.chipBg,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(

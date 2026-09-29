@@ -150,3 +150,32 @@ class VirelloTheme {
     end: Alignment.bottomRight,
   );
 }
+
+/// Theme-aware color helpers — the 2026-09-29 master board is dark-first,
+/// but the app also supports light mode. Use these instead of fixed
+/// VirelloColors tokens in shared widgets and reskinned screens so both
+/// themes render correctly.
+class VTheme {
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  /// Card surface: board dark surface in dark mode, white in light.
+  static Color card(BuildContext context) =>
+      isDark(context) ? VirelloColors.boardSurface : Colors.white;
+
+  /// Chip / fill surface: board field in dark, light chip in light.
+  static Color chip(BuildContext context) =>
+      isDark(context) ? VirelloColors.boardField : VirelloColors.chipBg;
+
+  /// Hairline borders: board border in dark, light divider in light.
+  static Color divider(BuildContext context) =>
+      isDark(context) ? VirelloColors.boardBorder : VirelloColors.divider;
+
+  /// Secondary text: board gray in dark, muted-dark in light.
+  static Color textSec(BuildContext context) =>
+      isDark(context) ? VirelloColors.boardTextSec : VirelloColors.mutedDark;
+
+  /// Primary text: white in dark, ink in light.
+  static Color text(BuildContext context) =>
+      isDark(context) ? Colors.white : VirelloColors.ink;
+}

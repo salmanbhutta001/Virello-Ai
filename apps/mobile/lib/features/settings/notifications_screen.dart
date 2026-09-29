@@ -84,8 +84,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         .bodySmall
                                         ?.copyWith(
                                             color: fallback
-                                                ? Colors.amber[800]
-                                                : Colors.grey),
+                                                ? VirelloColors.amber
+                                                : VirelloColors.boardTextSec),
                                   ),
                                 ],
                               ),

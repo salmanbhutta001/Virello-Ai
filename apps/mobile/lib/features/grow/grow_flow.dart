@@ -196,7 +196,7 @@ class _GrowFlowState extends State<GrowFlow> {
                 Slider(value: _budget, min: 5, max: 500, divisions: 99,
                   onChanged: (v) => setState(() => _budget = v)),
                 const Text('AI will never exceed your approved budget.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  style: TextStyle(fontSize: 12, color: VirelloColors.boardTextSec)),
               ],
             ]),
           ),
@@ -225,7 +225,7 @@ class _GrowFlowState extends State<GrowFlow> {
   Widget _row(String k, String v) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(children: [
-      SizedBox(width: 90, child: Text(k, style: const TextStyle(color: Colors.grey, fontSize: 13))),
+      SizedBox(width: 90, child: Text(k, style: const TextStyle(color: VirelloColors.boardTextSec, fontSize: 13))),
       Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
     ]),
   );
@@ -258,7 +258,7 @@ class _GrowFlowState extends State<GrowFlow> {
           const SizedBox(height: 32),
           if (done) ...[
             Text(s.campaignLive,
-              textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+              textAlign: TextAlign.center, style: const TextStyle(color: VirelloColors.boardTextSec)),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
@@ -275,7 +275,7 @@ class _GrowFlowState extends State<GrowFlow> {
             ),
           ] else
             const Text('Content Analysis → Audience → Strategy → Creative → Launch',
-              style: TextStyle(fontSize: 12, color: Colors.grey), textAlign: TextAlign.center),
+              style: TextStyle(fontSize: 12, color: VirelloColors.boardTextSec), textAlign: TextAlign.center),
         ]),
       ),
     );
@@ -307,7 +307,7 @@ class _ModeCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            Text(desc, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(desc, style: const TextStyle(fontSize: 12, color: VirelloColors.boardTextSec)),
           ])),
           if (selected) Icon(Icons.check_circle, color: scheme.primary),
         ]),

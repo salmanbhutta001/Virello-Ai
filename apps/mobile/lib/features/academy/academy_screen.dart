@@ -225,7 +225,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      color: VirelloColors.mutedDark,
+                      color: VTheme.textSec(context),
                       fontSize: 13,
                       height: 1.4)),
               const SizedBox(height: 10),
@@ -264,21 +264,21 @@ class _AcademyScreenState extends State<AcademyScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: VirelloColors.chipBg,
+                        color: VTheme.chip(context),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(s.startLesson,
                           style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: VirelloColors.mutedDark)),
+                              color: VTheme.textSec(context))),
                     ),
                   if (quizScore != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: VirelloColors.chipBg,
+                        color: VTheme.chip(context),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -291,7 +291,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
                               style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: VirelloColors.mutedDark)),
+                                  color: VTheme.textSec(context))),
                         ],
                       ),
                     ),
@@ -460,7 +460,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
           const SizedBox(height: 8),
           Text('${_lesson['description'] ?? ''}',
               style: const TextStyle(
-                  color: VirelloColors.mutedDark, fontSize: 14, height: 1.5)),
+                  color: VTheme.textSec(context), fontSize: 14, height: 1.5)),
           const SizedBox(height: 16),
           for (final sec in sections)
             Card(
@@ -627,14 +627,14 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: VirelloColors.chipBg,
+                    color: VTheme.chip(context),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text('${result['explanation']}',
                       style: const TextStyle(
                           fontSize: 12,
                           height: 1.5,
-                          color: VirelloColors.mutedDark)),
+                          color: VTheme.textSec(context))),
                 ),
               ),
           ],
@@ -667,7 +667,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border ?? VirelloColors.divider, width: 1.2),
+        border: Border.all(color: border ?? VTheme.divider(context), width: 1.2),
       ),
       child: Row(
         children: [

@@ -20,7 +20,7 @@ class GrowthEngineScreen extends StatefulWidget {
   State<GrowthEngineScreen> createState() => _GrowthEngineScreenState();
 }
 
-const _darkCard = Color(0xFF262743);
+const _darkCard = VirelloColors.boardSurface;
 
 class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   AppStrings get s => AppStrings(appState.localeCode);
@@ -116,7 +116,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: VirelloColors.navy,
+        scaffoldBackgroundColor: VirelloColors.boardBg,
         cardColor: _darkCard,
         colorScheme: const ColorScheme.dark(primary: VirelloColors.violet),
       ),
@@ -194,7 +194,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               spreadRadius: 6,
             ),
             BoxShadow(
-              color: const Color(0xFF22D3EE).withValues(alpha: 0.25),
+              color: const Color(0xFFF95177).withValues(alpha: 0.25),
               blurRadius: 60,
               spreadRadius: 2,
             ),
@@ -663,14 +663,14 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: VirelloColors.navy,
+        scaffoldBackgroundColor: VirelloColors.boardBg,
         cardColor: _darkCard,
         colorScheme: const ColorScheme.dark(primary: VirelloColors.violet),
       ),
       child: Builder(
         builder: (ctx) => Scaffold(
           appBar: AppBar(
-            backgroundColor: VirelloColors.navy,
+            backgroundColor: VirelloColors.boardBg,
             foregroundColor: Colors.white,
             title: Text(s.engineAuditTrail),
           ),

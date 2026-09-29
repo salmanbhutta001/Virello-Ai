@@ -78,10 +78,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       };
 
   Color _statusColor(CampaignStatus st) => switch (st) {
-        CampaignStatus.live => Colors.green,
-        CampaignStatus.optimizing => Colors.blue,
-        CampaignStatus.paused => Colors.orange,
-        CampaignStatus.completed => Colors.grey,
+        CampaignStatus.live => VirelloColors.success,
+        CampaignStatus.optimizing => const Color(0xFF60A5FA),
+        CampaignStatus.paused => VirelloColors.amber,
+        CampaignStatus.completed => VirelloColors.boardTextSec,
         _ => VirelloColors.violet,
       };
 
@@ -299,7 +299,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               child: LinearProgressIndicator(
                 value: (cp.spendUsd / cp.budgetUsd).clamp(0.0, 1.0),
                 minHeight: 6,
-                backgroundColor: VirelloColors.chipBg,
+                backgroundColor: VTheme.chip(context),
                 valueColor: const AlwaysStoppedAnimation(VirelloColors.violet),
               ),
             ),
@@ -369,7 +369,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: VirelloColors.chipBg,
+                  color: VTheme.chip(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

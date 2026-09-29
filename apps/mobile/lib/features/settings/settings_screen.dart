@@ -97,7 +97,7 @@ class SettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(s.signOut,
-                style: const TextStyle(color: Colors.red)),
+                style: const TextStyle(color: VirelloColors.danger)),
           ),
         ],
       ),
@@ -192,7 +192,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               _row(
                 icon: Icons.block_outlined,
-                iconColor: Colors.red,
+                iconColor: VirelloColors.danger,
                 title: s.whatWeNeverDo,
                 onTap: () =>
                     _trustDialog(context, s.whatWeNeverDo, s.neverDoList),
@@ -229,13 +229,13 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999)),
-                side: const BorderSide(color: Colors.red, width: 1.2),
+                side: const BorderSide(color: VirelloColors.danger, width: 1.2),
               ),
               child: Text(s.signOut,
                   style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.red)),
+                      color: VirelloColors.danger)),
             ),
           ],
         ),

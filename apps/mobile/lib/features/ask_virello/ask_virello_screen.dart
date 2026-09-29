@@ -290,8 +290,8 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
 
   Widget _bubble(_AskMsg m) {
     final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
-    final bg = m.fromUser ? VirelloColors.violet : VirelloColors.chipBg;
-    final fg = m.fromUser ? Colors.white : VirelloColors.ink;
+    final bg = m.fromUser ? VirelloColors.violet : VTheme.chip(context);
+    final fg = m.fromUser ? Colors.white : VTheme.text(context);
     return Align(
       alignment: align,
       child: Container(
