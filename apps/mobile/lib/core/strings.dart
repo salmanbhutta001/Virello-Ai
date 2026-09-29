@@ -8339,12 +8339,6 @@ class AppStrings {
         'Disponível na Amazon', 'Auf Amazon verfügbar', 'Amazon\'da mevcut',
         'Tersedia di Amazon', 'অ্যামাজনে উপলব্ধ'
       );
-  String get billingTitle => _get('Billing & subscriptions',
-        'بلنگ اور سبسکرپشنز', 'الفوترة والاشتراكات',
-        'बिलिंग और सदस्यता', 'Facturation et abonnements',
-        'Facturación y suscripciones', 'Faturamento e assinaturas',
-        'Abrechnung & Abonnements', 'Faturalandırma ve abonelikler',
-        'Penagihan & langganan', 'বিলিং ও সাবস্ক্রিপশন');
   String billingPayWith(String p) => _get('Pay with $p', '$p سے ادائیگی کریں',
         'ادفع عبر $p', '$p से भुगतान करें', 'Payer avec $p',
         'Pagar con $p', 'Pagar com $p', 'Mit $p zahlen', '$p ile öde',
