@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/config.dart';
 import '../../core/strings.dart';
@@ -10,12 +11,15 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Board screen 30: "Conversion".
+/// Board screen 30: "Conversion" — fully functional AI format converter.
 ///
-/// Board layout: header, format option rows, input field, Convert button.
-/// Wires to the REAL POST /api/v1/content/transform endpoint — converts a
-/// link or text into native drafts per format. Output is honestly labeled
-/// (AI vs heuristic) and never promises reach or virality.
+/// Converts pasted text/link into native drafts: Video Script, Carousel,
+/// Thread, or Story Caption. Uses a free text-AI provider (Pollinations.ai,
+/// no key) for REAL intelligent conversion, with the backend transform
+/// endpoint as fallback.
+///
+/// HONEST: AI output labeled as such; fallback labeled basic draft. Never
+/// promises reach or virality.
 class ConversionScreen extends StatefulWidget {
   const ConversionScreen({super.key});
 
@@ -28,8 +32,9 @@ class _ConversionScreenState extends State<ConversionScreen> {
   int _format = 0; // 0 video script, 1 carousel, 2 thread, 3 story caption
   bool _working = false;
   String? _error;
-  Map<String, dynamic>? _result; // full transform response
-  bool _dev = false;
+  String? _output;
+  bool _isAi = false;
+  bool _sharing = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -46,55 +51,41 @@ class _ConversionScreenState extends State<ConversionScreen> {
     'story_caption',
   ];
 
-  Future<void> _convert() async {
-    final raw = _inputCtrl.text.trim();
-    if (raw.isEmpty) {
-      setState(() => _error = s.boardEnterTextFirst);
-      return;
-    }
-    setState(() {
-      _working = true;
-      _error = null;
-      _result = null;
-    });
-    try {
-      final token = authStore.accessToken;
-      final res = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/v1/content/transform'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty)
-            'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'text': raw}),
-      );
-      if (res.statusCode != 200) throw Exception(res.body);
-      if (!mounted) return;
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      setState(() {
-        _dev = data['source'] != 'ai';
-        _result = data;
-        _working = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = s.askFailed;
-        _working = false;
-      });
+  /// AI intelligence: format-specific conversion prompts.
+  String _buildAiPrompt(String raw, String format, String lang) {
+    final langNote = lang == 'ur'
+        ? 'Write in Roman Urdu.'
+        : lang == 'ar'
+            ? 'Write in Arabic.'
+            : 'Write in English.';
+    final base =
+        'Convert the following content into a $format. $langNote\nContent:\n$raw\n\n';
+    switch (format) {
+      case 'video_script':
+        return '${base}Structure:\nHOOK: one irresistible opening line\nBEAT 1/2/3: three key points, each one line\nCTA: call to action\nKeep every line short and speakable. No hashtags.';
+      case 'carousel':
+        return '${base}Write 6 slides for an Instagram carousel. Format each as "SLIDE n: " followed by a bold headline, then one supporting line. Make slide 1 a scroll-stopping hook and slide 6 a CTA.';
+      case 'thread':
+        return '${base}Write a 5-post X/Twitter thread. Format each as "1/5 " etc. at the start. First post hooks, middle posts deliver value, last post has the CTA. Each post under 240 characters.';
+      default:
+        return '${base}Write one punchy story caption (under 25 words) with natural energy. No hashtags.';
     }
   }
 
-  void _copy(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.boardCopied)));
+  Future<String?> _askAi(String prompt) async {
+    final url =
+        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+    final res = await http.get(Uri.parse(url)).timeout(
+          const Duration(seconds: 60),
+        );
+    if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+      return res.body.trim();
+    }
+    return null;
   }
 
-  /// Renders the user-selected format from the real transform response.
-  String _formatText() {
-    final result = _result;
-    if (result == null) return '';
+  /// Backend fallback: renders the selected format from transform response.
+  String _formatBackend(Map<String, dynamic> result) {
     final platforms = (result['platforms'] as List?) ?? [];
     if (platforms.isEmpty) return '';
     final fmts = ((platforms.first as Map)['formats'] as Map?)
@@ -117,7 +108,8 @@ class _ConversionScreenState extends State<ConversionScreen> {
             .map((e) => '${e.key + 1}. ${e.value}')
             .join('\n\n');
       case 'thread':
-        final posts = (fmts['thread']?['posts'] as List?)?.cast<String>() ?? [];
+        final posts =
+            (fmts['thread']?['posts'] as List?)?.cast<String>() ?? [];
         return posts
             .asMap()
             .entries
@@ -128,9 +120,80 @@ class _ConversionScreenState extends State<ConversionScreen> {
     }
   }
 
+  Future<void> _convert() async {
+    final raw = _inputCtrl.text.trim();
+    if (raw.isEmpty) {
+      setState(() => _error = s.boardEnterTextFirst);
+      return;
+    }
+    setState(() {
+      _working = true;
+      _error = null;
+      _output = null;
+    });
+    String? output;
+    bool ai = false;
+    // 1) Real AI conversion.
+    try {
+      output = await _askAi(
+        _buildAiPrompt(raw, _formatKeys[_format], appState.localeCode),
+      );
+      ai = output != null;
+    } catch (_) {}
+    // 2) Backend fallback.
+    if (output == null) {
+      try {
+        final token = authStore.accessToken;
+        final res = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/v1/content/transform'),
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null && token.isNotEmpty)
+              'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'text': raw}),
+        );
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          output = _formatBackend(data);
+          ai = false;
+        }
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _output = (output == null || output.isEmpty) ? null : output;
+      _isAi = ai;
+      if (_output == null) _error = s.askFailed;
+    });
+  }
+
+  void _copy() {
+    if (_output == null) return;
+    Clipboard.setData(ClipboardData(text: _output!));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(s.boardCopied)));
+  }
+
+  Future<void> _share() async {
+    if (_output == null || _sharing) return;
+    setState(() => _sharing = true);
+    try {
+      await Share.share('$_output\n\nvia Virello');
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final formats = ['Video Script', 'Carousel', 'Thread', 'Story Caption'];
+    final formats = [
+      s.boardFormatVideoScript,
+      s.boardFormatCarousel,
+      s.boardFormatThread,
+      s.boardFormatStoryCaption,
+    ];
     final formatIcons = [
       Icons.videocam_outlined,
       Icons.view_carousel_outlined,
@@ -155,10 +218,9 @@ class _ConversionScreenState extends State<ConversionScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: (active
-                                ? VirelloColors.pink
-                                : VirelloColors.pink.withValues(alpha: 0.14))
-                            .withValues(alpha: active ? 1 : 0.14),
+                        color: active
+                            ? VirelloColors.pink
+                            : VirelloColors.pink.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
@@ -242,60 +304,90 @@ class _ConversionScreenState extends State<ConversionScreen> {
               style: const TextStyle(color: VirelloColors.danger, fontSize: 13),
             ),
           ],
-          if (_dev && _result != null) ...[
+          // Converted draft (selected format).
+          if (_output != null) ...[
             const SizedBox(height: 12),
-            Text(
-              s.boardDevHeuristic,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontStyle: FontStyle.italic,
-                color: VTheme.textSec(context),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: VirelloColors.pink.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _isAi ? s.boardImageAiLabel : s.boardScriptDraftLabel,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: VirelloColors.pink,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            VBoardCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          formats[_format],
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: VTheme.text(context),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _copy,
+                        icon: const Icon(
+                          Icons.copy_outlined,
+                          color: VirelloColors.pink,
+                          size: 20,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _sharing ? null : _share,
+                        icon: _sharing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                            : const Icon(
+                                Icons.share_outlined,
+                                color: VirelloColors.pink,
+                                size: 20,
+                              ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SelectableText(
+                    _output!,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.7,
+                      color: VTheme.text(context),
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _working ? null : _convert,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text(s.boardImageRegenerate),
             ),
           ],
-          // Draft result (selected format).
-          if (_result != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: VBoardCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            formats[_format],
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: VTheme.text(context),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => _copy(_formatText()),
-                          icon: const Icon(
-                            Icons.copy_outlined,
-                            color: VirelloColors.pink,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatText(),
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        height: 1.7,
-                        color: VTheme.text(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

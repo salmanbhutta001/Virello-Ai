@@ -10089,6 +10089,22 @@ class AppStrings {
         'Buat Caption',
         'ক্যাপশন তৈরি করুন'
       );
+  String get boardFormatVideoScript => _get(
+        'Video Script',
+        'ویڈیو اسکرپٹ',
+      );
+  String get boardFormatCarousel => _get(
+        'Carousel',
+        'کیروسل',
+      );
+  String get boardFormatThread => _get(
+        'Thread',
+        'تھریڈ',
+      );
+  String get boardFormatStoryCaption => _get(
+        'Story Caption',
+        'اسٹوری کیپشن',
+      );
   String get boardTemplateStructure => _get(
         'Structure',
         'ساخت',
