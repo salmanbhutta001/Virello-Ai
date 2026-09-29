@@ -135,3 +135,16 @@ PRODUCT_CATEGORIES = [
     "all", "tech", "fashion", "home", "fitness", "beauty",
     "men", "women", "sale", "best_sellers",
 ]
+
+
+class WishlistItem(Base):
+    """User's saved/wishlisted product (heart button on product detail)."""
+    __tablename__ = "wishlist_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id"), index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("products.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now())

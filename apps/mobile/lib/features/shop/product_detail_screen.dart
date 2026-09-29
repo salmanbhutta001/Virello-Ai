@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -50,6 +51,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _error;
   Map<String, dynamic>? _product;
   bool _liked = false;
+  int _galleryIndex = 0;
   bool _expanded = false;
 
   @override
@@ -99,15 +101,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _share(Map<String, dynamic> p) async {
     final url = '${p['affiliate_url'] ?? ''}';
-    final text =
-        url.isNotEmpty ? '${p['title'] ?? ''}\n$url' : '${p['title'] ?? ''}';
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.shopLinkCopied)));
+    final title = '${p['title'] ?? ''}';
+    final text = url.isNotEmpty
+        ? '$title
+$url
+
+via Virello Shop'
+        : '$title
+via Virello Shop';
+    await Share.share(text, subject: title);
   }
 
-  Future<void> _onBuy(Map<String, dynamic> p) async {
+    /// Wishlist: save/remove product.
+  Future<void> _toggleWishlist(Map<String, dynamic> p) async {
+    setState(() => _liked = !_liked);
+    if (!mounted) return;
+    final msg = _liked ? 'Added to wishlist' : 'Removed from wishlist';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    try {
+      final id = p['id'];
+      if (id != null) {
+        await api.post('/api/v1/commerce/wishlist',
+            body: {'product_id': id, 'saved': _liked});
+      }
+    } catch (_) {}
+  }
+
+Future<void> _onBuy(Map<String, dynamic> p) async {
     final isAffiliate = p['is_affiliate'] == true;
     if (isAffiliate) {
       final url = '${p['affiliate_url'] ?? ''}';
@@ -195,27 +215,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
-        // Hero image + creator pill + floating actions.
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: images.isNotEmpty
-                  ? Image.network(images.first,
-                      height: 360,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          _imgPlaceholder(360))
-                  : _imgPlaceholder(360),
-            ),
-            // Creator pill (top): honest publisher + real listing age.
-            Positioned(
-              top: 14,
-              left: 14,
-              right: 14,
-              child: Container(
+        // Creator pill (above image, not overlaying): honest publisher + real listing age.
+        Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
@@ -265,7 +266,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ],
                 ),
               ),
+        const SizedBox(height: 12),
+        // Hero image gallery + floating actions.
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: images.isNotEmpty
+                  ? Container(
+                      color: Colors.white,
+                      height: 360,
+                      child: PageView.builder(
+                        itemCount: images.length,
+                        onPageChanged: (i) =>
+                            setState(() => _galleryIndex = i),
+                        itemBuilder: (_, i) => Image.network(
+                          images[i],
+                          height: 360,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) =>
+                              _imgPlaceholder(360),
+                        ),
+                      ),
+                    )
+                  : _imgPlaceholder(360),
             ),
+            // Creator pill (top): honest publisher + real listing age.
+            ,
             // Floating like / share (bottom, overlapping).
             Positioned(
               bottom: -26,
@@ -275,13 +304,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _floatBtn(
-                    icon: _liked
-                        ? Icons.thumb_up_rounded
-                        : Icons.thumb_up_outlined,
-                    active: _liked,
-                    onTap: () =>
-                        setState(() => _liked = !_liked),
-                  ),
+                icon: _liked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                active: _liked,
+                onTap: () => _toggleWishlist(p),
+              ),
                   const SizedBox(width: 12),
                   _floatBtn(
                     icon: Icons.send_outlined,
@@ -293,6 +321,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         const SizedBox(height: 38),
+        // Gallery dots (all product angles).
+        if (images.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (int i = 0; i < images.length; i++)
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 3),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i == _galleryIndex
+                          ? const Color(0xFFE91E63)
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         // Title + provider pill (real provider only).
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

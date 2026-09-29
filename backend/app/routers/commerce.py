@@ -45,6 +45,7 @@ from app.models.commerce import (
     CommerceOrder,
     Product,
     ProductPage,
+    WishlistItem,
 )
 from app.models.core import User
 
@@ -713,6 +714,51 @@ def _check_curator_token(request_token: str) -> None:
     expected = os.environ.get("VIRELLO_CURATOR_TOKEN", "")
     if not expected or not request_token or not secrets.compare_digest(request_token, expected):
         raise HTTPException(401, "Invalid curator token")
+
+
+@router.post("/wishlist", response_model=dict, status_code=201)
+async def toggle_wishlist(
+    payload: dict,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Save or remove a product from the user's wishlist (heart button)."""
+    pid = payload.get("product_id")
+    saved = bool(payload.get("saved", True))
+    if not pid:
+        raise HTTPException(status_code=400, detail="product_id required")
+    try:
+        pid_u = uuid.UUID(str(pid))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid product_id")
+    existing = (await db.execute(
+        select(WishlistItem).where(
+            WishlistItem.user_id == user.id,
+            WishlistItem.product_id == pid_u,
+        )
+    )).scalars().first()
+    if saved and not existing:
+        db.add(WishlistItem(user_id=user.id, product_id=pid_u))
+        await db.commit()
+    elif not saved and existing:
+        await db.delete(existing)
+        await db.commit()
+    return {"saved": saved, "product_id": str(pid)}
+
+
+@router.get("/wishlist", response_model=list)
+async def get_wishlist(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """User's wishlisted products (for future wishlist tab)."""
+    rows = (await db.execute(
+        select(WishlistItem).where(WishlistItem.user_id == user.id)
+        .order_by(WishlistItem.created_at.desc())
+    )).scalars().all()
+    return [{"product_id": str(w.product_id),
+             "created_at": w.created_at.isoformat() if w.created_at else None}
+            for w in rows]
 
 
 @router.post("/products/curate", response_model=dict, status_code=201)
