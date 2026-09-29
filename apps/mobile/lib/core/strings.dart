@@ -2193,6 +2193,7 @@ class AppStrings {
       _get('Comment posted', 'تبصرہ پوسٹ ہو گیا', 'تم نشر التعليق');
   String get boardCommentDeleted =>
       _get('Comment deleted', 'تبصرہ حذف ہو گیا', 'تم حذف التعليق');
+  String get delete => _get('Delete', 'حذف کریں', 'حذف');
   String get boardDeleteCommentConfirm =>
       _get('Delete this comment?', 'یہ تبصرہ حذف کریں؟', 'حذف هذا التعليق؟');
   String get boardActivity => _get('Activity', 'سرگرمی', 'النشاط');

@@ -1,4 +1,4 @@
-import '../core/strings.dart';
+import '../../core/strings.dart';
 
 /// Human "time ago" for ISO-8601 timestamps from the API.
 /// Returns null when the timestamp cannot be parsed (caller shows nothing).
