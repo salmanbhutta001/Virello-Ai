@@ -7,6 +7,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/local_creator.dart';
 
 /// Board screen 31: "Generate Captions" — fully functional AI caption studio.
 ///
@@ -126,6 +127,13 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
             .toList();
         ai = false;
       } catch (_) {}
+    }
+    // 3) On-device fallback — always produces drafts, zero network.
+    if (captions == null || captions.isEmpty) {
+      captions = LocalCreator.buildCaptions(topic, appState.localeCode)
+          .map((c) => _Caption(c['text']!, c['hashtags']!))
+          .toList();
+      ai = false;
     }
     if (!mounted) return;
     setState(() {

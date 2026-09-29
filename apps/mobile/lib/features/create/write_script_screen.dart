@@ -7,6 +7,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/local_creator.dart';
 
 /// Board screen 24: "Write Script" — fully functional AI script writer.
 ///
@@ -130,6 +131,14 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
         body = '${scr?['body'] ?? ''}';
         ai = false;
       } catch (_) {}
+    }
+    // 3) On-device fallback — always produces a draft, zero network.
+    if (body == null || body.isEmpty) {
+      final local = LocalCreator.buildScript(
+          topic, _toneNames[_tone], appState.localeCode);
+      title = local['title'];
+      body = local['body'];
+      ai = false;
     }
     if (!mounted) return;
     setState(() {

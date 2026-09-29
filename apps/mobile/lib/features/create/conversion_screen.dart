@@ -10,6 +10,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/local_creator.dart';
 
 /// Board screen 30: "Conversion" — fully functional AI format converter.
 ///
@@ -159,6 +160,12 @@ class _ConversionScreenState extends State<ConversionScreen> {
           ai = false;
         }
       } catch (_) {}
+    }
+    // 3) On-device fallback — always produces output, zero network.
+    if (output == null || output.isEmpty) {
+      output = LocalCreator.buildConversion(
+          raw, _formatKeys[_format], appState.localeCode);
+      ai = false;
     }
     if (!mounted) return;
     setState(() {

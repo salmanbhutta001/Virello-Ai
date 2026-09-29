@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   String? _imageUrl;
   int _seed = 0;
   bool _loading = false;
+  Timer? _genTimer;
   bool _loadFailed = false;
   bool _sharing = false;
 
@@ -51,6 +53,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
 
   @override
   void dispose() {
+    _genTimer?.cancel();
     _promptCtrl.dispose();
     super.dispose();
   }
@@ -69,6 +72,21 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _loading = true;
       _loadFailed = false;
     });
+    _armTimeout();
+  }
+
+  /// Safety net: image generation can stall on slow networks — never spin
+  /// forever. After 2 minutes without a loaded image, show retry.
+  void _armTimeout() {
+    _genTimer?.cancel();
+    _genTimer = Timer(const Duration(seconds: 120), () {
+      if (mounted && _loading) {
+        setState(() {
+          _loading = false;
+          _loadFailed = true;
+        });
+      }
+    });
   }
 
   void _regenerate() {
@@ -80,6 +98,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _loading = true;
       _loadFailed = false;
     });
+    _armTimeout();
   }
 
   Future<void> _share() async {
@@ -216,6 +235,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                   // Image fully loaded behind the spinner; flip state.
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted && _loading) {
+                      _genTimer?.cancel();
                       setState(() => _loading = false);
                     }
                   });
