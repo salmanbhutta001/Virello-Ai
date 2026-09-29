@@ -92,6 +92,14 @@ class _VirelloAppState extends State<VirelloApp> {
   int _boardStep = 0;
   bool _boardOnboarded = false;
 
+  /// Navigator key so auth transitions can reset the route stack.
+  /// (Changing MaterialApp.home alone does NOT clear routes that were
+  /// pushed on top — e.g. SignInScreen pushed from WelcomeScreen — which
+  /// left users staring at the login screen after a successful login.)
+  final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+  bool _wasSignedIn = false;
+  bool _navResetScheduled = false;
+
   @override
   void initState() {
     super.initState();
@@ -120,11 +128,30 @@ class _VirelloAppState extends State<VirelloApp> {
 
   /// Log one app-open visit per session for the admin analytics dashboard
   /// (server-side throttled; failures never affect the app).
+  ///
+  /// Also resets the navigation stack on sign-in / sign-out transitions so
+  /// the user immediately sees the post-login (or signed-out) screen instead
+  /// of a stale pushed route. The replacement route builds `_root()` lazily,
+  /// so later state changes (e.g. finishing onboarding) keep working.
   void _onAuthChanged() {
+    final nowSignedIn = authStore.loaded && authStore.signedIn;
+    final justSignedIn = nowSignedIn && !_wasSignedIn;
+    final justSignedOut = !nowSignedIn && _wasSignedIn;
+    _wasSignedIn = nowSignedIn;
     setState(() {});
-    if (!_trackedOpen && authStore.loaded && authStore.signedIn) {
+    if (!_trackedOpen && nowSignedIn) {
       _trackedOpen = true;
       ApiClient().trackAppOpen();
+    }
+    if ((justSignedIn || justSignedOut) && !_navResetScheduled) {
+      _navResetScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navResetScheduled = false;
+        _navKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => _root()),
+          (route) => false,
+        );
+      });
     }
   }
 
@@ -133,6 +160,7 @@ class _VirelloAppState extends State<VirelloApp> {
     return MaterialApp(
       title: 'Virello',
       debugShowCheckedModeBanner: false,
+      navigatorKey: _navKey,
       theme: VirelloTheme.light(),
       darkTheme: VirelloTheme.dark(),
       themeMode: appState.themeMode,
