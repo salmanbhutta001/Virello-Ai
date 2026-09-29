@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
@@ -27,6 +28,11 @@ class _EntertainScreenState extends State<EntertainScreen> {
   Map<String, dynamic>? _comic;
   bool _comicDev = false;
 
+  /// Session-generated story ideas (board 64 "My Stories").
+  /// Real output of POST /api/v1/entertain/story from this session only —
+  /// the backend stores no story history, so nothing is faked.
+  final List<Map<String, dynamic>> _myStories = [];
+
   AppStrings get s => AppStrings(appState.localeCode);
 
   @override
@@ -52,6 +58,14 @@ class _EntertainScreenState extends State<EntertainScreen> {
             : null;
         _storyDev = res['dev'] == true;
         _generating = false;
+        if (_story != null) {
+          _myStories.insert(0, {
+            'title': _story!['title'] ?? '',
+            'body': _story!['body'] ?? '',
+            'topic': _storyCtrl.text.trim(),
+            'at': DateTime.now().toIso8601String(),
+          });
+        }
       });
     } on AuthException {
       if (!mounted) return;
@@ -122,10 +136,124 @@ class _EntertainScreenState extends State<EntertainScreen> {
               onSelectionChanged: (sel) => setState(() => _mode = sel.first),
             ),
             const SizedBox(height: 16),
+            if (_mode == 0) _myStoriesSection(context),
             if (_mode == 0) _storyForm(context) else _comicForm(context),
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Board 64 "My Stories": the real story ideas generated this session.
+  /// No fake viewer counts — the backend keeps no story history.
+  Widget _myStoriesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(s.p11MyStories,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            const SizedBox(width: 8),
+            if (_myStories.isNotEmpty)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: VirelloColors.pink.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '${_myStories.length} ${s.p11IdeasThisSession}',
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: VirelloColors.pink),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (_myStories.isEmpty)
+          VBoardCard(
+            child: Row(
+              children: [
+                const Icon(Icons.auto_stories_outlined,
+                    color: VirelloColors.muted, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(s.p11NoStoriesYet,
+                      style: const TextStyle(
+                          fontSize: 13, color: VirelloColors.muted)),
+                ),
+              ],
+            ),
+          )
+        else
+          VBoardCard(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              children: List.generate(_myStories.length, (i) {
+                final st = _myStories[i];
+                return ListTile(
+                  leading: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [VirelloColors.pink, VirelloColors.pinkDeep],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.auto_stories,
+                        color: Colors.white, size: 20),
+                  ),
+                  title: Text('${st['title'] ?? ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  subtitle: Text(
+                    '${st['body'] ?? ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12, color: VirelloColors.muted),
+                  ),
+                  trailing: const Icon(Icons.chevron_right,
+                      size: 18, color: VirelloColors.muted),
+                  onTap: () => _viewStory(st),
+                );
+              }),
+            ),
+          ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  void _viewStory(Map<String, dynamic> st) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: VirelloColors.boardSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('${st['title'] ?? ''}',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: SingleChildScrollView(
+            child: Text('${st['body'] ?? ''}',
+                style: const TextStyle(fontSize: 14, height: 1.7))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(s.cancelBtn),
+          ),
+        ],
       ),
     );
   }

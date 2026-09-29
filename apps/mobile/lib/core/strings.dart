@@ -2581,4 +2581,103 @@ class AppStrings {
   String get p10AnalysisFailed =>
       _get('Analysis failed', 'تجزیہ ناکام ہوا', 'فشل التحليل');
   String get p10Retype => _get('Try again', 'دوبارہ کوشش کریں', 'حاول مجددًا');
+
+  // ---- Phase 11: board fidelity — remaining screens ----
+  String get p11Messages => _get('Messages', 'پیغامات', 'الرسائل');
+  String get p11TabAll => _get('All', 'سب', 'الكل');
+  String get p11TabCreators => _get('Creators', 'کریئیٹرز', 'المبدعون');
+  String get p11TabCustomers => _get('Customers', 'گاہک', 'العملاء');
+  String get p11RecentChats =>
+      _get('Recent chats', 'حالیہ چیٹس', 'الدردشات الأخيرة');
+  String get p11NoMessages =>
+      _get('No messages yet.', 'ابھی کوئی پیغام نہیں۔', 'لا رسائل بعد.');
+  String get p11NoMessagesSub => _get(
+        'Collab requests from creators and product leads from customers will appear here.',
+        'کریئیٹرز کی تعاون کی درخواستیں اور گاہکوں کی پراڈکٹ لیڈز یہاں نظر آئیں گی۔',
+        'ستظهر هنا طلبات التعاون والعملاء المحتملون لمنتجاتك.',
+      );
+  String get p11NoCreators => _get('No collab requests yet.',
+      'ابھی کوئی تعاون کی درخواست نہیں۔', 'لا طلبات تعاون بعد.');
+  String get p11NoCustomers => _get('No customer leads yet.',
+      'ابھی کوئی گاہک لیڈ نہیں۔', 'لا عملاء محتملين بعد.');
+  String get p11CollabRequest =>
+      _get('Collab request', 'تعاون کی درخواست', 'طلب تعاون');
+  String get p11ProductLead => _get('Product lead', 'پراڈکٹ لیڈ', 'عميل محتمل');
+  String get p11Accept => _get('Accept', 'قبول کریں', 'قبول');
+  String get p11Decline => _get('Decline', 'مسترد کریں', 'رفض');
+  String get p11StatusPending => _get('Pending', 'زیر التواء', 'قيد الانتظار');
+  String get p11StatusAccepted => _get('Accepted', 'قبول شدہ', 'مقبول');
+  String get p11StatusDeclined => _get('Declined', 'مسترد شدہ', 'مرفوض');
+  String get p11RequestUpdated =>
+      _get('Request updated.', 'درخواست اپ ڈیٹ ہو گئی۔', 'تم تحديث الطلب.');
+  String get p11LeadProduct => _get('Product', 'پراڈکٹ', 'المنتج');
+  String get p11LeadSource => _get('Source', 'ذریعہ', 'المصدر');
+  String get p11LeadStatus => _get('Status', 'حیثیت', 'الحالة');
+  String get p11RequestFrom =>
+      _get('Request from', 'درخواست کنندہ', 'مقدِّم الطلب');
+  String get p11PostLink => _get('Post link', 'پوسٹ کا لنک', 'رابط المنشور');
+  String get p11FilterUnread => _get('Unread', 'ان پڑھ', 'غير المقروءة');
+  String get p11NoUnread => _get('No unread notifications.',
+      'کوئی ان پڑھی اطلاع نہیں۔', 'لا إشعارات غير مقروءة.');
+  String get p11SellerDashboard =>
+      _get('Seller Dashboard', 'سیلر ڈیش بورڈ', 'لوحة البائع');
+  String get p11GoLive => _get('Go Live', 'لائیو جائیں', 'بث مباشر');
+  String get p11StatProducts => _get('Products', 'پراڈکٹس', 'المنتجات');
+  String get p11StatLeads => _get('Leads', 'لیڈز', 'العملاء المحتملون');
+  String get p11StatAvgLeads =>
+      _get('Avg leads / product', 'اوسط لیڈز / پراڈکٹ', 'متوسط العملاء / منتج');
+  String get p11LeadsPerProduct =>
+      _get('Leads per product', 'فی پراڈکٹ لیڈز', 'العملاء لكل منتج');
+  String get p11NoProductsYet =>
+      _get('No products yet.', 'ابھی کوئی پراڈکٹ نہیں۔', 'لا منتجات بعد.');
+  String get p11NoProductsSub => _get(
+        'Add your first product in the Shop to see your seller stats here.',
+        'اپنے سیلر اعداد یہاں دیکھنے کے لیے Shop میں اپنی پہلی پراڈکٹ شامل کریں۔',
+        'أضف منتجك الأول في المتجر لرؤية إحصاءاتك هنا.',
+      );
+  String get p11AddProduct =>
+      _get('Add product', 'پراڈکٹ شامل کریں', 'أضف منتجًا');
+  String get p11LiveSoon => _get(
+        'Live selling is not available yet — add products in the Shop instead.',
+        'لائیو سیلنگ ابھی دستیاب نہیں — اس کے بجائے Shop میں پراڈکٹس شامل کریں۔',
+        'البيع المباشر غير متاح بعد — أضف المنتجات في المتجر بدلًا من ذلك.',
+      );
+  String get p11LanguageAnalytics =>
+      _get('Language Analytics', 'زبان کے تجزیات', 'تحليلات اللغة');
+  String get p11Languages => _get('Languages', 'زبانیں', 'اللغات');
+  String p11LangsSupported(int n) =>
+      _get('$n languages supported', '$n زبانیں معاون ہیں', '$n لغة مدعومة');
+  String get p11CoverageNote => _get(
+        'App UI translation coverage across the real supported languages — never usage estimates.',
+        'حقیقی معاون زبانوں میں ایپ UI ترجمہ کوریج — کبھی استعمال کے اندازے نہیں۔',
+        'تغطية ترجمة واجهة التطبيق عبر اللغات المدعومة فعليًا — وليست تقديرات استخدام.',
+      );
+  String get p11FullUi => _get('Full app UI', 'مکمل ایپ UI', 'واجهة كاملة');
+  String get p11ContentOnly => _get('Content', 'مواد', 'المحتوى');
+  String get p11ContentOnlyNote => _get(
+        'Content language: AI detection and audience matching supported; app UI stays in your chosen language.',
+        'مواد کی زبان: AI شناخت اور سامعین کی مطابقت معاون؛ ایپ UI آپ کی منتخب زبان میں رہتا ہے۔',
+        'لغة المحتوى: الكشف والمطابقة بالذكاء الاصطناعي مدعومان؛ تبقى واجهة التطبيق بلغتك المختارة.',
+      );
+  String get p11Company => _get('Company', 'کمپنی', 'الشركة');
+  String get p11AboutVirello =>
+      _get('About Virello', 'Virello کے بارے میں', 'عن Virello');
+  String get p11WhatVirelloDoes =>
+      _get('What Virello does', 'Virello کیا کرتا ہے', 'ماذا يفعل Virello');
+  String get p11CompanyDesc => _get(
+        'Virello AI is your AI growth manager. It matches your content with genuinely interested audiences through legitimate discovery — AI content analysis, audience insights, and AI-managed growth across organic and paid channels.',
+        'Virello AI آپ کا AI گروتھ مینیجر ہے۔ یہ آپ کے مواد کو حقیقی دلچسپی رکھنے والے سامعین سے جائز دریافت کے ذریعے ملاتا ہے — AI مواد کا تجزیہ، سامعین کی بصیرت، اور آرگینک و پیڈ چینلز میں AI کے زیر انتظام گروتھ۔',
+        'Virello AI هو مدير النمو بالذكاء الاصطناعي. يطابق المحتوى مع جمهور مهتم فعلًا عبر الاكتشاف المشروع — تحليل المحتوى، ورؤى الجمهور، والنمو المُدار بالذكاء الاصطناعي عبر القنوات المجانية والمدفوعة.',
+      );
+  String get p11WhatWeNeverDo =>
+      _get('What we never do', 'ہم کیا کبھی نہیں کرتے', 'ما لا نفعله أبدًا');
+  String get p11ContactSupport =>
+      _get('Contact support', 'سپورٹ سے رابطہ کریں', 'تواصل مع الدعم');
+  String get p11MyStories => _get('My Stories', 'میری کہانیاں', 'قصصي');
+  String get p11NoStoriesYet => _get(
+      'No stories yet — generate your first story idea below.',
+      'ابھی کوئی کہانی نہیں — نیچے اپنی پہلی کہانی کا آئیڈیا بنائیں۔',
+      'لا قصص بعد — ولّد فكرة قصتك الأولى أدناه.');
+  String get p11IdeasThisSession =>
+      _get('ideas this session', 'اس سیشن کے آئیڈیاز', 'أفكار هذه الجلسة');
 }

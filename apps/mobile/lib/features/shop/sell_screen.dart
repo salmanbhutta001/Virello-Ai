@@ -4,6 +4,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import 'seller_dashboard_screen.dart';
 
 /// Phase 4 — Creator product listing form.
 ///
@@ -62,8 +63,7 @@ class _SellScreenState extends State<SellScreen> {
     }
     final affUrl = _affUrlCtrl.text.trim();
     if (_isAffiliate) {
-      if (!(affUrl.startsWith('http://') ||
-          affUrl.startsWith('https://'))) {
+      if (!(affUrl.startsWith('http://') || affUrl.startsWith('https://'))) {
         setState(() => _error = s.sellNeedAffiliateUrl);
         return;
       }
@@ -97,8 +97,7 @@ class _SellScreenState extends State<SellScreen> {
         'stock_qty': stock < 0 ? 0 : stock,
         'is_affiliate': _isAffiliate,
         'affiliate_url': _isAffiliate ? affUrl : '',
-        'affiliate_provider':
-            _isAffiliate ? _affiliateProvider : '',
+        'affiliate_provider': _isAffiliate ? _affiliateProvider : '',
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -121,6 +120,14 @@ class _SellScreenState extends State<SellScreen> {
       appBar: AppBar(
         title: Text(s.sellTitle,
             style: const TextStyle(fontWeight: FontWeight.w800)),
+        actions: [
+          IconButton(
+            tooltip: s.p11SellerDashboard,
+            icon: const Icon(Icons.dashboard_outlined),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const SellerDashboardScreen())),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -152,8 +159,8 @@ class _SellScreenState extends State<SellScreen> {
                 flex: 2,
                 child: TextField(
                   controller: _priceCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: s.sellPriceHint,
                     border: OutlineInputBorder(
@@ -171,11 +178,9 @@ class _SellScreenState extends State<SellScreen> {
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   items: _currencies
-                      .map((c) => DropdownMenuItem(
-                          value: c, child: Text(c)))
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (v) =>
-                      setState(() => _currency = v ?? 'USD'),
+                  onChanged: (v) => setState(() => _currency = v ?? 'USD'),
                 ),
               ),
             ],
@@ -192,11 +197,9 @@ class _SellScreenState extends State<SellScreen> {
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   items: _categories
-                      .map((c) => DropdownMenuItem(
-                          value: c, child: Text(c)))
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (v) =>
-                      setState(() => _category = v ?? 'all'),
+                  onChanged: (v) => setState(() => _category = v ?? 'all'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -230,8 +233,8 @@ class _SellScreenState extends State<SellScreen> {
             value: _isAffiliate,
             onChanged: (v) => setState(() => _isAffiliate = v),
             title: Text(s.sellIsAffiliate,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600)),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             contentPadding: EdgeInsets.zero,
           ),
           if (_isAffiliate) ...[
@@ -240,8 +243,8 @@ class _SellScreenState extends State<SellScreen> {
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 labelText: s.sellAffiliateUrlHint,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
             const SizedBox(height: 12),
@@ -249,12 +252,11 @@ class _SellScreenState extends State<SellScreen> {
               initialValue: _affiliateProvider,
               decoration: InputDecoration(
                 labelText: s.sellAffiliateProvider,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
               items: _affProviders
-                  .map((p) => DropdownMenuItem(
-                      value: p, child: Text(p)))
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                   .toList(),
               onChanged: (v) =>
                   setState(() => _affiliateProvider = v ?? 'amazon'),
@@ -292,12 +294,10 @@ class _SellScreenState extends State<SellScreen> {
       decoration: BoxDecoration(
         color: VirelloColors.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: VirelloColors.danger.withValues(alpha: 0.3)),
+        border: Border.all(color: VirelloColors.danger.withValues(alpha: 0.3)),
       ),
       child: Text(_error!,
-          style: const TextStyle(
-              fontSize: 13, color: VirelloColors.danger)),
+          style: const TextStyle(fontSize: 13, color: VirelloColors.danger)),
     );
   }
 }

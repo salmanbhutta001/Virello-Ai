@@ -12,9 +12,11 @@ import '../discovery/result_screen.dart';
 import '../settings/language_settings_screen.dart';
 import '../settings/notifications_screen.dart';
 import '../settings/settings_screen.dart';
+import '../shop/seller_dashboard_screen.dart';
 import '../social/activity_screen.dart';
 import '../social/creator_dashboard_screen.dart';
 import '../social/following_screen.dart';
+import '../social/messages_screen.dart';
 import '../tutorial/tutorial_guide_screen.dart';
 import 'billing_screen.dart';
 import 'support_chat_screen.dart';
@@ -37,31 +39,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    apiClient
-        .me()
-        .then((m) {
-          if (mounted) setState(() => _me = m);
-        })
-        .catchError((_) {});
-    apiClient
-        .listCampaigns()
-        .then((l) {
-          if (mounted) setState(() => _campaignCount = l.length);
-        })
-        .catchError((_) {});
-    Future.wait([apiClient.getTopics(), apiClient.getInterests()])
-        .then((r) {
-          if (!mounted) return;
-          final topics = r[0] as List<Topic>;
-          final interests = r[1] as Set<String>;
-          setState(() {
-            _topicNames = {
-              for (final t in topics) t.slug: t.name(appState.localeCode),
-            };
-            _interests = interests;
-          });
-        })
-        .catchError((_) {});
+    apiClient.me().then((m) {
+      if (mounted) setState(() => _me = m);
+    }).catchError((_) {});
+    apiClient.listCampaigns().then((l) {
+      if (mounted) setState(() => _campaignCount = l.length);
+    }).catchError((_) {});
+    Future.wait([apiClient.getTopics(), apiClient.getInterests()]).then((r) {
+      if (!mounted) return;
+      final topics = r[0] as List<Topic>;
+      final interests = r[1] as Set<String>;
+      setState(() {
+        _topicNames = {
+          for (final t in topics) t.slug: t.name(appState.localeCode),
+        };
+        _interests = interests;
+      });
+    }).catchError((_) {});
     savedStore.addListener(_onSavedChanged);
   }
 
@@ -87,9 +81,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isAdmin = _me?['is_admin'] == true;
     final initial = _name.isNotEmpty ? _name[0].toUpperCase() : 'V';
     final handle = _email.contains('@') ? '@${_email.split('@').first}' : '';
-    final planLabel = _plan.isEmpty
-        ? ''
-        : '${_plan[0].toUpperCase()}${_plan.substring(1)}';
+    final planLabel =
+        _plan.isEmpty ? '' : '${_plan[0].toUpperCase()}${_plan.substring(1)}';
 
     return Scaffold(
       body: ListView(
@@ -120,8 +113,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         IconButton(
-                          tooltip: AppStrings(appState.localeCode)
-                              .settingsTitle,
+                          tooltip:
+                              AppStrings(appState.localeCode).settingsTitle,
                           icon: const Icon(
                             Icons.settings_outlined,
                             color: Colors.white,
@@ -322,11 +315,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       _menuRow(
+                        icon: Icons.chat_bubble_outline,
+                        title: s.p11Messages,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const MessagesScreen(),
+                          ),
+                        ),
+                      ),
+                      _menuRow(
                         icon: Icons.dashboard_outlined,
                         title: s.boardCreatorDashboard,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const CreatorDashboardScreen(),
+                          ),
+                        ),
+                      ),
+                      _menuRow(
+                        icon: Icons.storefront_outlined,
+                        title: s.p11SellerDashboard,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SellerDashboardScreen(),
                           ),
                         ),
                       ),
@@ -460,22 +471,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String? subtitle,
     Widget? trailing,
     VoidCallback? onTap,
-  }) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-    leading: Icon(icon, color: iconColor),
-    title: Text(
-      title,
-      style: TextStyle(fontWeight: FontWeight.w600, color: titleColor),
-    ),
-    subtitle: subtitle == null
-        ? null
-        : Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: VirelloColors.muted),
-          ),
-    trailing: trailing ?? const Icon(Icons.chevron_right, size: 20),
-    onTap: onTap,
-  );
+  }) =>
+      ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        leading: Icon(icon, color: iconColor),
+        title: Text(
+          title,
+          style: TextStyle(fontWeight: FontWeight.w600, color: titleColor),
+        ),
+        subtitle: subtitle == null
+            ? null
+            : Text(
+                subtitle,
+                style:
+                    const TextStyle(fontSize: 12, color: VirelloColors.muted),
+              ),
+        trailing: trailing ?? const Icon(Icons.chevron_right, size: 20),
+        onTap: onTap,
+      );
 
   /// Editable profile sheet: name field, Save calls PATCH /users/me,
   /// refreshes profile state, shows a confirmation.
@@ -600,9 +613,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _savedCard(PostAnalysisResult r) {
     final title = r.title.isEmpty ? r.url : r.title;
     return GestureDetector(
-      onTap: () =>
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => ResultScreen(result: r))),
+      onTap: () => Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => ResultScreen(result: r))),
       child: SizedBox(
         width: 140,
         child: Column(

@@ -6,6 +6,8 @@ import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../tutorial/tutorial_guide_screen.dart';
 import 'change_password_screen.dart';
+import 'company_screen.dart';
+import 'language_analytics_screen.dart';
 import 'language_settings_screen.dart';
 import 'notifications_screen.dart';
 import '../profile/billing_screen.dart';
@@ -29,17 +31,15 @@ class SettingsScreen extends StatelessWidget {
     Color? titleColor,
   }) =>
       ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: Icon(icon, color: iconColor),
         title: Text(title,
-            style:
-                TextStyle(fontWeight: FontWeight.w600, color: titleColor)),
+            style: TextStyle(fontWeight: FontWeight.w600, color: titleColor)),
         subtitle: subtitle == null
             ? null
             : Text(subtitle,
-                style: const TextStyle(
-                    fontSize: 12, color: VirelloColors.muted)),
+                style:
+                    const TextStyle(fontSize: 12, color: VirelloColors.muted)),
         trailing: trailing ?? const Icon(Icons.chevron_right, size: 20),
         onTap: onTap,
       );
@@ -68,8 +68,7 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
         content: Text(body),
         actions: [
           TextButton(
@@ -146,6 +145,12 @@ class SettingsScreen extends StatelessWidget {
                     builder: (_) => const LanguageSettingsScreen())),
               ),
               _row(
+                icon: Icons.bar_chart_outlined,
+                title: s.p11LanguageAnalytics,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const LanguageAnalyticsScreen())),
+              ),
+              _row(
                 icon: Icons.notifications_outlined,
                 title: s.notifications,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -167,8 +172,8 @@ class SettingsScreen extends StatelessWidget {
               _row(
                 icon: Icons.credit_card_outlined,
                 title: s.billingTitle,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const BillingScreen())),
+                onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BillingScreen())),
               ),
             ]),
             _section(s.trustLegalSection, [
@@ -186,8 +191,7 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.verified_user_outlined,
                 iconColor: VirelloColors.pink,
                 title: s.howVirelloGrows,
-                onTap: () => _trustDialog(
-                    context, s.howVirelloGrows,
+                onTap: () => _trustDialog(context, s.howVirelloGrows,
                     '${s.neverFake}\n\n${s.noGuarantees}'),
               ),
               _row(
@@ -215,6 +219,13 @@ class SettingsScreen extends StatelessWidget {
               ),
             ]),
             _section(s.aboutSection, [
+              _row(
+                icon: Icons.business_outlined,
+                title: s.p11Company,
+                subtitle: 'Virello AI',
+                onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CompanyScreen())),
+              ),
               _row(
                 icon: Icons.info_outline,
                 title: s.appVersion,
