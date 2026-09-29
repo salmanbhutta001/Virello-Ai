@@ -636,7 +636,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             const SizedBox(height: 8),
             // Quick launch: build + approve + launch in one tap.
             VGradientButton(
-              label: 'Build & Launch Now',
+              label: s.adLaunchCampaign,
               icon: Icons.rocket_launch_outlined,
               onPressed: _busy ? null : _buildAndLaunch,
             ),
