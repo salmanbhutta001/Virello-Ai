@@ -10476,6 +10476,20 @@ class AppStrings {
         'Kampanye dihapus',
         'ক্যাম্পেইন মুছে ফেলা হয়েছে'
       );
+  String get deleteFailed =>
+      _get('Could not delete. Check your connection and try again.',
+        'ڈیلیٹ نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+        'تعذر الحذف. تحقق من اتصالك وحاول مرة أخرى.',
+        'हटाया नहीं जा सका। अपना कनेक्शन जांचें और पुनः प्रयास करें।',
+        'Impossible de supprimer. Vérifiez votre connexion et réessayez.',
+        'No se pudo eliminar. Comprueba tu conexión e inténtalo de nuevo.',
+        'Não foi possível excluir. Verifique sua conexão e tente novamente.',
+        'Löschen fehlgeschlagen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
+        'Silinemedi. Bağlantınızı kontrol edip tekrar deneyin.',
+        'Tidak dapat menghapus. Periksa koneksi Anda dan coba lagi.',
+        'মুছে ফেলা যায়নি। আপনার সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।'
+      );
+
 
   // ---- Board fidelity phase 7: core tabs (07-12) ----
   String get boardCreateSomething => _get(
