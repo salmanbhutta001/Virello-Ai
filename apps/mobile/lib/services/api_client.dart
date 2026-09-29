@@ -17,7 +17,7 @@ class ApiClient {
   final String? Function()? tokenProvider;
 
   ApiClient({String? baseUrl, this.tokenProvider})
-    : baseUrl = baseUrl ?? AppConfig.baseUrl;
+      : baseUrl = baseUrl ?? AppConfig.baseUrl;
 
   Map<String, String> get _headers {
     final token = tokenProvider?.call();
@@ -285,10 +285,11 @@ class ApiClient {
   Future<Map<String, dynamic>> aiSupportChat(
     String question,
     String language,
-  ) => _postJson('/api/v1/ai/support', {
-    'question': question,
-    'language': language,
-  });
+  ) =>
+      _postJson('/api/v1/ai/support', {
+        'question': question,
+        'language': language,
+      });
 
   // ------------------------------ ai-core (Ask Virello) ------------------------------
   /// Ask Virello: natural-language → intent → module → response.
@@ -299,11 +300,12 @@ class ApiClient {
     String text, {
     String? conversationId,
     String? language,
-  }) => _postJson('/api/v1/ai-core/ask', {
-    'text': text,
-    if (conversationId != null) 'conversation_id': conversationId,
-    if (language != null) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/ai-core/ask', {
+        'text': text,
+        if (conversationId != null) 'conversation_id': conversationId,
+        if (language != null) 'language': language,
+      });
 
   /// List the user's AI conversations (most recent first).
   Future<List<dynamic>> getAiConversations() async {
@@ -344,8 +346,7 @@ class ApiClient {
     if (language != null && language.isNotEmpty) q['language'] = language;
     final query = q.entries
         .map(
-          (e) =>
-              '${Uri.encodeComponent(e.key)}='
+          (e) => '${Uri.encodeComponent(e.key)}='
               '${Uri.encodeComponent(e.value)}',
         )
         .join('&');
@@ -370,7 +371,8 @@ class ApiClient {
   Future<Map<String, dynamic>> submitAcademyQuiz(
     String id,
     List<int> answers,
-  ) => _postJson('/api/v1/academy/lessons/$id/quiz', {'answers': answers});
+  ) =>
+      _postJson('/api/v1/academy/lessons/$id/quiz', {'answers': answers});
 
   /// POST /api/v1/academy/lessons/{id}/complete — marks the lesson done.
   Future<Map<String, dynamic>> completeAcademyLesson(String id) =>
@@ -388,12 +390,13 @@ class ApiClient {
     String? prompt,
     String? length,
     String? language,
-  }) => _postJson('/api/v1/entertain/story', {
-    if (topic != null && topic.isNotEmpty) 'topic': topic,
-    if (prompt != null && prompt.isNotEmpty) 'prompt': prompt,
-    if (length != null && length.isNotEmpty) 'length': length,
-    if (language != null && language.isNotEmpty) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/entertain/story', {
+        if (topic != null && topic.isNotEmpty) 'topic': topic,
+        if (prompt != null && prompt.isNotEmpty) 'prompt': prompt,
+        if (length != null && length.isNotEmpty) 'length': length,
+        if (language != null && language.isNotEmpty) 'language': language,
+      });
 
   /// POST /api/v1/entertain/comic-idea — AI-generated comic strip outline.
   /// Response: {comic:{title,panels:[{panel,description,caption}]},dev,provider}.
@@ -401,11 +404,12 @@ class ApiClient {
     required String topic,
     int? panels,
     String? language,
-  }) => _postJson('/api/v1/entertain/comic-idea', {
-    'topic': topic,
-    if (panels != null) 'panels': panels,
-    if (language != null && language.isNotEmpty) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/entertain/comic-idea', {
+        'topic': topic,
+        if (panels != null) 'panels': panels,
+        if (language != null && language.isNotEmpty) 'language': language,
+      });
 
   // ------------------------------ viral lab (Phase 2) ------------------------------
   /// Improvement suggestions for a post URL or pasted text.
@@ -413,10 +417,11 @@ class ApiClient {
   Future<Map<String, dynamic>> improveContent({
     String? postUrl,
     String? text,
-  }) => _postJson('/api/v1/analysis/improve', {
-    if (postUrl != null) 'post_url': postUrl,
-    if (text != null) 'text': text,
-  });
+  }) =>
+      _postJson('/api/v1/analysis/improve', {
+        if (postUrl != null) 'post_url': postUrl,
+        if (text != null) 'text': text,
+      });
 
   /// Original content variations at different angles.
   /// Response: {variations[{text, angle, why_it_works}], count, dev, ...}.
@@ -424,11 +429,12 @@ class ApiClient {
     String? postUrl,
     String? text,
     int count = 3,
-  }) => _postJson('/api/v1/analysis/variations', {
-    if (postUrl != null) 'post_url': postUrl,
-    if (text != null) 'text': text,
-    'count': count,
-  });
+  }) =>
+      _postJson('/api/v1/analysis/variations', {
+        if (postUrl != null) 'post_url': postUrl,
+        if (text != null) 'text': text,
+        'count': count,
+      });
 
   // ------------------------------ creator studio (Phase 3) ------------------------------
   /// Content ideas for a topic.
@@ -436,44 +442,48 @@ class ApiClient {
     String topic, {
     int count = 5,
     String? language,
-  }) => _postJson('/api/v1/create/ideas', {
-    'topic': topic,
-    'count': count,
-    if (language != null) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/create/ideas', {
+        'topic': topic,
+        'count': count,
+        if (language != null) 'language': language,
+      });
 
   /// Script with hook/body/cta sections.
   Future<Map<String, dynamic>> createScript(
     String topic, {
     String format = 'video',
     String? language,
-  }) => _postJson('/api/v1/create/scripts', {
-    'topic': topic,
-    'format': format,
-    if (language != null) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/create/scripts', {
+        'topic': topic,
+        'format': format,
+        if (language != null) 'language': language,
+      });
 
   /// Captions with hashtags and tones.
   Future<Map<String, dynamic>> createCaptions(
     String topic, {
     String? platform,
     String? language,
-  }) => _postJson('/api/v1/create/captions', {
-    'topic': topic,
-    if (platform != null) 'platform': platform,
-    if (language != null) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/create/captions', {
+        'topic': topic,
+        if (platform != null) 'platform': platform,
+        if (language != null) 'language': language,
+      });
 
   /// Opening hooks for a topic.
   Future<Map<String, dynamic>> createHooks(
     String topic, {
     int count = 5,
     String? language,
-  }) => _postJson('/api/v1/create/hooks', {
-    'topic': topic,
-    'count': count,
-    if (language != null) 'language': language,
-  });
+  }) =>
+      _postJson('/api/v1/create/hooks', {
+        'topic': topic,
+        'count': count,
+        if (language != null) 'language': language,
+      });
 
   // ------------------------------ billing ------------------------------
   Future<Map<String, dynamic>> credits() => _getJson('/api/v1/billing/credits');
@@ -557,8 +567,9 @@ class ApiClient {
       body: jsonEncode(body),
     );
     if (res.statusCode == 401) throw const AuthException();
-    if (res.statusCode != 200 && res.statusCode != 201)
+    if (res.statusCode != 200 && res.statusCode != 201) {
       throw ApiException(res.statusCode, res.body);
+    }
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
@@ -590,31 +601,34 @@ class ApiClient {
     String? preferredLanguage,
     List<String>? contentLanguages,
     bool? allRelevantLanguages,
-  }) => _patchJson('/api/v1/users/me', {
-    if (preferredLanguage != null) 'preferred_language': preferredLanguage,
-    if (contentLanguages != null) 'content_languages': contentLanguages,
-    if (allRelevantLanguages != null)
-      'all_relevant_languages': allRelevantLanguages,
-  });
+  }) =>
+      _patchJson('/api/v1/users/me', {
+        if (preferredLanguage != null) 'preferred_language': preferredLanguage,
+        if (contentLanguages != null) 'content_languages': contentLanguages,
+        if (allRelevantLanguages != null)
+          'all_relevant_languages': allRelevantLanguages,
+      });
 
   /// POST /api/v1/languages/expand — AI-suggested extra language audiences.
   Future<Map<String, dynamic>> expandLanguages(
     List<String> languages,
     List<String> concepts,
-  ) => _postJson('/api/v1/languages/expand', {
-    'languages': languages,
-    'concepts': concepts,
-  });
+  ) =>
+      _postJson('/api/v1/languages/expand', {
+        'languages': languages,
+        'concepts': concepts,
+      });
 
   /// PATCH /api/v1/ads/campaigns/{id} — language targeting mode.
   Future<Map<String, dynamic>> updateCampaignLanguageTargeting(
     String campaignId, {
     required String mode,
     List<String>? targetLanguages,
-  }) => _patchJson('/api/v1/ads/campaigns/$campaignId', {
-    'language_targeting_mode': mode,
-    if (targetLanguages != null) 'target_languages': targetLanguages,
-  });
+  }) =>
+      _patchJson('/api/v1/ads/campaigns/$campaignId', {
+        'language_targeting_mode': mode,
+        if (targetLanguages != null) 'target_languages': targetLanguages,
+      });
 
   /// POST /api/v1/analysis/analyze — deep post/link analysis.
   Future<PostAnalysisResult> analyzePost(
@@ -1073,8 +1087,7 @@ class ApiClient {
     if (sort != null && sort.isNotEmpty) q['sort'] = sort;
     final query = q.entries
         .map(
-          (e) =>
-              '${Uri.encodeComponent(e.key)}='
+          (e) => '${Uri.encodeComponent(e.key)}='
               '${Uri.encodeComponent(e.value)}',
         )
         .join('&');
@@ -1102,15 +1115,25 @@ class ApiClient {
   Future<Map<String, dynamic>> recordLead(
     String productId, {
     String source = 'shop',
-  }) => _postJson('/api/v1/commerce/products/$productId/lead', {
-    'source': source,
-  });
+  }) =>
+      _postJson('/api/v1/commerce/products/$productId/lead', {
+        'source': source,
+      });
 
   /// GET /api/v1/commerce/my/products — the signed-in creator's listings.
   Future<List<dynamic>> myProducts() async {
     final data = await _getDynamic('/api/v1/commerce/my/products');
     return (data as List).toList();
   }
+
+  /// GET /api/v1/commerce/my/leads — genuine leads on my own products.
+  Future<Map<String, dynamic>> myLeads() =>
+      _getJson('/api/v1/commerce/my/leads');
+
+  /// GET /api/v1/billing/transactions — my own payment transactions
+  /// (purchases of plans/credits). Labeled as payments, never as sales.
+  Future<Map<String, dynamic>> myTransactions() =>
+      _getJson('/api/v1/billing/transactions');
 
   /// POST /api/v1/commerce/products/{id}/sync — re-sync affiliate
   /// price/stock. Returns status:"not_configured" until provider API

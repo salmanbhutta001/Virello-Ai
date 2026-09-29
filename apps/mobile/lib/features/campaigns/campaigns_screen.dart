@@ -8,10 +8,20 @@ import '../../main.dart';
 import '../../features/ads/campaign_builder_screen.dart';
 import '../../features/ads/ad_campaigns_screen.dart';
 import '../../features/audience/audience_intelligence_screen.dart';
+import '../../features/audience/multilingual_audience_screen.dart';
 import '../../features/growth_engine/growth_engine_screen.dart';
+import '../../features/grow/product_panel_screen.dart';
+import '../../features/grow/optimization_recommendations_screen.dart';
+import '../../features/grow/sales_screen.dart';
+import '../../features/grow/ai_content_report_screen.dart';
+import '../../features/shop/shipment_dashboard_screen.dart';
 
-/// Campaigns: board-styled tabbed list with real metric totals + spend pacing.
-/// Metrics are only shown when the backend reports them — never faked.
+/// 37 · Campaigns — board-faithful filter screen.
+///
+/// AppBar "Campaigns" + back, filter chips that actually filter the real
+/// campaign list, and board-style rows (icon + name + status). Metrics and
+/// spend pacing are shown only when the backend reports them — never faked.
+/// The overflow menu wires the rest of the Grow tab flow.
 class CampaignsScreen extends StatefulWidget {
   const CampaignsScreen({super.key});
   @override
@@ -35,6 +45,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       return await apiClient.listCampaigns();
     } on AuthException {
       if (mounted) handleAuthFailure(s.sessionExpired);
+      return [];
+    } catch (_) {
       return [];
     }
   }
@@ -78,9 +90,9 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       };
 
   Color _statusColor(CampaignStatus st) => switch (st) {
-        CampaignStatus.live => VirelloColors.success,
+        CampaignStatus.live => const Color(0xFF22C55E),
         CampaignStatus.optimizing => const Color(0xFF60A5FA),
-        CampaignStatus.paused => VirelloColors.amber,
+        CampaignStatus.paused => const Color(0xFFF59E0B),
         CampaignStatus.completed => VirelloColors.boardTextSec,
         _ => VirelloColors.pink,
       };
@@ -103,15 +115,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.grow),
+        leading: const BackButton(),
+        title: Text(s.campaigns,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
-          IconButton(
-            tooltip: s.freeServices,
-            icon: const Icon(Icons.campaign_outlined),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => const AdCampaignsScreen(),
-            )),
-          ),
           IconButton(
             tooltip: s.adBuilder,
             icon: const Icon(Icons.addchart_outlined),
@@ -126,6 +133,23 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               builder: (_) => const AudienceIntelligenceScreen(),
             )),
           ),
+          PopupMenuButton<String>(
+            tooltip: s.p10MoreGrowTools,
+            icon: const Icon(Icons.more_vert),
+            color: VirelloColors.boardSurface,
+            onSelected: _openTool,
+            itemBuilder: (_) => [
+              _menuItem('agent', Icons.psychology_outlined, s.p10ProductPanel),
+              _menuItem('recs', Icons.auto_fix_high_outlined,
+                  s.p10OptRecommendations),
+              _menuItem('sales', Icons.payments_outlined, s.p10Sales),
+              _menuItem('report', Icons.insights_outlined, s.p10AiReport),
+              _menuItem('ship', Icons.local_shipping_outlined,
+                  s.p10ShipmentDashboard),
+              _menuItem('langs', Icons.translate_outlined, s.p10Multilingual),
+              _menuItem('ads', Icons.campaign_outlined, s.freeServices),
+            ],
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -136,22 +160,15 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           builder: (c, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
               return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  const VShimmerBox(height: 34, radius: 20),
-                  const SizedBox(height: 12),
-                  const Row(children: [
-                    VShimmerBox(height: 74),
-                    SizedBox(width: 10),
-                    VShimmerBox(height: 74),
-                    SizedBox(width: 10),
-                    VShimmerBox(height: 74),
-                  ]),
-                  const SizedBox(height: 16),
-                  for (var i = 0; i < 3; i++) ...[
-                    const VShimmerBox(height: 148, radius: 20),
-                    const SizedBox(height: 12),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: const [
+                  VShimmerBox(height: 38, radius: 20),
+                  SizedBox(height: 12),
+                  VShimmerBox(height: 66, radius: 16),
+                  SizedBox(height: 10),
+                  VShimmerBox(height: 66, radius: 16),
+                  SizedBox(height: 10),
+                  VShimmerBox(height: 66, radius: 16),
                 ],
               );
             }
@@ -165,40 +182,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               ]);
             }
             final all = snap.data ?? [];
-            if (all.isEmpty) {
-              return ListView(children: [
-                Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(children: [
-                    Container(
-                      width: 84,
-                      height: 84,
-                      decoration: BoxDecoration(
-                        gradient: VirelloColors.brandGradient,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(Icons.rocket_launch_outlined,
-                          color: Colors.white, size: 40),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(s.noCampaigns,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 16)),
-                    const SizedBox(height: 6),
-                    Text(s.noCampaignsHint,
-                        style: const TextStyle(
-                            color: VirelloColors.muted, fontSize: 13),
-                        textAlign: TextAlign.center),
-                  ]),
-                ),
-              ]);
-            }
+            if (all.isEmpty) return _emptyList();
             final items = _bucket(all, _tab);
-            final totalReach = all.fold<double>(0, (a, x) => a + x.reach);
-            final totalClicks = all.fold<double>(0, (a, x) => a + x.clicks);
-            final totalSales = all.fold<double>(0, (a, x) => a + x.conversions);
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
                 VPillTabs(
                   tabs: [
@@ -209,26 +196,19 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   selected: _tab,
                   onTap: (i) => setState(() => _tab = i),
                 ),
-                const SizedBox(height: 12),
-                Row(children: [
-                  VStatTile(label: s.totalReach, value: _fmt(totalReach)),
-                  const SizedBox(width: 10),
-                  VStatTile(label: s.adClicks, value: _fmt(totalClicks)),
-                  const SizedBox(width: 10),
-                  VStatTile(label: s.totalSales, value: _fmt(totalSales)),
-                ]),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 if (items.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
                     child: Text(s.nothingHere,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: VirelloColors.muted)),
+                        style:
+                            const TextStyle(color: VirelloColors.boardTextSec)),
                   )
                 else
                   for (final cp in items) ...[
-                    _card(cp),
-                    const SizedBox(height: 12),
+                    _row(cp),
+                    const SizedBox(height: 10),
                   ],
               ],
             );
@@ -238,107 +218,236 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     );
   }
 
-  Widget _card(Campaign cp) => VCard(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: VirelloColors.brandGradient,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(_goalIcon(cp.goal), color: Colors.white, size: 28),
+  PopupMenuItem<String> _menuItem(String value, IconData icon, String label) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: VirelloColors.pink),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(color: Colors.white)),
+        ],
+      ),
+    );
+  }
+
+  void _openTool(String key) {
+    final dest = switch (key) {
+      'agent' => const ProductPanelScreen(),
+      'recs' => const OptimizationRecommendationsScreen(),
+      'sales' => const SalesScreen(),
+      'report' => const AiContentReportScreen(),
+      'ship' => const ShipmentDashboardScreen(),
+      'langs' => const MultilingualAudienceScreen(),
+      'ads' => const AdCampaignsScreen(),
+      _ => null,
+    };
+    if (dest != null) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => dest));
+    }
+  }
+
+  Widget _emptyList() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
+      children: [
+        Column(children: [
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              gradient: VirelloColors.brandGradient,
+              borderRadius: BorderRadius.circular(24),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(cp.title.isEmpty ? cp.postUrl : cp.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 15)),
-                    const SizedBox(height: 6),
-                    Row(children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                            color: _statusColor(cp.status),
-                            shape: BoxShape.circle),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(_statusLabel(cp.status),
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: _statusColor(cp.status))),
-                    ]),
-                  ]),
+            child: const Icon(Icons.rocket_launch_outlined,
+                color: Colors.white, size: 40),
+          ),
+          const SizedBox(height: 16),
+          Text(s.noCampaigns,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: Colors.white)),
+          const SizedBox(height: 6),
+          Text(s.noCampaignsHint,
+              style: const TextStyle(
+                  color: VirelloColors.boardTextSec, fontSize: 13),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 18),
+          VPinkButton(
+            label: s.adBuilder,
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const CampaignBuilderScreen(),
+            )),
+          ),
+        ]),
+      ],
+    );
+  }
+
+  /// Board-style row: goal icon + campaign name + status. Tapping opens the
+  /// action sheet (growth engine, share, pause) — metrics only when real.
+  Widget _row(Campaign cp) {
+    final color = _statusColor(cp.status);
+    return VBoardCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: () => _showActions(cp),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: VirelloColors.pink.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
             ),
-          ]),
-          const SizedBox(height: 12),
-          if (cp.hasMetrics)
-            Row(children: [
-              Expanded(child: _miniStat(s.totalReach, _fmt(cp.reach))),
-              Expanded(
-                  child: _miniStat(s.adEngagement,
-                      '${cp.engagementRate.toStringAsFixed(1)}%')),
-              Expanded(child: _miniStat(s.totalSales, _fmt(cp.conversions))),
-            ])
-          else
-            Text(s.metricsSoon,
-                style:
-                    const TextStyle(fontSize: 12, color: VirelloColors.muted)),
-          if (cp.budgetUsd > 0) ...[
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: (cp.spendUsd / cp.budgetUsd).clamp(0.0, 1.0),
-                minHeight: 6,
-                backgroundColor: VTheme.chip(context),
-                valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-                'Spend \$${cp.spendUsd.toStringAsFixed(2)} of \$${cp.budgetUsd.toStringAsFixed(0)} budget',
-                style:
-                    const TextStyle(fontSize: 11, color: VirelloColors.muted)),
-          ],
-          if (cp.status == CampaignStatus.live ||
-              cp.status == CampaignStatus.optimizing) ...[
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child:
+                Icon(_goalIcon(cp.goal), color: VirelloColors.pink, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextButton.icon(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                Text(cp.title.isEmpty ? cp.postUrl : cp.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: Colors.white)),
+                const SizedBox(height: 4),
+                Row(children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration:
+                        BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(_statusLabel(cp.status),
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
+                  if (cp.hasMetrics) ...[
+                    const SizedBox(width: 10),
+                    Text(
+                        '${s.p10Reach} ${_fmt(cp.reach)} · ${cp.engagementRate.toStringAsFixed(1)}%',
+                        style: const TextStyle(
+                            fontSize: 11, color: VirelloColors.boardTextSec)),
+                  ],
+                ]),
+                if (cp.budgetUsd > 0) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: (cp.spendUsd / cp.budgetUsd).clamp(0.0, 1.0),
+                      minHeight: 5,
+                      backgroundColor: VirelloColors.boardField,
+                      valueColor:
+                          const AlwaysStoppedAnimation(VirelloColors.pink),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
+        ],
+      ),
+    );
+  }
+
+  void _showActions(Campaign cp) {
+    final live = cp.status == CampaignStatus.live ||
+        cp.status == CampaignStatus.optimizing;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: VirelloColors.boardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(cp.title.isEmpty ? cp.postUrl : cp.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
+              const SizedBox(height: 4),
+              Text(_statusLabel(cp.status),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _statusColor(cp.status))),
+              const SizedBox(height: 14),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.psychology_outlined,
+                    color: VirelloColors.pink),
+                title: Text(s.growthEngine,
+                    style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => GrowthEngineScreen(
                           campaignId: cp.id,
                           campaignTitle:
-                              cp.title.isEmpty ? cp.postUrl : cp.title))),
-                  icon: const Icon(Icons.psychology_outlined, size: 18),
-                  label: Text(s.growthEngine),
+                              cp.title.isEmpty ? cp.postUrl : cp.title)));
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.auto_fix_high_outlined,
+                    color: VirelloColors.pink),
+                title: Text(s.p10OptRecommendations,
+                    style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) =>
+                          const OptimizationRecommendationsScreen()));
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(Icons.share_outlined, color: VirelloColors.pink),
+                title:
+                    const Text('Share', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _shareCampaign(cp);
+                },
+              ),
+              if (live)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.pause_outlined,
+                      color: VirelloColors.pink),
+                  title: Text(s.pause,
+                      style: const TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _pause(cp);
+                  },
                 ),
-                TextButton.icon(
-                  onPressed: () => _pause(cp),
-                  icon: const Icon(Icons.pause_outlined, size: 18),
-                  label: Text(s.pause),
-                ),
-                TextButton.icon(
-                  onPressed: () => _shareCampaign(cp),
-                  icon: const Icon(Icons.share_outlined, size: 18),
-                  label: const Text('Share'),
-                ),
-              ],
-            ),
-          ],
-        ]),
-      );
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   /// Show the trackable share link with copy + share options.
   Future<void> _shareCampaign(Campaign cp) async {
@@ -348,6 +457,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       if (!mounted || shareUrl.isEmpty) return;
       showModalBottomSheet(
         context: context,
+        backgroundColor: VirelloColors.boardSurface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -358,32 +468,36 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Share Campaign',
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
               const SizedBox(height: 8),
               const Text(
                 'Share this trackable link. Every real person who opens it is counted as a genuine click.',
-                style: TextStyle(fontSize: 13, color: VirelloColors.muted),
+                style:
+                    TextStyle(fontSize: 13, color: VirelloColors.boardTextSec),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: VTheme.chip(context),
+                  color: VirelloColors.boardField,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(shareUrl,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(
+                              fontSize: 13, color: Colors.white),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.copy, size: 20),
+                      icon: const Icon(Icons.copy,
+                          size: 20, color: VirelloColors.pink),
                       onPressed: () {
-                        // Copy to clipboard
                         Navigator.of(ctx).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -398,6 +512,9 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: VirelloColors.pink,
+                      foregroundColor: Colors.white),
                   onPressed: () => _loadShareStats(cp.id, ctx),
                   icon: const Icon(Icons.analytics_outlined, size: 18),
                   label: const Text('View Real Stats'),
@@ -419,12 +536,15 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
   Future<void> _loadShareStats(String campaignId, BuildContext ctx) async {
     try {
       final stats = await apiClient.getCampaignStats(campaignId);
-      if (!mounted) return;
+      if (!ctx.mounted) return;
       Navigator.of(ctx).pop();
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (dctx) => AlertDialog(
-          title: const Text('Real Campaign Stats'),
+          backgroundColor: VirelloColors.boardSurface,
+          title: const Text('Real Campaign Stats',
+              style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,14 +555,16 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Only genuine visits are counted. Zero means no one has opened your link yet — share it!',
-                style: TextStyle(fontSize: 12, color: VirelloColors.muted),
+                style:
+                    TextStyle(fontSize: 12, color: VirelloColors.boardTextSec),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dctx).pop(),
-              child: const Text('Close'),
+              child: const Text('Close',
+                  style: TextStyle(color: VirelloColors.pink)),
             ),
           ],
         ),
@@ -455,22 +577,17 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 14)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 14, color: VirelloColors.boardTextSec)),
             Text(value,
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w800)),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white)),
           ],
         ),
       );
-
-  Widget _miniStat(String label, String value) => Column(children: [
-        Text(value,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-        const SizedBox(height: 2),
-        Text(label,
-            style: const TextStyle(fontSize: 10, color: VirelloColors.muted),
-            textAlign: TextAlign.center),
-      ]);
 
   String _fmt(double n) =>
       n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}K' : n.toStringAsFixed(0);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
@@ -24,6 +25,7 @@ class _AskMsg {
   final bool dev;
   final bool comingSoon;
   final List<Map<String, dynamic>> actions;
+  final List<Map<String, dynamic>> products;
   _AskMsg({
     required this.fromUser,
     required this.text,
@@ -31,6 +33,7 @@ class _AskMsg {
     this.dev = false,
     this.comingSoon = false,
     this.actions = const [],
+    this.products = const [],
   });
 }
 
@@ -41,6 +44,8 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
   String? _conversationId;
   bool _sending = false;
   bool _loadingHistory = false;
+  int _tab = 0; // 0 = Chat, 1 = History (board pill tabs)
+  List<dynamic> _historyItems = [];
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -89,6 +94,10 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
+      final products = (res['products'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
       setState(() {
         _conversationId = res['conversation_id'] as String? ?? _conversationId;
         _messages.add(_AskMsg(
@@ -98,6 +107,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
           dev: dev,
           comingSoon: comingSoon,
           actions: actions,
+          products: products,
         ));
         _sending = false;
       });
@@ -124,17 +134,15 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
     });
   }
 
-  Future<void> _showHistory() async {
+  Future<void> _loadHistory() async {
     setState(() => _loadingHistory = true);
     try {
       final list = await apiClient.getAiConversations();
       if (!mounted) return;
-      setState(() => _loadingHistory = false);
-      final picked = await showModalBottomSheet<String>(
-        context: context,
-        builder: (_) => _HistorySheet(items: list),
-      );
-      if (picked != null && mounted) _openConversation(picked);
+      setState(() {
+        _historyItems = list;
+        _loadingHistory = false;
+      });
     } on AuthException {
       if (!mounted) return;
       setState(() => _loadingHistory = false);
@@ -154,6 +162,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
           .toList();
       setState(() {
         _conversationId = id;
+        _tab = 0; // back to the Chat tab
         _messages
           ..clear()
           ..addAll(msgs.map((m) => _AskMsg(
@@ -203,37 +212,10 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                gradient: VirelloColors.brandGradient,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child:
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 8),
-            Text(s.askVirello),
-          ],
-        ),
+        leading: const BackButton(),
+        title: Text(s.p10GrowthAI,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
-          if (_loadingHistory)
-            const Padding(
-              padding: EdgeInsets.all(14),
-              child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2)),
-            )
-          else
-            IconButton(
-              tooltip: s.newChat,
-              icon: const Icon(Icons.history_outlined),
-              onPressed: _showHistory,
-            ),
           IconButton(
             tooltip: s.newChat,
             icon: const Icon(Icons.add_comment_outlined),
@@ -243,47 +225,129 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollCtrl,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_sending ? 1 : 0),
-              itemBuilder: (_, i) {
-                if (i == _messages.length) return _typingBubble();
-                return _bubble(_messages[i]);
-              },
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _inputCtrl,
-                      decoration: InputDecoration(
-                        hintText: s.askVirelloHint,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(22)),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                      ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: _send,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _sending ? null : () => _send(_inputCtrl.text),
-                    icon: const Icon(Icons.send_outlined),
-                  ),
-                ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: VPillTabs(
+                tabs: [s.p10Chat, s.p10History],
+                selected: _tab,
+                onTap: (i) {
+                  setState(() => _tab = i);
+                  if (i == 1) _loadHistory();
+                },
               ),
             ),
           ),
+          Expanded(
+            child: _tab == 0 ? _chatBody() : _historyBody(),
+          ),
+          if (_tab == 0) _inputRow(),
         ],
+      ),
+    );
+  }
+
+  Widget _chatBody() {
+    return ListView.builder(
+      controller: _scrollCtrl,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      itemCount: _messages.length + (_sending ? 1 : 0),
+      itemBuilder: (_, i) {
+        if (i == _messages.length) return _typingBubble();
+        return _bubble(_messages[i]);
+      },
+    );
+  }
+
+  Widget _historyBody() {
+    if (_loadingHistory) {
+      return const Center(
+          child: CircularProgressIndicator(color: VirelloColors.pink));
+    }
+    if (_historyItems.isEmpty) {
+      return Center(
+        child: Text(s.nothingHere,
+            style: const TextStyle(color: VirelloColors.boardTextSec)),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      itemCount: _historyItems.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, i) {
+        final it = Map<String, dynamic>.from(_historyItems[i] as Map);
+        return VBoardCard(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          onTap: () => _openConversation('${it['id'] ?? ''}'),
+          child: Row(
+            children: [
+              const Icon(Icons.chat_bubble_outline,
+                  color: VirelloColors.pink, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${it['title'] ?? 'Chat'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, color: Colors.white)),
+                    Text('${it['updated_at'] ?? ''}',
+                        style: const TextStyle(
+                            fontSize: 11, color: VirelloColors.boardTextSec)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right,
+                  color: VirelloColors.boardTextSec),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _inputRow() {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _inputCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: s.askVirelloHint,
+                  hintStyle: const TextStyle(color: VirelloColors.boardTextSec),
+                  filled: true,
+                  fillColor: VirelloColors.boardField,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide:
+                          const BorderSide(color: VirelloColors.boardBorder)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide:
+                          const BorderSide(color: VirelloColors.boardBorder)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                textInputAction: TextInputAction.send,
+                onSubmitted: _send,
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              style: IconButton.styleFrom(backgroundColor: VirelloColors.pink),
+              onPressed: _sending ? null : () => _send(_inputCtrl.text),
+              icon: const Icon(Icons.send_outlined),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -374,8 +438,79 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                       .toList(),
                 ),
               ),
+            if (m.products.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  children: m.products.map((p) => _productCard(p)).toList(),
+                ),
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Product card inside a chat bubble — rendered only when the AI
+  /// response actually carries product data. Never synthesized.
+  Widget _productCard(Map<String, dynamic> p) {
+    final img = '${p['image_url'] ?? ''}';
+    final price = '${p['price_display'] ?? ''}';
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: VirelloColors.boardField,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: VirelloColors.boardBorder),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: img.isNotEmpty
+                ? Image.network(img,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                        width: 52,
+                        height: 52,
+                        color: VirelloColors.boardSurface,
+                        child: const Icon(Icons.shopping_bag_outlined,
+                            color: VirelloColors.boardTextSec)))
+                : Container(
+                    width: 52,
+                    height: 52,
+                    color: VirelloColors.boardSurface,
+                    child: const Icon(Icons.shopping_bag_outlined,
+                        color: VirelloColors.boardTextSec)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${p['title'] ?? ''}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+                if (price.isNotEmpty && price != 'null')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(price,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: VirelloColors.pink)),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -390,53 +525,4 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
               child: CircularProgressIndicator(strokeWidth: 2)),
         ),
       );
-}
-
-class _HistorySheet extends StatelessWidget {
-  final List<dynamic> items;
-  const _HistorySheet({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: VirelloColors.divider,
-                  borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 12),
-          Flexible(
-            child: items.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('—'),
-                  )
-                : ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (_, i) {
-                      final it = Map<String, dynamic>.from(items[i] as Map);
-                      return ListTile(
-                        leading: const Icon(Icons.chat_bubble_outline),
-                        title: Text('${it['title'] ?? 'Chat'}',
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text('${it['updated_at'] ?? ''}',
-                            style: const TextStyle(color: VirelloColors.muted)),
-                        onTap: () =>
-                            Navigator.of(context).pop('${it['id'] ?? ''}'),
-                      );
-                    },
-                  ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
 }

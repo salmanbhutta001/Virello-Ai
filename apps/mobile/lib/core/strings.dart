@@ -2379,4 +2379,206 @@ class AppStrings {
   String get boardClearFilter => _get('Clear', 'صاف کریں', 'مسح');
   String get boardTopicsAll =>
       _get('All Topics', 'تمام موضوعات', 'كل المواضيع');
+
+  // ---- Board fidelity phase 10: grow screens (52-84) ----
+  String get p10LiveCampaign =>
+      _get('Live Campaign', 'لائیو مہم', 'حملة مباشرة');
+  String get p10Analyzing =>
+      _get('Analyzing...', 'تجزیہ ہو رہا ہے...', 'جارٍ التحليل...');
+  String get p10FetchingContent =>
+      _get('Fetching content', 'مواد حاصل کیا جا رہا ہے', 'جارٍ جلب المحتوى');
+  String get p10AnalyzingTopicAudience => _get('Analyzing topic & audience',
+      'موضوع اور سامعین کا تجزیہ', 'تحليل الموضوع والجمهور');
+  String get p10GeneratingInsights =>
+      _get('Generating insights', 'بصیرتیں بنائی جا رہی ہیں', 'توليد الرؤى');
+  String get p10PreparingRecommendations => _get(
+      'Preparing recommendations', 'سفارشات تیار ہو رہی ہیں', 'تجهيز التوصيات');
+  String get p10ViewDetails =>
+      _get('View Details', 'تفصیلات دیکھیں', 'عرض التفاصيل');
+  String get p10AiGrowthAgent =>
+      _get('AI Growth Agent', 'AI گروتھ ایجنٹ', 'وكيل النمو بالذكاء الاصطناعي');
+  String get p10Optimizing =>
+      _get('Optimizing', 'بہتر بنایا جا رہا ہے', 'جارٍ التحسين');
+  String get p10AnalyzingPerformance =>
+      _get('Analyzing performance', 'کارکردگی کا تجزیہ', 'تحليل الأداء');
+  String get p10AdjustingBalance =>
+      _get('Adjusting balance', 'توازن درست کیا جا رہا ہے', 'ضبط التوازن');
+  String get p10OptimizingBudget =>
+      _get('Optimizing budget', 'بجٹ بہتر بنایا جا رہا ہے', 'تحسين الميزانية');
+  String get p10Online => _get('Online', 'آن لائن', 'متصل');
+  String get p10GoLive => _get('Go Live', 'لائیو کریں', 'انشر');
+  String get p10ContentScore =>
+      _get('Content Score', 'مواد اسکور', 'نتيجة المحتوى');
+  String get p10Video => _get('Video', 'ویڈیو', 'فيديو');
+  String get p10Story => _get('Story', 'اسٹوری', 'قصة');
+  String get p10Carousel => _get('Carousel', 'کیروسل', 'دوّار');
+  String get p10Recommendations =>
+      _get('Recommendations', 'سفارشات', 'التوصيات');
+  String get p10Creators => _get('Creators', 'کریئیٹرز', 'المبدعون');
+  String get p10ApplyAll => _get('Apply All', 'سب لاگو کریں', 'تطبيق الكل');
+  String get p10ApplyAllWhy => _get(
+      'Recommendations are applied automatically when the AI optimization agent runs. Use "Go Live" on the AI Growth Agent panel to run it.',
+      'AI آپٹیمائزیشن ایجنٹ چلنے پر سفارشات خودکار طور پر لاگو ہوتی ہیں۔ اسے چلانے کے لیے AI گروتھ ایجنٹ پینل پر "Go Live" دبائیں۔',
+      'تُطبَّق التوصيات تلقائيًا عند تشغيل وكيل التحسين. اضغط "انشر" في لوحة وكيل النمو لتشغيله.');
+  String p10RecsHeadline(int n) => _get('$n AI recommendations ready',
+      '$n AI سفارشات تیار ہیں', '$n توصية جاهزة من الذكاء الاصطناعي');
+  String get p10GreatStart =>
+      _get('Great progress', 'زبردست پیش رفت', 'تقدم رائع');
+  String get p10AudienceSegments =>
+      _get('Audience Segments', 'سامعین کے طبقات', 'شرائح الجمهور');
+  String get p10ViewAllSegments =>
+      _get('View all segments', 'تمام طبقات دیکھیں', 'عرض كل الشرائح');
+  String get p10NoSegments => _get('No audience segments yet',
+      'ابھی کوئی سامعین طبقات نہیں', 'لا توجد شرائح جمهور بعد');
+  String get p10NoSegmentsHint => _get(
+      'Audience segments are created from real discovery signals. Run an analysis to start building yours.',
+      'سامعین کے طبقات حقیقی دریافت سگنلز سے بنتے ہیں۔ شروع کرنے کے لیے تجزیہ چلائیں۔',
+      'تُنشأ شرائح الجمهور من إشارات اكتشاف حقيقية. شغّل تحليلًا للبدء.');
+  String get p10Languages => _get('Languages', 'زبانیں', 'اللغات');
+  String get p10Details => _get('Details', 'تفصیلات', 'التفاصيل');
+  String get p10LangStatsNote => _get(
+      'Audience share per language is not tracked — we never invent percentages. These are the real languages Virello supports.',
+      'فی زبان سامعین کا حصہ ٹریک نہیں ہوتا — ہم کبھی فیصد نہیں گھڑتے۔ یہ وہ حقیقی زبانیں ہیں جنہیں Virello سپورٹ کرتا ہے۔',
+      'لا نتتبع حصة الجمهور لكل لغة — ولا نخترع النسب أبدًا. هذه هي اللغات الحقيقية التي يدعمها Virello.');
+  String get p10ReviewCampaign =>
+      _get('Review Campaign', 'مہم کا جائزہ', 'مراجعة الحملة');
+  String get p10SelectProducts =>
+      _get('Select products...', 'پراڈکٹس منتخب کریں...', 'اختر المنتجات...');
+  String get p10AdSetName =>
+      _get('Ad set name', 'ایڈ سیٹ کا نام', 'اسم المجموعة الإعلانية');
+  String get p10CampaignName =>
+      _get('Campaign name', 'مہم کا نام', 'اسم الحملة');
+  String get p10NoCampaignToReview => _get(
+      'No campaign to review yet. Build a campaign first — it will appear here for your approval.',
+      'جائزے کے لیے ابھی کوئی مہم نہیں۔ پہلے مہم بنائیں — وہ منظوری کے لیے یہاں نظر آئے گی۔',
+      'لا توجد حملة للمراجعة بعد. أنشئ حملة أولًا — ستظهر هنا لاعتمادها.');
+  String get p10SubmitApproval =>
+      _get('Submit for approval', 'منظوری کے لیے بھیجیں', 'إرسال للاعتماد');
+  String get p10ApprovalNote => _get(
+      'Nothing goes live without your approval. Paid boost also needs a verified payment method.',
+      'آپ کی منظوری کے بغیر کچھ لائیو نہیں ہوگا۔ پیڈ بوسٹ کے لیے تصدیق شدہ ادائیگی بھی ضروری ہے۔',
+      'لا يُنشر شيء دون اعتمادك. يحتاج التعزيز المدفوع أيضًا إلى وسيلة دفع موثّقة.');
+  String get p10CampaignSubmitted => _get('Campaign submitted for approval',
+      'مہم منظوری کے لیے بھیج دی گئی', 'أُرسلت الحملة للاعتماد');
+  String get p10Services => _get('Services', 'سروسز', 'الخدمات');
+  String get p10Orders => _get('Orders', 'آرڈرز', 'الطلبات');
+  String get p10TotalRevenue =>
+      _get('Total revenue', 'کل آمدنی', 'إجمالي الإيرادات');
+  String get p10NoSalesYet =>
+      _get('No sales yet', 'ابھی کوئی فروخت نہیں', 'لا توجد مبيعات بعد');
+  String get p10NoSalesHint => _get(
+      'When customers buy your products, real revenue appears here. We never invent sales figures.',
+      'جب گاہک آپ کی پراڈکٹس خریدیں گے تو حقیقی آمدنی یہاں نظر آئے گی۔ ہم کبھی فروخت کے اعداد نہیں گھڑتے۔',
+      'عندما يشتري العملاء منتجاتك، تظهر الإيرادات الحقيقية هنا. لا نخترع أرقام المبيعات أبدًا.');
+  String get p10Leads => _get('Leads', 'لیڈز', 'العملاء المحتملون');
+  String get p10Payments => _get('Payments', 'ادائیگیاں', 'المدفوعات');
+  String get p10NoShipments => _get('No shipments tracked yet',
+      'ابھی کوئی شپمنٹ ٹریک نہیں', 'لا توجد شحنات مُتتبَّعة بعد');
+  String get p10NoShipmentsHint => _get(
+      'Shipment tracking is not connected. Your real products are listed under Products.',
+      'شپمنٹ ٹریکنگ منسلک نہیں۔ آپ کی حقیقی پراڈکٹس Products میں درج ہیں۔',
+      'تتبع الشحنات غير متصل. منتجاتك الحقيقية مدرجة تحت المنتجات.');
+  String get p10Shipments => _get('Shipments', 'شپمنٹس', 'الشحنات');
+  String get p10CheckPriceAmazon => _get('Check price on Amazon',
+      'ایمیزون پر قیمت دیکھیں', 'تحقق من السعر على أمازون');
+  String get p10DayOverview =>
+      _get('Day Overview', 'دن کا جائزہ', 'نظرة اليوم');
+  String get p10AiContentReport => _get(
+      'AI Content Report', 'AI مواد رپورٹ', 'تقرير المحتوى بالذكاء الاصطناعي');
+  String get p10ReportEmpty => _get(
+      'No report data yet. Publish content and grow campaigns — your real numbers will appear here.',
+      'ابھی رپورٹ ڈیٹا نہیں۔ مواد شائع کریں اور مہمات بڑھائیں — آپ کے حقیقی اعداد یہاں نظر آئیں گے۔',
+      'لا توجد بيانات تقرير بعد. انشر المحتوى ونمِّ الحملات — ستظهر أرقامك الحقيقية هنا.');
+  String get p10GrowthAI =>
+      _get('GrowthAI', 'گروتھ AI', 'نمو الذكاء الاصطناعي');
+  String get p10Chat => _get('Chat', 'چیٹ', 'دردشة');
+  String get p10History => _get('History', 'ہسٹری', 'السجل');
+  String get p10CampaignSetup =>
+      _get('Campaign Setup', 'مہم سیٹ اپ', 'إعداد الحملة');
+  String get p10Budget => _get('Budget', 'بجٹ', 'الميزانية');
+  String get p10Duration => _get('Duration', 'مدت', 'المدة');
+  String get p10Audience => _get('Audience', 'سامعین', 'الجمهور');
+  String get p10Days => _get('days', 'دن', 'أيام');
+  String get p10FreeGrowPlan => _get('Free Grow', 'مفت گرو', 'نمو مجاني');
+  String get p10PaidBoostPlan => _get('Paid Boost', 'پیڈ بوسٹ', 'تعزيز مدفوع');
+  String get p10CreateCampaign =>
+      _get('Create Campaign', 'مہم بنائیں', 'أنشئ الحملة');
+  String get p10CampaignCreated => _get(
+      'Campaign created — review and approve it to go live.',
+      'مہم بن گئی — لائیو کرنے کے لیے جائزہ لیں اور منظور کریں۔',
+      'تم إنشاء الحملة — راجعها واعتمدها للنشر.');
+  String get p10DevHeuristicNote => _get(
+      'Dev preview: heuristic AI until a production provider is connected.',
+      'ڈیو پریویو: پروڈکشن فراہم کنندہ منسلک ہونے تک ہیورسٹک AI۔',
+      'معاينة تطويرية: ذكاء اصطناعي إرشادي حتى توصيل مزوّد الإنتاج.');
+  String get p10EstimatedReach =>
+      _get('Estimated reach', 'متوقع رسائی', 'الوصول المتوقع');
+  String get p10EstimateNote => _get('Estimate — not a guarantee.',
+      'تخمینہ — ضمانت نہیں۔', 'تقدير — ليس ضمانًا.');
+  String get p10Status => _get('Status', 'حیثیت', 'الحالة');
+  String get p10Approved => _get('Approved', 'منظور شدہ', 'معتمدة');
+  String get p10PendingApproval =>
+      _get('Pending approval', 'منظوری زیر التواء', 'بانتظار الاعتماد');
+  String get p10Draft => _get('Draft', 'مسودہ', 'مسودة');
+  String get p10Active => _get('Active', 'فعال', 'نشطة');
+  String get p10ApproveAndLaunch =>
+      _get('Approve & Launch', 'منظور کریں اور لانچ کریں', 'اعتمد وانشر');
+  String get p10PaidNeedsPayment => _get(
+      'Paid Boost needs a verified payment method first. Add one in Plan & Billing, then approve this campaign.',
+      'پیڈ بوسٹ کے لیے پہلے تصدیق شدہ ادائیگی کا طریقہ ضروری ہے۔ Plan & Billing میں شامل کریں، پھر اس مہم کو منظور کریں۔',
+      'يحتاج التعزيز المدفوع إلى وسيلة دفع موثّقة أولًا. أضف واحدة في الخطة والفوترة، ثم اعتمد هذه الحملة.');
+  String get p10ConfirmGoLive => _get(
+      'This will submit the campaign for approval. Nothing launches without your explicit approval.',
+      'اس سے مہم منظوری کے لیے بھیجی جائے گی۔ آپ کی واضح منظوری کے بغیر کچھ لانچ نہیں ہوگا۔',
+      'سيُرسل هذا الحملة للاعتماد. لا يُنشر شيء دون اعتمادك الصريح.');
+  String get p10Confirm => _get('Confirm', 'تصدیق کریں', 'تأكيد');
+  String get p10Cancel => _get('Cancel', 'منسوخ کریں', 'إلغاء');
+  String get p10Launched =>
+      _get('Campaign is live', 'مہم لائیو ہو گئی', 'الحملة منشورة الآن');
+  String get p10MoreGrowTools =>
+      _get('More Grow tools', 'مزید گرو ٹولز', 'المزيد من أدوات النمو');
+  String get p10ProductPanel =>
+      _get('AI Growth Agent', 'AI گروتھ ایجنٹ', 'وكيل النمو بالذكاء الاصطناعي');
+  String get p10OptRecommendations => _get(
+      'Optimization Recommendations', 'آپٹیمائزیشن سفارشات', 'توصيات التحسين');
+  String get p10Sales => _get('Sales', 'فروخت', 'المبيعات');
+  String get p10AiReport =>
+      _get('AI Content Report', 'AI مواد رپورٹ', 'تقرير المحتوى');
+  String get p10ShipmentDashboard =>
+      _get('Shipment Dashboard', 'شپمنٹ ڈیش بورڈ', 'لوحة الشحنات');
+  String get p10Multilingual => _get(
+      'Multilingual Audience', 'کثیر لسانی سامعین', 'الجمهور متعدد اللغات');
+  String get p10CampaignFilterNote =>
+      _get('Filter your campaigns', 'اپنی مہمات فلٹر کریں', 'صفِّ حملاتك');
+  String get p10Reach => _get('Reach', 'رسائی', 'الوصول');
+  String get p10Engagement => _get('Engagement', 'انگیجمنٹ', 'التفاعل');
+  String get p10Impressions => _get('Impressions', 'امپریشنز', 'مرات الظهور');
+  String get p10Clicks => _get('Clicks', 'کلکس', 'النقرات');
+  String get p10SelectCampaignFirst => _get(
+      'Select one of your campaigns first to run the AI Growth Agent.',
+      'AI گروتھ ایجنٹ چلانے کے لیے پہلے اپنی ایک مہم منتخب کریں۔',
+      'اختر إحدى حملاتك أولًا لتشغيل وكيل النمو.');
+  String get p10RunOptimization =>
+      _get('Run Optimization', 'آپٹیمائزیشن چلائیں', 'تشغيل التحسين');
+  String get p10OptimizationDone => _get(
+      'Optimization run complete — decisions are audited below.',
+      'آپٹیمائزیشن مکمل — فیصلے نیچے آڈٹ شدہ ہیں۔',
+      'اكتمل تشغيل التحسين — القرارات مدققة أدناه.');
+  String get p10NoDecisionsYet => _get(
+      'No optimization decisions yet. Run the optimizer to generate audited decisions from real campaign data.',
+      'ابھی کوئی آپٹیمائزیشن فیصلے نہیں۔ حقیقی مہم ڈیٹا سے آڈٹ شدہ فیصلے بنانے کے لیے آپٹیمائزر چلائیں۔',
+      'لا توجد قرارات تحسين بعد. شغّل المحسِّن لتوليد قرارات مدققة من بيانات الحملة الحقيقية.');
+  String p10StepOf(int i, int n) =>
+      _get('Step $i of $n', 'مرحلہ $i از $n', 'الخطوة $i من $n');
+  String get p10PickProduct =>
+      _get('Pick a product', 'پراڈکٹ چنیں', 'اختر منتجًا');
+  String get p10NoProductsForCampaign => _get(
+      'No products yet. Add products in the Shop tab to promote them.',
+      'ابھی کوئی پراڈکٹ نہیں۔ پروموٹ کرنے کے لیے Shop ٹیب میں پراڈکٹس شامل کریں۔',
+      'لا توجد منتجات بعد. أضف منتجات في تبويب المتجر للترويج لها.');
+  String get p10SetAdName => _get('Give your ad set a name',
+      'اپنے ایڈ سیٹ کو نام دیں', 'سمِّ مجموعتك الإعلانية');
+  String get p10AnalysisFailed =>
+      _get('Analysis failed', 'تجزیہ ناکام ہوا', 'فشل التحليل');
+  String get p10Retype => _get('Try again', 'دوبارہ کوشش کریں', 'حاول مجددًا');
 }

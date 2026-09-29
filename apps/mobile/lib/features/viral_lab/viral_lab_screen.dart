@@ -6,9 +6,13 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Phase 2 — Viral Lab: paste a link or text → score → per-area improvement
-/// suggestions → original content variations. All AI output is labeled
-/// dev/heuristic until a production provider is configured.
+/// 57 · Viral Lab — board-faithful "Content Score" screen.
+///
+/// Pink pill tabs (Video / Story / Carousel), a large pink score ring, stat
+/// chips from the real component scores, and recommendation rows with icons
+/// from the REAL /api/v1/analysis/improve + /variations endpoints.
+/// All AI output is labeled dev/heuristic until a production provider is
+/// configured.
 class ViralLabScreen extends StatefulWidget {
   const ViralLabScreen({super.key});
 
@@ -20,9 +24,12 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
   AppStrings get s => AppStrings(appState.localeCode);
 
   final _ctrl = TextEditingController();
+  int _tab = 0;
   bool _working = false;
-  Map<String, dynamic>? _result;
-  Map<String, dynamic>? _variations;
+  // Per-format last results — tabs switch between real, already-fetched
+  // analyses; nothing is ever synthesized for a format.
+  final _results = <int, Map<String, dynamic>?>{};
+  final _variations = <int, Map<String, dynamic>?>{};
   String? _error;
 
   @override
@@ -45,8 +52,6 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
     setState(() {
       _working = true;
       _error = null;
-      _result = null;
-      _variations = null;
     });
     try {
       final improve = await apiClient.improveContent(
@@ -65,10 +70,10 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
       }
       if (!mounted) return;
       setState(() {
-        _result = improve;
-        _variations = vars;
+        _results[_tab] = improve;
+        _variations[_tab] = vars;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _error = s.askFailed);
     } finally {
@@ -84,61 +89,78 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final result = _results[_tab];
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          s.viralLab,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
+        leading: const BackButton(),
+        title: Text(s.p10ContentScore,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
+          VPillTabs(
+            tabs: [s.p10Video, s.p10Story, s.p10Carousel],
+            selected: _tab,
+            onTap: (i) => setState(() => _tab = i),
+          ),
+          const SizedBox(height: 16),
           _inputCard(),
           if (_error != null) _errorCard(),
-          if (_working) _loadingCard(),
-          if (_result != null) ...[
-            _scoreCard(),
-            _improvementsCard(),
-            _hookCard(),
+          if (_working)
+            const Padding(
+              padding: EdgeInsets.only(top: 28),
+              child: Center(
+                  child: CircularProgressIndicator(color: VirelloColors.pink)),
+            ),
+          if (result != null) ...[
+            const SizedBox(height: 16),
+            _scoreCard(result),
+            const SizedBox(height: 12),
+            _recommendations(result),
+            if ((_variations[_tab]?['variations'] as List?)?.isNotEmpty ==
+                true) ...[
+              const SizedBox(height: 12),
+              _variationsCard(),
+            ],
           ],
-          if (_variations != null) _variationsCard(),
         ],
       ),
     );
   }
 
   Widget _inputCard() {
-    return VCard(
+    return VBoardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
             controller: _ctrl,
-            maxLines: 4,
+            maxLines: 3,
             minLines: 2,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
               hintText: s.pasteLinkOrText,
+              hintStyle: const TextStyle(
+                  color: VirelloColors.boardTextSec, fontSize: 13),
+              filled: true,
+              fillColor: VirelloColors.boardField,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: VirelloColors.divider),
+                borderSide: const BorderSide(color: VirelloColors.boardBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: VirelloColors.boardBorder),
               ),
               contentPadding: const EdgeInsets.all(12),
             ),
           ),
           const SizedBox(height: 12),
-          ElevatedButton.icon(
+          VPinkButton(
+            label: s.analyzeImprove,
             onPressed: _working ? null : _analyze,
-            icon: const Icon(Icons.science_outlined, size: 20),
-            label: Text(s.analyzeImprove),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: VirelloColors.pink,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            loading: _working,
           ),
         ],
       ),
@@ -148,323 +170,259 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
   Widget _errorCard() {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: VCard(
+      child: VBoardCard(
         child: Row(
           children: [
             const Icon(Icons.error_outline, color: VirelloColors.danger),
             const SizedBox(width: 10),
-            Expanded(child: Text(_error!)),
+            Expanded(
+                child:
+                    Text(_error!, style: const TextStyle(color: Colors.white))),
           ],
         ),
       ),
     );
   }
 
-  Widget _loadingCard() {
-    return const Padding(
-      padding: EdgeInsets.only(top: 24),
-      child: Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  Widget _scoreCard() {
-    final r = _result!;
+  Widget _scoreCard(Map<String, dynamic> r) {
     final score = (r['score'] ?? 0) as num;
     final dev = r['dev'] == true;
     final components = (r['components'] as Map?)?.cast<String, dynamic>() ?? {};
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: VCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _scoreRing(score.toInt()),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        s.scoreLabel,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: VirelloColors.muted,
-                        ),
-                      ),
-                      Text(
-                        '$score / 100',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      if (dev)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            s.devPreviewNote,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                              color: VirelloColors.muted,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (components.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: components.entries.map((e) {
-                  return Chip(
-                    label: Text(
-                      '${e.key}: ${e.value}',
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    backgroundColor: VirelloColors.chipBg,
-                  );
-                }).toList(),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _scoreRing(int score) {
-    final color = score >= 70
-        ? VirelloColors.success
-        : score >= 40
-        ? VirelloColors.amber
-        : VirelloColors.danger;
-    return SizedBox(
-      width: 64,
-      height: 64,
-      child: Stack(
-        alignment: Alignment.center,
+    return VBoardCard(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      child: Column(
         children: [
-          CircularProgressIndicator(
-            value: score / 100,
-            strokeWidth: 7,
-            backgroundColor: VirelloColors.divider,
-            valueColor: AlwaysStoppedAnimation(color),
-          ),
-          Text(
-            '$score',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-          ),
+          _BoardRing(score: score.toDouble()),
+          const SizedBox(height: 16),
+          if (components.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: components.entries.map((e) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: VirelloColors.boardField,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: VirelloColors.boardBorder),
+                  ),
+                  child: Text(
+                    '${e.key}: ${e.value}',
+                    style: const TextStyle(
+                        fontSize: 11.5,
+                        color: VirelloColors.boardTextSec,
+                        fontWeight: FontWeight.w600),
+                  ),
+                );
+              }).toList(),
+            ),
+          if (dev) ...[
+            const SizedBox(height: 10),
+            Text(
+              s.p10DevHeuristicNote,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: VirelloColors.boardTextSec,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _improvementsCard() {
-    final items = ((_result!['improvements'] as List?) ?? [])
-        .cast<Map>()
-        .toList();
+  Widget _recommendations(Map<String, dynamic> r) {
+    final items = ((r['improvements'] as List?) ?? []).cast<Map>().toList();
     if (items.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      children: [
+        for (final it in items)
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(
-              s.improvementAreas,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            ),
-          ),
-          ...items.map((it) {
-            final high = it['priority'] == 'high';
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: VCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VBoardCard(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: (it['priority'] == 'high'
+                              ? VirelloColors.danger
+                              : VirelloColors.amber)
+                          .withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      it['priority'] == 'high'
+                          ? Icons.priority_high
+                          : Icons.lightbulb_outline,
+                      color: it['priority'] == 'high'
+                          ? VirelloColors.danger
+                          : VirelloColors.amber,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          high ? Icons.priority_high : Icons.lightbulb_outline,
-                          size: 18,
-                          color: high ? VirelloColors.danger : VirelloColors.amber,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${it['title']}',
-                            style: const TextStyle(
+                        Text(
+                          '${it['title']}',
+                          style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                              color: Colors.white),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: (high ? VirelloColors.danger : VirelloColors.amber)
-                                .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            high ? s.priorityHigh : s.priorityMedium,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: high ? VirelloColors.danger : VirelloColors.amber,
-                            ),
-                          ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${it['suggestion']}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 12.5,
+                              color: VirelloColors.boardTextSec,
+                              height: 1.4),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${it['suggestion']}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 1.5,
-                        color: VirelloColors.ink,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _hookCard() {
-    final hook = _result!['rewritten_hook'] as String?;
-    if (hook == null || hook.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: VCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              s.rewrittenHook,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: VirelloColors.pink.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '"$hook"',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  height: 1.5,
-                ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy,
+                        size: 18, color: VirelloColors.boardTextSec),
+                    onPressed: () => _copy('${it['suggestion']}'),
+                  ),
+                ],
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => _copy(hook),
-                icon: const Icon(Icons.copy, size: 16),
-                label: Text(s.copyText),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 
   Widget _variationsCard() {
-    final items = ((_variations!['variations'] as List?) ?? [])
+    final items = ((_variations[_tab]!['variations'] as List?) ?? [])
         .cast<Map>()
         .toList();
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(
-              s.variations,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Text(
+            s.variations,
+            style: const TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
           ),
-          ...items.map((v) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: VCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: VirelloColors.chipBg,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${v['angle']}',
-                        style: const TextStyle(
+        ),
+        for (final v in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VBoardCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.pink.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${v['angle']}',
+                      style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: VirelloColors.pink,
-                        ),
-                      ),
+                          color: VirelloColors.pink),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${v['text']}',
-                      style: const TextStyle(fontSize: 14, height: 1.5),
-                    ),
-                    if ((v['why_it_works'] ?? '').toString().isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          '${s.whyItWorks}: ${v['why_it_works']}',
-                          style: const TextStyle(
+                  ),
+                  const SizedBox(height: 8),
+                  Text('${v['text']}',
+                      style: const TextStyle(
+                          fontSize: 14, height: 1.5, color: Colors.white)),
+                  if ((v['why_it_works'] ?? '').toString().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${s.whyItWorks}: ${v['why_it_works']}',
+                        style: const TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
-                            color: VirelloColors.muted,
-                          ),
-                        ),
-                      ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () => _copy('${v['text']}'),
-                        icon: const Icon(Icons.copy, size: 16),
-                        label: Text(s.copyText),
+                            color: VirelloColors.boardTextSec),
                       ),
                     ),
-                  ],
-                ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => _copy('${v['text']}'),
+                      icon: const Icon(Icons.copy,
+                          size: 16, color: VirelloColors.pink),
+                      label: Text(s.copyText,
+                          style: const TextStyle(color: VirelloColors.pink)),
+                    ),
+                  ),
+                ],
               ),
-            );
-          }),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Large pink score ring — the board's signature for Content Score.
+class _BoardRing extends StatelessWidget {
+  final double score;
+  const _BoardRing({required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final v = score.clamp(0, 100);
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 150,
+            height: 150,
+            child: CircularProgressIndicator(
+              value: v / 100,
+              strokeWidth: 14,
+              backgroundColor: VirelloColors.pink.withValues(alpha: 0.18),
+              color: VirelloColors.pink,
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${v.round()}%',
+                style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white),
+              ),
+              Text(
+                s.p10ContentScore,
+                style: const TextStyle(
+                    fontSize: 11, color: VirelloColors.boardTextSec),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
+
+  AppStrings get s => AppStrings(appState.localeCode);
 }
