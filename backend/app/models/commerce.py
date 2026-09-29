@@ -131,4 +131,7 @@ class CommerceOrder(Base):
 
 
 # Displayed in the Shop UI category chips (matches Hafiz's reference).
-PRODUCT_CATEGORIES = ["all", "men", "women", "sale", "best_sellers"]
+PRODUCT_CATEGORIES = [
+    "all", "tech", "fashion", "home", "fitness", "beauty",
+    "men", "women", "sale", "best_sellers",
+]

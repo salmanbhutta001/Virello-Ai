@@ -776,7 +776,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
   String? _sortNote;
   final Set<String> _liked = {};
 
-  static const _tabs = ['best_sellers', 'men', 'women', 'sale'];
+  static const _tabs = ['tech', 'fashion', 'home', 'fitness', 'beauty'];
 
   @override
   void initState() {
@@ -797,6 +797,16 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
 
   String _tabLabel(String t) {
     switch (t) {
+      case 'tech':
+        return s.shopCatTech;
+      case 'fashion':
+        return s.shopCatFashion;
+      case 'home':
+        return s.shopCatHome;
+      case 'fitness':
+        return s.shopCatFitness;
+      case 'beauty':
+        return s.shopCatBeauty;
       case 'men':
         return s.shopCatMen;
       case 'women':
