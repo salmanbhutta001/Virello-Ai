@@ -90,6 +90,35 @@ async def interact(body: InteractionIn, db: AsyncSession = Depends(get_db),
         raise HTTPException(400, str(exc))
 
 
+@router.get("/interactions/mine")
+async def my_interactions(kind: str | None = None,
+                          limit: int = 50,
+                          db: AsyncSession = Depends(get_db),
+                          user: User = Depends(get_current_user)) -> dict:
+    """The caller's own genuine interactions (e.g. kind=like), newest first.
+
+    Joined with campaign titles so the app can show what was liked.
+    Only the caller's own rows — never anyone else's.
+    """
+    from app.models.core import Campaign
+    from app.models.growth import DiscoveryInteraction
+    limit = max(1, min(limit, 100))
+    stmt = (select(DiscoveryInteraction, Campaign.title)
+            .join(Campaign, Campaign.id == DiscoveryInteraction.campaign_id)
+            .where(DiscoveryInteraction.user_id == user.id)
+            .order_by(DiscoveryInteraction.created_at.desc())
+            .limit(limit))
+    if kind:
+        stmt = stmt.where(DiscoveryInteraction.kind == kind)
+    rows = (await db.execute(stmt)).all()
+    return {"interactions": [
+        {"kind": i.kind,
+         "campaign_id": str(i.campaign_id),
+         "campaign_title": title,
+         "created_at": i.created_at.isoformat() if i.created_at else None}
+        for i, title in rows]}
+
+
 class PlacementIn(BaseModel):
     campaign_id: str
     topics: list[str] = []

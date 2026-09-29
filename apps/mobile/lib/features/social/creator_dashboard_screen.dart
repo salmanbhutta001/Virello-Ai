@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
-import '../../core/virello_ui.dart';
+import '../../data/models.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
 
-/// Board screen 18: Creator Dashboard.
+/// Board screen 18: Creator Dashboard — pixel-faithful.
 ///
-/// Real numbers only, from GET /api/v1/analytics/overview (genuine
-/// ad_impressions on the user's own campaigns). Zeros when there is no
-/// data — demo numbers are never served.
+/// Header: back arrow + "Creator Dashboard". One stats row with three
+/// columns and dividers: Total Reach / Engagement / Clicks (pink small
+/// labels, big white values). "Recent Posts" section with the user's
+/// real campaigns.
+///
+/// Real numbers only, from GET /api/v1/analytics/overview. Zeros when
+/// there is no data. No Followers stat (the backend does not track
+/// followers) and no trend deltas (no real delta data exists).
 class CreatorDashboardScreen extends StatefulWidget {
   const CreatorDashboardScreen({super.key});
   @override
@@ -18,20 +23,25 @@ class CreatorDashboardScreen extends StatefulWidget {
 }
 
 class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
-  late Future<Map<String, dynamic>> _future;
+  late Future<Map<String, dynamic>> _statsFuture;
+  late Future<List<Campaign>> _postsFuture;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
   @override
   void initState() {
     super.initState();
-    _future = apiClient.analyticsOverview();
+    _statsFuture = apiClient.analyticsOverview();
+    _postsFuture = apiClient.listCampaigns().catchError((_) => <Campaign>[]);
   }
 
   Future<void> _refresh() async {
-    setState(() => _future = apiClient.analyticsOverview());
+    setState(() {
+      _statsFuture = apiClient.analyticsOverview();
+      _postsFuture = apiClient.listCampaigns().catchError((_) => <Campaign>[]);
+    });
     try {
-      await _future;
+      await Future.wait([_statsFuture, _postsFuture]);
     } catch (_) {}
   }
 
@@ -50,126 +60,174 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(s.boardCreatorDashboard)),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: _future,
-          builder: (c, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return _error();
-            }
-            final d = snap.data ?? {};
-            final reach = (d['reach'] as num? ?? 0);
-            final rate = (d['engagement_rate'] as num? ?? 0);
-            final clicks = (d['clicks'] as num? ?? 0);
-            final conv = (d['conversions'] as num? ?? 0);
-            final empty = reach == 0 && clicks == 0 && conv == 0;
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _statCard(
-                        label: s.boardTotalReach,
-                        value: _fmt(reach),
-                        icon: Icons.visibility_outlined,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _statCard(
-                        label: s.boardEngagementRate,
-                        value:
-                            '${rate.toStringAsFixed(rate == rate.roundToDouble() ? 0 : 1)}%',
-                        icon: Icons.favorite_outline,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _statCard(
-                        label: s.boardClicks,
-                        value: _fmt(clicks),
-                        icon: Icons.mouse_outlined,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _statCard(
-                        label: s.boardConversions,
-                        value: _fmt(conv),
-                        icon: Icons.shopping_cart_outlined,
-                      ),
-                    ),
-                  ],
-                ),
-                if (empty) ...[
-                  const SizedBox(height: 24),
-                  Icon(
-                    Icons.bar_chart_outlined,
-                    size: 56,
-                    color: VirelloColors.boardTextSec,
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      s.boardNoStatsYet,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: VirelloColors.boardTextSec,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            );
-          },
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              _header(),
+              const SizedBox(height: 8),
+              _statsRow(),
+              const SizedBox(height: 20),
+              _recentPosts(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _statCard({
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return VBoardCard(
+  /// Board header: back arrow + "Creator Dashboard".
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          Text(
+            s.boardCreatorDashboard,
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Board stats row: three columns with dividers, pink labels.
+  Widget _statsRow() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _statsFuture,
+      builder: (c, snap) {
+        final d = snap.data ?? {};
+        final reach = d['reach'] as num? ?? 0;
+        final rate = d['engagement_rate'] as num? ?? 0;
+        final clicks = d['clicks'] as num? ?? 0;
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: VirelloColors.boardSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: VirelloColors.boardBorder),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _stat(
+                  s.boardTotalReach,
+                  _fmt(reach),
+                ),
+              ),
+              const _StatDivider(),
+              Expanded(
+                child: _stat(
+                  s.boardEngagementRate,
+                  '${rate.toStringAsFixed(rate == rate.roundToDouble() ? 0 : 1)}%',
+                ),
+              ),
+              const _StatDivider(),
+              Expanded(
+                child: _stat(s.boardClicks, _fmt(clicks)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _stat(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: VirelloColors.pink,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+      ],
+    );
+  }
+
+  /// Board "Recent Posts": the user's real campaigns in a 2-col grid.
+  Widget _recentPosts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          s.boardRecentPosts,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<List<Campaign>>(
+          future: _postsFuture,
+          builder: (c, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final posts = (snap.data ?? []).take(6).toList();
+            if (posts.isEmpty) {
+              return _emptyPosts();
+            }
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.4,
+              ),
+              itemCount: posts.length,
+              itemBuilder: (_, i) => _postTile(posts[i]),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _postTile(Campaign p) {
+    final title = p.title;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: VirelloColors.boardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: VirelloColors.boardBorder),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: VirelloColors.pink.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: VirelloColors.pink, size: 20),
+          const Icon(
+            Icons.campaign_outlined,
+            color: VirelloColors.pink,
+            size: 22,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            value,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
+            title.isNotEmpty ? title : s.untitled,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 12.5,
-              color: VirelloColors.boardTextSec,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1.35,
             ),
           ),
         ],
@@ -177,29 +235,42 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
     );
   }
 
-  Widget _error() {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Icon(
-          Icons.wifi_off_outlined,
-          size: 56,
-          color: VirelloColors.boardTextSec,
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
-          child: Text(
-            s.analyzeFailed,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: VirelloColors.boardTextSec,
+  Widget _emptyPosts() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.bar_chart_outlined,
+            size: 48,
+            color: VirelloColors.boardTextSec,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              s.boardNoStatsYet,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: VirelloColors.boardTextSec,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 44,
+      color: VirelloColors.boardBorder,
     );
   }
 }

@@ -147,76 +147,87 @@ class _CommentsScreenState extends State<CommentsScreen> {
     );
   }
 
+  /// Board 15 comment card: dark rounded card, avatar + name/time + text.
   Widget _row(Map<String, dynamic> c) {
     final author = '${c['author_name'] ?? '?'}';
     final initial = author.isNotEmpty ? author[0].toUpperCase() : '?';
     final ago = boardTimeAgo('${c['created_at'] ?? ''}', s);
     final mine = c['mine'] == true;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: VirelloColors.brandGradient,
-          ),
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: VirelloColors.boardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VirelloColors.boardBorder),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: VirelloColors.brandGradient,
+            ),
+            child: Text(
+              initial,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      author,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        author,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                        ),
                       ),
                     ),
-                  ),
-                  if (ago != null)
-                    Text(
-                      ago,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: VirelloColors.boardTextSec,
+                    if (ago != null)
+                      Text(
+                        ago,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: VirelloColors.boardTextSec,
+                        ),
                       ),
-                    ),
-                  if (mine)
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                        color: VirelloColors.boardTextSec,
+                    if (mine)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: VirelloColors.boardTextSec,
+                        ),
+                        tooltip: s.delete,
+                        onPressed: () => _delete(c),
                       ),
-                      tooltip: s.delete,
-                      onPressed: () => _delete(c),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${c['text'] ?? ''}',
-                style: const TextStyle(fontSize: 14, height: 1.45),
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${c['text'] ?? ''}',
+                  style: const TextStyle(fontSize: 14, height: 1.45),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

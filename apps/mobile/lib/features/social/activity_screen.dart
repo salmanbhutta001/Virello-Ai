@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
-import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
-import 'comments_screen.dart';
 import 'creator_profile_screen.dart';
 import 'time_ago.dart';
 
-/// Board screen 16: Activity.
+/// Board screen 16: Activity — pixel-faithful.
 ///
-/// Real activity only: the user's own comments (GET /api/v1/social/
-/// comments/mine) and follows (GET /api/v1/social/following). There is
-/// no Likes tab because no backend lists the user's likes — a tab with
-/// an always-empty state would be dishonest UI, so it is omitted.
+/// Header "Activity", 4 tabs (All / Likes / Comments / Follows, pink
+/// pill active), flat rows: avatar + text + time, dividers between rows.
+/// All real: likes from GET /api/v1/discovery/interactions/mine,
+/// comments from /social/comments/mine, follows from /social/following.
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
   @override
@@ -22,7 +20,7 @@ class ActivityScreen extends StatefulWidget {
 }
 
 class _ActivityItem {
-  final String kind; // 'comment' | 'follow'
+  final String kind; // 'like' | 'comment' | 'follow'
   final DateTime? at;
   final Map<String, dynamic> data;
   _ActivityItem(this.kind, this.at, this.data);
@@ -51,6 +49,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Future<List<_ActivityItem>> _load() async {
     final items = <_ActivityItem>[];
+    try {
+      final likes = await apiClient.myInteractions(kind: 'like');
+      for (final l in likes) {
+        items.add(
+          _ActivityItem('like', _parse('${l['created_at'] ?? ''}'), l),
+        );
+      }
+    } catch (_) {}
     try {
       final comments = await apiClient.myComments();
       for (final c in comments) {
@@ -87,8 +93,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
   List<_ActivityItem> _filtered(List<_ActivityItem> all) {
     switch (_tab) {
       case 1:
-        return all.where((e) => e.kind == 'comment').toList();
+        return all.where((e) => e.kind == 'like').toList();
       case 2:
+        return all.where((e) => e.kind == 'comment').toList();
+      case 3:
         return all.where((e) => e.kind == 'follow').toList();
       default:
         return all;
@@ -98,130 +106,206 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(s.boardActivity)),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: VPillTabs(
-              tabs: [s.boardAll, s.boardComments, s.boardFollows],
-              selected: _tab,
-              onTap: (i) => setState(() => _tab = i),
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: FutureBuilder<List<_ActivityItem>>(
-                future: _future,
-                builder: (c, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final items = _filtered(snap.data ?? []);
-                  if (items.isEmpty) {
-                    return _empty();
-                  }
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _row(items[i]),
-                  );
-                },
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _header(),
+            _tabs(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: FutureBuilder<List<_ActivityItem>>(
+                  future: _future,
+                  builder: (c, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final items = _filtered(snap.data ?? []);
+                    if (items.isEmpty) {
+                      return _empty();
+                    }
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const Divider(
+                        color: VirelloColors.boardBorder,
+                        height: 1,
+                      ),
+                      itemBuilder: (_, i) => _row(items[i]),
+                    );
+                  },
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Board header: "Activity" title, left-aligned.
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          Text(
+            s.boardActivity,
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
           ),
         ],
       ),
     );
   }
 
+  /// Board tabs: All / Likes / Comments / Follows — pink pill active.
+  Widget _tabs() {
+    final labels = [
+      s.boardAll,
+      s.boardLikes,
+      s.boardComments,
+      s.boardFollows,
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (var i = 0; i < labels.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              _tabPill(labels[i], i),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tabPill(String label, int index) {
+    final active = _tab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _tab = index),
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          borderRadius: BorderRadius.circular(19),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.white : VirelloColors.boardTextSec,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Board activity row: flat, avatar + text + time.
   Widget _row(_ActivityItem e) {
+    final isLike = e.kind == 'like';
     final isComment = e.kind == 'comment';
-    final title = isComment
-        ? '${e.data['author_name'] ?? ''}'
-        : '${e.data['creator_name'] ?? e.data['creator_handle'] ?? ''}';
-    final subtitle = isComment
-        ? '${s.boardCommentedOn}: "${_short('${e.data['text'] ?? ''}')}"'
-        : '${s.boardStartedFollowing} @${e.data['creator_handle'] ?? ''}';
+    final title = isLike
+        ? '${e.data['campaign_title'] ?? ''}'
+        : isComment
+            ? '${e.data['author_name'] ?? ''}'
+            : '${e.data['creator_name'] ?? e.data['creator_handle'] ?? ''}';
+    final subtitle = isLike
+        ? s.boardLikedPost
+        : isComment
+            ? '${s.boardCommentedOn}: "${_short('${e.data['text'] ?? ''}')}"'
+            : '${s.boardStartedFollowing} @${e.data['creator_handle'] ?? ''}';
     final initial = title.isNotEmpty ? title[0].toUpperCase() : '?';
     final ago = e.at == null
         ? null
         : boardTimeAgo(e.at!.toUtc().toIso8601String(), s);
-    return VBoardCard(
-      onTap: isComment
-          ? null
-          : () => Navigator.of(context).push(
+    final icon = isLike
+        ? Icons.favorite_rounded
+        : isComment
+            ? Icons.chat_bubble_outline_rounded
+            : null;
+    return InkWell(
+      onTap: e.kind == 'follow'
+          ? () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => CreatorProfileScreen(follow: e.data),
               ),
+            )
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: icon != null
+                    ? VirelloColors.pink.withValues(alpha: 0.14)
+                    : null,
+                gradient: icon != null ? null : VirelloColors.brandGradient,
+              ),
+              child: icon != null
+                  ? Icon(icon, color: VirelloColors.pink, size: 20)
+                  : Text(
+                      initial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
             ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isComment
-                  ? VirelloColors.pink.withValues(alpha: 0.14)
-                  : null,
-              gradient: isComment ? null : VirelloColors.brandGradient,
-            ),
-            child: isComment
-                ? const Icon(
-                    Icons.chat_bubble_outline,
-                    color: VirelloColors.pink,
-                    size: 20,
-                  )
-                : Text(
-                    initial,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
                     ),
                   ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: VirelloColors.boardTextSec,
-                  ),
-                ),
-                if (ago != null)
+                  const SizedBox(height: 2),
                   Text(
-                    ago,
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: VirelloColors.boardTextSec,
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            if (ago != null)
+              Text(
+                ago,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: VirelloColors.boardTextSec,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

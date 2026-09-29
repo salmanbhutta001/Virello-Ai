@@ -252,6 +252,17 @@ class ApiClient {
         .toList();
   }
 
+  /// The signed-in user's own genuine discovery interactions
+  /// (Activity screen Likes tab). Real data only — empty when the user
+  /// hasn't liked anything yet.
+  Future<List<Map<String, dynamic>>> myInteractions({String? kind}) async {
+    final q = kind != null ? '?kind=${Uri.encodeComponent(kind)}' : '';
+    final j = await _getJson('/api/v1/discovery/interactions/mine$q');
+    return ((j['interactions'] as List?) ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+  }
+
   Future<Map<String, dynamic>> postComment(String postUrl, String text) async {
     final j = await _postJson('/api/v1/social/comments', {
       'post_url': postUrl,

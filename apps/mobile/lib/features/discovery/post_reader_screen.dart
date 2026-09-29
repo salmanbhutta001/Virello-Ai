@@ -307,7 +307,11 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     final saved = savedStore.contains(item.postUrl);
     return Scaffold(
       appBar: AppBar(
-        title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(s.boardPostDetail),
         actions: [
           IconButton(
             tooltip: saved ? s.readerSaved : s.readerSave,

@@ -2199,6 +2199,8 @@ class AppStrings {
   String get boardActivity => _get('Activity', 'سرگرمی', 'النشاط');
   String get boardAll => _get('All', 'سب', 'الكل');
   String get boardLikes => _get('Likes', 'لائکس', 'الإعجابات');
+  String get boardLikedPost =>
+      _get('You liked this post', 'آپ نے یہ پوسٹ پسند کی', 'أعجبك هذا المنشور');
   String get boardFollows => _get('Follows', 'فالوز', 'المتابَعات');
   String get boardNoActivity =>
       _get('Nothing here yet', 'یہاں ابھی کچھ نہیں', 'لا شيء هنا بعد');
@@ -2220,6 +2222,9 @@ class AppStrings {
         'ابھی کوئی اعداد نہیں — اصل نمبر دیکھنے کے لیے مہم شروع کریں',
         'لا إحصاءات بعد — أطلق حملة لرؤية أرقام حقيقية',
       );
+  String get boardRecentPosts =>
+      _get('Recent Posts', 'حالیہ پوسٹس', 'المنشورات الأخيرة');
+  String get untitled => _get('Untitled', 'بلا عنوان', 'بدون عنوان');
   String get boardFollowedSince =>
       _get('Following since', 'سے فالو کر رہے ہیں', 'تتابعه منذ');
   String get boardLike => _get('Like', 'لائک', 'أعجبني');
@@ -2245,6 +2250,10 @@ class AppStrings {
   String get boardSearch => _get('Search', 'تلاش', 'بحث');
   String get boardSearchHint => _get('Search...', 'تلاش کریں...', 'ابحث...');
   String get boardPosts => _get('Posts', 'پوسٹس', 'المنشورات');
+  String get boardReels => _get('Reels', 'ریلز', 'ريلز');
+  String get boardShop => _get('Shop', 'شاپ', 'المتجر');
+  String get boardNoCreatorPosts => _get(
+      'No posts from this creator yet', 'اس کریئیٹر کی ابھی کوئی پوسٹ نہیں', 'لا توجد منشورات لهذا المبدع بعد');
   String get boardProductsTab => _get('Products', 'پراڈکٹس', 'المنتجات');
   String get boardUsers => _get('Users', 'صارفین', 'المستخدمون');
   String get boardCategories => _get('Categories', 'کیٹیگریز', 'الفئات');
