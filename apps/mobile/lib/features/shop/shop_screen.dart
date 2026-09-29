@@ -127,6 +127,12 @@ class _ShopScreenState extends State<ShopScreen> {
     } on AuthException {
       if (!mounted) return;
       handleAuthFailure(s.sessionExpired);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      // 404 = commerce backend not deployed yet — honest message, not a
+      // "check your connection" red herring.
+      setState(() => _error =
+          e.status == 404 ? s.shopBackendUpdating : s.askFailed);
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = s.askFailed);

@@ -7105,6 +7105,19 @@ class AppStrings {
         'Tidak dapat menghubungi Virello AI. Periksa koneksimu dan coba lagi.',
         'Virello AI-এর সাথে সংযোগ করা যায়নি। আপনার সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।'
       );
+  String get shopBackendUpdating => _get(
+        'Shop is updating on the server. Please try again in a few minutes.',
+        'شاپ سرور پر اپ ڈیٹ ہو رہی ہے۔ چند منٹ بعد دوبارہ کوشش کریں۔',
+        'المتجر قيد التحديث على الخادم. حاول مجددًا بعد بضع دقائق.',
+        'शॉप सर्वर पर अपडेट हो रही है। कृपया कुछ मिनट बाद पुनः प्रयास करें।',
+        'La boutique est en cours de mise à jour sur le serveur. Réessayez dans quelques minutes.',
+        'La tienda se está actualizando en el servidor. Inténtalo de nuevo en unos minutos.',
+        'A loja está a ser atualizada no servidor. Tenta novamente dentro de alguns minutos.',
+        'Der Shop wird auf dem Server aktualisiert. Bitte versuche es in wenigen Minuten erneut.',
+        'Mağaza sunucuda güncelleniyor. Lütfen birkaç dakika sonra tekrar dene.',
+        'Toko sedang diperbarui di server. Silakan coba lagi dalam beberapa menit.',
+        'সার্ভারে শপ আপডেট হচ্ছে। কয়েক মিনিট পরে আবার চেষ্টা করুন।'
+      );
 
   // ------------------------------ Shop (Phase 1 placeholder) ------------------------------
   String get shop => _get('Shop', 'شاپ', 'المتجر',
