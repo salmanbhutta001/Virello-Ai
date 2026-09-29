@@ -27,8 +27,13 @@ jobs:
       - name: Apply splash and icon fix
         working-directory: apps/mobile
         run: |
-          curl -L -o /tmp/splash.zip "https://muse.ai/files/1389292924257306/1105209719126885/fwaaq1ey9v4n95luv7jr3qpi/virello-splash.zip"
-          unzip -o -q /tmp/splash.zip
+          # Splash assets already live in the repo; the legacy zip link may be
+          # dead — try it but never fail the build if the download is invalid.
+          if curl -L --fail -s -o /tmp/splash.zip "https://muse.ai/files/1389292924257306/1105209719126885/fwaaq1ey9v4n95luv7jr3qpi/virello-splash.zip" && unzip -t -q /tmp/splash.zip >/dev/null 2>&1; then
+            unzip -o -q /tmp/splash.zip
+          else
+            echo "Splash zip unavailable or invalid — using repo assets."
+          fi
           rm -f /tmp/splash.zip
           # Allow cleartext HTTP for localhost testing
           sed -i 's/android:icon="@mipmap\/ic_launcher">/android:icon="@mipmap\/ic_launcher"\n        android:usesCleartextTraffic="true">/' android/app/src/main/AndroidManifest.xml
