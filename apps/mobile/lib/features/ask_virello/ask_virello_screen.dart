@@ -191,6 +191,9 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
     } else if (path.contains('discovery')) {
       requestedTab.value = 1; // Discover tab
       Navigator.of(context).pop();
+    } else if (path.contains('shop')) {
+      requestedTab.value = 4; // Shop tab
+      Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(note != null && '$note'.isNotEmpty ? '$note' : label),

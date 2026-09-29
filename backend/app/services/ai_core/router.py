@@ -65,9 +65,10 @@ MODULES: dict[str, dict] = {
     },
     SHOP: {
         "module": "commerce",
-        "status": "coming_soon",
+        "status": "live",
         "phase": 4,
-        "served_by": None,
+        "endpoint": "GET /api/v1/commerce/products",
+        "served_by": "Shop catalog (real products, affiliate disclosure)",
     },
     LEARN: {
         "module": "academy",

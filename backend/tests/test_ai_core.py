@@ -101,11 +101,11 @@ async def test_detect_chain_create_and_grow():
 
 
 @pytest.mark.asyncio
-async def test_module_map_honest_for_unbuilt():
+async def test_module_map_shop_is_live():
     shop = intent_router.module_for("shop")
-    assert shop["status"] == "coming_soon"
+    assert shop["status"] == "live"
     assert shop["phase"] == 4
-    assert shop["served_by"] is None
+    assert shop["served_by"] is not None
 
 
 # ---------------------------------------------------------------------------
@@ -177,16 +177,34 @@ async def test_handle_ask_create_uses_dev_provider(user):
 
 
 @pytest.mark.asyncio
-async def test_handle_ask_shop_honest_coming_soon(user):
+async def test_handle_ask_shop_uses_real_catalog(user):
+    from app.models.commerce import Product
     async with SessionLocal() as db:
         u = (await db.execute(select(User).where(User.id == user))).scalar_one()
+        db.add(Product(
+            creator_id=u.id,
+            title="Test Massage Gun Pro",
+            description="A deep tissue percussion massager for testing.",
+            category="fitness",
+            image_urls=["https://example.com/1.jpg", "https://example.com/2.jpg"],
+            is_active=True,
+        ))
+        await db.commit()
+        # Specific product question -> real catalog match, never invented.
         result = await handle_ask(
-            db, u, "I want to buy shoes, compare prices", language="en")
-    assert result["intent"] == "shop"
-    assert result["module_status"] == "coming_soon"
-    assert "Phase 4" in result["reply"]
-    # nothing faked: no actions that invent commerce functionality
-    assert result["actions"] == []
+            db, u, "Tell me about this product: Test Massage Gun Pro", language="en")
+        assert result["intent"] == "shop"
+        assert result["module_status"] == "live"
+        assert "Test Massage Gun Pro" in result["reply"]
+        assert "Phase 4" not in result["reply"]
+        assert any(a.get("path", "").find("shop") >= 0 for a in result["actions"])
+        # Unknown product -> honest miss, no invented details.
+        miss = await handle_ask(
+            db, u, "Tell me about this product: Zzzq Nonexistent Widget 9000",
+            language="en")
+        assert miss["intent"] == "shop"
+        assert "couldn't find" in miss["reply"]
+        assert "Test Massage Gun Pro" in miss["reply"]  # real suggestion listed
 
 
 @pytest.mark.asyncio
@@ -276,7 +294,7 @@ async def test_intents_endpoint_public(client: httpx.AsyncClient):
     j = r.json()
     assert j["method"] == "keyword-heuristic-v1"
     intents = {i["intent"]: i for i in j["intents"]}
-    assert intents["shop"]["status"] == "coming_soon"
+    assert intents["shop"]["status"] == "live"
     assert intents["grow"]["status"] == "live"
 
 

@@ -5,9 +5,11 @@ The main flow:
   2. load/create conversation + per-user AIContext
   3. dispatch to the mapped module:
      - live modules call REAL existing services/endpoints
-     - unbuilt vision modules (commerce) return an honest "coming soon"
-       message — functionality is NEVER faked (academy and entertainment
-       went live in Phases 5 and 6 and now dispatch to real services)
+       (shop answers from the real product catalog — never invented;
+       academy and entertainment went live in Phases 5 and 6 and now
+       dispatch to real services)
+     - unbuilt vision modules return an honest "coming soon" message —
+       functionality is NEVER faked
   4. persist user + assistant messages, log the intent, merge context
   5. return a structured response
 
@@ -19,6 +21,7 @@ auto-executed.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 
 from sqlalchemy import select
@@ -86,13 +89,13 @@ _T: dict[str, dict[str, str]] = {
     },
     "support_fallback": {
         "en": ("I'm Virello's AI assistant. I can help with how Virello works, plans "
-               "(Free Grow vs Paid Boost), payments (PayPal, Payoneer, Google Pay), "
+               "(Free Grow vs Paid Boost), payments (Google Play Billing), "
                "and account issues. What do you need help with?"),
         "ur": ("Main Virello ka AI assistant hoon. Virello kaise kaam karta hai, plans "
-               "(Free Grow vs Paid Boost), payments (PayPal, Payoneer, Google Pay) aur "
+               "(Free Grow vs Paid Boost), payments (Google Play Billing) aur "
                "account ke masail me madad kar sakta hoon. Kya madad chahiye?"),
         "ar": ("أنا مساعد Virello الذكي. يمكنني المساعدة في كيفية عمل Virello، والخطط "
-               "والمدفوعات (PayPal وPayoneer وGoogle Pay) ومشاكل الحساب. بمَ أساعدك؟"),
+               "والمدفوعات (Google Play Billing) ومشاكل الحساب. بمَ أساعدك؟"),
     },
     "coming_soon": {
         "en": "{name} is coming in Phase {phase} of the Virello evolution. {detail} I'll announce it here the moment it lands — nothing is faked in the meantime.",
@@ -135,6 +138,31 @@ _T: dict[str, dict[str, str]] = {
         "en": "\n\n_(Development preview — heuristic output. Connect a production AI provider for final results.)_",
         "ur": "\n\n_(Development preview — heuristic output. Hatmi nataij ke liye production AI provider connect karein.)_",
         "ar": "\n\n_(معاينة تطويرية — مخرجات استدلالية. اربط موفر ذكاء اصطناعي إنتاجيًا للنتائج النهائية.)_",
+    },
+    "shop_found": {
+        "en": ("Here's what I found in the Virello Shop:\n\n**{title}**\n{description}\n\n"
+               "Category: {category} • {photos} photos\n{price_line}\n\n"
+               "_Affiliate link — we may earn a commission._"),
+        "ur": ("Virello Shop me ye mila:\n\n**{title}**\n{description}\n\n"
+               "Category: {category} • {photos} photos\n{price_line}\n\n"
+               "_Affiliate link — humein commission mil sakta hai._"),
+        "ar": ("هذا ما وجدته في متجر Virello:\n\n**{title}**\n{description}\n\n"
+               "الفئة: {category} • {photos} صور\n{price_line}\n\n"
+               "_رابط تسويق بالعمولة — قد نحصل على عمولة._"),
+    },
+    "shop_not_found": {
+        "en": ("I couldn't find \"{query}\" in the Virello Shop catalog yet — I only "
+               "talk about products that are really listed. Here are some recent "
+               "arrivals you might like:"),
+        "ur": ("\"{query}\" Virello Shop me abhi nahi mila — main sirf unhi products "
+               "ke baare me batata hoon jo waqai listed hain. Ye nayi products dekho:"),
+        "ar": ("لم أجد «{query}» في متجر Virello بعد — أتحدث فقط عن المنتجات المدرجة "
+               "فعلًا. إليك بعض الوافدين الجدد:"),
+    },
+    "shop_browse": {
+        "en": "Here are the latest products in the Virello Shop:",
+        "ur": "Virello Shop ki taaza tareen products ye hain:",
+        "ar": "إليك أحدث المنتجات في متجر Virello:",
     },
 }
 
@@ -308,7 +336,7 @@ async def _dispatch_support(
         "You are Virello AI Support. Answer briefly and honestly about the "
         "Virello app: AI growth manager, Free Grow (organic, $0) vs Paid Boost "
         "packages (Starter $10/7d, Growth $25/14d, Pro $50/30d, Scale $100/30d), "
-        "payments via PayPal/Payoneer/Google Pay only (no Stripe), OAuth-only "
+        "payments via Google Play Billing only (no Stripe, no PayPal), OAuth-only "
         "social connections (never passwords), no fake engagement ever. "
         "Reply in the user's language. If unsure, say so."
     )
@@ -338,6 +366,145 @@ def _dispatch_coming_soon(intent: str, lang: str) -> tuple[str, list[dict], bool
         detail=detail[lang if lang in ("en", "ur", "ar") else "en"],
     )
     return reply, [], True, None
+
+
+_SHOP_STOPWORDS = frozenset((
+    "tell", "me", "about", "this", "that", "product", "products", "the", "a",
+    "an", "and", "for", "with", "on", "price", "check", "amazon", "please",
+    "what", "which", "is", "are", "of", "in", "to", "do", "you", "have",
+    "any", "show", "find", "search", "looking", "want", "buy", "deal",
+    "deals", "store", "shop",
+))
+
+
+def _shop_keywords(text: str) -> list[str]:
+    """Significant search tokens from the user's message.
+
+    Strips parenthetical boilerplate (e.g. "(Check price on Amazon)") and
+    generic question words; keeps the words that identify the product.
+    """
+    cleaned = re.sub(r"\(.*?\)", " ", (text or "").lower())
+    words = re.findall(r"[a-z0-9]{3,}", cleaned)
+    out: list[str] = []
+    for w in words:
+        if w not in _SHOP_STOPWORDS and w not in out:
+            out.append(w)
+    return out[:12]
+
+
+def _shop_price_line(p, lang: str) -> str:
+    if getattr(p, "price_cents", 0) and p.price_cents > 0:
+        amount = p.price_cents / 100
+        cur = (getattr(p, "currency", "") or "USD").upper()
+        symbol = {"USD": "$", "GBP": "£", "EUR": "€", "PKR": "Rs "}.get(cur, cur + " ")
+        return f"{symbol}{amount:,.2f}"
+    return {
+        "en": "Check price on Amazon.",
+        "ur": "Qeemat Amazon par check karein.",
+        "ar": "تحقق من السعر على أمازون.",
+    }[lang]
+
+
+def _shop_product_card(p, lang: str) -> str:
+    desc = (getattr(p, "description", "") or "").strip()
+    if len(desc) > 240:
+        desc = desc[:240].rstrip() + "…"
+    photos = len(getattr(p, "image_urls", None) or [])
+    cat = (getattr(p, "category", "") or "all").replace("_", " ").title()
+    return _t(
+        "shop_found", lang,
+        title=(p.title or "").strip(),
+        description=desc or "—",
+        category=cat,
+        photos=str(photos),
+        price_line=_shop_price_line(p, lang),
+    )
+
+
+def _shop_suggestion_lines(products, lang: str) -> str:
+    lines = []
+    for p in products[:5]:
+        title = (p.title or "").strip()
+        if len(title) > 70:
+            title = title[:70].rstrip() + "…"
+        lines.append(f"• {title} — {_shop_price_line(p, lang)}")
+    return "\n".join(lines)
+
+
+async def _dispatch_shop(
+    db: AsyncSession, text: str, lang: str
+) -> tuple[str, list[dict], bool, str | None]:
+    """Shop: answer from the REAL product catalog — never invented.
+
+    - Specific product question → best catalog match with real details.
+    - No match → honest "not listed yet" + real recent arrivals.
+    - Generic browse ("show me products") → latest real products.
+    dev=False: this is real catalog data, not heuristic output.
+    """
+    from app.models.commerce import Product
+
+    lang = lang if lang in ("en", "ur", "ar") else "en"
+    rows = (
+        (await db.execute(
+            select(Product)
+            .where(Product.is_active.is_(True))
+            .order_by(Product.created_at.desc())
+            .limit(200)
+        ))
+        .scalars()
+        .all()
+    )
+
+    def view_action(label: str) -> dict:
+        return {
+            "label": label,
+            "kind": "nav",
+            "path": "/shop",
+            "note": {
+                "en": "Opening the Shop tab.",
+                "ur": "Shop tab khol raha hoon.",
+                "ar": "فتح علامة تبويب المتجر.",
+            }[lang],
+        }
+
+    view_label = {
+        "en": "View in Shop",
+        "ur": "Shop me dekho",
+        "ar": "عرض في المتجر",
+    }[lang]
+
+    keywords = _shop_keywords(text)
+    if not rows:
+        reply = {
+            "en": "The Virello Shop catalog is empty right now — new products are added every hour. Check back soon.",
+            "ur": "Virello Shop catalog abhi khaali hai — har ghante nayi products add hoti hain. Jald wapas check karein.",
+            "ar": "كتالوج متجر Virello فارغ حاليًا — تُضاف منتجات جديدة كل ساعة. عُد قريبًا.",
+        }[lang]
+        return reply, [view_action(view_label)], False, None
+
+    if not keywords:
+        # Generic browse: latest real products.
+        reply = _t("shop_browse", lang) + "\n" + _shop_suggestion_lines(rows, lang)
+        return reply, [view_action(view_label)], False, None
+
+    best = None
+    best_score = 0
+    best_single_len = 0
+    for p in rows:
+        title_l = (p.title or "").lower()
+        hits = [kw for kw in keywords if kw in title_l]
+        score = len(hits)
+        single_len = max([len(k) for k in hits], default=0)
+        if score > best_score or (score == best_score and single_len > best_single_len):
+            best, best_score, best_single_len = p, score, single_len
+
+    if best is not None and (best_score >= 2 or (best_score == 1 and best_single_len >= 5)):
+        return _shop_product_card(best, lang), [view_action(view_label)], False, None
+
+    # Honest miss: name what was asked, suggest real arrivals.
+    query = " ".join(keywords[:6])
+    reply = _t("shop_not_found", lang, query=query) + "\n" + _shop_suggestion_lines(rows, lang)
+    return reply, [view_action(view_label)], False, None
 
 
 async def _dispatch_learn(
@@ -428,7 +595,7 @@ async def handle_ask(
     elif intent == intent_router.ENTERTAIN:
         reply, actions, dev, provider_name = _dispatch_entertain(lang)
     elif intent == intent_router.SHOP:
-        reply, actions, dev, provider_name = _dispatch_coming_soon(intent, lang)
+        reply, actions, dev, provider_name = await _dispatch_shop(db, text, lang)
     else:  # unknown
         reply, actions, dev, provider_name = _t("unknown", lang), [], True, None
 
