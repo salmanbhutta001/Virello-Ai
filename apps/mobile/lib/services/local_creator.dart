@@ -1,3 +1,5 @@
+import 'dart:async';
+
 /// On-device fallback creator — the LAST resort in the generation chain:
 ///
 ///   1) real AI provider  ->  2) backend heuristic  ->  3) THIS
@@ -145,4 +147,28 @@ class LocalCreator {
 
 extension _Take on String {
   String take(int n) => length <= n ? this : substring(0, n);
+}
+
+/// Returns the first non-null result from parallel attempts, or null if
+/// every attempt fails/returns null. Used to race the AI provider against
+/// the backend heuristic so the user gets whichever answers first instead
+/// of waiting out a full timeout chain.
+Future<T?> raceFirst<T>(List<Future<T?>> attempts) async {
+  if (attempts.isEmpty) return null;
+  final completer = Completer<T?>();
+  var pending = attempts.length;
+  void settle(T? v) {
+    if (completer.isCompleted) return;
+    if (v != null) {
+      completer.complete(v);
+      return;
+    }
+    pending--;
+    if (pending <= 0) completer.complete(null);
+  }
+
+  for (final a in attempts) {
+    a.then(settle, onError: (_) => settle(null));
+  }
+  return completer.future;
 }

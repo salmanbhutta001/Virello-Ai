@@ -1221,7 +1221,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       final url =
           'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
       final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
       if (!mounted) return;
       if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
         final blocks = res.body.split(RegExp(r'\n\s*\n'));

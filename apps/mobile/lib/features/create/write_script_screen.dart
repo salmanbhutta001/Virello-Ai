@@ -67,12 +67,61 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
     final url =
         'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
     final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 45),
+          const Duration(seconds: 20),
         );
     if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
       return res.body.trim();
     }
     return null;
+  }
+
+  /// Attempt 1: real AI provider. Returns null on any failure.
+  Future<({String title, String body, bool ai})?> _aiAttempt(
+      String topic) async {
+    try {
+      final aiText = await _askAi(
+        _buildAiPrompt(topic, _toneNames[_tone], appState.localeCode),
+      );
+      if (aiText == null || aiText.isEmpty) return null;
+      final lines = aiText.split('\n');
+      final titleIdx =
+          lines.indexWhere((l) => l.trim().toUpperCase().startsWith('TITLE:'));
+      if (titleIdx >= 0) {
+        return (
+          title: lines[titleIdx]
+              .replaceFirst(RegExp(r'(?i)^title:\s*'), '')
+              .trim(),
+          body: lines
+              .asMap()
+              .entries
+              .where((e) => e.key != titleIdx)
+              .map((e) => e.value)
+              .join('\n')
+              .trim(),
+          ai: true,
+        );
+      }
+      return (title: topic, body: aiText, ai: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Attempt 2: backend heuristic draft. Returns null on any failure.
+  Future<({String title, String body, bool ai})?> _backendAttempt(
+      String topic) async {
+    try {
+      final r = await apiClient.createScript(
+        topic,
+        language: appState.localeCode,
+      );
+      final scr = (r['script'] as Map?)?.cast<String, dynamic>();
+      final body = '${scr?['body'] ?? ''}';
+      if (body.isEmpty) return null;
+      return (title: '${scr?['title'] ?? topic}', body: body, ai: false);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _generate() async {
@@ -88,50 +137,15 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
       _scriptTitle = null;
       _scriptBody = null;
     });
-    String? title;
-    String? body;
-    bool ai = false;
-    try {
-      // 1) Real AI provider.
-      final aiText = await _askAi(
-        _buildAiPrompt(topic, _toneNames[_tone], appState.localeCode),
-      );
-      if (aiText != null) {
-        final lines = aiText.split('\n');
-        // Extract TITLE line if present.
-        final titleIdx =
-            lines.indexWhere((l) => l.trim().toUpperCase().startsWith('TITLE:'));
-        if (titleIdx >= 0) {
-          title = lines[titleIdx].replaceFirst(RegExp(r'(?i)^title:\s*'), '').trim();
-          body = lines
-              .asMap()
-              .entries
-              .where((e) => e.key != titleIdx)
-              .map((e) => e.value)
-              .join('\n')
-              .trim();
-        } else {
-          title = topic;
-          body = aiText;
-        }
-        ai = true;
-      }
-    } catch (_) {
-      // Fall through to backend heuristic.
-    }
-    // 2) Backend fallback (heuristic draft).
-    if (body == null || body.isEmpty) {
-      try {
-        final r = await apiClient.createScript(
-          topic,
-          language: appState.localeCode,
-        );
-        final scr = (r['script'] as Map?)?.cast<String, dynamic>();
-        title = '${scr?['title'] ?? topic}';
-        body = '${scr?['body'] ?? ''}';
-        ai = false;
-      } catch (_) {}
-    }
+    // 1+2) Race the real AI provider against the backend heuristic —
+    // whichever answers first wins (no more waiting out a full timeout).
+    final won = await raceFirst([
+      _aiAttempt(topic),
+      _backendAttempt(topic),
+    ]);
+    String? title = won?.title;
+    String? body = won?.body;
+    bool ai = won?.ai ?? false;
     // 3) On-device fallback — always produces a draft, zero network.
     if (body == null || body.isEmpty) {
       final local = LocalCreator.buildScript(

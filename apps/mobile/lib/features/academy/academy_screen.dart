@@ -379,7 +379,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       final url =
           'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
       final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 60));
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
       if (!mounted) return;
       final answer = res.statusCode == 200 && res.body.trim().isNotEmpty
           ? res.body.trim()

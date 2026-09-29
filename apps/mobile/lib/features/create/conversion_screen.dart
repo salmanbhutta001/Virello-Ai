@@ -121,6 +121,40 @@ class _ConversionScreenState extends State<ConversionScreen> {
     }
   }
 
+  Future<({String output, bool ai})?> _aiAttempt(String raw) async {
+    try {
+      final output = await _askAi(
+        _buildAiPrompt(raw, _formatKeys[_format], appState.localeCode),
+      );
+      if (output == null || output.isEmpty) return null;
+      return (output: output, ai: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<({String output, bool ai})?> _backendAttempt(String raw) async {
+    try {
+      final token = authStore.accessToken;
+      final res = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/v1/content/transform'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'text': raw}),
+      ).timeout(const Duration(seconds: 20));
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final output = _formatBackend(data);
+      if (output.isEmpty) return null;
+      return (output: output, ai: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _convert() async {
     final raw = _inputCtrl.text.trim();
     if (raw.isEmpty) {
@@ -132,35 +166,13 @@ class _ConversionScreenState extends State<ConversionScreen> {
       _error = null;
       _output = null;
     });
-    String? output;
-    bool ai = false;
-    // 1) Real AI conversion.
-    try {
-      output = await _askAi(
-        _buildAiPrompt(raw, _formatKeys[_format], appState.localeCode),
-      );
-      ai = output != null;
-    } catch (_) {}
-    // 2) Backend fallback.
-    if (output == null) {
-      try {
-        final token = authStore.accessToken;
-        final res = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/v1/content/transform'),
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null && token.isNotEmpty)
-              'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({'text': raw}),
-        );
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          output = _formatBackend(data);
-          ai = false;
-        }
-      } catch (_) {}
-    }
+    // 1+2) Race the real AI against the backend — fastest wins.
+    final won = await raceFirst([
+      _aiAttempt(raw),
+      _backendAttempt(raw),
+    ]);
+    String? output = won?.output;
+    bool ai = won?.ai ?? false;
     // 3) On-device fallback — always produces output, zero network.
     if (output == null || output.isEmpty) {
       output = LocalCreator.buildConversion(

@@ -66,7 +66,7 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
     final url =
         'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
     final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 60),
+          const Duration(seconds: 20),
         );
     if (res.statusCode != 200 || res.body.trim().isEmpty) return null;
     final blocks = res.body.split(RegExp(r'\n\s*\n'));
@@ -90,6 +90,39 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
     return out.isEmpty ? null : out;
   }
 
+  Future<({List<_Caption> captions, bool ai})?> _aiAttempt(
+      String topic) async {
+    try {
+      final captions = await _askAi(
+        _buildAiPrompt(topic, _tab == 1, appState.localeCode),
+      );
+      if (captions == null || captions.isEmpty) return null;
+      return (captions: captions, ai: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<({List<_Caption> captions, bool ai})?> _backendAttempt(
+      String topic) async {
+    try {
+      final r = await apiClient.createCaptions(
+        topic,
+        language: appState.localeCode,
+      );
+      final captions = (((r['captions'] as List?) ?? [])
+              .map((e) => (e as Map).cast<String, dynamic>())
+              .toList())
+          .map((c) =>
+              _Caption('${c['text'] ?? ''}', '${c['hashtags'] ?? ''}'))
+          .toList();
+      if (captions.isEmpty) return null;
+      return (captions: captions, ai: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _generate() async {
     final topic = _topicCtrl.text.trim();
     if (topic.isEmpty) {
@@ -103,31 +136,13 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
       _captions = [];
       _selected.clear();
     });
-    List<_Caption>? captions;
-    bool ai = false;
-    // 1) Real AI.
-    try {
-      captions = await _askAi(
-        _buildAiPrompt(topic, _tab == 1, appState.localeCode),
-      );
-      ai = captions != null;
-    } catch (_) {}
-    // 2) Backend fallback.
-    if (captions == null) {
-      try {
-        final r = await apiClient.createCaptions(
-          topic,
-          language: appState.localeCode,
-        );
-        captions = (((r['captions'] as List?) ?? [])
-                .map((e) => (e as Map).cast<String, dynamic>())
-                .toList())
-            .map((c) => _Caption(
-                '${c['text'] ?? ''}', '${c['hashtags'] ?? ''}'))
-            .toList();
-        ai = false;
-      } catch (_) {}
-    }
+    // 1+2) Race the real AI against the backend — fastest wins.
+    final won = await raceFirst([
+      _aiAttempt(topic),
+      _backendAttempt(topic),
+    ]);
+    List<_Caption>? captions = won?.captions;
+    bool ai = won?.ai ?? false;
     // 3) On-device fallback — always produces drafts, zero network.
     if (captions == null || captions.isEmpty) {
       captions = LocalCreator.buildCaptions(topic, appState.localeCode)

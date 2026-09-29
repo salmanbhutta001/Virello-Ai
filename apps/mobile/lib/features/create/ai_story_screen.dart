@@ -61,12 +61,61 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
     final url =
         'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
     final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 60),
+          const Duration(seconds: 20),
         );
     if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
       return res.body.trim();
     }
     return null;
+  }
+
+  Future<({String title, String body, bool ai})?> _aiAttempt(
+      String prompt) async {
+    try {
+      final aiText = await _askAi(
+        _buildAiPrompt(prompt, _length, appState.localeCode),
+      );
+      if (aiText == null || aiText.isEmpty) return null;
+      final lines = aiText.split('\n');
+      final titleIdx =
+          lines.indexWhere((l) => l.trim().toUpperCase().startsWith('TITLE:'));
+      if (titleIdx >= 0) {
+        return (
+          title: lines[titleIdx]
+              .replaceFirst(RegExp(r'(?i)^title:\s*'), '')
+              .trim(),
+          body: lines
+              .asMap()
+              .entries
+              .where((e) => e.key != titleIdx)
+              .map((e) => e.value)
+              .join('\n')
+              .trim(),
+          ai: true,
+        );
+      }
+      return (title: prompt, body: aiText, ai: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<({String title, String body, bool ai})?> _backendAttempt(
+      String prompt) async {
+    try {
+      final lengths = ['short', 'medium', 'long'];
+      final r = await apiClient.generateStory(
+        prompt: prompt,
+        length: lengths[_length],
+        language: appState.localeCode,
+      );
+      final story = (r['story'] as Map?)?.cast<String, dynamic>();
+      final body = '${story?['body'] ?? ''}';
+      if (body.isEmpty) return null;
+      return (title: '${story?['title'] ?? prompt}', body: body, ai: false);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _generate() async {
@@ -82,53 +131,15 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
       _storyTitle = null;
       _storyBody = null;
     });
-    String? title;
-    String? body;
-    bool ai = false;
-    try {
-      // 1) Real AI provider.
-      final aiText = await _askAi(
-        _buildAiPrompt(prompt, _length, appState.localeCode),
-      );
-      if (aiText != null) {
-        final lines = aiText.split('\n');
-        final titleIdx =
-            lines.indexWhere((l) => l.trim().toUpperCase().startsWith('TITLE:'));
-        if (titleIdx >= 0) {
-          title = lines[titleIdx]
-              .replaceFirst(RegExp(r'(?i)^title:\s*'), '')
-              .trim();
-          body = lines
-              .asMap()
-              .entries
-              .where((e) => e.key != titleIdx)
-              .map((e) => e.value)
-              .join('\n')
-              .trim();
-        } else {
-          title = prompt;
-          body = aiText;
-        }
-        ai = true;
-      }
-    } catch (_) {
-      // Fall through to backend heuristic.
-    }
-    // 2) Backend fallback (heuristic draft).
-    if (body == null || body.isEmpty) {
-      try {
-        final lengths = ['short', 'medium', 'long'];
-        final r = await apiClient.generateStory(
-          prompt: prompt,
-          length: lengths[_length],
-          language: appState.localeCode,
-        );
-        final story = (r['story'] as Map?)?.cast<String, dynamic>();
-        title = '${story?['title'] ?? prompt}';
-        body = '${story?['body'] ?? ''}';
-        ai = false;
-      } catch (_) {}
-    }
+    // 1+2) Race the real AI provider against the backend heuristic —
+    // whichever answers first wins.
+    final won = await raceFirst([
+      _aiAttempt(prompt),
+      _backendAttempt(prompt),
+    ]);
+    String? title = won?.title;
+    String? body = won?.body;
+    bool ai = won?.ai ?? false;
     // 3) On-device fallback — always produces a draft, zero network.
     if (body == null || body.isEmpty) {
       final local =

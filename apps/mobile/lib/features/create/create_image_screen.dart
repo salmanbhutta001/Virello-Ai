@@ -48,7 +48,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     final styled = '$prompt, ${_styleSuffix[style]}';
     final q = Uri.encodeComponent(styled);
     return 'https://image.pollinations.ai/prompt/$q'
-        '?width=1024&height=1024&seed=$seed&nologo=true&model=flux&private=true';
+        '?width=1024&height=1024&seed=$seed&nologo=true&model=turbo&private=true';
   }
 
   @override
@@ -79,7 +79,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   /// forever. After 2 minutes without a loaded image, show retry.
   void _armTimeout() {
     _genTimer?.cancel();
-    _genTimer = Timer(const Duration(seconds: 120), () {
+    _genTimer = Timer(const Duration(seconds: 60), () {
       if (mounted && _loading) {
         setState(() {
           _loading = false;

@@ -68,7 +68,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   String _sceneUrl(String prompt, int seed) {
     final q = Uri.encodeComponent(prompt);
     return 'https://image.pollinations.ai/prompt/$q'
-        '?width=1024&height=1024&seed=$seed&nologo=true&model=flux&private=true';
+        '?width=1024&height=1024&seed=$seed&nologo=true&model=turbo&private=true';
   }
 
   Future<List<String>> _loadTab() async {
