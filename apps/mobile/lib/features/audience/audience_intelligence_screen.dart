@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/strings.dart';
+import '../../core/theme.dart';
 import '../../data/ads_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
