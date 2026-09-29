@@ -224,7 +224,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
               Text('${l['description'] ?? ''}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: VTheme.textSec(context),
                       fontSize: 13,
                       height: 1.4)),
@@ -268,7 +268,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(s.startLesson,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: VTheme.textSec(context))),
@@ -288,7 +288,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
                               size: 13, color: VirelloColors.amber),
                           const SizedBox(width: 4),
                           Text('${s.quizScore} $quizScore',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: VTheme.textSec(context))),
@@ -459,7 +459,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text('${_lesson['description'] ?? ''}',
-              style: const TextStyle(
+              style: TextStyle(
                   color: VTheme.textSec(context), fontSize: 14, height: 1.5)),
           const SizedBox(height: 16),
           for (final sec in sections)
@@ -631,7 +631,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text('${result['explanation']}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12,
                           height: 1.5,
                           color: VTheme.textSec(context))),
