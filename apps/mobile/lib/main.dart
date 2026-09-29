@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/theme.dart';
 import 'core/strings.dart';
 import 'services/api_client.dart';
@@ -7,7 +8,10 @@ import 'services/auth_store.dart';
 import 'services/saved_store.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/onboarding/language_select_screen.dart';
+import 'features/onboarding/interests_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/splash/welcome_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/discovery/discovery_screen.dart';
 import 'features/create/create_hub_screen.dart';
@@ -84,12 +88,28 @@ class VirelloApp extends StatefulWidget {
 class _VirelloAppState extends State<VirelloApp> {
   bool _trackedOpen = false;
   bool _splashSeen = false;
+  // Master-board post-sign-in onboarding: 0 = language select, 1 = interests.
+  int _boardStep = 0;
+  bool _boardOnboarded = false;
 
   @override
   void initState() {
     super.initState();
     appState.addListener(() => setState(() {}));
     authStore.addListener(_onAuthChanged);
+    _loadBoardFlag();
+  }
+
+  Future<void> _loadBoardFlag() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(
+          () => _boardOnboarded =
+              prefs.getBool('virello_board_onboarded') ?? false,
+        );
+      }
+    } catch (_) {}
   }
 
   @override
@@ -125,15 +145,28 @@ class _VirelloAppState extends State<VirelloApp> {
     if (!authStore.loaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    // If signed in, go straight to the app (skip splash).
-    // If not signed in, show splash first, then login.
+    // Signed-out: Splash (board 01) -> Welcome (board 02) -> Sign In.
     if (!authStore.signedIn) {
       if (!_splashSeen) {
         return SplashScreen(
           onGetStarted: () => setState(() => _splashSeen = true),
         );
       }
-      return const SignInScreen();
+      return const WelcomeScreen();
+    }
+    // Signed-in: board Language Select (05) -> Interests (06), once.
+    if (!_boardOnboarded) {
+      if (_boardStep == 0) {
+        return LanguageSelectScreen(
+          onDone: () => setState(() => _boardStep = 1),
+        );
+      }
+      return InterestsScreen(
+        onDone: () => setState(() {
+          _boardStep = 0;
+          _boardOnboarded = true;
+        }),
+      );
     }
     return const RootShell();
   }
@@ -254,9 +287,9 @@ class _RootShellState extends State<RootShell> {
       bottom: 96,
       child: GestureDetector(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AskVirelloScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AskVirelloScreen()));
         },
         child: Container(
           width: 56,
@@ -291,7 +324,8 @@ class _RootShellState extends State<RootShell> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(
-            top: BorderSide(color: VirelloColors.divider, width: 1)),
+          top: BorderSide(color: VirelloColors.divider, width: 1),
+        ),
         boxShadow: [
           BoxShadow(
             color: VirelloColors.navy.withValues(alpha: 0.06),
@@ -316,20 +350,24 @@ class _RootShellState extends State<RootShell> {
                     children: [
                       Icon(
                         active ? it.activeIcon : it.icon,
-                        color:
-                            active ? VirelloColors.violet : VirelloColors.muted,
+                        color: active
+                            ? VirelloColors.violet
+                            : VirelloColors.muted,
                         size: 24,
                       ),
                       const SizedBox(height: 3),
-                      Text(it.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight:
-                                active ? FontWeight.w700 : FontWeight.w500,
-                            color: active
-                                ? VirelloColors.violet
-                                : VirelloColors.muted,
-                          )),
+                      Text(
+                        it.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: active
+                              ? VirelloColors.violet
+                              : VirelloColors.muted,
+                        ),
+                      ),
                     ],
                   ),
                 ),

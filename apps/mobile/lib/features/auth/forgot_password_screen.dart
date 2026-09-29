@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
+import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
 /// "Forgot password?" — step 1: email an OTP code (proves ownership);
 /// step 2: code + new password. Backend signs the user in on success.
 /// Also lets OTP/OAuth accounts attach a password for the first time.
+/// Board styling: dark background, dark icon fields, pink buttons.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
   @override
@@ -41,14 +44,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => _error = s.invalidEmail);
       return;
     }
-    setState(() { _working = true; _error = null; });
+    setState(() {
+      _working = true;
+      _error = null;
+    });
     try {
       await authStore.requestPasswordReset(email);
       if (!mounted) return;
-      setState(() { _codeSent = true; _working = false; });
+      setState(() {
+        _codeSent = true;
+        _working = false;
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _working = false; _error = s.signInFailed; });
+      setState(() {
+        _working = false;
+        _error = s.signInFailed;
+      });
     }
   }
 
@@ -65,161 +77,135 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => _error = s.passwordsDontMatch);
       return;
     }
-    setState(() { _working = true; _error = null; });
+    setState(() {
+      _working = true;
+      _error = null;
+    });
     try {
       await authStore.confirmPasswordReset(
-          _emailCtrl.text, _codeCtrl.text, _passwordCtrl.text);
+        _emailCtrl.text,
+        _codeCtrl.text,
+        _passwordCtrl.text,
+      );
       // AuthStore notifies; main.dart swaps to the app shell.
     } catch (e) {
       if (!mounted) return;
-      setState(() { _working = false; _error = _friendly(e); });
+      setState(() {
+        _working = false;
+        _error = _friendly(e);
+      });
     }
   }
 
   String _friendly(Object e) {
     if (e is ApiException && e.status == 401) return s.invalidCode;
-    if (e is ApiException && e.status == 422) return s.passwordTooShort;
-    if (e is ApiException && e.status == 404) return s.invalidEmailOrPassword;
     return s.signInFailed;
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    bool obscure = false,
-    Widget? suffix,
-    Widget? prefix,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$label *',
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            obscureText: obscure,
-            autocorrect: false,
-            enableSuggestions: !obscure,
-            decoration: InputDecoration(
-              hintText: hint,
-              prefixIcon: prefix,
-              suffixIcon: suffix,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14),
-            ),
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _codeSent ? _reset() : _sendCode(),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _eye(bool obscured, VoidCallback onTap) => IconButton(
+    icon: Icon(
+      obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+      color: VirelloColors.boardTextSec,
+    ),
+    onPressed: onTap,
+  );
 
   @override
   Widget build(BuildContext context) {
-    const violet = Color(0xFF4F50FE);
     return Scaffold(
+      backgroundColor: VirelloColors.boardBg,
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: const BackButton(color: Colors.white),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(s.resetPasswordTitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 26, fontWeight: FontWeight.w800)),
+                Text(
+                  s.resetPasswordTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 24),
                 if (!_codeSent) ...[
-                  _field(
+                  VDarkField(
                     controller: _emailCtrl,
-                    label: s.emailLabel,
                     hint: s.emailHint,
+                    icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _sendCode(),
                   ),
                   if (_error != null) ...[
-                    Text(_error!,
-                        style: const TextStyle(
-                            color: Colors.red, fontSize: 13)),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: VirelloColors.pink,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
-                  FilledButton(
-                    onPressed: (_emailCtrl.text.trim().contains('@') &&
-                            !_working)
+                  const SizedBox(height: 20),
+                  VPinkButton(
+                    label: s.sendCodeBtn,
+                    loading: _working,
+                    onPressed:
+                        (_emailCtrl.text.trim().contains('@') && !_working)
                         ? _sendCode
                         : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: violet,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999)),
-                    ),
-                    child: _working
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : Text(s.sendCodeBtn,
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700)),
                   ),
                 ] else ...[
-                  Text('${s.codeSentTo} ${_emailCtrl.text.trim()}',
-                      style: const TextStyle(
-                          fontSize: 13.5, color: Colors.grey)),
+                  Text(
+                    '${s.codeSentTo} ${_emailCtrl.text.trim()}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: VirelloColors.boardTextSec,
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  _field(
+                  VDarkField(
                     controller: _codeCtrl,
-                    label: s.enterCode,
                     hint: s.codeHint,
+                    icon: Icons.key_outlined,
                     keyboardType: TextInputType.number,
-                    prefix: const Icon(Icons.key_outlined),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  _field(
+                  const SizedBox(height: 14),
+                  VDarkField(
                     controller: _passwordCtrl,
-                    label: s.newPasswordLabel,
                     hint: s.passwordHint,
+                    icon: Icons.lock_outline,
                     obscure: _obscure1,
-                    suffix: IconButton(
-                      icon: Icon(_obscure1
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
-                      onPressed: () =>
-                          setState(() => _obscure1 = !_obscure1),
+                    suffix: _eye(
+                      _obscure1,
+                      () => setState(() => _obscure1 = !_obscure1),
                     ),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  _field(
+                  const SizedBox(height: 14),
+                  VDarkField(
                     controller: _confirmCtrl,
-                    label: s.confirmPasswordLabel,
                     hint: s.confirmPasswordLabel,
+                    icon: Icons.lock_outline,
                     obscure: _obscure2,
-                    suffix: IconButton(
-                      icon: Icon(_obscure2
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
-                      onPressed: () =>
-                          setState(() => _obscure2 = !_obscure2),
+                    suffix: _eye(
+                      _obscure2,
+                      () => setState(() => _obscure2 = !_obscure2),
                     ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _reset(),
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -227,34 +213,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       onPressed: _working
                           ? null
                           : () => setState(() => _codeSent = false),
-                      child: Text(s.useDifferentEmail),
+                      child: Text(
+                        s.useDifferentEmail,
+                        style: const TextStyle(color: VirelloColors.pink),
+                      ),
                     ),
                   ),
                   if (_error != null) ...[
-                    Text(_error!,
-                        style: const TextStyle(
-                            color: Colors.red, fontSize: 13)),
-                    const SizedBox(height: 10),
-                  ],
-                  FilledButton(
-                    onPressed: _working ? null : _reset,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: violet,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999)),
+                    const SizedBox(height: 4),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: VirelloColors.pink,
+                        fontSize: 13,
+                      ),
                     ),
-                    child: _working
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : Text(s.resetPasswordBtn,
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700)),
+                  ],
+                  const SizedBox(height: 14),
+                  VPinkButton(
+                    label: s.resetPasswordBtn,
+                    loading: _working,
+                    onPressed: _working ? null : _reset,
                   ),
                 ],
                 const SizedBox(height: 20),

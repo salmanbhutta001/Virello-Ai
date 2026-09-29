@@ -1,5 +1,7 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import 'theme.dart';
 
 /// Shared board-style components: gradient button, pill tabs, score ring,
@@ -41,11 +43,14 @@ class VGradientButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
               if (icon != null) ...[
                 const SizedBox(width: 8),
                 Icon(icon, color: Colors.white, size: 20),
@@ -83,18 +88,22 @@ class VPillTabs extends StatelessWidget {
               onTap: () => onTap(i),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: active ? VirelloColors.violet : VirelloColors.chipBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(tabs[i],
-                    style: TextStyle(
-                      color: active ? Colors.white : VirelloColors.mutedDark,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    )),
+                child: Text(
+                  tabs[i],
+                  style: TextStyle(
+                    color: active ? Colors.white : VirelloColors.mutedDark,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ),
           );
@@ -116,8 +125,8 @@ class VScoreRing extends StatelessWidget {
     final color = s >= 70
         ? VirelloColors.success
         : s >= 45
-            ? VirelloColors.amber
-            : VirelloColors.violet;
+        ? VirelloColors.amber
+        : VirelloColors.violet;
     return SizedBox(
       width: size,
       height: size,
@@ -135,14 +144,25 @@ class VScoreRing extends StatelessWidget {
               strokeCap: StrokeCap.round,
             ),
           ),
-          Column(mainAxisSize: MainAxisSize.min, children: [
-            Text('${s.round()}',
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${s.round()}',
                 style: TextStyle(
-                    fontSize: size * 0.3, fontWeight: FontWeight.w900)),
-            Text('/ 100',
+                  fontSize: size * 0.3,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                '/ 100',
                 style: TextStyle(
-                    color: VirelloColors.muted, fontSize: size * 0.1)),
-          ]),
+                  color: VirelloColors.muted,
+                  fontSize: size * 0.1,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -154,8 +174,12 @@ class VShimmerBox extends StatefulWidget {
   final double? width;
   final double height;
   final double radius;
-  const VShimmerBox(
-      {super.key, this.width, required this.height, this.radius = 12});
+  const VShimmerBox({
+    super.key,
+    this.width,
+    required this.height,
+    this.radius = 12,
+  });
 
   @override
   State<VShimmerBox> createState() => _VShimmerBoxState();
@@ -169,8 +193,9 @@ class _VShimmerBoxState extends State<VShimmerBox>
   void initState() {
     super.initState();
     _c = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1100))
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -202,8 +227,11 @@ class VDonutSlice {
   final String label;
   final double value; // 0..1 share
   final Color color;
-  const VDonutSlice(
-      {required this.label, required this.value, required this.color});
+  const VDonutSlice({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 }
 
 /// Donut chart drawn with a CustomPainter — no extra dependencies.
@@ -214,38 +242,54 @@ class VDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(painter: _DonutPainter(slices)),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: slices
-              .map((sl) => Padding(
+    return Row(
+      children: [
+        SizedBox(
+          width: size,
+          height: size,
+          child: CustomPaint(painter: _DonutPainter(slices)),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: slices
+                .map(
+                  (sl) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(children: [
-                      Container(
+                    child: Row(
+                      children: [
+                        Container(
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                              color: sl.color, shape: BoxShape.circle)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: Text(sl.label,
-                              style: const TextStyle(fontSize: 12))),
-                      Text('${(sl.value * 100).round()}%',
+                            color: sl.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            sl.label,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        Text(
+                          '${(sl.value * 100).round()}%',
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700)),
-                    ]),
-                  ))
-              .toList(),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 }
 
@@ -265,19 +309,26 @@ class _DonutPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = radius * 0.42
         ..strokeCap = StrokeCap.butt;
-      canvas.drawArc(Rect.fromCircle(center: center, radius: radius * 0.75),
-          start, sweep, false, paint);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius * 0.75),
+        start,
+        sweep,
+        false,
+        paint,
+      );
       start += sweep;
     }
     // Center label: top slice share.
     if (slices.isNotEmpty) {
       final tp = TextPainter(
         text: TextSpan(
-            text: '${(slices.first.value * 100).round()}%',
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: VirelloColors.ink)),
+          text: '${(slices.first.value * 100).round()}%',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: VirelloColors.ink,
+          ),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
@@ -303,14 +354,19 @@ class VStatTile extends StatelessWidget {
           color: VirelloColors.chipBg,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(children: [
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(fontSize: 11, color: VirelloColors.muted)),
-        ]),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: VirelloColors.muted),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -342,15 +398,21 @@ class VSearchBar extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: VirelloColors.muted, fontSize: 14),
-        prefixIcon:
-            const Icon(Icons.search, color: VirelloColors.muted, size: 22),
+        prefixIcon: const Icon(
+          Icons.search,
+          color: VirelloColors.muted,
+          size: 22,
+        ),
         filled: true,
         fillColor: VirelloColors.chipBg,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -361,26 +423,37 @@ class VSectionHeader extends StatelessWidget {
   final String title;
   final String? actionLabel;
   final VoidCallback? onAction;
-  const VSectionHeader(
-      {super.key, required this.title, this.actionLabel, this.onAction});
+  const VSectionHeader({
+    super.key,
+    required this.title,
+    this.actionLabel,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Expanded(
-          child: Text(title,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-      if (actionLabel != null)
-        GestureDetector(
-          onTap: onAction,
-          child: Text(actionLabel!,
-              style: const TextStyle(
-                  fontSize: 13,
-                  color: VirelloColors.violet,
-                  fontWeight: FontWeight.w700)),
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
         ),
-    ]);
+        if (actionLabel != null)
+          GestureDetector(
+            onTap: onAction,
+            child: Text(
+              actionLabel!,
+              style: const TextStyle(
+                fontSize: 13,
+                color: VirelloColors.violet,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -409,7 +482,10 @@ class VCard extends StatelessWidget {
     );
     if (onTap == null) return card;
     return InkWell(
-        onTap: onTap, borderRadius: BorderRadius.circular(20), child: card);
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: card,
+    );
   }
 }
 
@@ -445,16 +521,21 @@ class VPinkButton extends StatelessWidget {
             disabledBackgroundColor: VirelloColors.pink,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
+              borderRadius: BorderRadius.circular(14),
+            ),
             textStyle: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w700),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           child: loading
               ? const SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2.5, color: Colors.white),
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
                 )
               : Text(label),
         ),
@@ -503,24 +584,25 @@ class VDarkField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-            color: VirelloColors.boardTextSec, fontSize: 14),
-        prefixIcon:
-            Icon(icon, color: VirelloColors.boardTextSec, size: 20),
+          color: VirelloColors.boardTextSec,
+          fontSize: 14,
+        ),
+        prefixIcon: Icon(icon, color: VirelloColors.boardTextSec, size: 20),
         suffixIcon: suffix,
         filled: true,
         fillColor: VirelloColors.boardField,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: VirelloColors.boardBorder),
+          borderSide: const BorderSide(color: VirelloColors.boardBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: VirelloColors.pink, width: 1.5),
+          borderSide: const BorderSide(color: VirelloColors.pink, width: 1.5),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
     );
   }
@@ -546,39 +628,33 @@ class VSelectChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
-          color: selected
-              ? VirelloColors.pink
-              : VirelloColors.boardField,
+          color: selected ? VirelloColors.pink : VirelloColors.boardField,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected
-                ? VirelloColors.pink
-                : VirelloColors.boardBorder,
+            color: selected ? VirelloColors.pink : VirelloColors.boardBorder,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon,
-                  size: 16,
-                  color: selected
-                      ? Colors.white
-                      : VirelloColors.boardTextSec),
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? Colors.white : VirelloColors.boardTextSec,
+              ),
               const SizedBox(width: 6),
             ],
-            Text(label,
-                style: TextStyle(
-                  color: selected
-                      ? Colors.white
-                      : VirelloColors.boardTextSec,
-                  fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w600,
-                  fontSize: 13.5,
-                )),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : VirelloColors.boardTextSec,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                fontSize: 13.5,
+              ),
+            ),
           ],
         ),
       ),
@@ -605,16 +681,16 @@ class VBoardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VirelloColors.boardSurface,
         borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: VirelloColors.boardBorder, width: 1),
+        border: Border.all(color: VirelloColors.boardBorder, width: 1),
       ),
       child: child,
     );
     if (onTap == null) return card;
     return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: card);
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: card,
+    );
   }
 }
 
@@ -622,8 +698,7 @@ class VBoardCard extends StatelessWidget {
 class VPinkCircleButton extends StatelessWidget {
   final VoidCallback onPressed;
   final double size;
-  const VPinkCircleButton(
-      {super.key, required this.onPressed, this.size = 56});
+  const VPinkCircleButton({super.key, required this.onPressed, this.size = 56});
 
   @override
   Widget build(BuildContext context) {
@@ -708,19 +783,14 @@ class VGlassLangBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             gradient: LinearGradient(
               colors: dark
-                  ? [
-                      const Color(0xB32A2B45),
-                      const Color(0x80332E5C),
-                    ]
-                  : [
-                      const Color(0xC4FFFFFF),
-                      const Color(0xA6F0EEFF),
-                    ],
+                  ? [const Color(0xB32A2B45), const Color(0x80332E5C)]
+                  : [const Color(0xC4FFFFFF), const Color(0xA6F0EEFF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-                color: VirelloColors.violet.withValues(alpha: 0.35)),
+              color: VirelloColors.violet.withValues(alpha: 0.35),
+            ),
             boxShadow: [
               BoxShadow(
                 color: VirelloColors.violet.withValues(alpha: 0.18),

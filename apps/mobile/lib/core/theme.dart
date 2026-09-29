@@ -42,12 +42,12 @@ class VirelloColors {
   );
 
   static List<BoxShadow> get cardShadow => [
-        BoxShadow(
-          color: const Color(0xFF1C1D33).withValues(alpha: 0.08),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: const Color(0xFF1C1D33).withValues(alpha: 0.08),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }
 
 /// Virello premium theme: board pink primary.
@@ -57,8 +57,10 @@ class VirelloTheme {
   static const _seed = VirelloColors.pink; // 2026-09-29 board accent
 
   static ThemeData dark() {
-    var scheme =
-        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark);
+    var scheme = ColorScheme.fromSeed(
+      seedColor: _seed,
+      brightness: Brightness.dark,
+    );
     // Board look: near-black page, dark cards.
     scheme = scheme.copyWith(
       surface: VirelloColors.boardBg,
@@ -68,8 +70,10 @@ class VirelloTheme {
   }
 
   static ThemeData light() {
-    var scheme =
-        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.light);
+    var scheme = ColorScheme.fromSeed(
+      seedColor: _seed,
+      brightness: Brightness.light,
+    );
     // Board look: pure white page background.
     scheme = scheme.copyWith(surface: Colors.white);
     return _base(scheme, Brightness.light);
@@ -90,7 +94,10 @@ class VirelloTheme {
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-            fontSize: 20, fontWeight: FontWeight.w700, color: scheme.onSurface),
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -105,23 +112,28 @@ class VirelloTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         indicatorColor: scheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

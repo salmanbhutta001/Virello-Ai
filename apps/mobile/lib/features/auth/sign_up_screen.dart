@@ -1,12 +1,23 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../core/brand_icons.dart';
 import '../../core/strings.dart';
+import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
-/// Email + password account creation. Backend bcrypt-hashes the password
-/// and returns the JWT pair (signed in immediately).
+/// Board screen 03 — Create Account: dark fields (Full name / Email /
+/// Password), pink Sign Up, "or continue with" + Google/Apple/Facebook
+/// circles, "Already have an account? Log In".
+///
+/// Logic preserved: email+password signup (backend bcrypt), Google/Apple
+/// OAuth (backend-verified). We never ask for social-media passwords.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
   @override
@@ -17,10 +28,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
   bool _working = false;
-  bool _obscure1 = true;
-  bool _obscure2 = true;
+  bool _obscure = true;
   String? _error;
 
   AppStrings get s => AppStrings(appState.localeCode);
@@ -30,7 +39,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
-    _confirmCtrl.dispose();
     super.dispose();
   }
 
@@ -44,18 +52,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() => _error = s.passwordTooShort);
       return;
     }
-    if (_passwordCtrl.text != _confirmCtrl.text) {
-      setState(() => _error = s.passwordsDontMatch);
-      return;
-    }
-    setState(() { _working = true; _error = null; });
+    setState(() {
+      _working = true;
+      _error = null;
+    });
     try {
       await authStore.signUpWithPassword(
-          email, _passwordCtrl.text, _nameCtrl.text);
+        email,
+        _passwordCtrl.text,
+        _nameCtrl.text.trim(),
+      );
       // AuthStore notifies; main.dart swaps to the app shell.
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = _friendly(e); });
+      setState(() {
+        _error = _friendly(e);
+      });
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -67,189 +79,233 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return s.signInFailed;
   }
 
-  void _policySoon() {
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _working = true;
+      _error = null;
+    });
+    try {
+      final account = await GoogleSignIn(scopes: const ['email', 'profile'])
+          .signIn();
+      if (account == null) {
+        if (mounted) setState(() => _working = false);
+        return;
+      }
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('missing id_token');
+      }
+      await authStore.signInWithProvider('google', idToken, account.email);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _working = false;
+        _error = s.socialSignInFailed;
+      });
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    setState(() {
+      _working = true;
+      _error = null;
+    });
+    try {
+      final cred = await SignInWithApple.getAppleIDCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final idToken = cred.identityToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('missing identity token');
+      }
+      await authStore.signInWithProvider('apple', idToken, cred.email);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _working = false;
+        _error = s.socialSignInFailed;
+      });
+    }
+  }
+
+  void _facebookSoon() {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(s.policySoon)));
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    bool optional = false,
-    bool obscure = false,
-    Widget? suffix,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(optional ? label : '$label *',
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            obscureText: obscure,
-            autocorrect: false,
-            enableSuggestions: !obscure,
-            decoration: InputDecoration(
-              hintText: hint,
-              suffixIcon: suffix,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14),
-            ),
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _signUp(),
-          ),
-        ],
+  Widget _socialCircle({required Widget child, required VoidCallback? onTap}) {
+    return InkWell(
+      onTap: _working ? null : onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: VirelloColors.boardField,
+          border: Border.all(color: VirelloColors.boardBorder),
+        ),
+        alignment: Alignment.center,
+        child: child,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const violet = Color(0xFF4F50FE);
-    final canSubmit = _emailCtrl.text.trim().contains('@') &&
-        _passwordCtrl.text.isNotEmpty &&
-        _confirmCtrl.text.isNotEmpty &&
+    final canSubmit =
+        _emailCtrl.text.trim().contains('@') &&
+        _passwordCtrl.text.length >= 8 &&
         !_working;
     return Scaffold(
+      backgroundColor: VirelloColors.boardBg,
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: const BackButton(color: Colors.white),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(s.signUpTitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 26, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    style:
-                        const TextStyle(fontSize: 12.5, color: Colors.grey),
-                    children: [
-                      TextSpan(text: s.loginAgreementLead),
-                      TextSpan(
-                        text: s.userAgreement,
-                        style: const TextStyle(
-                            color: violet, fontWeight: FontWeight.w600),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = _policySoon,
-                      ),
-                      TextSpan(text: s.loginAgreementMid),
-                      TextSpan(
-                        text: s.privacyPolicy,
-                        style: const TextStyle(
-                            color: violet, fontWeight: FontWeight.w600),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = _policySoon,
-                      ),
-                      const TextSpan(text: '.'),
-                    ],
-                  ),
+                Text(
+                  s.boardCreateAccount,
                   textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                const SizedBox(height: 24),
-                _field(
+                const SizedBox(height: 28),
+                VDarkField(
                   controller: _nameCtrl,
-                  label: s.nameLabelOptional,
-                  hint: s.nameLabelOptional,
-                  optional: true,
+                  hint: s.boardFullName,
+                  icon: Icons.person_outline,
+                  keyboardType: TextInputType.name,
+                  onChanged: (_) => setState(() {}),
                 ),
-                _field(
+                const SizedBox(height: 14),
+                VDarkField(
                   controller: _emailCtrl,
-                  label: s.emailLabel,
                   hint: s.emailHint,
+                  icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => _signUp(),
                 ),
-                _field(
+                const SizedBox(height: 14),
+                VDarkField(
                   controller: _passwordCtrl,
-                  label: s.passwordLabel,
                   hint: s.passwordHint,
-                  obscure: _obscure1,
+                  icon: Icons.lock_outline,
+                  obscure: _obscure,
                   suffix: IconButton(
-                    icon: Icon(_obscure1
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
-                    onPressed: () =>
-                        setState(() => _obscure1 = !_obscure1),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: VirelloColors.boardTextSec,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
                   ),
-                ),
-                _field(
-                  controller: _confirmCtrl,
-                  label: s.confirmPasswordLabel,
-                  hint: s.confirmPasswordLabel,
-                  obscure: _obscure2,
-                  suffix: IconButton(
-                    icon: Icon(_obscure2
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
-                    onPressed: () =>
-                        setState(() => _obscure2 = !_obscure2),
-                  ),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => _signUp(),
                 ),
                 if (_error != null) ...[
-                  Text(_error!,
-                      style:
-                          const TextStyle(color: Colors.red, fontSize: 13)),
-                  const SizedBox(height: 10),
-                ],
-                FilledButton(
-                  onPressed: canSubmit ? _signUp : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: violet,
-                    disabledBackgroundColor: Colors.grey.shade300,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999)),
+                  const SizedBox(height: 12),
+                  Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: VirelloColors.pink,
+                      fontSize: 13,
+                    ),
                   ),
-                  child: _working
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : Text(s.signUpBtn,
-                          style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700)),
+                ],
+                const SizedBox(height: 22),
+                VPinkButton(
+                  label: s.signUpBtn,
+                  loading: _working,
+                  onPressed: canSubmit ? _signUp : null,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Divider(color: VirelloColors.boardBorder),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        s.orContinueWith,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: VirelloColors.boardTextSec,
+                        ),
+                      ),
+                    ),
+                    const Expanded(
+                      child: Divider(color: VirelloColors.boardBorder),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 18),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(s.alreadyHaveAccountQ,
-                        style: const TextStyle(
-                            fontSize: 13.5, color: Colors.grey)),
-                    TextButton(
-                      onPressed: _working
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4)),
-                      child: Text(s.logInLink,
-                          style: const TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: violet)),
+                    _socialCircle(
+                      onTap: _signInWithGoogle,
+                      child: const GoogleGIcon(size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                    if (Platform.isIOS)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: _socialCircle(
+                          onTap: _signInWithApple,
+                          child: const IconTheme(
+                            data: IconThemeData(color: Colors.white),
+                            child: AppleIcon(size: 24),
+                          ),
+                        ),
+                      ),
+                    _socialCircle(
+                      onTap: _facebookSoon,
+                      child: const FacebookIcon(size: 22),
                     ),
                   ],
+                ),
+                const SizedBox(height: 22),
+                Text.rich(
+                  TextSpan(
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: VirelloColors.boardTextSec,
+                    ),
+                    children: [
+                      TextSpan(text: s.alreadyHaveAccountQ),
+                      TextSpan(
+                        text: ' ${s.logInLink}',
+                        style: const TextStyle(
+                          color: VirelloColors.pink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = _working
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
               ],

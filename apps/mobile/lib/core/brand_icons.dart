@@ -6,11 +6,9 @@ import 'package:flutter/material.dart';
 /// relative). Not a general-purpose SVG parser.
 Path _parseSvgPath(String d) {
   final path = Path();
-  final tokens =
-      RegExp(r'[MLHVCSZmlhvcs]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?')
-          .allMatches(d)
-          .map((m) => m.group(0)!)
-          .toList();
+  final tokens = RegExp(
+    r'[MLHVCSZmlhvcs]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?',
+  ).allMatches(d).map((m) => m.group(0)!).toList();
   int i = 0;
   String cmd = '';
   double cx = 0, cy = 0, sx = 0, sy = 0;
@@ -139,7 +137,11 @@ class _BrandPainter extends CustomPainter {
     canvas.scale(size.width / 24);
     for (final (color, p) in parts) {
       canvas.drawPath(
-          p, Paint()..color = color..style = PaintingStyle.fill);
+        p,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill,
+      );
     }
   }
 
@@ -155,28 +157,29 @@ class GoogleGIcon extends StatelessWidget {
   static final _parts = <(int, String)>[
     (
       0xFF4285F4,
-      'M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45c-.28 1.48-1.12 2.73-2.38 3.58v2.97h3.86c2.26-2.09 3.57-5.16 3.57-8.74z'
+      'M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45c-.28 1.48-1.12 2.73-2.38 3.58v2.97h3.86c2.26-2.09 3.57-5.16 3.57-8.74z',
     ),
     (
       0xFF34A853,
-      'M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.86-2.97c-1.07.72-2.44 1.15-4.08 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.07C3.26 21.3 7.31 24 12 24z'
+      'M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.86-2.97c-1.07.72-2.44 1.15-4.08 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.07C3.26 21.3 7.31 24 12 24z',
     ),
     (
       0xFFFBBC05,
-      'M5.27 14.31c-.24-.72-.38-1.49-.38-2.31s.14-1.59.38-2.31V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.07z'
+      'M5.27 14.31c-.24-.72-.38-1.49-.38-2.31s.14-1.59.38-2.31V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.07z',
     ),
     (
       0xFFEA4335,
-      'M12 4.73c1.76 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.07C6.22 6.84 8.87 4.73 12 4.73z'
+      'M12 4.73c1.76 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.07C6.22 6.84 8.87 4.73 12 4.73z',
     ),
   ].map((e) => (Color(e.$1), _parseSvgPath(e.$2))).toList();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(painter: _BrandPainter(_parts)));
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _BrandPainter(_parts)),
+    );
   }
 }
 
@@ -192,9 +195,34 @@ class AppleIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = IconTheme.of(context).color ?? Colors.black87;
     return SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-            painter: _BrandPainter([(color, _parseSvgPath(_pathData))])));
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _BrandPainter([(color, _parseSvgPath(_pathData))]),
+      ),
+    );
+  }
+}
+
+/// Facebook "f" mark (board screen 03). UI affordance only — tapping it
+/// shows a coming-soon notice; OAuth is Google/Apple only.
+class FacebookIcon extends StatelessWidget {
+  final double size;
+  const FacebookIcon({super.key, this.size = 19});
+
+  static const _pathData =
+      'M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.6-1.5h1.3V4.9c-.3 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5V11H8.5v3H11v7h2.5z';
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _BrandPainter([
+          (const Color(0xFF1877F2), _parseSvgPath(_pathData)),
+        ]),
+      ),
+    );
   }
 }
