@@ -9799,6 +9799,10 @@ class AppStrings {
         'Image generation failed. Please try again.',
         'تصویر بنانے میں ناکامی۔ دوبارہ کوشش کریں۔',
       );
+  String get boardScriptDraftLabel => _get(
+        'Basic draft',
+        'بنیادی مسودہ',
+      );
   String get boardSceneEstablishing => _get(
         'Establishing shot',
         'افتتاحی منظر',
