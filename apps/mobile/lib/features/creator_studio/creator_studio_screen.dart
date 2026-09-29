@@ -72,49 +72,49 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
   }
 
   Future<void> _genIdeas() => _run(() async {
-    final r = await apiClient.createIdeas(
-      _topic,
-      language: appState.localeCode,
-    );
-    setState(() {
-      _ideas = ((r['ideas'] as List?) ?? []).cast<Map>().toList();
-      _dev = r['dev'] == true;
-    });
-  });
+        final r = await apiClient.createIdeas(
+          _topic,
+          language: appState.localeCode,
+        );
+        setState(() {
+          _ideas = ((r['ideas'] as List?) ?? []).cast<Map>().toList();
+          _dev = r['dev'] == true;
+        });
+      });
 
   Future<void> _genScript() => _run(() async {
-    final r = await apiClient.createScript(
-      _topic,
-      format: _format,
-      language: appState.localeCode,
-    );
-    setState(() {
-      _script = (r['script'] as Map?)?.cast<String, dynamic>();
-      _dev = r['dev'] == true;
-    });
-  });
+        final r = await apiClient.createScript(
+          _topic,
+          format: _format,
+          language: appState.localeCode,
+        );
+        setState(() {
+          _script = (r['script'] as Map?)?.cast<String, dynamic>();
+          _dev = r['dev'] == true;
+        });
+      });
 
   Future<void> _genCaptions() => _run(() async {
-    final r = await apiClient.createCaptions(
-      _topic,
-      language: appState.localeCode,
-    );
-    setState(() {
-      _captions = ((r['captions'] as List?) ?? []).cast<Map>().toList();
-      _dev = r['dev'] == true;
-    });
-  });
+        final r = await apiClient.createCaptions(
+          _topic,
+          language: appState.localeCode,
+        );
+        setState(() {
+          _captions = ((r['captions'] as List?) ?? []).cast<Map>().toList();
+          _dev = r['dev'] == true;
+        });
+      });
 
   Future<void> _genHooks() => _run(() async {
-    final r = await apiClient.createHooks(
-      _topic,
-      language: appState.localeCode,
-    );
-    setState(() {
-      _hooks = ((r['hooks'] as List?) ?? []).map((e) => '$e').toList();
-      _dev = r['dev'] == true;
-    });
-  });
+        final r = await apiClient.createHooks(
+          _topic,
+          language: appState.localeCode,
+        );
+        setState(() {
+          _hooks = ((r['hooks'] as List?) ?? []).map((e) => '$e').toList();
+          _dev = r['dev'] == true;
+        });
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -126,9 +126,9 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
         ),
         bottom: TabBar(
           controller: _tabs,
-          labelColor: VirelloColors.violet,
-          unselectedLabelColor: VirelloColors.muted,
-          indicatorColor: VirelloColors.violet,
+          labelColor: VirelloColors.pink,
+          unselectedLabelColor: VTheme.textSec(context),
+          indicatorColor: VirelloColors.pink,
           tabs: [
             Tab(
               text: s.tabIdeas,
@@ -151,7 +151,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
       ),
       body: Column(
         children: [
-          _topicBar(),
+          _topicBar(context),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -164,10 +164,10 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
             child: TabBarView(
               controller: _tabs,
               children: [
-                _ideasTab(),
-                _scriptsTab(),
-                _captionsTab(),
-                _hooksTab(),
+                _ideasTab(context),
+                _scriptsTab(context),
+                _captionsTab(context),
+                _hooksTab(context),
               ],
             ),
           ),
@@ -176,7 +176,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
     );
   }
 
-  Widget _topicBar() {
+  Widget _topicBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: TextField(
@@ -186,7 +186,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
           prefixIcon: const Icon(Icons.topic_outlined),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: VirelloColors.divider),
+            borderSide: BorderSide(color: VTheme.divider(context)),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
@@ -232,7 +232,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
               : const Icon(Icons.auto_awesome, size: 20),
           label: Text(label),
           style: ElevatedButton.styleFrom(
-            backgroundColor: VirelloColors.violet,
+            backgroundColor: VirelloColors.pink,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 13),
             shape: RoundedRectangleBorder(
@@ -244,43 +244,43 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
     );
   }
 
-  Widget _devBadge() {
+  Widget _devBadge(BuildContext context) {
     if (!_dev) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Text(
         s.devPreviewNote,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontStyle: FontStyle.italic,
-          color: VirelloColors.muted,
+          color: VTheme.textSec(context),
         ),
       ),
     );
   }
 
-  Widget _emptyState() {
+  Widget _emptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Text(
           s.noResultsYet,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: VirelloColors.muted, fontSize: 14),
+          style: TextStyle(color: VTheme.textSec(context), fontSize: 14),
         ),
       ),
     );
   }
 
   // ------------------------------ Ideas tab ------------------------------
-  Widget _ideasTab() {
+  Widget _ideasTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _generateButton(s.generateIdeas, _genIdeas),
-        _devBadge(),
+        _devBadge(context),
         if (_ideas.isEmpty)
-          _emptyState()
+          _emptyState(context)
         else
           ..._ideas.map(
             (idea) => Padding(
@@ -306,14 +306,14 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: VirelloColors.chipBg,
+                            color: VTheme.chip(context),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             '${idea['format'] ?? ''}',
                             style: const TextStyle(
                               fontSize: 11,
-                              color: VirelloColors.violet,
+                              color: VirelloColors.pink,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -323,10 +323,10 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
                     const SizedBox(height: 6),
                     Text(
                       '${idea['brief'] ?? ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         height: 1.5,
-                        color: VirelloColors.muted,
+                        color: VTheme.textSec(context),
                       ),
                     ),
                     Align(
@@ -348,7 +348,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
   }
 
   // ------------------------------ Scripts tab ------------------------------
-  Widget _scriptsTab() {
+  Widget _scriptsTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
@@ -365,9 +365,9 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
           ),
         ),
         _generateButton(s.generateScript, _genScript),
-        _devBadge(),
+        _devBadge(context),
         if (_script == null)
-          _emptyState()
+          _emptyState(context)
         else
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -388,7 +388,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
                         .map((b) => '• $b')
                         .join('\n'),
                     Icons.list,
-                    VirelloColors.violet,
+                    VirelloColors.pink,
                   ),
                   const SizedBox(height: 12),
                   _scriptSection(
@@ -436,19 +436,18 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
   }
 
   // ------------------------------ Captions tab ------------------------------
-  Widget _captionsTab() {
+  Widget _captionsTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _generateButton(s.generateCaptions, _genCaptions),
-        _devBadge(),
+        _devBadge(context),
         if (_captions.isEmpty)
-          _emptyState()
+          _emptyState(context)
         else
           ..._captions.map((cap) {
-            final tags = ((cap['hashtags'] as List?) ?? [])
-                .map((t) => '$t')
-                .join(' ');
+            final tags =
+                ((cap['hashtags'] as List?) ?? []).map((t) => '$t').join(' ');
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
               child: VCard(
@@ -466,7 +465,7 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
                           tags,
                           style: const TextStyle(
                             fontSize: 13,
-                            color: VirelloColors.violet,
+                            color: VirelloColors.pink,
                           ),
                         ),
                       ),
@@ -489,54 +488,54 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
   }
 
   // ------------------------------ Hooks tab ------------------------------
-  Widget _hooksTab() {
+  Widget _hooksTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _generateButton(s.generateHooks, _genHooks),
-        _devBadge(),
+        _devBadge(context),
         if (_hooks.isEmpty)
-          _emptyState()
+          _emptyState(context)
         else
           ..._hooks.asMap().entries.map(
-            (e) => Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              child: VCard(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: VirelloColors.violet.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${e.key + 1}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: VirelloColors.violet,
+                (e) => Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: VCard(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: VirelloColors.pink.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${e.key + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: VirelloColors.pink,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            e.value,
+                            style: const TextStyle(fontSize: 14, height: 1.5),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy, size: 18),
+                          onPressed: () => _copy(e.value),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        e.value,
-                        style: const TextStyle(fontSize: 14, height: 1.5),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 18),
-                      onPressed: () => _copy(e.value),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
       ],
     );
   }

@@ -57,7 +57,8 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/video/virello_tutorial.mp4');
+    _controller =
+        VideoPlayerController.asset('assets/video/virello_tutorial.mp4');
     _init();
   }
 
@@ -81,8 +82,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
 
   Future<void> _loadSubtitles(SharedPreferences prefs) async {
     try {
-      final raw =
-          await rootBundle.loadString('assets/tutorial_subtitles.json');
+      final raw = await rootBundle.loadString('assets/tutorial_subtitles.json');
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       final langs = decoded['languages'] as Map<String, dynamic>;
       final codes = langs.keys.toList()..sort();
@@ -92,8 +92,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
       _subChapters = decoded['chapters'] as List<dynamic>;
       _subLangCodes = List<String>.from(codes);
       _subLangs = langs;
-      _subLang =
-          (saved != null && langs.containsKey(saved)) ? saved : def;
+      _subLang = (saved != null && langs.containsKey(saved)) ? saved : def;
     } catch (_) {
       // Subtitles stay unavailable; video still plays.
     }
@@ -104,8 +103,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
     final pos = _controller.value.position.inSeconds.toDouble();
     final dur = _controller.value.duration.inSeconds.toDouble();
     if (pos > 3 && pos < dur - 5) {
-      SharedPreferences.getInstance()
-          .then((p) => p.setDouble(_prefsKey, pos));
+      SharedPreferences.getInstance().then((p) => p.setDouble(_prefsKey, pos));
     } else if (pos >= dur - 5 && dur > 0) {
       SharedPreferences.getInstance().then((p) => p.remove(_prefsKey));
     }
@@ -155,8 +153,8 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
         child: Text(
           line,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 13, height: 1.35),
+          style:
+              const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
         ),
       ),
     );
@@ -181,7 +179,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
                         child: Row(
                           children: [
                             const Icon(Icons.subtitles_rounded,
-                                size: 18, color: VirelloColors.violet),
+                                size: 18, color: VirelloColors.pink),
                             const SizedBox(width: 8),
                             Text(strings.tutorialSubtitles,
                                 style: Theme.of(context)
@@ -196,15 +194,15 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
                                 for (final c in _subLangCodes)
                                   DropdownMenuItem(
                                     value: c,
-                                    child: Text(_subLangs![c]['name_native']
-                                        as String),
+                                    child: Text(
+                                        _subLangs![c]['name_native'] as String),
                                   ),
                               ],
                               onChanged: (v) {
                                 if (v == null) return;
                                 setState(() => _subLang = v);
-                                SharedPreferences.getInstance().then(
-                                    (p) => p.setString(_subLangKey, v));
+                                SharedPreferences.getInstance()
+                                    .then((p) => p.setString(_subLangKey, v));
                               },
                             ),
                           ],
@@ -234,7 +232,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
                               _controller,
                               allowScrubbing: true,
                               colors: const VideoProgressColors(
-                                playedColor: VirelloColors.violet,
+                                playedColor: VirelloColors.pink,
                                 bufferedColor: Colors.white38,
                                 backgroundColor: Colors.white24,
                               ),
@@ -344,15 +342,15 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
     final end = next?.startSec ?? total;
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: VirelloColors.violet.withValues(alpha: 0.15),
+        backgroundColor: VirelloColors.pink.withValues(alpha: 0.15),
         child: Text('${index + 1}',
             style: const TextStyle(
-                color: VirelloColors.violet, fontWeight: FontWeight.bold)),
+                color: VirelloColors.pink, fontWeight: FontWeight.bold)),
       ),
       title: Text(title),
       subtitle: Text('${_fmt(chapter.startSec)} – ${_fmt(end)}'),
       trailing: const Icon(Icons.play_circle_outline_rounded,
-          color: VirelloColors.violet),
+          color: VirelloColors.pink),
       onTap: () => _seek(chapter.startSec),
     );
   }
@@ -393,9 +391,8 @@ class _ControlsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => controller.value.isPlaying
-          ? controller.pause()
-          : controller.play(),
+      onTap: () =>
+          controller.value.isPlaying ? controller.pause() : controller.play(),
       child: AnimatedBuilder(
         animation: controller,
         builder: (_, __) => Container(

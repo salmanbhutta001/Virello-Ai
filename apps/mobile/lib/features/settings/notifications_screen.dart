@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/strings.dart';
+import '../../core/theme.dart';
 import '../../main.dart';
 
 /// User-facing notifications: admin broadcasts localized to the user's
@@ -63,14 +64,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           final fallback = n['fallback_used'] == true;
                           return Card(
                             child: ListTile(
-                              leading: const Icon(
-                                  Icons.notifications_outlined),
+                              leading: const Icon(Icons.notifications_outlined),
                               title: Text('${n['title'] ?? ''}',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w600)),
                               subtitle: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('${n['body'] ?? ''}'),
                                   const SizedBox(height: 4),
@@ -85,7 +84,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         ?.copyWith(
                                             color: fallback
                                                 ? VirelloColors.amber
-                                                : VirelloColors.boardTextSec),
+                                                : VTheme.textSec(context)),
                                   ),
                                 ],
                               ),

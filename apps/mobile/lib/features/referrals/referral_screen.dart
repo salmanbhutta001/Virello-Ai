@@ -45,20 +45,19 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
-        if (authStore.accessToken != null &&
-            authStore.accessToken!.isNotEmpty)
+        if (authStore.accessToken != null && authStore.accessToken!.isNotEmpty)
           'Authorization': 'Bearer ${authStore.accessToken}',
       };
 
   Future<_ReferralBundle> _load() async {
     const base = AppConfig.baseUrl;
-    final mineRes =
-        await http.get(Uri.parse('$base/api/v1/referrals/mine'), headers: _headers);
+    final mineRes = await http.get(Uri.parse('$base/api/v1/referrals/mine'),
+        headers: _headers);
     if (mineRes.statusCode != 200) {
       throw Exception('mine ${mineRes.statusCode}');
     }
-    final statsRes =
-        await http.get(Uri.parse('$base/api/v1/referrals/stats'), headers: _headers);
+    final statsRes = await http.get(Uri.parse('$base/api/v1/referrals/stats'),
+        headers: _headers);
     if (statsRes.statusCode != 200) {
       throw Exception('stats ${statsRes.statusCode}');
     }
@@ -108,16 +107,15 @@ class _ReferralScreenState extends State<ReferralScreen> {
               padding: const EdgeInsets.all(20),
               children: [
                 Text(s.tagline,
-                    style: const TextStyle(
-                        fontSize: 14, color: VirelloColors.muted)),
+                    style: TextStyle(fontSize: 14, color: VTheme.textSec(c))),
                 const SizedBox(height: 16),
                 VCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(s.yourLink,
-                          style: const TextStyle(
-                              fontSize: 12, color: VirelloColors.muted)),
+                          style: TextStyle(
+                              fontSize: 12, color: VTheme.textSec(c))),
                       const SizedBox(height: 8),
                       SelectableText(link,
                           style: const TextStyle(
@@ -126,8 +124,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       Row(
                         children: [
                           Text('${s.yourCode}: ',
-                              style: const TextStyle(
-                                  fontSize: 12, color: VirelloColors.muted)),
+                              style: TextStyle(
+                                  fontSize: 12, color: VTheme.textSec(c))),
                           SelectableText(code,
                               style: const TextStyle(
                                   fontSize: 18,
@@ -147,8 +145,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Row(
                   children: [
                     VStatTile(
-                        label: s.invites,
-                        value: '${stats['invites'] ?? 0}'),
+                        label: s.invites, value: '${stats['invites'] ?? 0}'),
                     const SizedBox(width: 10),
                     VStatTile(
                         label: s.credited,
@@ -164,19 +161,17 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   child: Row(
                     children: [
                       const Icon(Icons.stars,
-                          color: VirelloColors.violet, size: 28),
+                          color: VirelloColors.pink, size: 28),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('${stats['credits_earned'] ?? 0}',
                               style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800)),
+                                  fontSize: 22, fontWeight: FontWeight.w800)),
                           Text(s.creditsEarned,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: VirelloColors.muted)),
+                              style: TextStyle(
+                                  fontSize: 12, color: VTheme.textSec(c))),
                         ],
                       ),
                     ],
@@ -199,8 +194,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(s.honestNote,
-                    style: const TextStyle(
-                        fontSize: 12, color: VirelloColors.muted)),
+                    style: TextStyle(fontSize: 12, color: VTheme.textSec(c))),
               ],
             );
           },
@@ -212,7 +206,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
   Widget _step(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: VirelloColors.violet),
+        Icon(icon, size: 20, color: VirelloColors.pink),
         const SizedBox(width: 10),
         Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
       ],

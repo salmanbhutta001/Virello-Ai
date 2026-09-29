@@ -105,8 +105,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(s.storiesTagline,
-                style:
-                    const TextStyle(color: VirelloColors.muted, fontSize: 13)),
+                style: TextStyle(color: VTheme.textSec(context), fontSize: 13)),
             const SizedBox(height: 12),
             SegmentedButton<int>(
               segments: [
@@ -123,7 +122,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
               onSelectionChanged: (sel) => setState(() => _mode = sel.first),
             ),
             const SizedBox(height: 16),
-            if (_mode == 0) _storyForm() else _comicForm(),
+            if (_mode == 0) _storyForm(context) else _comicForm(context),
             const SizedBox(height: 24),
           ],
         ),
@@ -131,7 +130,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
     );
   }
 
-  Widget _storyForm() {
+  Widget _storyForm(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -168,12 +167,12 @@ class _EntertainScreenState extends State<EntertainScreen> {
         ),
         const SizedBox(height: 16),
         if (_generating) const _LoadingCard(),
-        if (!_generating && _story != null) _storyCard(),
+        if (!_generating && _story != null) _storyCard(context),
       ],
     );
   }
 
-  Widget _storyCard() {
+  Widget _storyCard(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -184,7 +183,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
             Row(
               children: [
                 const Icon(Icons.auto_stories,
-                    color: VirelloColors.violet, size: 20),
+                    color: VirelloColors.pink, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('${_story!['title'] ?? ''}',
@@ -200,10 +199,10 @@ class _EntertainScreenState extends State<EntertainScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(s.devPreviewNote,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 10,
                         fontStyle: FontStyle.italic,
-                        color: VirelloColors.muted)),
+                        color: VTheme.textSec(context))),
               ),
             const SizedBox(height: 12),
             Align(
@@ -220,7 +219,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
     );
   }
 
-  Widget _comicForm() {
+  Widget _comicForm(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -246,7 +245,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: VirelloColors.chipBg,
+                color: VTheme.chip(context),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text('$_panels',
@@ -267,12 +266,12 @@ class _EntertainScreenState extends State<EntertainScreen> {
         ),
         const SizedBox(height: 16),
         if (_generating) const _LoadingCard(),
-        if (!_generating && _comic != null) _comicCard(),
+        if (!_generating && _comic != null) _comicCard(context),
       ],
     );
   }
 
-  Widget _comicCard() {
+  Widget _comicCard(BuildContext context) {
     final panels = ((_comic!['panels'] as List?) ?? [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
@@ -283,8 +282,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
-              const Icon(Icons.grid_view,
-                  color: VirelloColors.violet, size: 20),
+              const Icon(Icons.grid_view, color: VirelloColors.pink, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('${_comic!['title'] ?? s.comicIdea}',
@@ -336,7 +334,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: VirelloColors.chipBg,
+                        color: VTheme.chip(context),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text('“${p['caption']}”',
@@ -354,10 +352,10 @@ class _EntertainScreenState extends State<EntertainScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(s.devPreviewNote,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 10,
                     fontStyle: FontStyle.italic,
-                    color: VirelloColors.muted)),
+                    color: VTheme.textSec(context))),
           ),
       ],
     );
@@ -372,7 +370,7 @@ class _LoadingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: VirelloColors.chipBg,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Center(child: CircularProgressIndicator()),

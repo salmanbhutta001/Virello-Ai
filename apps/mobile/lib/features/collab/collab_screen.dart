@@ -104,7 +104,8 @@ class _CollabScreenState extends State<CollabScreen> {
   Future<void> _loadRequests() async {
     setState(() => _reqLoading = true);
     try {
-      final results = await Future.wait([CollabApi.outbox(), CollabApi.inbox()]);
+      final results =
+          await Future.wait([CollabApi.outbox(), CollabApi.inbox()]);
       if (!mounted) return;
       setState(() {
         _mine = [
@@ -130,8 +131,7 @@ class _CollabScreenState extends State<CollabScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -139,8 +139,8 @@ class _CollabScreenState extends State<CollabScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: Text(s.title,
-            style: const TextStyle(fontWeight: FontWeight.w800)),
+        title:
+            Text(s.title, style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -151,8 +151,8 @@ class _CollabScreenState extends State<CollabScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(s.subtitle,
-                  style: const TextStyle(
-                      color: VirelloColors.muted, fontSize: 13)),
+                  style:
+                      TextStyle(color: VTheme.textSec(context), fontSize: 13)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -164,10 +164,10 @@ class _CollabScreenState extends State<CollabScreen> {
             ),
             Expanded(
               child: _tab == 0
-                  ? _buildFind()
+                  ? _buildFind(context)
                   : _tab == 1
-                      ? _buildRequests(mine: true)
-                      : _buildRequests(mine: false),
+                      ? _buildRequests(context, mine: true)
+                      : _buildRequests(context, mine: false),
             ),
           ],
         ),
@@ -177,17 +177,16 @@ class _CollabScreenState extends State<CollabScreen> {
 
   // ------------------------------------------------------------ find tab
 
-  Widget _buildFind() {
+  Widget _buildFind(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       children: [
-        _buildCreatorCard(),
+        _buildCreatorCard(context),
         const SizedBox(height: 16),
         VSectionHeader(title: s.pickTopics),
         const SizedBox(height: 10),
         if (_topics.isEmpty)
-          Text(s.loading,
-              style: const TextStyle(color: VirelloColors.muted))
+          Text(s.loading, style: TextStyle(color: VTheme.textSec(context)))
         else
           Wrap(
             spacing: 8,
@@ -207,15 +206,15 @@ class _CollabScreenState extends State<CollabScreen> {
                       }
                     });
                   },
-                  selectedColor: VirelloColors.violet,
+                  selectedColor: VirelloColors.pink,
                   labelStyle: TextStyle(
                     color: _picked.contains(t['slug'])
                         ? Colors.white
-                        : VirelloColors.mutedDark,
+                        : VTheme.textSec(context),
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
-                  backgroundColor: VirelloColors.chipBg,
+                  backgroundColor: VTheme.chip(context),
                   side: BorderSide.none,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18)),
@@ -240,21 +239,20 @@ class _CollabScreenState extends State<CollabScreen> {
         if (!_matching && _matches.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text('${s.topicFit}: ${s.topicFitNote}',
-              style: const TextStyle(
-                  color: VirelloColors.muted, fontSize: 12)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 12)),
           const SizedBox(height: 10),
-          for (final m in _matches) _buildMatchCard(m),
+          for (final m in _matches) _buildMatchCard(context, m),
         ],
         if (!_matching && _matches.isEmpty && _matchNote == null) ...[
           const SizedBox(height: 16),
           Text(s.noMatches,
-              style: const TextStyle(color: VirelloColors.muted, fontSize: 13)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 13)),
         ],
       ],
     );
   }
 
-  Widget _buildCreatorCard() {
+  Widget _buildCreatorCard(BuildContext context) {
     if (_profileLoading) {
       return const VCard(child: VShimmerBox(height: 72));
     }
@@ -267,7 +265,7 @@ class _CollabScreenState extends State<CollabScreen> {
           Row(
             children: [
               const Icon(Icons.handshake_outlined,
-                  color: VirelloColors.violet, size: 26),
+                  color: VirelloColors.pink, size: 26),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -282,8 +280,7 @@ class _CollabScreenState extends State<CollabScreen> {
           ),
           const SizedBox(height: 6),
           Text(s.becomeCreatorDesc,
-              style:
-                  const TextStyle(color: VirelloColors.muted, fontSize: 12)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 12)),
           const SizedBox(height: 10),
           VGradientButton(
             label: optedIn ? s.myCreatorProfile : s.becomeCreator,
@@ -295,7 +292,7 @@ class _CollabScreenState extends State<CollabScreen> {
     );
   }
 
-  Widget _buildMatchCard(Map<String, dynamic> m) {
+  Widget _buildMatchCard(BuildContext context, Map<String, dynamic> m) {
     final fit = ((m['topic_fit'] as num?) ?? 0).toDouble();
     final audience = m['audience_size'];
     final matched = (m['matched_topics'] as List?)?.cast<String>() ?? [];
@@ -314,16 +311,16 @@ class _CollabScreenState extends State<CollabScreen> {
                           fontWeight: FontWeight.w800, fontSize: 16)),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: VirelloColors.violet.withValues(alpha: 0.12),
+                    color: VirelloColors.pink.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     '${s.topicFit}: ${(fit * 100).round()}%',
                     style: const TextStyle(
-                        color: VirelloColors.violet,
+                        color: VirelloColors.pink,
                         fontWeight: FontWeight.w800,
                         fontSize: 12),
                   ),
@@ -333,19 +330,17 @@ class _CollabScreenState extends State<CollabScreen> {
             if ((m['bio'] ?? '').toString().isNotEmpty) ...[
               const SizedBox(height: 4),
               Text((m['bio'] ?? '').toString(),
-                  style: const TextStyle(
-                      color: VirelloColors.muted, fontSize: 13)),
+                  style:
+                      TextStyle(color: VTheme.textSec(context), fontSize: 13)),
             ],
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.people_outline,
-                    size: 16, color: VirelloColors.muted),
+                Icon(Icons.people_outline,
+                    size: 16, color: VTheme.textSec(context)),
                 const SizedBox(width: 4),
                 Text(
-                  audience == null
-                      ? '—'
-                      : '$audience (${s.selfDeclared})',
+                  audience == null ? '—' : '$audience (${s.selfDeclared})',
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w600),
                 ),
@@ -354,8 +349,8 @@ class _CollabScreenState extends State<CollabScreen> {
                   Expanded(
                     child: Text(platforms.join(' · '),
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: VirelloColors.muted, fontSize: 12)),
+                        style: TextStyle(
+                            color: VTheme.textSec(context), fontSize: 12)),
                   ),
                 ],
               ],
@@ -363,8 +358,8 @@ class _CollabScreenState extends State<CollabScreen> {
             if (matched.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text('${s.matchedOn}: ${matched.join(', ')}',
-                  style: const TextStyle(
-                      color: VirelloColors.muted, fontSize: 12)),
+                  style:
+                      TextStyle(color: VTheme.textSec(context), fontSize: 12)),
             ],
             const SizedBox(height: 10),
             SizedBox(
@@ -374,8 +369,8 @@ class _CollabScreenState extends State<CollabScreen> {
                 icon: const Icon(Icons.send_outlined, size: 16),
                 label: Text(s.sendRequest),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: VirelloColors.violet,
-                  side: const BorderSide(color: VirelloColors.violet),
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
@@ -389,7 +384,7 @@ class _CollabScreenState extends State<CollabScreen> {
 
   // ----------------------------------------------------- requests tabs
 
-  Widget _buildRequests({required bool mine}) {
+  Widget _buildRequests(BuildContext context, {required bool mine}) {
     final list = mine ? _mine : _inbox;
     if (_reqLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -400,20 +395,19 @@ class _CollabScreenState extends State<CollabScreen> {
           padding: const EdgeInsets.all(32),
           child: Text(mine ? s.noRequests : s.noInbox,
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(color: VirelloColors.muted, fontSize: 14)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 14)),
         ),
       );
     }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       itemCount: list.length,
-      itemBuilder: (ctx, i) =>
-          _buildRequestCard(list[i], mine: mine),
+      itemBuilder: (ctx, i) => _buildRequestCard(ctx, list[i], mine: mine),
     );
   }
 
-  Widget _buildRequestCard(Map<String, dynamic> r, {required bool mine}) {
+  Widget _buildRequestCard(BuildContext context, Map<String, dynamic> r,
+      {required bool mine}) {
     final status = (r['status'] ?? 'pending').toString();
     final name = mine
         ? (r['creator_name'] ?? '').toString()
@@ -440,13 +434,13 @@ class _CollabScreenState extends State<CollabScreen> {
             Text((r['post_url'] ?? '').toString(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: VirelloColors.violet, fontSize: 12)),
+                style:
+                    const TextStyle(color: VirelloColors.pink, fontSize: 12)),
             if ((r['message'] ?? '').toString().isNotEmpty) ...[
               const SizedBox(height: 6),
               Text((r['message'] ?? '').toString(),
-                  style: const TextStyle(
-                      color: VirelloColors.mutedDark, fontSize: 13)),
+                  style:
+                      TextStyle(color: VTheme.textSec(context), fontSize: 13)),
             ],
             if (canDecide) ...[
               const SizedBox(height: 10),
@@ -455,8 +449,8 @@ class _CollabScreenState extends State<CollabScreen> {
                   Expanded(
                     child: VGradientButton(
                       label: s.accept,
-                      onPressed: () => _decide(
-                          (r['request_id'] ?? '').toString(), 'accept'),
+                      onPressed: () =>
+                          _decide((r['request_id'] ?? '').toString(), 'accept'),
                       height: 44,
                     ),
                   ),
@@ -467,8 +461,7 @@ class _CollabScreenState extends State<CollabScreen> {
                           (r['request_id'] ?? '').toString(), 'decline'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.redAccent,
-                        side:
-                            const BorderSide(color: Colors.redAccent),
+                        side: const BorderSide(color: Colors.redAccent),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                         minimumSize: const Size(0, 44),
@@ -482,8 +475,8 @@ class _CollabScreenState extends State<CollabScreen> {
             if (canShare) ...[
               const SizedBox(height: 6),
               Text(s.markSharedHint,
-                  style: const TextStyle(
-                      color: VirelloColors.muted, fontSize: 12)),
+                  style:
+                      TextStyle(color: VTheme.textSec(context), fontSize: 12)),
               const SizedBox(height: 6),
               SizedBox(
                 width: double.infinity,
@@ -493,8 +486,8 @@ class _CollabScreenState extends State<CollabScreen> {
                   icon: const Icon(Icons.check_circle_outline, size: 16),
                   label: Text(s.markShared),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: VirelloColors.violet,
-                    side: const BorderSide(color: VirelloColors.violet),
+                    foregroundColor: VirelloColors.pink,
+                    side: const BorderSide(color: VirelloColors.pink),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -517,7 +510,7 @@ class _CollabScreenState extends State<CollabScreen> {
         color = Colors.redAccent;
         break;
       case 'shared':
-        color = VirelloColors.violet;
+        color = VirelloColors.pink;
         break;
       default:
         color = Colors.orange;
@@ -575,16 +568,16 @@ class _CollabScreenState extends State<CollabScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('${s.sendRequest} — ${m['display_name']}',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800, fontSize: 16)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             const SizedBox(height: 14),
             TextField(
               controller: urlCtrl,
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 labelText: s.yourPostLink,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
             const SizedBox(height: 12),
@@ -594,8 +587,8 @@ class _CollabScreenState extends State<CollabScreen> {
               decoration: InputDecoration(
                 labelText: s.messageOptional,
                 hintText: s.messageHint,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
             const SizedBox(height: 16),
@@ -627,10 +620,11 @@ class _CollabScreenState extends State<CollabScreen> {
     final topicsCtrl = TextEditingController(
         text: ((p?['topics'] as List?) ?? const []).join(', '));
     final bioCtrl = TextEditingController(text: (p?['bio'] ?? '').toString());
-    final audCtrl = TextEditingController(
-        text: p?['audience_size']?.toString() ?? '');
-    final Set<String> plats =
-        ((p?['platforms'] as List?) ?? const []).map((e) => e.toString()).toSet();
+    final audCtrl =
+        TextEditingController(text: p?['audience_size']?.toString() ?? '');
+    final Set<String> plats = ((p?['platforms'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .toSet();
     bool optedIn = (p?['is_opted_in'] ?? true) == true;
     const allPlatforms = ['instagram', 'tiktok', 'youtube', 'x', 'facebook'];
 
@@ -715,10 +709,9 @@ class _CollabScreenState extends State<CollabScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(s.optIn,
-                      style: const TextStyle(fontSize: 14)),
+                  title: Text(s.optIn, style: const TextStyle(fontSize: 14)),
                   value: optedIn,
-                  activeThumbColor: VirelloColors.violet,
+                  activeThumbColor: VirelloColors.pink,
                   onChanged: (v) => setSheet(() => optedIn = v),
                 ),
                 const SizedBox(height: 8),
@@ -739,15 +732,14 @@ class _CollabScreenState extends State<CollabScreen> {
                             .where((e) => e.isNotEmpty)
                             .toList(),
                         'platforms': plats.toList(),
-                        'audience_size':
-                            int.tryParse(audCtrl.text.trim()),
+                        'audience_size': int.tryParse(audCtrl.text.trim()),
                         'bio': bioCtrl.text.trim(),
                         'is_opted_in': optedIn,
                       });
                       if (!mounted) return;
                       setState(() {
-                        _profile = (j['profile'] as Map)
-                            .cast<String, dynamic>();
+                        _profile =
+                            (j['profile'] as Map).cast<String, dynamic>();
                       });
                       navigator.pop(true);
                     } catch (e) {

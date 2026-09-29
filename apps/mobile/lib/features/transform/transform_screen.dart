@@ -86,8 +86,7 @@ class _TransformScreenState extends State<TransformScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(t('copied')),
-          duration: const Duration(seconds: 1)),
+          content: Text(t('copied')), duration: const Duration(seconds: 1)),
     );
   }
 
@@ -100,8 +99,7 @@ class _TransformScreenState extends State<TransformScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(t('subtitle'),
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(t('subtitle'), style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 12),
             VPillTabs(
               tabs: [t('modeUrl'), t('modeText')],
@@ -114,8 +112,8 @@ class _TransformScreenState extends State<TransformScreen> {
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: _mode == 0 ? t('hintUrl') : t('hintText'),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
             const SizedBox(height: 12),
@@ -154,24 +152,22 @@ class _TransformScreenState extends State<TransformScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: VirelloColors.violet.withValues(alpha: 0.12),
+              color: VirelloColors.pink.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               isAi ? t('sourceAi') : t('sourceHeuristic'),
               style: const TextStyle(
-                color: VirelloColors.violet,
+                color: VirelloColors.pink,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(t('draftsNote'),
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(t('draftsNote'), style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -221,7 +217,7 @@ class _TransformScreenState extends State<TransformScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: VirelloColors.violet, size: 20),
+                Icon(icon, color: VirelloColors.pink, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(title,

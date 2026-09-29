@@ -77,8 +77,7 @@ class _SeedingScreenState extends State<SeedingScreen> {
       if (res.statusCode != 200) throw Exception(res.body);
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       setState(() {
-        _suggestions =
-            (body['plans'] as List).cast<Map<String, dynamic>>();
+        _suggestions = (body['plans'] as List).cast<Map<String, dynamic>>();
         _info = body['message'] as String?;
       });
       await _loadPlans(silent: true);
@@ -143,8 +142,8 @@ class _SeedingScreenState extends State<SeedingScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(s.subtitle,
-              style: TextStyle(
-                  fontSize: 13, color: Theme.of(context).hintColor)),
+              style:
+                  TextStyle(fontSize: 13, color: Theme.of(context).hintColor)),
           const SizedBox(height: 12),
           VCard(
             child: Column(
@@ -211,8 +210,8 @@ class _SeedingScreenState extends State<SeedingScreen> {
           const SizedBox(height: 8),
           if (_myPlans.isEmpty)
             Text(s.noPlans,
-                style: TextStyle(
-                    fontSize: 13, color: Theme.of(context).hintColor))
+                style:
+                    TextStyle(fontSize: 13, color: Theme.of(context).hintColor))
           else
             for (final plan in _myPlans) _planCard(plan, inMyPlans: true),
           const SizedBox(height: 12),
@@ -291,8 +290,7 @@ class _SeedingScreenState extends State<SeedingScreen> {
               decoration: BoxDecoration(
                 color: Colors.amber.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,24 +312,28 @@ class _SeedingScreenState extends State<SeedingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VirelloColors.violet.withValues(alpha: 0.06),
+                color: VirelloColors.pink.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: VirelloColors.violet.withValues(alpha: 0.25)),
+                    color: VirelloColors.pink.withValues(alpha: 0.25)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(isAi ? Icons.auto_awesome : Icons.description_outlined,
-                          size: 14, color: VirelloColors.violet),
+                      Icon(
+                          isAi
+                              ? Icons.auto_awesome
+                              : Icons.description_outlined,
+                          size: 14,
+                          color: VirelloColors.pink),
                       const SizedBox(width: 6),
                       Text(isAi ? s.aiDraft : s.heuristicDraft,
                           style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: VirelloColors.violet)),
+                              color: VirelloColors.pink)),
                     ],
                   ),
                   const SizedBox(height: 6),

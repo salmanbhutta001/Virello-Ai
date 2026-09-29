@@ -36,7 +36,8 @@ class _CtrStrings {
       'ar': 'تدقيق CTR للرابط',
     },
     'subtitle': {
-      'en': 'See how your link looks when shared — a factual OpenGraph & meta audit.',
+      'en':
+          'See how your link looks when shared — a factual OpenGraph & meta audit.',
       'ur': 'دیکھیں آپ کا لنک شیئر ہونے پر کیسا لگے گا — حقائق پر مبنی آڈٹ۔',
       'ar': 'شاهد كيف يبدو رابطك عند مشاركته — تدقيق واقعي للوسوم.',
     },
@@ -164,8 +165,7 @@ class _CtrApi {
       Uri.parse('${apiClient.baseUrl}/api/v1/content/ctr-audit'),
       headers: {
         'Content-Type': 'application/json',
-        if (token != null && token.isNotEmpty)
-          'Authorization': 'Bearer $token',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       },
       body: jsonEncode({'url': url}),
     );
@@ -239,12 +239,11 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
                   const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text(s.get('subtitle'),
-              style:
-                  const TextStyle(color: VirelloColors.muted, fontSize: 13)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 13)),
           const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-              color: VirelloColors.cardBg,
+              color: VTheme.card(context),
               borderRadius: BorderRadius.circular(16),
               boxShadow: VirelloColors.cardShadow,
             ),
@@ -255,12 +254,11 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
               onSubmitted: (_) => _audit(),
               decoration: InputDecoration(
                 hintText: s.get('urlHint'),
-                hintStyle: const TextStyle(color: VirelloColors.muted),
-                prefixIcon:
-                    const Icon(Icons.link, color: VirelloColors.violet),
+                hintStyle: TextStyle(color: VTheme.textSec(context)),
+                prefixIcon: const Icon(Icons.link, color: VirelloColors.pink),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
           ),
@@ -277,43 +275,44 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
               padding: EdgeInsets.symmetric(vertical: 32),
               child: CircularProgressIndicator(),
             )),
-          if (_result != null) ..._buildResult(_result!),
+          if (_result != null) ..._buildResult(context, _result!),
         ],
       ),
     );
   }
 
-  List<Widget> _buildResult(Map<String, dynamic> d) {
+  List<Widget> _buildResult(BuildContext context, Map<String, dynamic> d) {
     final summary = Map<String, dynamic>.from(d['summary'] as Map? ?? {});
-    final checks =
-        ((d['checks'] as List?) ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    final checks = ((d['checks'] as List?) ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
     final sug = Map<String, dynamic>.from(d['suggestions'] as Map? ?? {});
     return [
-      _buildSummaryCard(summary),
+      _buildSummaryCard(context, summary),
       const SizedBox(height: 20),
       VSectionHeader(title: s.get('checklistTitle')),
       const SizedBox(height: 8),
-      ...checks.map(_buildCheckRow),
+      ...checks.map((c) => _buildCheckRow(context, c)),
       const SizedBox(height: 20),
       VSectionHeader(title: s.get('suggestionsTitle')),
       const SizedBox(height: 4),
-      _buildSourceBadge(sug['source'] as String? ?? 'heuristic'),
+      _buildSourceBadge(context, sug['source'] as String? ?? 'heuristic'),
       const SizedBox(height: 8),
       Text(s.get('titlesLabel'),
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
       const SizedBox(height: 8),
-      ...((sug['titles'] as List?) ?? [])
-          .map((e) => _buildSuggestionCard(Map<String, dynamic>.from(e as Map))),
+      ...((sug['titles'] as List?) ?? []).map((e) =>
+          _buildSuggestionCard(context, Map<String, dynamic>.from(e as Map))),
       const SizedBox(height: 12),
       Text(s.get('descsLabel'),
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
       const SizedBox(height: 8),
-      ...((sug['descriptions'] as List?) ?? [])
-          .map((e) => _buildSuggestionCard(Map<String, dynamic>.from(e as Map))),
+      ...((sug['descriptions'] as List?) ?? []).map((e) =>
+          _buildSuggestionCard(context, Map<String, dynamic>.from(e as Map))),
     ];
   }
 
-  Widget _buildSummaryCard(Map<String, dynamic> summary) {
+  Widget _buildSummaryCard(BuildContext context, Map<String, dynamic> summary) {
     final p = (summary['pass'] as num? ?? 0).toInt();
     final w = (summary['warn'] as num? ?? 0).toInt();
     final f = (summary['fail'] as num? ?? 0).toInt();
@@ -339,8 +338,7 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
               style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
           Text(s.get('noScoreNote'),
-              style:
-                  const TextStyle(color: VirelloColors.muted, fontSize: 12)),
+              style: TextStyle(color: VTheme.textSec(context), fontSize: 12)),
         ],
       ),
     );
@@ -361,16 +359,14 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
                     fontSize: 20, fontWeight: FontWeight.w800, color: color)),
             Text(label,
                 style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: color)),
+                    fontSize: 11, fontWeight: FontWeight.w600, color: color)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCheckRow(Map<String, dynamic> c) {
+  Widget _buildCheckRow(BuildContext context, Map<String, dynamic> c) {
     final status = c['status'] as String? ?? 'warn';
     final color = status == 'pass'
         ? VirelloColors.success
@@ -422,15 +418,16 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text('${c['detail'] ?? ''}',
-                      style: const TextStyle(
-                          color: VirelloColors.muted, fontSize: 12.5)),
-                  if (needsFix && (c['fix_hint'] as String? ?? '').isNotEmpty) ...[
+                      style: TextStyle(
+                          color: VTheme.textSec(context), fontSize: 12.5)),
+                  if (needsFix &&
+                      (c['fix_hint'] as String? ?? '').isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: VirelloColors.violet.withValues(alpha: 0.08),
+                        color: VirelloColors.pink.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: RichText(
@@ -442,7 +439,7 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
                               text: '${s.get('fixLabel')}: ',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  color: VirelloColors.violet),
+                                  color: VirelloColors.pink),
                             ),
                             TextSpan(text: '${c['fix_hint']}'),
                           ],
@@ -459,22 +456,22 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
     );
   }
 
-  Widget _buildSourceBadge(String source) {
+  Widget _buildSourceBadge(BuildContext context, String source) {
     final isAi = source == 'ai';
     return Row(
       children: [
         Icon(isAi ? Icons.auto_awesome : Icons.build_outlined,
-            size: 14, color: VirelloColors.muted),
+            size: 14, color: VTheme.textSec(context)),
         const SizedBox(width: 6),
         Text(
           isAi ? s.get('sourceAi') : s.get('sourceHeuristic'),
-          style: const TextStyle(color: VirelloColors.muted, fontSize: 12),
+          style: TextStyle(color: VTheme.textSec(context), fontSize: 12),
         ),
       ],
     );
   }
 
-  Widget _buildSuggestionCard(Map<String, dynamic> item) {
+  Widget _buildSuggestionCard(BuildContext context, Map<String, dynamic> item) {
     final text = '${item['text'] ?? ''}';
     final length = (item['length'] as num? ?? text.length).toInt();
     return Padding(
@@ -489,20 +486,20 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
             Row(
               children: [
                 Text('$length ${s.get('chars')}',
-                    style: const TextStyle(
-                        color: VirelloColors.muted, fontSize: 12)),
+                    style: TextStyle(
+                        color: VTheme.textSec(context), fontSize: 12)),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: text));
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(s.get('copied'))));
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(s.get('copied'))));
                   },
                   icon: const Icon(Icons.copy, size: 16),
                   label: Text(s.get('copy')),
-                  style: TextButton.styleFrom(
-                      foregroundColor: VirelloColors.violet),
+                  style:
+                      TextButton.styleFrom(foregroundColor: VirelloColors.pink),
                 ),
               ],
             ),

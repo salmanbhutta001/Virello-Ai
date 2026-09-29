@@ -51,10 +51,29 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: const [
-        'jpg', 'jpeg', 'png', 'webp', 'gif',
-        'mp4', 'mov', 'webm', '3gp', 'mkv',
-        'mp3', 'wav', 'm4a', 'ogg',
-        'pdf', 'doc', 'docx', 'txt', 'csv', 'xls', 'xlsx', 'ppt', 'pptx',
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+        'gif',
+        'mp4',
+        'mov',
+        'webm',
+        '3gp',
+        'mkv',
+        'mp3',
+        'wav',
+        'm4a',
+        'ogg',
+        'pdf',
+        'doc',
+        'docx',
+        'txt',
+        'csv',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
       ],
     );
     final path = picked?.path;
@@ -110,7 +129,8 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
   }
 
   String _sizeLabel(int bytes) {
-    if (bytes >= 1024 * 1024) return '${(bytes / 1048576).toStringAsFixed(1)} MB';
+    if (bytes >= 1024 * 1024)
+      return '${(bytes / 1048576).toStringAsFixed(1)} MB';
     if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
     return '$bytes B';
   }
@@ -138,20 +158,20 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          if (_phase == _Phase.idle && _meta == null) _emptyState(),
+          if (_phase == _Phase.idle && _meta == null) _emptyState(context),
           if (_phase == _Phase.uploading) _uploadingState(),
           if (_meta != null) ...[
-            _previewCard(),
+            _previewCard(context),
             const SizedBox(height: 16),
             _captionField(),
             const SizedBox(height: 12),
             _checkButton(),
             if (_report != null) ...[
               const SizedBox(height: 16),
-              _reportCard(),
+              _reportCard(context),
             ],
             const SizedBox(height: 20),
-            _growSection(),
+            _growSection(context),
           ],
           if (_error != null) ...[
             const SizedBox(height: 12),
@@ -162,7 +182,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     );
   }
 
-  Widget _emptyState() {
+  Widget _emptyState(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: 32),
@@ -174,7 +194,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: VirelloColors.violet.withValues(alpha: 0.35),
+                color: VirelloColors.pink.withValues(alpha: 0.35),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
@@ -195,7 +215,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
         Text(
           s.pickFileHint,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: VirelloColors.muted, height: 1.5),
+          style: TextStyle(color: VTheme.textSec(context), height: 1.5),
         ),
         const SizedBox(height: 24),
         VGradientButton(
@@ -217,7 +237,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     );
   }
 
-  Widget _previewCard() {
+  Widget _previewCard(BuildContext context) {
     final meta = _meta!;
     final kind = meta['kind'] as String? ?? 'document';
     final name = meta['filename'] as String? ?? '';
@@ -252,9 +272,9 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${kind.toUpperCase()} • ${_sizeLabel(size)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: VirelloColors.muted,
+                    color: VTheme.textSec(context),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -277,7 +297,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: VirelloColors.muted),
+            icon: Icon(Icons.refresh, color: VTheme.textSec(context)),
             tooltip: s.pickFromPhone,
             onPressed: _pickAndUpload,
           ),
@@ -291,11 +311,10 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
       width: 72,
       height: 72,
       decoration: BoxDecoration(
-        color: VirelloColors.violet.withValues(alpha: 0.1),
+        color: VirelloColors.pink.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(_kindIcon(kind),
-          color: VirelloColors.violet, size: 34),
+      child: Icon(_kindIcon(kind), color: VirelloColors.pink, size: 34),
     );
   }
 
@@ -336,14 +355,15 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     );
   }
 
-  Widget _reportCard() {
+  Widget _reportCard(BuildContext context) {
     final r = _report!;
     final score = (r['score'] as num?)?.toInt() ?? 0;
     final verdict = r['verdict'] as String? ?? '';
     final checks = (r['checks'] as List? ?? [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
-    final recs = (r['recommendations'] as List? ?? []).map((e) => '$e').toList();
+    final recs =
+        (r['recommendations'] as List? ?? []).map((e) => '$e').toList();
     final scoreColor = score >= 75
         ? Colors.green
         : score >= 50
@@ -365,8 +385,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                       value: score / 100,
                       strokeWidth: 7,
                       color: scoreColor,
-                      backgroundColor:
-                          scoreColor.withValues(alpha: 0.15),
+                      backgroundColor: scoreColor.withValues(alpha: 0.15),
                     ),
                     Text(
                       '$score',
@@ -392,9 +411,9 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                     const SizedBox(height: 4),
                     Text(
                       s.heuristicNote,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
-                        color: VirelloColors.muted,
+                        color: VTheme.textSec(context),
                       ),
                     ),
                   ],
@@ -438,9 +457,9 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                         ),
                         Text(
                           '${c['detail']}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12.5,
-                            color: VirelloColors.muted,
+                            color: VTheme.textSec(context),
                             height: 1.4,
                           ),
                         ),
@@ -464,11 +483,10 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('•  ',
-                          style: TextStyle(color: VirelloColors.violet)),
+                          style: TextStyle(color: VirelloColors.pink)),
                       Expanded(
                         child: Text(t,
-                            style: const TextStyle(
-                                fontSize: 13, height: 1.45)),
+                            style: const TextStyle(fontSize: 13, height: 1.45)),
                       ),
                     ],
                   ),
@@ -479,7 +497,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     );
   }
 
-  Widget _growSection() {
+  Widget _growSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,6 +507,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
         ),
         const SizedBox(height: 10),
         _growRow(
+          context,
           icon: Icons.track_changes,
           color: const Color(0xFFF59E0B),
           title: s.findAudience,
@@ -505,8 +524,9 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
           },
         ),
         _growRow(
+          context,
           icon: Icons.rocket_launch_outlined,
-          color: VirelloColors.violet,
+          color: VirelloColors.pink,
           title: s.promoteWithAI,
           desc: s.promoteWithAIDesc,
           onTap: () {
@@ -523,6 +543,7 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
           },
         ),
         _growRow(
+          context,
           icon: Icons.smart_toy_outlined,
           color: const Color(0xFF22B8CF),
           title: s.letAiGrowContent,
@@ -532,8 +553,8 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => GrowFlow(
-                    initialInput: caption.isEmpty ? null : caption),
+                builder: (_) =>
+                    GrowFlow(initialInput: caption.isEmpty ? null : caption),
               ),
             );
           },
@@ -542,7 +563,8 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
     );
   }
 
-  Widget _growRow({
+  Widget _growRow(
+    BuildContext context, {
     required IconData icon,
     required Color color,
     required String title,
@@ -574,12 +596,12 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
                           fontSize: 14.5, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 3),
                   Text(desc,
-                      style: const TextStyle(
-                          fontSize: 12.5, color: VirelloColors.muted)),
+                      style: TextStyle(
+                          fontSize: 12.5, color: VTheme.textSec(context))),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: VirelloColors.muted),
+            Icon(Icons.chevron_right, color: VTheme.textSec(context)),
           ],
         ),
       ),
