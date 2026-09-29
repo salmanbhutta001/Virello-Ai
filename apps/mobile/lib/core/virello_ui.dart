@@ -413,6 +413,239 @@ class VCard extends StatelessWidget {
   }
 }
 
+/// ── 2026-09-29 master board widgets ──────────────────────────────
+
+/// Solid hot-pink primary button — the board's signature CTA.
+/// Full-width, radius 14, white bold label, optional loading spinner.
+class VPinkButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool loading;
+  final double height;
+  const VPinkButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.loading = false,
+    this.height = 56,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null && !loading;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: enabled ? onPressed : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: VirelloColors.pink,
+            disabledBackgroundColor: VirelloColors.pink,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+            textStyle: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          child: loading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2.5, color: Colors.white),
+                )
+              : Text(label),
+        ),
+      ),
+    );
+  }
+}
+
+/// Board-style dark text field: dark fill, subtle border, prefix icon,
+/// gray hint, white text. Always dark — matches the board exactly.
+class VDarkField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  final TextInputType keyboardType;
+  final bool obscure;
+  final Widget? suffix;
+  final FocusNode? focusNode;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  const VDarkField({
+    super.key,
+    required this.controller,
+    required this.hint,
+    required this.icon,
+    this.keyboardType = TextInputType.text,
+    this.obscure = false,
+    this.suffix,
+    this.focusNode,
+    this.onChanged,
+    this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      keyboardType: keyboardType,
+      obscureText: obscure,
+      autocorrect: false,
+      enableSuggestions: !obscure,
+      style: const TextStyle(color: Colors.white, fontSize: 15),
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+            color: VirelloColors.boardTextSec, fontSize: 14),
+        prefixIcon:
+            Icon(icon, color: VirelloColors.boardTextSec, size: 20),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: VirelloColors.boardField,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              const BorderSide(color: VirelloColors.boardBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              const BorderSide(color: VirelloColors.pink, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+}
+
+/// Multi-select interest chip: dark pill, pink when selected.
+class VSelectChip extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final bool selected;
+  final VoidCallback onTap;
+  const VSelectChip({
+    super.key,
+    required this.label,
+    this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+        decoration: BoxDecoration(
+          color: selected
+              ? VirelloColors.pink
+              : VirelloColors.boardField,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? VirelloColors.pink
+                : VirelloColors.boardBorder,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 16,
+                  color: selected
+                      ? Colors.white
+                      : VirelloColors.boardTextSec),
+              const SizedBox(width: 6),
+            ],
+            Text(label,
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white
+                      : VirelloColors.boardTextSec,
+                  fontWeight:
+                      selected ? FontWeight.w700 : FontWeight.w600,
+                  fontSize: 13.5,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Board-style dark card: dark surface, subtle border, generous radius.
+class VBoardCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
+  const VBoardCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: VirelloColors.boardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border:
+            Border.all(color: VirelloColors.boardBorder, width: 1),
+      ),
+      child: child,
+    );
+    if (onTap == null) return card;
+    return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: card);
+  }
+}
+
+/// Circular pink arrow button — board splash screen (01).
+class VPinkCircleButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final double size;
+  const VPinkCircleButton(
+      {super.key, required this.onPressed, this.size = 56});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: VirelloColors.pink,
+          foregroundColor: Colors.white,
+          shape: const CircleBorder(),
+          padding: EdgeInsets.zero,
+        ),
+        child: const Icon(Icons.arrow_forward_rounded, size: 26),
+      ),
+    );
+  }
+}
+
+/// Translucent squircle with a violet border and soft glow, showing the
+/// language's native-script glyph (اردو, ع, हिं, Ñ, Aa) in its color.
 /// Frosted-glass language badge — matches the approved mockup.
 /// Translucent squircle with a violet border and soft glow, showing the
 /// language's native-script glyph (اردو, ع, हिं, Ñ, Aa) in its color.

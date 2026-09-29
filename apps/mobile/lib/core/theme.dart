@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 
-/// Virello design tokens — approved 10-screen board (2026-09-26).
-/// Light theme: white background, violet primary, dark-navy text.
-/// The AI Growth Agent screen is always dark navy.
+/// Virello design tokens.
+///
+/// 2026-09-29 master board palette (dark-first):
+/// near-black background, dark surfaces, hot-pink primary accent.
+/// Light theme keeps working; the board itself is dark-first.
 class VirelloColors {
-  static const violet = Color(0xFF7C5CFF);
-  static const violetDeep = Color(0xFF6A48F5);
+  // ── Board palette (2026-09-29 master design board) ──
+  /// Primary accent — hot pink sampled from the board (#F95177).
+  static const pink = Color(0xFFF95177);
+  static const pinkDeep = Color(0xFFE63E63);
+  static const boardBg = Color(0xFF0B0B0E);
+  static const boardSurface = Color(0xFF15151C);
+  static const boardField = Color(0xFF1D1D26);
+  static const boardBorder = Color(0xFF2B2B36);
+  static const boardTextSec = Color(0xFF9CA3AF);
+
+  /// Board accent alias: the old violet name now resolves to board pink,
+  /// so all 31 existing usages reskin automatically.
+  @Deprecated('Use VirelloColors.pink (2026-09-29 board accent)')
+  static const violet = pink;
+  @Deprecated('Use VirelloColors.pinkDeep')
+  static const violetDeep = pinkDeep;
   static const navy = Color(0xFF1C1D33);
   static const ink = Color(0xFF1A1B2E);
   static const muted = Color(0xFF8F8FA8);
@@ -18,9 +34,9 @@ class VirelloColors {
   static const danger = Color(0xFFE05252);
   static const amber = Color(0xFFFFB020);
 
-  /// Signature gradient: Get Started / LET AI GROW / AI orb.
+  /// Signature gradient: board pink → deep pink (was violet).
   static const brandGradient = LinearGradient(
-    colors: [Color(0xFF7C5CFF), Color(0xFF9D4EDD), Color(0xFF22D3EE)],
+    colors: [Color(0xFFF95177), Color(0xFFE63E63)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -34,14 +50,20 @@ class VirelloColors {
       ];
 }
 
-/// Virello premium theme: violet primary on clean white (light),
-/// deep navy dark theme. Trustworthy + futuristic.
+/// Virello premium theme: board pink primary.
+/// Dark theme is board-first: near-black background, dark surfaces.
+/// Light theme keeps a clean white page with the pink accent.
 class VirelloTheme {
-  static const _seed = Color(0xFF7C5CFF); // board violet
+  static const _seed = VirelloColors.pink; // 2026-09-29 board accent
 
   static ThemeData dark() {
-    final scheme =
+    var scheme =
         ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark);
+    // Board look: near-black page, dark cards.
+    scheme = scheme.copyWith(
+      surface: VirelloColors.boardBg,
+      surfaceContainerHighest: VirelloColors.boardSurface,
+    );
     return _base(scheme, Brightness.dark);
   }
 
@@ -72,7 +94,12 @@ class VirelloTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: b == Brightness.dark
+              ? const BorderSide(color: VirelloColors.boardBorder, width: 1)
+              : BorderSide.none,
+        ),
         color: scheme.surfaceContainerHighest,
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -103,9 +130,10 @@ class VirelloTheme {
     );
   }
 
-  /// Signature gradient for the LET AI GROW button and hero cards.
+  /// Signature gradient for the LET AI GROW button and hero cards —
+  /// board pink family.
   static const growGradient = LinearGradient(
-    colors: [Color(0xFF6C3DF5), Color(0xFF9D4EDD), Color(0xFF22D3EE)],
+    colors: [Color(0xFFF95177), Color(0xFFE63E63), Color(0xFFC2274E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
