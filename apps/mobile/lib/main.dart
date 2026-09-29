@@ -425,12 +425,12 @@ class _RootShellState extends State<RootShell> {
   Widget _centerButton() {
     return Center(
       child: Transform.translate(
-        offset: const Offset(0, -10),
+        offset: const Offset(0, -8),
         child: GestureDetector(
           onTap: () => setState(() => _index = 2),
           child: Container(
-            width: 58,
-            height: 58,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
@@ -446,7 +446,7 @@ class _RootShellState extends State<RootShell> {
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 30),
+            child: const Icon(Icons.add, color: Colors.white, size: 26),
           ),
         ),
       ),

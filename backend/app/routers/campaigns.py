@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -136,12 +136,8 @@ async def delete_campaign(
     """Owner deletes a campaign permanently. Audit-logged."""
     campaign = await _owned(db, user, campaign_id)
     for model in (AgentRun, MetricDaily, FraudFlag, DiscoveryPlacement,
-                  DiscoveryInteraction, SocialMetricSnapshot):
-        rows = (await db.execute(
-            select(model).where(model.campaign_id == campaign.id)
-        )).scalars().all()
-        for r in rows:
-            await db.delete(r)
+        DiscoveryInteraction, SocialMetricSnapshot):
+        await db.execute(delete(model).where(model.campaign_id == campaign.id))
     loops = (await db.execute(
         select(GrowthLoop).where(GrowthLoop.campaign_id == campaign.id)
     )).scalars().all()
@@ -153,11 +149,7 @@ async def delete_campaign(
             (GrowthObservation, GrowthObservation.loop_id),
             (GrowthDecision, GrowthDecision.loop_id),
         ):
-            child_rows = (await db.execute(
-                select(child_model).where(col == loop.id)
-            )).scalars().all()
-            for cr in child_rows:
-                await db.delete(cr)
+            await db.execute(delete(child_model).where(col == loop.id))
         await db.delete(loop)
     db.add(AuditLog(user_id=user.id, action="campaign.delete", details=str(campaign_id)))
     await db.delete(campaign)
