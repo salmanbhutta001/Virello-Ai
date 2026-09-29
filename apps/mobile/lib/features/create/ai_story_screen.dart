@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Board screen 25: "AI Story".
+/// Board screen 25: "AI Story" — fully functional AI story writer.
 ///
-/// Board layout: header, prompt field, Generate. Output wires to the REAL
-/// POST /api/v1/entertain/story endpoint (dev-labeled until a production
-/// provider is configured — never claimed otherwise).
+/// Uses a free text-AI provider (Pollinations.ai, no key required) to write
+/// a REAL story in the requested length and the app's language. Falls back
+/// to the backend heuristic endpoint if the AI provider is unreachable.
+///
+/// HONEST: AI-written output is labeled as such; the fallback is labeled
+/// as a basic draft. Never claims human authorship.
 class AiStoryScreen extends StatefulWidget {
   const AiStoryScreen({super.key});
 
@@ -22,15 +27,45 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
   final _promptCtrl = TextEditingController();
   int _length = 0; // 0 short, 1 medium, 2 long
   bool _working = false;
-  Map<String, dynamic>? _story;
-  bool _dev = false;
+  String? _storyTitle;
+  String? _storyBody;
+  bool _isAi = false;
+  bool _sharing = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
+
+  static const _lengthWords = ['about 150 words', 'about 400 words', 'about 800 words'];
 
   @override
   void dispose() {
     _promptCtrl.dispose();
     super.dispose();
+  }
+
+  /// Builds the AI prompt with real intelligence: length + language + craft.
+  String _buildAiPrompt(String idea, int lengthIdx, String lang) {
+    final langNote = lang == 'ur'
+        ? 'Write the story in Roman Urdu (Urdu written in Latin script).'
+        : lang == 'ar'
+            ? 'Write the story in Arabic.'
+            : 'Write the story in English.';
+    return 'Write an engaging, original short story based on this idea: $idea\n'
+        'Length: ${_lengthWords[lengthIdx]}. $langNote\n'
+        'Start with a line "TITLE: " followed by a captivating title, then a blank line, then the story.\n'
+        'Use vivid sensory details, natural dialogue where it fits, and a satisfying ending with a small twist or emotional payoff. '
+        'No moralizing, no bullet points — pure narrative.';
+  }
+
+  Future<String?> _askAi(String prompt) async {
+    final url =
+        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+    final res = await http.get(Uri.parse(url)).timeout(
+          const Duration(seconds: 60),
+        );
+    if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+      return res.body.trim();
+    }
+    return null;
   }
 
   Future<void> _generate() async {
@@ -43,34 +78,88 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
     }
     setState(() {
       _working = true;
-      _story = null;
+      _storyTitle = null;
+      _storyBody = null;
     });
+    String? title;
+    String? body;
+    bool ai = false;
     try {
-      final lengths = ['short', 'medium', 'long'];
-      final r = await apiClient.generateStory(
-        prompt: prompt,
-        length: lengths[_length],
-        language: appState.localeCode,
+      // 1) Real AI provider.
+      final aiText = await _askAi(
+        _buildAiPrompt(prompt, _length, appState.localeCode),
       );
-      if (!mounted) return;
-      setState(() {
-        _story = (r['story'] as Map?)?.cast<String, dynamic>();
-        _dev = r['dev'] == true;
-        _working = false;
-      });
+      if (aiText != null) {
+        final lines = aiText.split('\n');
+        final titleIdx =
+            lines.indexWhere((l) => l.trim().toUpperCase().startsWith('TITLE:'));
+        if (titleIdx >= 0) {
+          title = lines[titleIdx]
+              .replaceFirst(RegExp(r'(?i)^title:\s*'), '')
+              .trim();
+          body = lines
+              .asMap()
+              .entries
+              .where((e) => e.key != titleIdx)
+              .map((e) => e.value)
+              .join('\n')
+              .trim();
+        } else {
+          title = prompt;
+          body = aiText;
+        }
+        ai = true;
+      }
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _working = false);
+      // Fall through to backend heuristic.
+    }
+    // 2) Backend fallback (heuristic draft).
+    if (body == null || body.isEmpty) {
+      try {
+        final lengths = ['short', 'medium', 'long'];
+        final r = await apiClient.generateStory(
+          prompt: prompt,
+          length: lengths[_length],
+          language: appState.localeCode,
+        );
+        final story = (r['story'] as Map?)?.cast<String, dynamic>();
+        title = '${story?['title'] ?? prompt}';
+        body = '${story?['body'] ?? ''}';
+        ai = false;
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _storyTitle = title;
+      _storyBody = (body == null || body.isEmpty) ? null : body;
+      _isAi = ai;
+    });
+    if (_storyBody == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(s.askFailed)),
       );
     }
   }
 
-  void _copy(String text) {
+  void _copy() {
+    final text = '${_storyTitle ?? ''}\n\n${_storyBody ?? ''}';
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(s.boardCopied)));
+  }
+
+  Future<void> _share() async {
+    if (_storyBody == null || _sharing) return;
+    setState(() => _sharing = true);
+    try {
+      await Share.share(
+        '${_storyTitle ?? ''}\n\n$_storyBody\n\nvia Virello',
+        subject: _storyTitle ?? s.boardAiStory,
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
   }
 
   @override
@@ -145,19 +234,29 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                     ),
             ),
           ),
-          if (_dev) ...[
+          if (_storyBody != null) ...[
             const SizedBox(height: 12),
-            Text(
-              s.boardDevHeuristic,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontStyle: FontStyle.italic,
-                color: VTheme.textSec(context),
-              ),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: VirelloColors.pink.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _isAi ? s.boardImageAiLabel : s.boardScriptDraftLabel,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: VirelloColors.pink,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-          if (_story != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             VBoardCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +265,7 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${_story!['title'] ?? s.boardAiStory}',
+                          _storyTitle ?? s.boardAiStory,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
@@ -175,20 +274,33 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () => _copy(
-                          '${_story!['title'] ?? ''}\n\n${_story!['body'] ?? ''}',
-                        ),
+                        onPressed: _copy,
                         icon: const Icon(
                           Icons.copy_outlined,
                           color: VirelloColors.pink,
                           size: 20,
                         ),
                       ),
+                      IconButton(
+                        onPressed: _sharing ? null : _share,
+                        icon: _sharing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                            : const Icon(
+                                Icons.share_outlined,
+                                color: VirelloColors.pink,
+                                size: 20,
+                              ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '${_story!['body'] ?? ''}',
+                  SelectableText(
+                    _storyBody!,
                     style: TextStyle(
                       fontSize: 13.5,
                       height: 1.7,
@@ -197,6 +309,12 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _working ? null : _generate,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text(s.boardImageRegenerate),
             ),
           ],
         ],
