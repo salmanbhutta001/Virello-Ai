@@ -323,8 +323,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        // Stock chip (real).
-        _stockChip(stockQty),
+        // Stock chip (real; affiliate stock tracked by Amazon).
+        _stockChip(stockQty, isAffiliate),
         if (desc.isNotEmpty) ...[
           const SizedBox(height: 12),
           GestureDetector(
@@ -499,14 +499,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _stockChip(int qty) {
-    final label = qty <= 0
+  Widget _stockChip(int qty, bool isAffiliate) {
+    // Affiliate: stock tracked by Amazon, never show Out of stock.
+    final label = isAffiliate
+        ? s.shopAvailableOnAmazon
+        : qty <= 0
         ? s.shopOutOfStock
         : qty <= 5
             ? s.shopLimitedStock
             : s.shopInStock;
-    final color = qty <= 0
-        ? VirelloColors.danger
+    final color = isAffiliate
+        ? VirelloColors.success
+        : qty <= 0
+            ? VirelloColors.danger
         : qty <= 5
             ? VirelloColors.amber
             : VirelloColors.success;

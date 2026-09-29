@@ -8334,6 +8334,11 @@ class AppStrings {
         'Stok habis',
         'স্টক শেষ'
       );
+  String get shopAvailableOnAmazon => _get('Available on Amazon', 'ایمیزون پر دستیاب', 'متوفر على أمازون',
+        'अमेज़न पर उपलब्ध', 'Disponible sur Amazon', 'Disponible en Amazon',
+        'Disponível na Amazon', 'Auf Amazon verfügbar', 'Amazon\'da mevcut',
+        'Tersedia di Amazon', 'অ্যামাজনে উপলব্ধ'
+      );
   String get shopLimitedStock =>
       _get('Limited stock', 'محدود اسٹاک', 'مخزون محدود',
         'सीमित स्टॉक',
