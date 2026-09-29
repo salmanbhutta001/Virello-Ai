@@ -8,7 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.core import AuditLog, Campaign, CampaignGoal, CampaignStatus, GrowthMode, User
+from app.models.core import (
+    AgentRun, AuditLog, Campaign, CampaignGoal, CampaignStatus,
+    FraudFlag, GrowthMode, MetricDaily, User,
+)
+from app.models.growth import DiscoveryInteraction, DiscoveryPlacement
+from app.models.growth_engine import (
+    GrowthDecision, GrowthLoop, GrowthObservation, GrowthRound,
+    GrowthSegment, GrowthVariant,
+)
+from app.models.social_metrics import SocialMetricSnapshot
 from app.services.pipeline import launch_pipeline
 
 router = APIRouter()
@@ -126,6 +135,30 @@ async def delete_campaign(
 ) -> dict:
     """Owner deletes a campaign permanently. Audit-logged."""
     campaign = await _owned(db, user, campaign_id)
+    for model in (AgentRun, MetricDaily, FraudFlag, DiscoveryPlacement,
+                  DiscoveryInteraction, SocialMetricSnapshot):
+        rows = (await db.execute(
+            select(model).where(model.campaign_id == campaign.id)
+        )).scalars().all()
+        for r in rows:
+            await db.delete(r)
+    loops = (await db.execute(
+        select(GrowthLoop).where(GrowthLoop.campaign_id == campaign.id)
+    )).scalars().all()
+    for loop in loops:
+        for child_model, col in (
+            (GrowthSegment, GrowthSegment.loop_id),
+            (GrowthVariant, GrowthVariant.loop_id),
+            (GrowthRound, GrowthRound.loop_id),
+            (GrowthObservation, GrowthObservation.loop_id),
+            (GrowthDecision, GrowthDecision.loop_id),
+        ):
+            child_rows = (await db.execute(
+                select(child_model).where(col == loop.id)
+            )).scalars().all()
+            for cr in child_rows:
+                await db.delete(cr)
+        await db.delete(loop)
     db.add(AuditLog(user_id=user.id, action="campaign.delete", details=str(campaign_id)))
     await db.delete(campaign)
     await db.commit()

@@ -111,7 +111,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(s.growFailed)));
+          .showSnackBar(SnackBar(content: Text(s.deleteFailed)));
     }
   }
 
