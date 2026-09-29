@@ -746,6 +746,34 @@ async def toggle_wishlist(
     return {"saved": saved, "product_id": str(pid)}
 
 
+@router.post("/products/gallery", response_model=dict)
+async def update_product_gallery(
+    payload: dict,
+    x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a product's gallery images (AI-generated angles).
+    Auth: X-Curator-Token header. Body: {"asin": "...", "image_urls": [...]}.
+    Replaces image_urls entirely (gallery backfill)."""
+    _check_curator_token(x_curator_token or "")
+    asin = (payload.get("asin") or "").strip().upper()
+    image_urls = [u.strip() for u in (payload.get("image_urls") or []) if u.strip()][:10]
+    if not asin or not image_urls:
+        raise HTTPException(status_code=400, detail="asin and image_urls required")
+    from app.services.affiliate.amazon import AmazonAffiliateProvider
+    provider = AmazonAffiliateProvider()
+    affiliate_url = provider.build_affiliate_url(asin)
+    existing = (
+        await db.execute(select(Product).where(Product.affiliate_url == affiliate_url))
+    ).scalar_one_or_none()
+    if existing is None:
+        raise HTTPException(status_code=404, detail=f"Product not found: {asin}")
+    existing.image_urls = image_urls
+    await db.commit()
+    return {"asin": asin, "product_id": str(existing.id),
+            "image_urls": image_urls, "count": len(image_urls)}
+
+
 @router.get("/wishlist", response_model=list)
 async def get_wishlist(
     user: User = Depends(get_current_user),

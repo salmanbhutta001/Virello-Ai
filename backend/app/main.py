@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.core.config import settings
 from app.core.database import init_db
@@ -42,6 +44,12 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Public product gallery images (AI-generated angles).
+# Served at /gallery/{asin}_angle{N}.jpg — no auth needed for product display.
+_GALLERY_DIR = Path(__file__).resolve().parent / "static" / "gallery"
+_GALLERY_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/gallery", StaticFiles(directory=str(_GALLERY_DIR)), name="gallery")
 
 app.add_middleware(
     CORSMiddleware,
