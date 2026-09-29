@@ -9775,6 +9775,34 @@ class AppStrings {
         'Pembuatan gambar AI membutuhkan kunci penyedia — segera hadir. Prompt Anda tersimpan di bawah.',
         'AI দিয়ে ছবি তৈরির জন্য প্রোভাইডার কী দরকার — শীঘ্রই আসছে। আপনার প্রম্পট নিচে সংরক্ষিত আছে।'
       );
+  String get boardImageGenerating => _get(
+        'Generating your image…',
+        'آپ کی تصویر بن رہی ہے…',
+      );
+  String get boardImageRegenerate => _get(
+        'Regenerate',
+        'دوبارہ بنائیں',
+      );
+  String get boardImageShare => _get(
+        'Share',
+        'شیئر کریں',
+      );
+  String get boardImageShareFailed => _get(
+        'Could not prepare the image for sharing.',
+        'تصویر شیئر کے لیے تیار نہیں ہو سکی۔',
+      );
+  String get boardImageAiLabel => _get(
+        'AI-generated',
+        'AI سے بنی',
+      );
+  String get boardImageFailed => _get(
+        'Image generation failed. Please try again.',
+        'تصویر بنانے میں ناکامی۔ دوبارہ کوشش کریں۔',
+      );
+  String get boardImageRetry => _get(
+        'Retry',
+        'دوبارہ کوشش',
+      );
   String get boardVideoComingSoon => _get(
         'AI video generation needs a provider key — coming soon. Your idea is saved below.',
         'AI ویڈیو بنانے کے لیے فراہم کنندہ کی کنجی درکار ہے — جلد آ رہا ہے۔ آپ کا آئیڈیا نیچے محفوظ ہے۔',
