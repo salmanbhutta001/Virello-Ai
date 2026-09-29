@@ -34,7 +34,7 @@ class VGradientButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: VirelloColors.violet.withValues(alpha: 0.35),
+                color: VirelloColors.pink.withValues(alpha: 0.35),
                 blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
@@ -93,7 +93,7 @@ class VPillTabs extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: active ? VirelloColors.violet : VTheme.chip(context),
+                  color: active ? VirelloColors.pink : VTheme.chip(context),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -126,7 +126,7 @@ class VScoreRing extends StatelessWidget {
         ? VirelloColors.success
         : s >= 45
         ? VirelloColors.amber
-        : VirelloColors.violet;
+        : VirelloColors.pink;
     return SizedBox(
       width: size,
       height: size,
@@ -449,7 +449,7 @@ class VSectionHeader extends StatelessWidget {
               actionLabel!,
               style: const TextStyle(
                 fontSize: 13,
-                color: VirelloColors.violet,
+                color: VirelloColors.pink,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -791,11 +791,11 @@ class VGlassLangBadge extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: VirelloColors.violet.withValues(alpha: 0.35),
+              color: VirelloColors.pink.withValues(alpha: 0.35),
             ),
             boxShadow: [
               BoxShadow(
-                color: VirelloColors.violet.withValues(alpha: 0.18),
+                color: VirelloColors.pink.withValues(alpha: 0.18),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),

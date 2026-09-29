@@ -203,7 +203,7 @@ class _BillingScreenState extends State<BillingScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: VirelloColors.violet
+                          color: VirelloColors.pink
                               .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -211,7 +211,7 @@ class _BillingScreenState extends State<BillingScreen> {
                             style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: VirelloColors.violet)),
+                                color: VirelloColors.pink)),
                       ),
                     ],
                   ],
@@ -232,7 +232,7 @@ class _BillingScreenState extends State<BillingScreen> {
             style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: VirelloColors.violet),
+                color: VirelloColors.pink),
           ),
         ],
       ),
@@ -264,7 +264,7 @@ class _BillingScreenState extends State<BillingScreen> {
               style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: VirelloColors.violet)),
+                  color: VirelloColors.pink)),
         ],
       ),
     );

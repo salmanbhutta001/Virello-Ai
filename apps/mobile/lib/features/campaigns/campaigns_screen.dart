@@ -82,7 +82,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         CampaignStatus.optimizing => const Color(0xFF60A5FA),
         CampaignStatus.paused => VirelloColors.amber,
         CampaignStatus.completed => VirelloColors.boardTextSec,
-        _ => VirelloColors.violet,
+        _ => VirelloColors.pink,
       };
 
   String _statusLabel(CampaignStatus st) {
@@ -129,7 +129,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         ],
       ),
       body: RefreshIndicator(
-        color: VirelloColors.violet,
+        color: VirelloColors.pink,
         onRefresh: _refresh,
         child: FutureBuilder<List<Campaign>>(
           future: _future,
@@ -300,7 +300,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 value: (cp.spendUsd / cp.budgetUsd).clamp(0.0, 1.0),
                 minHeight: 6,
                 backgroundColor: VTheme.chip(context),
-                valueColor: const AlwaysStoppedAnimation(VirelloColors.violet),
+                valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
               ),
             ),
             const SizedBox(height: 4),

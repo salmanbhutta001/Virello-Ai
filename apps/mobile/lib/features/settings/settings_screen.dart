@@ -184,7 +184,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               _row(
                 icon: Icons.verified_user_outlined,
-                iconColor: VirelloColors.violet,
+                iconColor: VirelloColors.pink,
                 title: s.howVirelloGrows,
                 onTap: () => _trustDialog(
                     context, s.howVirelloGrows,
@@ -207,7 +207,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               _row(
                 icon: Icons.play_circle_outline_rounded,
-                iconColor: VirelloColors.violet,
+                iconColor: VirelloColors.pink,
                 title: s.tutorialMenu,
                 subtitle: s.tutorialMenuSub,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(

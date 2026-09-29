@@ -156,7 +156,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   FilledButton(
                     onPressed: canSubmit ? _change : null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: VirelloColors.violet,
+                      backgroundColor: VirelloColors.pink,
                       disabledBackgroundColor: VirelloColors.boardBorder,
                       padding:
                           const EdgeInsets.symmetric(vertical: 15),

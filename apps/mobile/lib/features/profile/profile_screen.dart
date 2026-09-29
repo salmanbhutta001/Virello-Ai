@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w900,
-                      color: VirelloColors.violet,
+                      color: VirelloColors.pink,
                     ),
                   ),
                 ),
@@ -188,7 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   '$planLabel Plan',
                   style: const TextStyle(
                     fontSize: 13,
-                    color: VirelloColors.violet,
+                    color: VirelloColors.pink,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -351,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.play_circle_outline_rounded,
-                        iconColor: VirelloColors.violet,
+                        iconColor: VirelloColors.pink,
                         title: s.tutorialMenu,
                         subtitle: s.tutorialMenuSub,
                         onTap: () => Navigator.of(context).push(
@@ -374,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (isAdmin)
                         _menuRow(
                           icon: Icons.admin_panel_settings_outlined,
-                          iconColor: VirelloColors.violet,
+                          iconColor: VirelloColors.pink,
                           title: s.adminDashboard,
                           subtitle: s.adminOverview,
                           onTap: () => Navigator.of(context).push(
@@ -405,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       _menuRow(
                         icon: Icons.verified_user_outlined,
-                        iconColor: VirelloColors.violet,
+                        iconColor: VirelloColors.pink,
                         title: s.howVirelloGrows,
                         onTap: () => _showDialog(
                           s.howVirelloGrows,

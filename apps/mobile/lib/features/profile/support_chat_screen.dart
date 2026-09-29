@@ -93,11 +93,11 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: VirelloColors.violet.withValues(alpha: 0.08),
+            color: VirelloColors.pink.withValues(alpha: 0.08),
             child: Row(
               children: [
                 const Icon(Icons.smart_toy_outlined,
-                    size: 18, color: VirelloColors.violet),
+                    size: 18, color: VirelloColors.pink),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(s.supportAutomatedNote,
@@ -173,7 +173,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     final align =
         m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
     final bg = m.fromUser
-        ? VirelloColors.violet
+        ? VirelloColors.pink
         : VTheme.chip(context);
     final fg = m.fromUser ? Colors.white : VTheme.text(context);
     return Align(

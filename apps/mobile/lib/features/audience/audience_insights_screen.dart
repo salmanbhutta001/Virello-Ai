@@ -107,7 +107,7 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
   /// Top-3 matches as normalized donut slices (relevance fit, not reach).
   List<VDonutSlice> get _donutSlices {
     const colors = [
-      VirelloColors.violet,
+      VirelloColors.pink,
       Color(0xFF4AA8FF),
       Color(0xFF9A9AB0),
     ];
@@ -204,7 +204,7 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
           IconButton(
             onPressed: _load,
             icon: const Icon(Icons.refresh,
-                color: VirelloColors.violet, size: 28),
+                color: VirelloColors.pink, size: 28),
           ),
         ]),
       ),
@@ -287,8 +287,8 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
   Widget _pillsRow() {
     return Row(children: [
       _pill(s.aiMatched,
-          bg: VirelloColors.violet.withValues(alpha: 0.1),
-          fg: VirelloColors.violetDeep),
+          bg: VirelloColors.pink.withValues(alpha: 0.1),
+          fg: VirelloColors.pinkDeep),
       const SizedBox(width: 8),
       _pill(s.virelloAudience,
           bg: VirelloColors.chipBg, fg: VirelloColors.mutedDark),
@@ -312,14 +312,14 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
       chips.add(Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: VirelloColors.violet.withValues(alpha: 0.1),
+          color: VirelloColors.pink.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(m.name,
             style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: VirelloColors.violetDeep)),
+                color: VirelloColors.pinkDeep)),
       ));
       final sg = _segments[m.segmentId];
       if (sg != null) {
@@ -356,10 +356,10 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
 
   Widget _geoCard(List<MapEntry<String, double>> rows) {
     const barColors = [
-      VirelloColors.violet,
+      VirelloColors.pink,
       Color(0xFF4AA8FF),
       Color(0xFF9A9AB0),
-      VirelloColors.violetDeep,
+      VirelloColors.pinkDeep,
     ];
     return VCard(
       child: Column(children: [
@@ -452,7 +452,7 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
                         const Text('• ',
                             style: TextStyle(
                                 fontSize: 12,
-                                color: VirelloColors.violet,
+                                color: VirelloColors.pink,
                                 fontWeight: FontWeight.w800)),
                         Expanded(
                           child: Text(reason,

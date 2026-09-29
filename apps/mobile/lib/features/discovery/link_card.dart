@@ -225,7 +225,7 @@ class _LinkCardState extends State<LinkCard> {
                     child: FilledButton.icon(
                       onPressed: _handleRead,
                       style: FilledButton.styleFrom(
-                        backgroundColor: VirelloColors.violet,
+                        backgroundColor: VirelloColors.pink,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),

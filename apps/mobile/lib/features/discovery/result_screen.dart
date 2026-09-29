@@ -124,12 +124,12 @@ class _ResultScreenState extends State<ResultScreen> {
           TextButton.icon(
             onPressed: _grow,
             icon: const Icon(Icons.rocket_launch_outlined,
-                color: VirelloColors.violet),
+                color: VirelloColors.pink),
             label: Text(s.growThisPost,
                 style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: VirelloColors.violet)),
+                    color: VirelloColors.pink)),
           ),
           const SizedBox(height: 12),
         ],
@@ -190,7 +190,7 @@ class _ResultScreenState extends State<ResultScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: tinted
-            ? VirelloColors.violet.withValues(alpha: 0.1)
+            ? VirelloColors.pink.withValues(alpha: 0.1)
             : VirelloColors.chipBg,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -199,7 +199,7 @@ class _ResultScreenState extends State<ResultScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color:
-                  tinted ? VirelloColors.violetDeep : VirelloColors.mutedDark)),
+                  tinted ? VirelloColors.pinkDeep : VirelloColors.mutedDark)),
     );
   }
 
@@ -253,7 +253,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 value: (r.components[comps[i]]! / 100).clamp(0.0, 1.0),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(8),
-                color: VirelloColors.violet,
+                color: VirelloColors.pink,
                 backgroundColor: VirelloColors.chipBg,
               ),
             ),
@@ -274,12 +274,12 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VirelloColors.violet.withValues(alpha: 0.06),
+        color: VirelloColors.pink.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Icon(Icons.verified_outlined,
-            color: VirelloColors.violet, size: 20),
+            color: VirelloColors.pink, size: 20),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -302,14 +302,14 @@ class _ResultScreenState extends State<ResultScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: VirelloColors.violet.withValues(alpha: 0.1),
+                  color: VirelloColors.pink.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('#$h',
                     style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: VirelloColors.violetDeep)),
+                        color: VirelloColors.pinkDeep)),
               ))
           .toList(),
     );

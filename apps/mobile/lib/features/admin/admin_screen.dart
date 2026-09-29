@@ -167,7 +167,7 @@ class _OverviewSectionState extends State<_OverviewSection>
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icon, size: 20, color: const Color(0xFF6C3DF5)),
+            Icon(icon, size: 20, color: const Color(0xFFF95177)),
             const Spacer(),
             Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
@@ -348,7 +348,7 @@ class _AnalyticsSectionState extends State<_AnalyticsSection>
             child: Column(
               children: [
                 _kindRow(s.salesSubscriptions,
-                    _money(byKind['subscription']), const Color(0xFF6C3DF5)),
+                    _money(byKind['subscription']), const Color(0xFFF95177)),
                 _kindRow(s.salesCredits, _money(byKind['credits']),
                     const Color(0xFF22B8CF)),
                 _kindRow(s.salesRefunds, _money(byKind['refund']),
@@ -525,8 +525,8 @@ class _AnalyticsSectionState extends State<_AnalyticsSection>
                                           maxV),
                                   decoration: BoxDecoration(
                                     color: _selected == i
-                                        ? const Color(0xFF6C3DF5)
-                                        : const Color(0xFF6C3DF5)
+                                        ? const Color(0xFFF95177)
+                                        : const Color(0xFFF95177)
                                             .withValues(alpha: 0.45),
                                     borderRadius:
                                         const BorderRadius.vertical(

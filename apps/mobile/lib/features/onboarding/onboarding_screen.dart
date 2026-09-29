@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Container(
         width: 140, height: 140,
         decoration: BoxDecoration(shape: BoxShape.circle, gradient: VirelloTheme.growGradient,
-          boxShadow: [BoxShadow(color: const Color(0xFF6C3DF5).withValues(alpha: 0.35), blurRadius: 50)]),
+          boxShadow: [BoxShadow(color: const Color(0xFFF95177).withValues(alpha: 0.35), blurRadius: 50)]),
         child: Icon(slide.icon, size: 64, color: Colors.white),
       ),
       const SizedBox(height: 40),

@@ -132,7 +132,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
             icon: const Icon(Icons.science_outlined, size: 20),
             label: Text(s.analyzeImprove),
             style: ElevatedButton.styleFrom(
-              backgroundColor: VirelloColors.violet,
+              backgroundColor: VirelloColors.pink,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -365,7 +365,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VirelloColors.violet.withValues(alpha: 0.07),
+                color: VirelloColors.pink.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -429,7 +429,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: VirelloColors.violet,
+                          color: VirelloColors.pink,
                         ),
                       ),
                     ),

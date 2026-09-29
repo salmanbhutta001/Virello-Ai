@@ -118,7 +118,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       data: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: VirelloColors.boardBg,
         cardColor: _darkCard,
-        colorScheme: const ColorScheme.dark(primary: VirelloColors.violet),
+        colorScheme: const ColorScheme.dark(primary: VirelloColors.pink),
       ),
       child: Builder(
         builder: (ctx) => Scaffold(
@@ -126,7 +126,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
-                    color: VirelloColors.violet,
+                    color: VirelloColors.pink,
                     onRefresh: _load,
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -189,7 +189,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           gradient: VirelloColors.brandGradient,
           boxShadow: [
             BoxShadow(
-              color: VirelloColors.violet.withValues(alpha: 0.55),
+              color: VirelloColors.pink.withValues(alpha: 0.55),
               blurRadius: 44,
               spreadRadius: 6,
             ),
@@ -299,7 +299,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           color: _darkCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: VirelloColors.violet.withValues(alpha: 0.35), width: 1),
+              color: VirelloColors.pink.withValues(alpha: 0.35), width: 1),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(
@@ -515,7 +515,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               minHeight: 6,
               borderRadius: BorderRadius.circular(6),
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation(VirelloColors.violet),
+              valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
             ),
           ),
           const SizedBox(width: 8),
@@ -538,7 +538,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
         collapsedIconColor: Colors.white38,
         leading: Icon(
             v.isOriginal ? Icons.person_outline : Icons.auto_awesome_outlined,
-            color: v.isOriginal ? Colors.white38 : VirelloColors.violet),
+            color: v.isOriginal ? Colors.white38 : VirelloColors.pink),
         title: Text(v.label,
             style: const TextStyle(
                 color: Colors.white,
@@ -553,7 +553,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               minHeight: 5,
               borderRadius: BorderRadius.circular(6),
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation(VirelloColors.violet),
+              valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
             ),
             const SizedBox(height: 6),
             Text(
@@ -575,7 +575,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               if (v.hashtags.isNotEmpty)
                 Text(v.hashtags.join(' '),
                     style: const TextStyle(
-                        fontSize: 12, color: VirelloColors.violet)),
+                        fontSize: 12, color: VirelloColors.pink)),
               const SizedBox(height: 8),
               Text('${s.engineWhy}: ${v.rationale}',
                   style: const TextStyle(fontSize: 12, color: Colors.white54)),
@@ -665,7 +665,7 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
       data: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: VirelloColors.boardBg,
         cardColor: _darkCard,
-        colorScheme: const ColorScheme.dark(primary: VirelloColors.violet),
+        colorScheme: const ColorScheme.dark(primary: VirelloColors.pink),
       ),
       child: Builder(
         builder: (ctx) => Scaffold(

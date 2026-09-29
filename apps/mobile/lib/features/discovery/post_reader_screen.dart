@@ -183,7 +183,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                     style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
-                      color: VirelloColors.violet,
+                      color: VirelloColors.pink,
                     ),
                   ),
                 ],
@@ -313,7 +313,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             tooltip: saved ? s.readerSaved : s.readerSave,
             icon: Icon(
               saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-              color: saved ? VirelloColors.violet : null,
+              color: saved ? VirelloColors.pink : null,
             ),
             onPressed: _toggleSave,
           ),
@@ -555,7 +555,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                   const Icon(
                     Icons.auto_awesome,
                     size: 16,
-                    color: VirelloColors.violet,
+                    color: VirelloColors.pink,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
@@ -590,7 +590,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                     dense: true,
                     leading: CircleAvatar(
                       radius: 11,
-                      backgroundColor: VirelloColors.violet.withValues(
+                      backgroundColor: VirelloColors.pink.withValues(
                         alpha: 0.12,
                       ),
                       child: Text(
@@ -598,7 +598,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: VirelloColors.violet,
+                          color: VirelloColors.pink,
                         ),
                       ),
                     ),
@@ -620,7 +620,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
-                  color: VirelloColors.violet.withValues(alpha: 0.5),
+                  color: VirelloColors.pink.withValues(alpha: 0.5),
                   width: 3,
                 ),
               ),
@@ -715,7 +715,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                   const Icon(
                     Icons.check_circle_outline,
                     size: 16,
-                    color: VirelloColors.violet,
+                    color: VirelloColors.pink,
                   ),
                   const SizedBox(width: 8),
                   Expanded(

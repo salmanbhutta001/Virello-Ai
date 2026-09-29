@@ -69,7 +69,7 @@ class _AdCampaignsScreenState extends State<AdCampaignsScreen> {
             if (!snap.hasData) {
               return const Center(
                   child: CircularProgressIndicator(
-                      color: VirelloColors.violet));
+                      color: VirelloColors.pink));
             }
             final lists = snap.data!;
             return ListView(
@@ -87,7 +87,7 @@ class _AdCampaignsScreenState extends State<AdCampaignsScreen> {
                       child: _freeCard(c))),
                 const SizedBox(height: 16),
                 _sectionHeader(Icons.rocket_launch_outlined, s.paidServices,
-                    VirelloColors.violet, lists.paid.length),
+                    VirelloColors.pink, lists.paid.length),
                 const SizedBox(height: 8),
                 if (lists.paid.isEmpty)
                   _emptyNote()
@@ -256,15 +256,15 @@ class _AdCampaignsScreenState extends State<AdCampaignsScreen> {
                     : '')
             : c.geoMode;
     return _baseCard(c,
-        accent: VirelloColors.violet,
+        accent: VirelloColors.pink,
         planLabel: s.paidBoost,
         agentLabel: s.managedByPaidAi,
         meta: [
           const SizedBox(height: 6),
           Wrap(spacing: 6, runSpacing: 6, children: [
             if ((c.packageId ?? '').isNotEmpty)
-              _chip(c.packageId!, VirelloColors.violetDeep),
-            _chip('\$${c.budget.toStringAsFixed(0)}', VirelloColors.violet),
+              _chip(c.packageId!, VirelloColors.pinkDeep),
+            _chip('\$${c.budget.toStringAsFixed(0)}', VirelloColors.pink),
             _chip(s.packageDays(c.durationDays), VirelloColors.muted),
           ]),
           const SizedBox(height: 6),

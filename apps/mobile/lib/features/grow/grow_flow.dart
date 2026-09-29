@@ -248,7 +248,7 @@ class _GrowFlowState extends State<GrowFlow> {
           Container(
             width: 120, height: 120,
             decoration: BoxDecoration(shape: BoxShape.circle, gradient: VirelloTheme.growGradient,
-              boxShadow: [BoxShadow(color: const Color(0xFF6C3DF5).withValues(alpha: 0.4), blurRadius: 40)]),
+              boxShadow: [BoxShadow(color: const Color(0xFFF95177).withValues(alpha: 0.4), blurRadius: 40)]),
             child: Icon(done ? Icons.check : Icons.auto_awesome, size: 56, color: Colors.white),
           ),
           const SizedBox(height: 32),

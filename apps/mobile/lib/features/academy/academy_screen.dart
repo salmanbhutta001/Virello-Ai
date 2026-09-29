@@ -237,14 +237,14 @@ class _AcademyScreenState extends State<AcademyScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: VirelloColors.violet.withValues(alpha: 0.12),
+                      color: VirelloColors.pink.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(_categoryLabel('${l['category'] ?? ''}'),
                         style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: VirelloColors.violet)),
+                            color: VirelloColors.pink)),
                   ),
                   Container(
                     padding:
@@ -603,7 +603,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: VirelloColors.violet)),
+                    color: VirelloColors.pink)),
             const SizedBox(height: 6),
             Text('${q['q'] ?? ''}',
                 style:
@@ -659,8 +659,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       bg = VirelloColors.danger.withValues(alpha: 0.1);
       border = VirelloColors.danger;
     } else if (selected) {
-      bg = VirelloColors.violet.withValues(alpha: 0.08);
-      border = VirelloColors.violet;
+      bg = VirelloColors.pink.withValues(alpha: 0.08);
+      border = VirelloColors.pink;
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -673,7 +673,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         children: [
           Radio<int>(
             value: oi,
-            activeColor: VirelloColors.violet,
+            activeColor: VirelloColors.pink,
           ),
           Expanded(
             child: Padding(

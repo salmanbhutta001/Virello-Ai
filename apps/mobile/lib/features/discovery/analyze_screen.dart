@@ -133,7 +133,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen> {
               hintStyle:
                   const TextStyle(color: VirelloColors.muted, fontSize: 14),
               prefixIcon:
-                  const Icon(Icons.link, color: VirelloColors.violet, size: 22),
+                  const Icon(Icons.link, color: VirelloColors.pink, size: 22),
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -169,21 +169,21 @@ class _AnalyzeScreenState extends State<AnalyzeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: detected
-            ? VirelloColors.violet.withValues(alpha: 0.1)
+            ? VirelloColors.pink.withValues(alpha: 0.1)
             : VirelloColors.chipBg,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(detected ? Icons.check_circle : Icons.link,
             size: 16,
-            color: detected ? VirelloColors.violet : VirelloColors.muted),
+            color: detected ? VirelloColors.pink : VirelloColors.muted),
         const SizedBox(width: 6),
         Text(_platform,
             style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color:
-                    detected ? VirelloColors.violet : VirelloColors.mutedDark)),
+                    detected ? VirelloColors.pink : VirelloColors.mutedDark)),
       ]),
     );
   }
@@ -199,7 +199,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen> {
               width: 64,
               height: 64,
               child: CircularProgressIndicator(
-                  strokeWidth: 6, color: VirelloColors.violet),
+                  strokeWidth: 6, color: VirelloColors.pink),
             ),
             const SizedBox(height: 24),
             Text(s.analyzing,

@@ -235,7 +235,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                                 colors: [
-                                  Color(0xFF6C3DF5),
+                                  Color(0xFFF95177),
                                   Color(0xFF22D3EE)
                                 ],
                                 begin: Alignment.bottomCenter,

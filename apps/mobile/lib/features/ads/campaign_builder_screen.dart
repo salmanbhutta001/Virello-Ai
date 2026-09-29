@@ -568,7 +568,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Column(children: [
-                const CircularProgressIndicator(color: VirelloColors.violet),
+                const CircularProgressIndicator(color: VirelloColors.pink),
                 const SizedBox(height: 12),
                 Text(s.adBuilding,
                     style: const TextStyle(color: VirelloColors.muted)),
@@ -690,11 +690,11 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? VirelloColors.violet : VirelloColors.chipBg,
+            color: selected ? VirelloColors.pink : VirelloColors.chipBg,
             width: selected ? 2 : 1,
           ),
           color: selected
-              ? VirelloColors.violet.withValues(alpha: 0.08)
+              ? VirelloColors.pink.withValues(alpha: 0.08)
               : VirelloColors.chipBg,
         ),
         child: Row(children: [
@@ -702,7 +702,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: selected
-                  ? VirelloColors.violet
+                  ? VirelloColors.pink
                   : VirelloColors.muted.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -726,7 +726,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           ),
           if (selected)
             const Icon(Icons.check_circle,
-                color: VirelloColors.violet, size: 24),
+                color: VirelloColors.pink, size: 24),
         ]),
       ),
     );
@@ -767,7 +767,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       children: [
         _moduleHeader(
           icon: Icons.rocket_launch_outlined,
-          color: VirelloColors.violet,
+          color: VirelloColors.pink,
           title: s.paidBoost,
           badge: s.paidModuleBadge,
         ),
@@ -775,7 +775,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         VCard(
           child: Row(children: [
             const Icon(Icons.rocket_launch_outlined,
-                color: VirelloColors.violet, size: 20),
+                color: VirelloColors.pink, size: 20),
             const SizedBox(width: 10),
             Expanded(
                 child: Text(s.paidBoostDesc,
@@ -863,7 +863,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const Icon(Icons.info_outline,
-              color: VirelloColors.violet, size: 18),
+              color: VirelloColors.pink, size: 18),
           const SizedBox(width: 8),
           Text(s.paidLimitsTitle,
               style:
@@ -897,7 +897,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           child: Center(
               child: Padding(
         padding: EdgeInsets.all(16),
-        child: CircularProgressIndicator(color: VirelloColors.violet),
+        child: CircularProgressIndicator(color: VirelloColors.pink),
       )));
     }
     return Column(
@@ -908,13 +908,13 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         const SizedBox(height: 4),
         Row(children: [
           const Icon(Icons.account_balance_wallet_outlined,
-              size: 14, color: VirelloColors.violet),
+              size: 14, color: VirelloColors.pink),
           const SizedBox(width: 6),
           Expanded(
             child: Text(s.packageIsBudget,
                 style: const TextStyle(
                     fontSize: 12,
-                    color: VirelloColors.violet,
+                    color: VirelloColors.pink,
                     fontWeight: FontWeight.w600)),
           ),
         ]),
@@ -937,11 +937,11 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? VirelloColors.violet : VirelloColors.chipBg,
+            color: selected ? VirelloColors.pink : VirelloColors.chipBg,
             width: selected ? 2 : 1,
           ),
           color: selected
-              ? VirelloColors.violet.withValues(alpha: 0.08)
+              ? VirelloColors.pink.withValues(alpha: 0.08)
               : VirelloColors.chipBg,
         ),
         child: Row(children: [
@@ -959,7 +959,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: VirelloColors.violet,
+                          color: VirelloColors.pink,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(s.packagePopular,
@@ -980,11 +980,11 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: VirelloColors.violetDeep)),
+                  color: VirelloColors.pinkDeep)),
           const SizedBox(width: 8),
           if (selected)
             const Icon(Icons.check_circle,
-                color: VirelloColors.violet, size: 24),
+                color: VirelloColors.pink, size: 24),
         ]),
       ),
     );
@@ -1029,7 +1029,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: free ? Colors.teal : VirelloColors.violet,
+            color: free ? Colors.teal : VirelloColors.pink,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(free ? Icons.public_outlined : Icons.rocket_launch_outlined,
@@ -1087,7 +1087,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: VirelloColors.violetDeep)),
+                    color: VirelloColors.pinkDeep)),
         ]),
         const SizedBox(height: 4),
         if (current.name.isNotEmpty)
@@ -1132,10 +1132,10 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: VirelloColors.violet.withValues(alpha: 0.1),
+            color: VirelloColors.pink.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.link, color: VirelloColors.violet, size: 30),
+          child: const Icon(Icons.link, color: VirelloColors.pink, size: 30),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -1166,7 +1166,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: tinted
-            ? VirelloColors.violet.withValues(alpha: 0.1)
+            ? VirelloColors.pink.withValues(alpha: 0.1)
             : VirelloColors.chipBg,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -1175,7 +1175,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color:
-                  tinted ? VirelloColors.violetDeep : VirelloColors.mutedDark)),
+                  tinted ? VirelloColors.pinkDeep : VirelloColors.mutedDark)),
     );
   }
 
@@ -1226,7 +1226,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 12, color: VirelloColors.violetDeep)),
+                      fontSize: 12, color: VirelloColors.pinkDeep)),
           ]),
         ),
       ]),
@@ -1276,7 +1276,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                     color: on ? const Color(0xFFF7F4FF) : Colors.white,
                     border: Border.all(
                         color:
-                            on ? VirelloColors.violet : VirelloColors.divider,
+                            on ? VirelloColors.pink : VirelloColors.divider,
                         width: on ? 2 : 1),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -1288,7 +1288,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                         Icon(_objectiveIcon(v),
                             size: 18,
                             color: on
-                                ? VirelloColors.violet
+                                ? VirelloColors.pink
                                 : VirelloColors.muted),
                         const SizedBox(width: 6),
                         Flexible(
@@ -1297,7 +1297,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w800,
                                   color: on
-                                      ? VirelloColors.violetDeep
+                                      ? VirelloColors.pinkDeep
                                       : VirelloColors.ink)),
                         ),
                       ]),
@@ -1401,14 +1401,14 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: VirelloColors.violet.withValues(alpha: 0.1),
+        color: VirelloColors.pink.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(score.toStringAsFixed(2),
           style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: VirelloColors.violetDeep)),
+              color: VirelloColors.pinkDeep)),
     );
   }
 
@@ -1558,8 +1558,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 return FilterChip(
                   label: Text(_langLabel(code)),
                   selected: selected,
-                  selectedColor: VirelloColors.violet.withValues(alpha: 0.15),
-                  checkmarkColor: VirelloColors.violet,
+                  selectedColor: VirelloColors.pink.withValues(alpha: 0.15),
+                  checkmarkColor: VirelloColors.pink,
                   onSelected: editable
                       ? (v) => setState(() {
                             if (v) {
@@ -1607,7 +1607,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               child: TextButton(
                 onPressed: _busy ? null : _saveLanguageTargeting,
                 child: Text(s.saveChanges,
-                    style: const TextStyle(color: VirelloColors.violet)),
+                    style: const TextStyle(color: VirelloColors.pink)),
               ),
             ),
           ],
@@ -1737,8 +1737,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 return FilterChip(
                   label: Text('${p['name_en']}'),
                   selected: active,
-                  selectedColor: VirelloColors.violet.withValues(alpha: 0.15),
-                  checkmarkColor: VirelloColors.violet,
+                  selectedColor: VirelloColors.pink.withValues(alpha: 0.15),
+                  checkmarkColor: VirelloColors.pink,
                   onSelected: editable
                       ? (_) => setState(() => _geoCountries = codes)
                       : null,
@@ -1764,7 +1764,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               if (editable)
                 ActionChip(
                   avatar: const Icon(Icons.add,
-                      size: 16, color: VirelloColors.violet),
+                      size: 16, color: VirelloColors.pink),
                   label: Text(s.geoCustom),
                   onPressed: _openCountryPicker,
                 ),
@@ -1784,15 +1784,15 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    VirelloColors.violet.withValues(alpha: 0.08),
-                    VirelloColors.violet.withValues(alpha: 0.03),
+                    VirelloColors.pink.withValues(alpha: 0.08),
+                    VirelloColors.pink.withValues(alpha: 0.03),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 border: Border.all(
                     color:
-                        VirelloColors.violet.withValues(alpha: 0.25)),
+                        VirelloColors.pink.withValues(alpha: 0.25)),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -1801,14 +1801,14 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                   Row(
                     children: [
                       const Icon(Icons.public,
-                          size: 18, color: VirelloColors.violet),
+                          size: 18, color: VirelloColors.pink),
                       const SizedBox(width: 8),
                       Text(
                         '${s.geoYourMarkets} (${_geoCountries.length})',
                         style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
-                            color: VirelloColors.violetDeep),
+                            color: VirelloColors.pinkDeep),
                       ),
                     ],
                   ),
@@ -1834,7 +1834,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             child: TextButton(
               onPressed: _busy ? null : _saveGeography,
               child: Text(s.saveChanges,
-                  style: const TextStyle(color: VirelloColors.violet)),
+                  style: const TextStyle(color: VirelloColors.pink)),
             ),
           ),
         ],
@@ -1871,13 +1871,13 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         decoration: BoxDecoration(
           color: on ? const Color(0xFFF7F4FF) : Colors.white,
           border: Border.all(
-              color: on ? VirelloColors.violet : VirelloColors.divider,
+              color: on ? VirelloColors.pink : VirelloColors.divider,
               width: on ? 2 : 1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(children: [
           Icon(icon,
-              size: 20, color: on ? VirelloColors.violet : VirelloColors.muted),
+              size: 20, color: on ? VirelloColors.pink : VirelloColors.muted),
           const SizedBox(width: 10),
           Expanded(
             child:
@@ -1886,7 +1886,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: on ? VirelloColors.violetDeep : VirelloColors.ink)),
+                      color: on ? VirelloColors.pinkDeep : VirelloColors.ink)),
               Text(desc,
                   style:
                       const TextStyle(fontSize: 12, color: VirelloColors.muted)),
@@ -1894,7 +1894,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           ),
           if (on)
             const Icon(Icons.check_circle,
-                size: 20, color: VirelloColors.violet),
+                size: 20, color: VirelloColors.pink),
         ]),
       ),
     );
@@ -1961,7 +1961,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: (suggested
-                      ? VirelloColors.violet
+                      ? VirelloColors.pink
                       : const Color(0xFF22B8CF))
                   .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
@@ -1972,7 +1972,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: suggested
-                    ? VirelloColors.violet
+                    ? VirelloColors.pink
                     : const Color(0xFF0E7490),
               ),
             ),
@@ -2062,7 +2062,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                       },
                       child: Text(s.done,
                           style: const TextStyle(
-                              color: VirelloColors.violet,
+                              color: VirelloColors.pink,
                               fontWeight: FontWeight.w800)),
                     ),
                   ]),
@@ -2096,9 +2096,9 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                         child: FilterChip(
                           label: Text(s.geoAllRegions),
                           selected: regionFilter.isEmpty,
-                          selectedColor: VirelloColors.violet
+                          selectedColor: VirelloColors.pink
                               .withValues(alpha: 0.15),
-                          checkmarkColor: VirelloColors.violet,
+                          checkmarkColor: VirelloColors.pink,
                           onSelected: (_) =>
                               setS(() => regionFilter = ''),
                         ),
@@ -2110,9 +2110,9 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                             label:
                                 Text('${p.value['name_en']}'),
                             selected: regionFilter == p.key,
-                            selectedColor: VirelloColors.violet
+                            selectedColor: VirelloColors.pink
                                 .withValues(alpha: 0.15),
-                            checkmarkColor: VirelloColors.violet,
+                            checkmarkColor: VirelloColors.pink,
                             onSelected: (_) => setS(() =>
                                 regionFilter = p.key),
                           ),
@@ -2146,7 +2146,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                                   size: 14),
                               onDeleted: () =>
                                   setS(() => temp.remove(code)),
-                              backgroundColor: VirelloColors.violet
+                              backgroundColor: VirelloColors.pink
                                   .withValues(alpha: 0.1),
                             ),
                           ),
@@ -2166,9 +2166,9 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                         label: Text(s.geoUseAiSuggestion),
                         style: OutlinedButton.styleFrom(
                           foregroundColor:
-                              VirelloColors.violet,
+                              VirelloColors.pink,
                           side: const BorderSide(
-                              color: VirelloColors.violet),
+                              color: VirelloColors.pink),
                           shape: RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(14)),
@@ -2215,12 +2215,12 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                                       vertical: 12),
                               decoration: BoxDecoration(
                                 color: picked
-                                    ? VirelloColors.violet
+                                    ? VirelloColors.pink
                                         .withValues(alpha: 0.08)
                                     : VirelloColors.chipBg,
                                 border: Border.all(
                                   color: picked
-                                      ? VirelloColors.violet
+                                      ? VirelloColors.pink
                                       : Colors.transparent,
                                   width: picked ? 1.5 : 1,
                                 ),
@@ -2266,7 +2266,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: picked
-                                        ? VirelloColors.violet
+                                        ? VirelloColors.pink
                                         : Colors.transparent,
                                     border: Border.all(
                                       color: picked
@@ -2412,7 +2412,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 value: frac.clamp(0.0, 1.0),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(8),
-                color: VirelloColors.violet,
+                color: VirelloColors.pink,
                 backgroundColor: VirelloColors.chipBg,
               ),
             ],
@@ -2435,7 +2435,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          color: VirelloColors.violet))
+                          color: VirelloColors.pink))
                   : FilledButton.tonalIcon(
                       onPressed: _optimizeNow,
                       icon: const Icon(Icons.auto_awesome_outlined),
@@ -2549,7 +2549,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             value: d.spendPct,
             minHeight: 8,
             borderRadius: BorderRadius.circular(8),
-            color: VirelloColors.violet,
+            color: VirelloColors.pink,
             backgroundColor: VirelloColors.chipBg,
           ),
           const SizedBox(height: 8),

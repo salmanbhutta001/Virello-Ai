@@ -290,7 +290,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
 
   Widget _bubble(_AskMsg m) {
     final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
-    final bg = m.fromUser ? VirelloColors.violet : VTheme.chip(context);
+    final bg = m.fromUser ? VirelloColors.pink : VTheme.chip(context);
     final fg = m.fromUser ? Colors.white : VTheme.text(context);
     return Align(
       alignment: align,
@@ -318,7 +318,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: VirelloColors.violet.withValues(alpha: 0.12),
+                    color: VirelloColors.pink.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -326,7 +326,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                     style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: VirelloColors.violet),
+                        color: VirelloColors.pink),
                   ),
                 ),
               ),
