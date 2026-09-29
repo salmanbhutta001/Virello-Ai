@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -48,6 +49,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
   AdOptimizationHistory? _history; // phase 3: run history + decision feed
   bool _optimizing = false;
   List<SegmentMatch> _matches = [];
+  bool _copyWorking = false;
+  List<Map<String, String>> _adCopies = [];
   String _objective = 'views';
   Set<String> _pickedSegments = {};
   String _langMode = 'single';
@@ -998,6 +1001,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       _postSummaryCard(),
       _planAgentBanner(),
       if (_result != null) _analysisCard(),
+      if (_result != null) _adCopyCard(),
       _objectiveCard(),
       _matchesCard(),
       if (!free) _geographyCard(),
@@ -1190,6 +1194,206 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       child: Text(_statusLabel(status),
           style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w800, color: color)),
+    );
+  }
+
+  /// AI intelligence: writes 3 ad copy variants (headline + primary
+  /// text + CTA) for the analyzed post.
+  Future<void> _generateAdCopy() async {
+    final r = _result;
+    if (r == null || _copyWorking) return;
+    setState(() => _copyWorking = true);
+    try {
+      final sig = r.signals;
+      final topics = ((sig['topics'] as List?) ?? []).join(', ');
+      final content = _campaign?.contentRef ?? '';
+      final langNote = appState.localeCode == 'ur'
+          ? 'Write in Roman Urdu.'
+          : appState.localeCode == 'ar'
+              ? 'Write in Arabic.'
+              : 'Write in English.';
+      final prompt =
+          'Write 3 high-converting ad copy variants for this post. $langNote\n'
+          'Post: $content\nTopics: $topics\n\n'
+          'For each variant output exactly:\n'
+          'HEADLINE: <under 8 words>\nTEXT: <one punchy sentence>\nCTA: <2-4 words>\n'
+          'Separate variants with a blank line. No numbering, no extra commentary.';
+      final url =
+          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
+      final res =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+      if (!mounted) return;
+      if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+        final blocks = res.body.split(RegExp(r'\n\s*\n'));
+        final out = <Map<String, String>>[];
+        for (final b in blocks) {
+          String h = '', t = '', cta = '';
+          for (final line in b.split('\n')) {
+            final l = line.trim();
+            if (l.toUpperCase().startsWith('HEADLINE:')) {
+              h = l.replaceFirst(RegExp(r'(?i)^headline:\s*'), '').trim();
+            } else if (l.toUpperCase().startsWith('TEXT:')) {
+              t = l.replaceFirst(RegExp(r'(?i)^text:\s*'), '').trim();
+            } else if (l.toUpperCase().startsWith('CTA:')) {
+              cta = l.replaceFirst(RegExp(r'(?i)^cta:\s*'), '').trim();
+            }
+          }
+          if (h.isNotEmpty || t.isNotEmpty) {
+            out.add({'headline': h, 'text': t, 'cta': cta});
+          }
+          if (out.length >= 3) break;
+        }
+        setState(() {
+          _adCopies = out;
+          _copyWorking = false;
+        });
+        if (out.isEmpty && mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(s.askFailed)));
+        }
+      } else {
+        setState(() => _copyWorking = false);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(s.askFailed)));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _copyWorking = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.askFailed)));
+    }
+  }
+
+  Widget _adCopyCard() {
+    return VCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Icon(Icons.auto_awesome_outlined,
+              color: VirelloColors.pink, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(s.adCopyTitle,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: VirelloColors.pink.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              s.boardImageAiLabel,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: VirelloColors.pink,
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        Text(s.adCopyDesc,
+            style: const TextStyle(
+                fontSize: 12.5, color: VirelloColors.muted)),
+        const SizedBox(height: 10),
+        ..._adCopies.asMap().entries.map((e) {
+          final i = e.key;
+          final c = e.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: VirelloColors.chipBg,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.pink.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('${s.adCopyVariant} ${i + 1}',
+                        style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: VirelloColors.pinkDeep)),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(
+                          text:
+                              '${c['headline']}\n${c['text']}\n${c['cta']}'));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.boardCopied)));
+                    },
+                    child: const Icon(Icons.copy_outlined,
+                        size: 18, color: VirelloColors.pink),
+                  ),
+                ]),
+                if ('${c['headline']}'.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('${c['headline']}',
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w800)),
+                ],
+                if ('${c['text']}'.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('${c['text']}',
+                      style: const TextStyle(
+                          fontSize: 13, color: VirelloColors.mutedDark)),
+                ],
+                if ('${c['cta']}'.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.pink,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('${c['cta']}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _copyWorking ? null : _generateAdCopy,
+            icon: _copyWorking
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child:
+                        CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_awesome_outlined, size: 18),
+            label: Text(_adCopies.isEmpty
+                ? s.adCopyGenerate
+                : s.boardImageRegenerate),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: VirelloColors.pink,
+              side: const BorderSide(color: VirelloColors.pink),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 

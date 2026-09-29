@@ -2719,6 +2719,22 @@ class AppStrings {
         'AI sedang menganalisis kontenmu…',
         'AI আপনার কনটেন্ট বিশ্লেষণ করছে…'
       );
+  String get adCopyTitle => _get(
+        'AI Ad Copy',
+        'AI اشتہاری متن',
+      );
+  String get adCopyDesc => _get(
+        'Three ready-to-use copy variants for your analyzed post.',
+        'آپ کی تجزیہ شدہ پوسٹ کے لیے تین تیار اشتہاری متن۔',
+      );
+  String get adCopyGenerate => _get(
+        'Generate ad copy',
+        'اشتہاری متن بنائیں',
+      );
+  String get adCopyVariant => _get(
+        'Variant',
+        'ورژن',
+      );
   String get adAnalysis =>
       _get('AI analysis', 'AI تجزیہ', 'تحليل الذكاء الاصطناعي',
         'AI विश्लेषण',
