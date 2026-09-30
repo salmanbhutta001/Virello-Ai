@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
-import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Board screen 01 — cinematic splash: full-bleed hero image with scrim,
-/// pink V mark, "Virello AI", "Create • Discover • Grow • Earn • Viral",
-/// tagline, pink circular arrow button.
+/// Board screen 01 — cinematic splash: full-bleed hero image (no blur),
+/// original colorful logo (single, no duplicate wordmark), tagline
+/// "Create • Discover • Grow • Earn • Viral", and the pink arrow CTA.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, required this.onGetStarted});
   final VoidCallback onGetStarted;
@@ -15,99 +14,100 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: VTheme.scaffold(context),
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Cinematic background image (full-bleed).
+          // Cinematic background — full-bleed, sharp, aligned (no blur).
           Positioned.fill(
             child: Image.asset(
               'assets/images/splash-hero.jpg',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              alignment: Alignment.center,
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Colors.black),
             ),
           ),
-          // Scrim for readability: darker at top/bottom, lighter in middle.
+          // Gentle scrims: a touch of dark at the very top (logo legibility)
+          // and bottom (CTA legibility). The middle stays fully vibrant.
           Positioned.fill(
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: isDark
-                      ? [
-                          Colors.black.withValues(alpha: 0.55),
-                          Colors.black.withValues(alpha: 0.25),
-                          Colors.black.withValues(alpha: 0.65),
-                        ]
-                      : [
-                          Colors.white.withValues(alpha: 0.72),
-                          Colors.white.withValues(alpha: 0.45),
-                          Colors.white.withValues(alpha: 0.78),
-                        ],
+                  stops: const [0.0, 0.22, 0.72, 1.0],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.38),
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.42),
+                  ],
                 ),
               ),
             ),
           ),
           SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            children: [
-              const Spacer(flex: 3),
-              // Pink V mark.
-              Image.asset(
-                'assets/images/logo-virello.png',
-                height: 92,
-                color: VirelloColors.pink,
-                colorBlendMode: BlendMode.srcIn,
-                errorBuilder: (_, __, ___) => const Text(
-                  'V',
-                  style: TextStyle(
-                    color: VirelloColors.pink,
-                    fontSize: 84,
-                    fontWeight: FontWeight.w900,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+                  // Original colorful logo — already carries the
+                  // "Virello AI" wordmark, so no separate text below it.
+                  Image.asset(
+                    'assets/images/logo-virello-dark.png',
+                    height: 68,
+                    errorBuilder: (_, __, ___) => const Text(
+                      'Virello AI',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 22),
+                  Text(
+                    s.splashTagline,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.4,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 8,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    s.boardIdeasAmplified,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 8,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(flex: 4),
+                  VPinkCircleButton(onPressed: onGetStarted),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 20),
-               Text(
-                'Virello AI',
-                style: TextStyle(
-                  color: VirelloColors.pink,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                s.splashTagline,
-                textAlign: TextAlign.center,
-                style:  TextStyle(
-                  color: isDark ? Colors.white70 : const Color(0xFF3A3A4A),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                s.boardIdeasAmplified,
-                textAlign: TextAlign.center,
-                style:  TextStyle(
-                  color: isDark ? Colors.white60 : const Color(0xFF5A5A6A),
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const Spacer(flex: 4),
-              VPinkCircleButton(onPressed: onGetStarted),
-              const SizedBox(height: 36),
-            ],
-          ),
-        ),
+            ),
           ),
         ],
       ),
