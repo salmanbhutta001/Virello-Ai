@@ -6685,6 +6685,33 @@ class AppStrings {
         'হাই! আমি Virello-এর সাপোর্ট সহকারী। প্ল্যান, ক্যাম্পেইন বা ফিচার সম্পর্কে যেকোনো কিছু জিজ্ঞাসা করুন।'
       );
 
+  // Live Chat Support
+  String get liveChatSupport => _get(
+        'Live Chat Support',
+        'لائیو چیٹ سپورٹ',
+        'دعم الدردشة المباشرة',
+      );
+  String get onlineNow => _get(
+        'Online',
+        'آن لائن',
+        'متصل الآن',
+      );
+  String get supportCaption => _get(
+        'Typically replies in seconds',
+        'عام طور پر چند سیکنڈ میں جواب دیتا ہے',
+        'يرد عادة خلال ثوانٍ',
+      );
+  String get typingDots => _get(
+        'typing…',
+        'لکھ رہا ہے…',
+        'يكتب…',
+      );
+  String get ticketCreatedNote => _get(
+        'Your ticket has been created. Our team will follow up soon.',
+        'آپ کی ٹکٹ بنا دی گئی ہے۔ ہماری ٹیم جلد رابطہ کرے گی۔',
+        'تم إنشاء تذكرتك. سيتواصل معك فريقنا قريباً.',
+      );
+
   // Following
   String get followingEmpty => _get(
         'You\'re not following anyone yet — follow creators to see them here.',

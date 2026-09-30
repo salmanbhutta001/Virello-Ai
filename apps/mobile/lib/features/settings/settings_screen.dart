@@ -205,7 +205,7 @@ class SettingsScreen extends StatelessWidget {
             _section(s.supportSection, [
               _row(
                 icon: Icons.support_agent_outlined,
-                title: s.aiSupport,
+                title: s.liveChatSupport,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const SupportChatScreen())),
               ),

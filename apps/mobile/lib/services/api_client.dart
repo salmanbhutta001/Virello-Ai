@@ -297,6 +297,21 @@ class ApiClient {
         'language': language,
       });
 
+  // ------------------------------ live chat support ------------------------------
+  /// Live Chat Support v2 — self-contained backend brain (no external AI).
+  /// history: last messages as [{role: 'user'|'assistant', text}].
+  /// Response: {answer, suggestions[3], actions[], escalated, intent, language}.
+  Future<Map<String, dynamic>> supportChat(
+    String message,
+    String language,
+    List<Map<String, String>> history,
+  ) =>
+      _postJson('/api/v1/support/chat', {
+        'message': message,
+        'language': language,
+        'history': history,
+      });
+
   // ------------------------------ ai-core (Ask Virello) ------------------------------
   /// Ask Virello: natural-language → intent → module → response.
   /// Response: {intent, confidence, module, module_status, method, reply,
