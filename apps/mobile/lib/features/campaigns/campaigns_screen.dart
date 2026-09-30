@@ -5,7 +5,10 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/models.dart';
 import '../../services/api_client.dart';
+import '../../services/posts_api.dart';
 import '../../main.dart';
+import '../posts/post_strings.dart';
+import '../posts/my_posts_screen.dart';
 import '../../features/ads/campaign_builder_screen.dart';
 import '../../features/ads/ad_campaigns_screen.dart';
 import '../../features/audience/audience_intelligence_screen.dart';
@@ -181,6 +184,15 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             icon: const Icon(Icons.hub_outlined),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const AudienceIntelligenceScreen(),
+            )),
+          ),
+          IconButton(
+            tooltip: MyPostStrings(
+                    Localizations.localeOf(context).languageCode)
+                .myPosts,
+            icon: const Icon(Icons.feed_outlined),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const MyPostsScreen(),
             )),
           ),
           PopupMenuButton<String>(
@@ -411,8 +423,12 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.more_vert,
+                size: 20, color: VirelloColors.boardTextSec),
+            onPressed: () => _showActions(cp),
+          ),
         ],
       ),
     );
@@ -621,6 +637,20 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               const SizedBox(height: 14),
               ListTile(
                 contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.edit_outlined,
+                    color: VirelloColors.pink),
+                title: Text(
+                    MyPostStrings(
+                            Localizations.localeOf(context).languageCode)
+                        .editCampaign,
+                    style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _editCampaign(cp);
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.psychology_outlined,
                     color: VirelloColors.pink),
                 title: Text(s.growthEngine,
@@ -680,6 +710,137 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   Navigator.of(context).pop();
                   _confirmDelete(cp);
                 },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Owner-only campaign edit: title, goal, budget. Board-styled sheet.
+  Future<void> _editCampaign(Campaign cp) async {
+    final code = Localizations.localeOf(context).languageCode;
+    final ps = MyPostStrings(code);
+    final titleCtrl = TextEditingController(text: cp.title);
+    final budgetCtrl = TextEditingController(
+        text: cp.budgetUsd > 0 ? cp.budgetUsd.toStringAsFixed(0) : '');
+    var goal = cp.goal;
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VirelloColors.boardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(ps.editCampaign,
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
+              const SizedBox(height: 14),
+              TextField(
+                controller: titleCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: ps.titleLabel,
+                  labelStyle: const TextStyle(
+                      color: VirelloColors.boardTextSec),
+                  enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: VirelloColors.boardField)),
+                  focusedBorder: const OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: VirelloColors.pink)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<CampaignGoal>(
+                initialValue: goal,
+                dropdownColor: VirelloColors.boardSurface,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: ps.goalLabel,
+                  labelStyle: const TextStyle(
+                      color: VirelloColors.boardTextSec),
+                  enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: VirelloColors.boardField)),
+                ),
+                items: CampaignGoal.values
+                    .map((g) => DropdownMenuItem(
+                        value: g,
+                        child: Text(g.label(AppStringsRef(code)))))
+                    .toList(),
+                onChanged: (g) =>
+                    setSheet(() => goal = g ?? goal),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: budgetCtrl,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: s.budgetLabel,
+                  labelStyle: const TextStyle(
+                      color: VirelloColors.boardTextSec),
+                  enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: VirelloColors.boardField)),
+                  focusedBorder: const OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: VirelloColors.pink)),
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton(
+                onPressed: () async {
+                  final title = titleCtrl.text.trim();
+                  if (title.isEmpty) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                        content: Text(ps.saveFailed)));
+                    return;
+                  }
+                  final budget =
+                      double.tryParse(budgetCtrl.text.trim());
+                  if (budget != null && budget < 0) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                        content: Text(ps.saveFailed)));
+                    return;
+                  }
+                  Navigator.of(ctx).pop();
+                  try {
+                    await userPostsApi.editCampaign(cp.id,
+                        title: title,
+                        goal: goal.apiValue,
+                        budgetUsd: budget ?? 0);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ps.campaignUpdated)));
+                    _refresh();
+                  } on AuthException {
+                    if (!mounted) return;
+                    handleAuthFailure(s.sessionExpired);
+                  } catch (_) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ps.saveFailed)));
+                  }
+                },
+                child: Text(s.save),
               ),
             ],
           ),

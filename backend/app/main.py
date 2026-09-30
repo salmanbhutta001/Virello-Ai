@@ -107,6 +107,9 @@ app.include_router(entertain_router.router, prefix="/api/v1", tags=["entertain"]
 app.include_router(commerce_router.router, prefix="/api/v1", tags=["commerce"])
 app.include_router(ctr_router.router, prefix="/api/v1/content", tags=["content"])
 app.include_router(ws.router, prefix="/api/v1")  # WebSocket: /api/v1/campaigns/{id}/stream
+# User posts: edit/delete own feed posts (DiscoveryPlacement), owner-only.
+from app.routers import posts as posts_router
+app.include_router(posts_router.router, prefix="/api/v1/posts", tags=["posts"])
 
 
 @app.get("/health")

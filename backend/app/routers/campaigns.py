@@ -157,6 +157,40 @@ async def delete_campaign(
     return {"deleted": True, "campaign_id": str(campaign_id)}
 
 
+class CampaignEditIn(BaseModel):
+    title: str | None = None
+    goal: CampaignGoal | None = None
+    budget_usd: float | None = None
+
+
+@router.patch("/{campaign_id}", response_model=CampaignOut)
+async def edit_campaign(
+    campaign_id: uuid.UUID,
+    body: CampaignEditIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> CampaignOut:
+    """Owner edits a campaign's title, goal, or budget. Status transitions
+    stay with the system/pause endpoint. Audit-logged."""
+    campaign = await _owned(db, user, campaign_id)
+    if body.title is not None:
+        title = body.title.strip()
+        if not title or len(title) > 255:
+            raise HTTPException(400, "Title must be 1-255 characters")
+        campaign.title = title
+    if body.goal is not None:
+        campaign.goal = body.goal
+    if body.budget_usd is not None:
+        if body.budget_usd < 0:
+            raise HTTPException(400, "Budget cannot be negative")
+        campaign.budget_usd = float(body.budget_usd)
+    db.add(AuditLog(user_id=user.id, action="campaign.edit",
+                    details=str(campaign_id)))
+    await db.commit()
+    await db.refresh(campaign)
+    return CampaignOut.from_row(campaign)
+
+
 async def _owned(db: AsyncSession, user: User, campaign_id: uuid.UUID) -> Campaign:
     res = await db.execute(
         select(Campaign).where(Campaign.id == campaign_id, Campaign.user_id == user.id)
