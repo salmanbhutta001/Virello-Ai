@@ -3,7 +3,19 @@ name: Build Virello APK + AAB
 on:
   push:
     branches: [ main ]
+    # Gallery image commits (backend/app/static/gallery/**) and backend-only
+    # changes must NOT rebuild the APK — product images are served live by the
+    # backend at runtime, never bundled in the app. Build only when the mobile
+    # app itself (or this workflow) changes.
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
+
+# Cancel superseded runs so gallery/hourly pushes never pile up APK builds.
+concurrency:
+  group: apk-build-main
+  cancel-in-progress: true
 
 jobs:
   build:
