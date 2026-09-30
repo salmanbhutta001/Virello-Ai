@@ -9,6 +9,7 @@ import 'change_password_screen.dart';
 import 'company_screen.dart';
 import 'language_analytics_screen.dart';
 import 'language_settings_screen.dart';
+import 'legal_document_screen.dart';
 import 'notifications_screen.dart';
 import '../profile/billing_screen.dart';
 import '../profile/support_chat_screen.dart';
@@ -180,12 +181,24 @@ class SettingsScreen extends StatelessWidget {
               _row(
                 icon: Icons.description_outlined,
                 title: s.userAgreement,
-                onTap: () => _policySoon(context),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const LegalDocumentScreen(
+                      doc: LegalDoc.userAgreement,
+                    ),
+                  ),
+                ),
               ),
               _row(
                 icon: Icons.privacy_tip_outlined,
                 title: s.privacyPolicy,
-                onTap: () => _policySoon(context),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const LegalDocumentScreen(
+                      doc: LegalDoc.privacyPolicy,
+                    ),
+                  ),
+                ),
               ),
               _row(
                 icon: Icons.verified_user_outlined,

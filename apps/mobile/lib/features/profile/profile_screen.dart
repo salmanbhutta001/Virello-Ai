@@ -93,6 +93,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   String get _pointsLevel => '${_me?['points_level'] ?? 'Sprout'}';
 
+  /// True when the signed-in email is on the admin allowlist.
+  /// (Must match backend VIRELLO_ADMIN_EMAILS.)
+  bool get _isAdminEmail {
+    final email = _email.trim().toLowerCase();
+    return email == 'salman09bhutta@gmail.com' ||
+        email == 'alif01fiverr@gmail.com';
+  }
+
+  /// Opens the Admin Panel via PIN screen (same as hidden gesture).
+  Future<void> _openAdminPanel() async {
+    final unlocked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AdminPinScreen()),
+    );
+    if (unlocked == true && mounted) {
+      apiClient.me().then((m) {
+        if (!mounted) return;
+        setState(() => _me = m);
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AdminScreen()),
+        );
+      }).catchError((_) {});
+    }
+  }
+
   /// Wallet chip: points balance + cash balance, opens WalletScreen on tap.
   /// Cash comes from GET /api/v1/wallet/balance (hidden when unavailable).
   Widget _pointsChip() {
@@ -453,6 +477,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
+                      // Visible Admin Panel entry for allowlisted emails.
+                      // (Hidden 5-tap on version footer still works as backup.)
+                      if (_isAdminEmail)
+                        _menuRow(
+                          icon: Icons.admin_panel_settings_outlined,
+                          iconColor: VirelloColors.pink,
+                          title: s.adminPanel,
+                          onTap: _openAdminPanel,
+                        ),
                       _menuRow(
                         icon: Icons.stars_outlined,
                         iconColor: VirelloColors.pink,

@@ -21,6 +21,7 @@ dependencies:
   url_launcher: ^6.3.1
   in_app_purchase: ^3.2.1
   video_player: ^2.9.0
+  webview_flutter: ^4.7.0
   image: ^4.0.0
   flutter_tts: ^4.0.0
   # Phase B: maintained FFmpegKit fork (ffmpeg_kit_flutter retired Jan 2025).
@@ -40,6 +41,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/video/
+    - assets/legal/
     - assets/tutorial_subtitles.json
   fonts:
     - family: Inter

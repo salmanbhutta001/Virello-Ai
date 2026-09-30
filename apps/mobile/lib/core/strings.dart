@@ -1480,6 +1480,13 @@ class AppStrings {
       );
   // Hidden PIN entry -> admin panel (profile version tapped 5x).
   String get adminPinTitle => _get('Admin Access', 'ایڈمن رسائی', 'دخول المسؤول');
+  String get adminPanel => _get('Admin Panel', 'ایڈمن پینل', 'لوحة المسؤول');
+  String get retry => _get('Retry', 'دوبارہ کوشش', 'إعادة المحاولة');
+  String get documentLoadError => _get(
+        'Could not load the document. Please try again.',
+        'دستاویز لوڈ نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔',
+        'تعذر تحميل المستند. يرجى المحاولة مرة أخرى.',
+      );
   String get adminPinHint =>
       _get('Enter admin PIN', 'ایڈمن PIN درج کریں', 'أدخل رمز المسؤول');
   String get adminPinWrong => _get(
@@ -14310,5 +14317,74 @@ class AppStrings {
         'We may change rates, limits, or these terms with reasonable notice in the app. Continued use after changes means you accept them. We may end the rewards program with 30 days\u2019 notice; earned Cash balances above the withdrawal minimum will still be payable. Questions: privacy@virello.com.',
         'ہم ایپ میں معقول اطلاع کے ساتھ ریٹس، حدود یا یہ شرائط بدل سکتے ہیں۔ تبدیلیوں کے بعد استعمال جاری رکھنا قبولیت ہے۔ ہم 30 دن کی اطلاع کے ساتھ انعامی پروگرام ختم کر سکتے ہیں؛ نکاسی کی کم از کم رقم سے زیادہ کیش بیلنس پھر بھی قابلِ ادائیگی ہو گا۔ سوالات: privacy@virello.com۔',
         'قد نغير الأسعار أو الحدود أو هذه الشروط بإشعار معقول في التطبيق. استمرار الاستخدام بعد التغييرات يعني قبولك لها. قد ننهي برنامج المكافآت بإشعار 30 يومًا؛ ستظل أرصدة النقد المكتسبة فوق الحد الأدنى للسحب مستحقة الدفع. للأسئلة: privacy@virello.com.',
+      );
+
+  // ----------------------------- App Tour -----------------------------
+  String get tourSkip => _get('Skip', 'چھوڑیں', 'تخطي');  String get tourNext => _get('Next', 'آگے', 'التالي');
+  String get tourBack => _get('Back', 'پیچھے', 'رجوع');
+  String get tourDone => _get('Get Started', 'شروع کریں', 'ابدأ');
+  String get tourTakeTour => _get('Take App Tour', 'ایپ کا دورہ کریں', 'جولة في التطبيق');
+
+  String get tourWelcomeTitle => _get(
+        'Welcome to Virello',
+        'Virello میں خوش آمدید',
+        'مرحبًا بك في Virello',
+      );
+  String get tourWelcomeDesc => _get(
+        'Your AI Growth Manager. Let me show you around — it only takes a minute.',
+        'آپ کا AI گروتھ مینیجر۔ آئیے آپ کو سیر کراتے ہیں — صرف ایک منٹ لگے گا۔',
+        'مدير النمو الذكي الخاص بك. دعني أريك التطبيق — سيستغرق دقيقة واحدة فقط.',
+      );
+  String get tourHomeTitle => _get('Home', 'ہوم', 'الرئيسية');
+  String get tourHomeDesc => _get(
+        'Your growth dashboard. Track followers, engagement, and AI insights — all in one place.',
+        'آپ کا گروتھ ڈیش بورڈ۔ فالوورز، مصروفیت اور AI بصیرت ٹریک کریں — سب ایک جگہ۔',
+        'لوحة نمو الخاصة بك. تتبع المتابعين والتفاعل ورؤى الذكاء الاصطناعي — كل ذلك في مكان واحد.',
+      );
+  String get tourDiscoverTitle => _get('Discover', 'دریافت', 'اكتشف');
+  String get tourDiscoverDesc => _get(
+        'Explore trending content, viral topics, and top creators in your niche.',
+        'رجحان ساز مواد، وائرل موضوعات اور آپ کے شعبے کے نمایاں تخلیق کار دریافت کریں۔',
+        'استكشف المحتوى الرائج والمواضيع الفيروسية وأفضل المبدعين في مجالك.',
+      );
+  String get tourCreateTitle => _get('Create Hub', 'تخلیق مرکز', 'مركز الإنشاء');
+  String get tourCreateDesc => _get(
+        'Your AI creation studio. Generate images, write scripts, craft stories, convert content — and render real videos with AI voiceover.',
+        'آپ کا AI تخلیقی اسٹوڈیو۔ تصاویر بنائیں، اسکرپٹ لکھیں، کہانیاں تخلیق کریں، مواد تبدیل کریں — اور AI وائس اوور کے ساتھ اصل ویڈیوز بنائیں۔',
+        'استوديو الإنشاء الذكي الخاص بك. أنشئ الصور واكتب النصوص واصنع القصص وحوّل المحتوى — وأنشئ مقاطع فيديو حقيقية بتعليق صوتي ذكي.',
+      );
+  String get tourGrowTitle => _get('Grow', 'بڑھائیں', 'نمو');
+  String get tourGrowDesc => _get(
+        'Launch AI-powered growth campaigns. Set your goal and budget — the AI manages the rest.',
+        'AI سے چلنے والی گروتھ مہمات شروع کریں۔ اپنا ہدف اور بجٹ طے کریں — باقی AI سنبھالے گا۔',
+        'أطلق حملات النمو المدعومة بالذكاء الاصطناعي. حدد هدفك وميزانيتك — وسيتولى الذكاء الاصطناعي الباقي.',
+      );
+  String get tourShopTitle => _get('Shop', 'خریداری', 'تسوق');
+  String get tourShopDesc => _get(
+        'Shop curated products across 26 departments. Share products to earn points.',
+        '26 شعبوں میں منتخب مصنوعات خریدیں۔ مصنوعات شیئر کر کے پوائنٹس کمائیں۔',
+        'تسوق المنتجات المختارة في 26 قسمًا. شارك المنتجات لتربح النقاط.',
+      );
+  String get tourProfileTitle => _get('Profile & Wallet', 'پروفائل اور والیٹ', 'الملف والمحفظة');
+  String get tourProfileDesc => _get(
+        'Manage your profile, check your points wallet, redeem credits, and track your rewards.',
+        'اپنا پروفائل منظم کریں، پوائنٹس والیٹ دیکھیں، کریڈٹس حاصل کریں اور انعامات ٹریک کریں۔',
+        'أدر ملفك الشخصي وتحقق من محفظة النقاط واستبدل الأرصدة وتتبع مكافآتك.',
+      );
+  String get tourAskTitle => _get('Ask Virello', 'Virello سے پوچھیں', 'اسأل Virello');
+  String get tourAskDesc => _get(
+        'Your AI assistant is always one tap away. Ask anything about growing your audience.',
+        'آپ کا AI اسسٹنٹ ہمیشہ ایک ٹیپ کی دوری پر۔ اپنے سامعین بڑھانے کے بارے میں کچھ بھی پوچھیں۔',
+        'مساعدك الذكي على بعد نقرة واحدة دائمًا. اسأل أي شيء عن تنمية جمهورك.',
+      );
+  String get tourDoneTitle => _get(
+        'You\'re all set!',
+        'آپ تیار ہیں!',
+        'أنت جاهز!',
+      );
+  String get tourDoneDesc => _get(
+        'You know your way around Virello now. Create something amazing and let the AI grow it.',
+        'اب آپ Virello سے واقف ہیں۔ کچھ شاندار بنائیں اور AI کو اسے بڑھانے دیں۔',
+        'أنت تعرف طريقك في Virello الآن. أنشئ شيئًا مذهلاً ودع الذكاء الاصطناعي ينميه.',
       );
 }
