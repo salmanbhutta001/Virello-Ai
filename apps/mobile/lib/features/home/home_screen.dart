@@ -159,16 +159,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                name.isEmpty ? 'Virello AI' : name,
-                style:  TextStyle(
-                  color: VTheme.text(context),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
+              if (name.isEmpty)
+                // Original colorful logo instead of plain "Virello AI" text.
+                Image.asset(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? 'assets/images/logo-virello-dark.png'
+                      : 'assets/images/logo-virello.png',
+                  height: 30,
+                  errorBuilder: (_, __, ___) => Text(
+                    'Virello AI',
+                    style: TextStyle(
+                      color: VTheme.text(context),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+              else
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: VTheme.text(context),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
               const SizedBox(height: 2),
               Text(
                 s.boardCreateSomething,
