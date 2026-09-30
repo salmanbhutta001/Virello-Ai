@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     c.label,
                     style:  TextStyle(
-                      color: VTheme.onBrand(context),
+                      color: VTheme.text(context),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -486,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
             AspectRatio(
               aspectRatio: 1.15,
               child: Container(
-                color: VTheme.text(context),
+                color: Colors.white,
                 width: double.infinity,
                 child: images.isNotEmpty
                     ? Image.network(
