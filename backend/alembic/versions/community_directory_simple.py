@@ -16,7 +16,9 @@ import sqlalchemy as sa
 from app.models.core import GUID
 
 revision: str = "community_dir_001"
-down_revision: Union[str, None] = "6a7b8c9d0e1f"
+# Was "6a7b8c9d0e1f" — that revision file no longer exists, which broke
+# `alembic heads`/`upgrade`. community_dir_001 is the effective base.
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
