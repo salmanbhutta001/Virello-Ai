@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -193,9 +194,43 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  void _facebookSoon() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.policySoon)));
+  Future<void> _signInWithFacebook() async {
+    setState(() {
+      _working = true;
+      _error = null;
+    });
+    try {
+      final result = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
+      );
+      if (result.status == LoginStatus.success) {
+        final accessToken = result.accessToken;
+        if (accessToken == null) {
+          throw Exception('missing access token');
+        }
+        // Get user email for the backend.
+        final userData = await FacebookAuth.instance.getUserData(
+          fields: 'email,name',
+        );
+        final email = userData['email'] as String?;
+        await authStore.signInWithProvider(
+          'facebook',
+          accessToken.tokenString,
+          email,
+        );
+      } else if (result.status == LoginStatus.cancelled) {
+        if (mounted) setState(() => _working = false);
+        return;
+      } else {
+        throw Exception(result.message ?? 'facebook login failed');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _working = false;
+        _error = s.socialSignInFailed;
+      });
+    }
   }
 
   Widget _socialCircle({required Widget child, required VoidCallback? onTap}) {
@@ -256,7 +291,7 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
         _socialCircle(
-          onTap: _facebookSoon,
+          onTap: _signInWithFacebook,
           child: const FacebookIcon(size: 22),
         ),
       ],

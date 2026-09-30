@@ -20,6 +20,7 @@ from app.core.security import (
     hash_password,
     issue_otp,
     record_login_failure,
+    verify_facebook_token,
     verify_oidc_token,
     verify_otp,
     verify_password,
@@ -64,16 +65,23 @@ async def _upsert_user(db: AsyncSession, email: str | None, name: str | None,
 @router.post("/oauth/{provider}/callback")
 async def oauth_callback(provider: str, body: OAuthCallbackIn,
                          db: AsyncSession = Depends(get_db)) -> dict:
-    """Verify provider id_token via JWKS, upsert user, return JWT pair."""
-    if provider not in ("apple", "google"):
+    """Verify provider token, upsert user, return JWT pair.
+
+    Google/Apple: OIDC id_token verified via JWKS.
+    Facebook: access token verified via Facebook Graph API.
+    """
+    if provider not in ("apple", "google", "facebook"):
         raise HTTPException(400, "Unsupported provider")
     try:
-        claims = await verify_oidc_token(provider, body.id_token)
+        if provider == "facebook":
+            claims = await verify_facebook_token(body.id_token)
+        else:
+            claims = await verify_oidc_token(provider, body.id_token)
     except ValueError as e:
         raise HTTPException(401, str(e))
     user = await _upsert_user(db, claims.get("email"), claims.get("name"),
                               provider, claims["sub"])
-    # OAuth via Google/Apple: the provider already verified this email.
+    # OAuth via Google/Apple/Facebook: the provider already verified this email.
     user.email_verified = True
     db.add(UserActivity(user_id=user.id, event="login"))
     await db.commit()

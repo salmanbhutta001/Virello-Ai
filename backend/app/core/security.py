@@ -78,6 +78,30 @@ async def verify_oidc_token(provider: str, id_token: str) -> dict:
     return {"sub": claims["sub"], "email": claims.get("email"), "name": claims.get("name")}
 
 
+async def verify_facebook_token(access_token: str) -> dict:
+    """Verify a Facebook access token via Graph API, return user info.
+
+    Calls https://graph.facebook.com/me with the token — if the token is
+    invalid/expired, Facebook returns an error and we raise ValueError.
+    Returns {"sub": fb_id, "email": email_or_None, "name": name}.
+    """
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(
+            "https://graph.facebook.com/me",
+            params={"access_token": access_token, "fields": "id,name,email"},
+        )
+    if resp.status_code != 200:
+        raise ValueError("Facebook token verification failed")
+    data = resp.json()
+    if "id" not in data:
+        raise ValueError("Facebook token verification failed")
+    return {
+        "sub": data["id"],
+        "email": data.get("email"),
+        "name": data.get("name"),
+    }
+
+
 # ---------------------------------------------------------------- Email OTP (dev: in-memory; prod: Redis)
 _otp_store: dict[str, tuple[str, float]] = {}  # email -> (code, expires_at)
 

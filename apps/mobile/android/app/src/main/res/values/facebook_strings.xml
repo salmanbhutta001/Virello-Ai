@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Facebook Login config.
+         Hafiz: replace these with your real values from
+         https://developers.facebook.com/apps (your Virello app):
+         - facebook_app_id: the numeric App ID
+         - fb_login_protocol_scheme: "fb" + App ID (e.g. fb123456789012345)
+         - facebook_client_token: from Settings > Advanced > Client Token -->
+    <string name="facebook_app_id">000000000000000</string>
+    <string name="fb_login_protocol_scheme">fb000000000000000</string>
+    <string name="facebook_client_token">REPLACE_WITH_CLIENT_TOKEN</string>
+</resources>
