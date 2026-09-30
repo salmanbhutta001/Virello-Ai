@@ -12,22 +12,18 @@ import '../../services/api_client.dart';
 import '../../services/rewards_api.dart';
 import '../rewards/leaderboard_screen.dart';
 import 'rewards_terms_screen.dart';
-import 'withdraw_screen.dart';
 
-/// Wallet (HYBRID): Points + Cash in one screen.
+/// Wallet (POINTS ONLY): No cash, no withdrawal.
 ///
-/// - Points card: balance, level progress, how-to-earn rules, "Convert to
-///   Cash" (POST /api/v1/wallet/convert) and "Get Credits" (existing
-///   POST /api/v1/rewards/redeem 100pts=10 credits). Both redemptions kept.
-/// - Cash Wallet card: $ balance, Withdraw button, pending-withdrawal
-///   banner, cash history, withdrawals list.
-/// - Top Sellers (week/month, verified_clicks, cash prize badges),
-///   volume-bonus progress, Top Posters race, past winners.
+/// - Points card: balance, level progress, how-to-earn rules, "Get Credits"
+///   (POST /api/v1/rewards/redeem 100pts=10 credits).
+/// - Top Sellers (week/month, verified_clicks, points prize badges),
+///   volume-bonus progress (points), Top Posters race, past winners.
 /// - "Terms" link opens the bundled Rewards Terms (EN/UR/AR) + the public
 ///   full-terms URL. First Wallet open shows the one-time 4-line agreement
 ///   bottom sheet (persisted in shared_preferences: wallet_terms_agreed_v1).
 ///
-/// Story line: "Post karo -> points. Share karo, bikwao -> cash."
+/// Story line: "Post karo -> points. Share karo -> points. Points se credits lo."
 /// Everything is server data — no values invented.
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -45,9 +41,6 @@ class _WalletScreenState extends State<WalletScreen> {
   Future<List<dynamic>>? _historyFuture;
   Future<List<dynamic>>? _winnersFuture;
 
-  Future<Map<String, dynamic>>? _walletFuture;
-  Future<List<dynamic>>? _cashHistoryFuture;
-  Future<List<dynamic>>? _withdrawalsFuture;
   Future<Map<String, dynamic>>? _volumeFuture;
   Future<List<dynamic>>? _sellerWinnersFuture;
   Future<List<dynamic>>? _claimsFuture;
@@ -89,12 +82,6 @@ class _WalletScreenState extends State<WalletScreen> {
       _historyFuture = _api.history(limit: 20).catchError((_) => <dynamic>[]);
       _winnersFuture = _api.winners().catchError((_) => <dynamic>[]);
 
-      _walletFuture =
-          _api.walletBalance().catchError((_) => <String, dynamic>{});
-      _cashHistoryFuture =
-          _api.walletHistory(limit: 20).catchError((_) => <dynamic>[]);
-      _withdrawalsFuture =
-          _api.withdrawals().catchError((_) => <dynamic>[]);
       _volumeFuture =
           _api.volumeProgress().catchError((_) => <String, dynamic>{});
       _sellerWinnersFuture =
@@ -235,116 +222,9 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   // ------------------------------ convert to cash ------------------------------
-  Future<void> _convertDialog(Map<String, dynamic> wallet) async {
-    final conv = wallet['conversion'] as Map<String, dynamic>? ?? {};
-    final minPts = (conv['min_points'] as num? ?? 1000).toInt();
-    final rateText = '${conv['rate_text'] ?? ''}';
-    final ctrl = TextEditingController();
-    bool busy = false;
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, setS) => AlertDialog(
-          title: Text(s.convertToCash),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (rateText.isNotEmpty)
-                Text(s.convertRate(rateText),
-                    style: const TextStyle(
-                        fontSize: 13, color: VirelloColors.muted)),
-              const SizedBox(height: 4),
-              Text(s.convertHint(minPts),
-                  style: const TextStyle(
-                      fontSize: 12.5, color: VirelloColors.muted)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: ctrl,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: s.convertConfirm,
-                  hintText: '$minPts+',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(c).pop(),
-              child: Text(s.cancel),
-            ),
-            TextButton(
-              onPressed: busy
-                  ? null
-                  : () async {
-                      final v = int.tryParse(ctrl.text.trim()) ?? 0;
-                      if (v < minPts) {
-                        ScaffoldMessenger.of(c).showSnackBar(SnackBar(
-                            content: Text(s.convertHint(minPts))));
-                        return;
-                      }
-                      setS(() => busy = true);
-                      try {
-                        final r = await _api.convertToCash(v);
-                        if (c.mounted) Navigator.of(c).pop(r);
-                      } on ApiException catch (e) {
-                        setS(() => busy = false);
-                        if (c.mounted) {
-                          ScaffoldMessenger.of(c).showSnackBar(SnackBar(
-                              content: Text(_serverMsg(e, s.convertToCash))));
-                        }
-                      } catch (_) {
-                        setS(() => busy = false);
-                      }
-                    },
-              child: Text(busy ? '…' : s.convert),
-            ),
-          ],
-        ),
-      ),
-    );
-    ctrl.dispose();
-    if (result != null && mounted) {
-      _load();
-      final cash = '${result['cash_display'] ?? ''}';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.convertSuccess(cash))),
-      );
-    }
-  }
 
-  void _openWithdraw(
-      Map<String, dynamic> wallet, List<dynamic> withdrawals) {
-    final balanceCents = (wallet['balance_cents'] as num? ?? 0).toInt();
-    final balanceDisplay =
-        '${wallet['balance_display'] ?? '\$${(balanceCents / 100).toStringAsFixed(2)}'}';
-    Map<String, dynamic>? pending;
-    for (final w in withdrawals) {
-      final m = Map<String, dynamic>.from(w as Map);
-      if ('${m['status']}'.toLowerCase() == 'pending') {
-        pending = m;
-        break;
-      }
-    }
-    Navigator.of(context)
-        .push(
-      MaterialPageRoute(
-        builder: (_) => WithdrawScreen(
-          balanceDisplay: balanceDisplay,
-          balanceCents: balanceCents,
-          pending: pending,
-        ),
-      ),
-    )
-        .then((_) {
-      if (mounted) _load();
-    });
-  }
+
+
 
   // =============================== build ===============================
   @override
@@ -376,8 +256,6 @@ class _WalletScreenState extends State<WalletScreen> {
             _taglineCard(),
             const SizedBox(height: 16),
             _pointsCard(),
-            const SizedBox(height: 16),
-            _cashCard(),
             const SizedBox(height: 20),
             _claimsSection(),
             const SizedBox(height: 20),
@@ -504,50 +382,26 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 const SizedBox(height: 14),
               ],
-              // TWO redemption buttons.
-              FutureBuilder<Map<String, dynamic>>(
-                future: _walletFuture,
-                builder: (c2, wsnap) {
-                  final w = wsnap.data ?? {};
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _convertDialog(w),
-                          icon: const Icon(Icons.currency_exchange_rounded,
-                              size: 18),
-                          label: Text(s.convertToCash),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: VirelloColors.pink,
-                            side:
-                                const BorderSide(color: VirelloColors.pink),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
+              // Redemption: Get Credits (points -> Grow credits).
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _redeeming ? null : () => _redeem(),
+                      icon: const Icon(Icons.bolt_outlined, size: 18),
+                      label: Text(s.getCredits),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: VirelloColors.pink,
+                        side:
+                            const BorderSide(color: VirelloColors.pink),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _redeeming ? null : () => _redeem(),
-                          icon: const Icon(Icons.bolt_outlined, size: 18),
-                          label: Text(s.getCredits),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: VirelloColors.pink,
-                            side:
-                                const BorderSide(color: VirelloColors.pink),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Row(
@@ -574,22 +428,12 @@ class _WalletScreenState extends State<WalletScreen> {
                 ],
               ),
               const SizedBox(height: 4),
-              FutureBuilder<Map<String, dynamic>>(
-                future: _walletFuture,
-                builder: (c2, wsnap) {
-                  final conv = (wsnap.data?['conversion']
-                          as Map<String, dynamic>?) ??
-                      {};
-                  final minPts =
-                      (conv['min_points'] as num? ?? 1000).toInt();
-                  return Text(
-                    s.convertHint(minPts),
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: VirelloColors.muted,
-                    ),
-                  );
-                },
+              Text(
+                s.redeemHint,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: VirelloColors.muted,
+                ),
               ),
             ],
           ),
@@ -599,207 +443,11 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   // ------------------------------ cash card ------------------------------
-  Widget _cashCard() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _walletFuture,
-      builder: (c, snap) {
-        final w = snap.data ?? {};
-        final cents = (w['balance_cents'] as num? ?? 0).toInt();
-        final display =
-            '${w['balance_display'] ?? '\$${(cents / 100).toStringAsFixed(2)}'}';
-        final conv = w['conversion'] as Map<String, dynamic>?;
-        final rateText = '${conv?['rate_text'] ?? ''}';
-        final waiting = snap.connectionState == ConnectionState.waiting;
-        return VCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.payments_outlined,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    s.cashWallet,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (rateText.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        rateText,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                waiting ? '…' : display,
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                s.minWithdrawalNote,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: VirelloColors.muted,
-                ),
-              ),
-              const SizedBox(height: 12),
-              FutureBuilder<List<dynamic>>(
-                future: _withdrawalsFuture,
-                builder: (c2, wsnap) {
-                  final rows = (wsnap.data ?? [])
-                      .map((e) => Map<String, dynamic>.from(e as Map))
-                      .toList();
-                  final hasPending = rows.any((m) =>
-                      '${m['status']}'.toLowerCase() == 'pending');
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (hasPending) ...[
-                        _pendingChip(rows.firstWhere((m) =>
-                            '${m['status']}'.toLowerCase() == 'pending')),
-                        const SizedBox(height: 10),
-                      ],
-                      VGradientButton(
-                        label: s.withdraw,
-                        icon: Icons.north_east_rounded,
-                        onPressed: () => _openWithdraw(w, rows),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 14),
-              _cashHistory(),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _pendingChip(Map<String, dynamic> p) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.hourglass_bottom_outlined,
-              size: 18, color: Color(0xFFB8860B)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${s.pendingWithdrawal} · ${p['amount_display'] ?? ''}',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _cashHistory() {
-    return FutureBuilder<List<dynamic>>(
-      future: _cashHistoryFuture,
-      builder: (c, snap) {
-        final rows = (snap.data ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList();
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 40,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (rows.isEmpty) {
-          return Text(
-            s.walletHistoryEmpty,
-            style: const TextStyle(
-              fontSize: 12.5,
-              color: VirelloColors.muted,
-            ),
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              s.history,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            for (final h in rows.take(10))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${h['reason'] ?? ''}',
-                            style: const TextStyle(fontSize: 13.5),
-                          ),
-                          if (h['created_at'] != null)
-                            Text(
-                              '${h['created_at']}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: VirelloColors.muted,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${h['delta_display'] ?? ''}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: (h['delta_cents'] as num? ?? 0) >= 0
-                            ? Colors.green
-                            : VirelloColors.danger,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
+
+
+
 
   // ------------------------------ my claims ------------------------------
   /// Proof-based share claims (GET /api/v1/rewards/claims): amount, a
@@ -958,7 +606,8 @@ class _WalletScreenState extends State<WalletScreen> {
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
             final p = d['period'] as Map<String, dynamic>?;
-            final prize = '${p?['prize_display'] ?? ''}';
+            final prizePts = (p?['prize_points'] as num?)?.toInt() ?? 0;
+            final prize = prizePts > 0 ? '$prizePts pts' : '';
             final label = '${p?['label'] ?? ''}';
             if (rows.isEmpty) {
               return VCard(
@@ -1194,7 +843,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       title: Text(
                         s.volumeRow(
                           '${t['progress'] ?? ''}',
-                          '\$${((t['cents'] as num? ?? 0) / 100).toStringAsFixed(2)}',
+                          '${(t['points'] as num? ?? 0).toInt()} pts',
                         ),
                         style: const TextStyle(
                           fontSize: 13.5,

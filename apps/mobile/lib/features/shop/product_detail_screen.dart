@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import '../ask_virello/ask_virello_screen.dart';
@@ -286,6 +287,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   : _imgPlaceholder(360),
             ),
             // Creator pill (top): honest publisher + real listing age.
+            const Positioned(
+              top: 14,
+              right: 14,
+              child: RewardBadge(points: 25),
+            ),
             // Floating like / share (bottom, overlapping).
             Positioned(
               bottom: -26,

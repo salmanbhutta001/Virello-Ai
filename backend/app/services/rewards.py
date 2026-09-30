@@ -65,6 +65,19 @@ REDEEM_MIN_POINTS = 100
 DEFAULT_REDEEM_RATE = 100  # points per 10 Grow credits
 REDEEM_RATE_SETTING = "rewards.redeem_rate"
 
+# Volume bonus (points-only): verified share-link clicks in rolling 7 days.
+# Replaces the old cash volume bonus ($2.00/$10.00) — no cash, no withdrawal.
+VOLUME_BONUS_POINTS_TIERS = [
+    {"clicks": 100, "points": 1000},
+    {"clicks": 500, "points": 5000},
+]
+VOLUME_BONUS_REASON = "volume_bonus"
+
+# Top seller prizes (points-only, replaces $10/$50 cash).
+# 500 pts = $1.00 rate: $10 -> 5000 pts, $50 -> 25000 pts.
+WEEKLY_TOP_SELLER_POINTS = 5000
+MONTHLY_TOP_SELLER_POINTS = 25000
+
 # Stable rule ids for the mobile "How to earn" list (mobile localizes text).
 RULES = [
     {"id": "post_created", "points": POST_POINTS,
@@ -731,3 +744,83 @@ async def leaderboard(db: AsyncSession, limit: int = 20,
             "timezone": "Asia/Karachi",
         },
     }
+
+
+# ------------------------------------------------------------------ share-click points (replaces cash)
+SHARE_CLICK_POINTS = 3
+SHARE_CLICK_DAILY_CAP = 50
+
+
+async def _verified_clicks_7d(db: AsyncSession,
+                              user_id: uuid.UUID) -> int:
+    """Verified share-link clicks in rolling 7 days."""
+    from datetime import timedelta
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    return (await db.execute(
+        select(func.count()).select_from(ShareClick).where(
+            ShareClick.sharer_user_id == user_id,
+            ShareClick.created_at >= cutoff))).scalar() or 0
+
+
+async def _check_volume_bonus_points(db: AsyncSession,
+                                     user_id: uuid.UUID) -> None:
+    """Volume bonus: N verified share-clicks in rolling 7 days -> +points.
+    Idempotent per threshold per ISO week via ref_id."""
+    clicks = await _verified_clicks_7d(db, user_id)
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    for t in VOLUME_BONUS_POINTS_TIERS:
+        if clicks >= int(t["clicks"]):
+            ref = f"volumebonus:{t['clicks']}:{week}"
+            await award(db, user_id, int(t["points"]),
+                        VOLUME_BONUS_REASON, ref)
+
+
+async def get_volume_progress_points(db: AsyncSession,
+                                     user_id: uuid.UUID) -> dict:
+    """Volume-bonus progress in POINTS (no cash)."""
+    clicks = await _verified_clicks_7d(db, user_id)
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    out = []
+    for t in VOLUME_BONUS_POINTS_TIERS:
+        thr = int(t["clicks"])
+        pts = int(t["points"])
+        ref = f"volumebonus:{thr}:{week}"
+        paid = (await db.execute(select(PointsLedger.id).where(
+            PointsLedger.user_id == user_id,
+            PointsLedger.reason == VOLUME_BONUS_REASON,
+            PointsLedger.ref_id == ref))).scalar_one_or_none() is not None
+        out.append({"clicks": thr, "points": pts,
+                    "achieved": clicks >= thr, "paid": paid,
+                    "progress": f"{min(clicks, thr)}/{thr}"})
+    return {"clicks_7d": clicks, "thresholds": out}
+
+
+async def award_share_click_points(db: AsyncSession, sharer_id: uuid.UUID,
+                                   viewer_key: str,
+                                   viewer_user_id: uuid.UUID | None,
+                                   asin: str, code: str) -> int:
+    """Points per verified share-link visit. No self-click points.
+    Dedupe (viewer, code, day) is structural via ref_id."""
+    if viewer_user_id is not None and viewer_user_id == sharer_id:
+        return 0
+    ref = f"shareclick:{code}:{viewer_key}:{datetime.now(timezone.utc).date().isoformat()}"
+    # Count today's share-click points for cap
+    today_start = datetime.combine(datetime.now(timezone.utc).date(),
+                                   datetime.min.time(),
+                                   tzinfo=timezone.utc)
+    n_today = (await db.execute(select(func.count()).select_from(
+        PointsLedger).where(
+            PointsLedger.user_id == sharer_id,
+            PointsLedger.reason == "share_click",
+            PointsLedger.created_at >= today_start,
+            PointsLedger.delta > 0))).scalar() or 0
+    if n_today >= SHARE_CLICK_DAILY_CAP:
+        return 0
+    earned = await award(db, sharer_id, SHARE_CLICK_POINTS,
+                         "share_click", ref)
+    if earned:
+        try:
+            await _check_volume_bonus_points(db, sharer_id)
+        except Exception:
+            pass
+    return earned

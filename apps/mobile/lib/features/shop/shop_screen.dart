@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/notifications_sheet.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import 'product_detail_screen.dart';
@@ -678,6 +679,11 @@ class _ShopScreenState extends State<ShopScreen> {
                                   color: Colors.black)),
                         ),
                       ),
+                    const Positioned(
+                      top: 10,
+                      right: 10,
+                      child: RewardBadge(points: 25),
+                    ),
                   ],
                 ),
               ),
@@ -827,6 +833,11 @@ class _ShopScreenState extends State<ShopScreen> {
                                 color: Colors.black)),
                       ),
                     ),
+                  const Positioned(
+                    top: 8,
+                    right: 8,
+                    child: RewardBadge(points: 25),
+                  ),
                 ],
               ),
             ),

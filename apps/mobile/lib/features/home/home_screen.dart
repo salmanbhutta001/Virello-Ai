@@ -483,19 +483,28 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1.15,
-              child: Container(
-                color: Colors.white,
-                width: double.infinity,
-                child: images.isNotEmpty
-                    ? Image.network(
-                        images.first,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => _imgFallback(),
-                      )
-                    : _imgFallback(),
-              ),
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.15,
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    child: images.isNotEmpty
+                        ? Image.network(
+                            images.first,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => _imgFallback(),
+                          )
+                        : _imgFallback(),
+                  ),
+                ),
+                const Positioned(
+                  top: 8,
+                  right: 8,
+                  child: RewardBadge(points: 25),
+                ),
+              ],
             ),
             Expanded(
               child: Padding(

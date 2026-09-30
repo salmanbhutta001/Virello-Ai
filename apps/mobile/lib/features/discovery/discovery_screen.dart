@@ -492,22 +492,31 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
-              child: Container(
-                width: 150,
-                height: 120,
-                color: Colors.white,
-                child: imgUrl.isNotEmpty
-                    ? Image.network(imgUrl,
-                        width: 150, height: 120, fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
-                            Icons.shopping_bag_outlined,
-                            color: VTheme.textSec(context)))
-                    : Icon(Icons.shopping_bag_outlined,
-                        color: VTheme.textSec(context)),
-              ),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14)),
+                  child: Container(
+                    width: 150,
+                    height: 120,
+                    color: Colors.white,
+                    child: imgUrl.isNotEmpty
+                        ? Image.network(imgUrl,
+                            width: 150, height: 120, fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Icon(
+                                Icons.shopping_bag_outlined,
+                                color: VTheme.textSec(context)))
+                        : Icon(Icons.shopping_bag_outlined,
+                            color: VTheme.textSec(context)),
+                  ),
+                ),
+                const Positioned(
+                  top: 6,
+                  right: 6,
+                  child: RewardBadge(points: 25),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(8),

@@ -14045,6 +14045,11 @@ class AppStrings {
         'تبدیلی کے لیے کم از کم $minPts پوائنٹس',
         'الحد الأدنى $minPts نقطة لكل تحويل',
       );
+  String get redeemHint => _get(
+        '100 points = 10 Grow credits. Minimum 100 points per redemption.',
+        '100 پوائنٹس = 10 گرو کریڈٹس۔ کم از کم 100 پوائنٹس۔',
+        '100 نقطة = 10 رصيد نمو. الحد الأدنى 100 نقطة.',
+      );
   String get convertConfirm =>
       _get('How many points to convert?', 'کتنے پوائنٹس تبدیل کریں؟',
           'كم عدد النقاط التي تريد تحويلها؟');
