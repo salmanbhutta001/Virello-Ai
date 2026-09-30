@@ -10,16 +10,13 @@ import '../academy/academy_screen.dart';
 import '../discovery/post_reader_screen.dart';
 import '../discovery/search_screen.dart';
 import '../settings/notifications_screen.dart';
+import '../shop/product_detail_screen.dart';
 
-/// Board screen 07: "Home Feed" — pixel-faithful rebuild.
-///
-/// Layout per the master board:
-/// - Header: greeting (small gray) / real user name (bold) / subtitle — left;
-///   bell button + avatar circle — right.
-/// - Rounded dark search bar → opens the Search screen.
-/// - 2x2 grid of quick cards: Create / Grow / Shop / Learn (icon + label).
-/// - "Active Campaigns" + View-all → real campaign card(s) with real stats.
-/// - "AI Recommendations" → horizontal real discovery cards.
+/// Home — redesigned 2026-09-30 per Hafiz:
+/// - Trending Products is the hero: gradient banner + 2-column real product
+///   grid filling the screen (real Shop catalog, sort=popular).
+/// - Active Campaigns + AI Recommendations move BELOW, compact and small.
+/// - Refreshed UI: gradient accents, softer cards, tighter rhythm.
 /// Never shows fake stats, names, or content.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String name = '';
     List<Campaign> campaigns = const [];
     List<DiscoveryItem> recs = const [];
+    List<Map<String, dynamic>> trending = const [];
     try {
       final me = await apiClient.me();
       final raw =
@@ -64,7 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
       feed.sort((a, b) => b.matchScore.compareTo(a.matchScore));
       recs = feed.take(6).toList();
     } catch (_) {}
-    return _HomeData(name: name, campaigns: campaigns, recs: recs);
+    try {
+      final data = await apiClient.listProducts(limit: 12, sort: 'popular');
+      trending = ((data['products'] as List?) ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {}
+    return _HomeData(
+      name: name,
+      campaigns: campaigns,
+      recs: recs,
+      trending: trending,
+    );
   }
 
   Future<void> _refresh() async {
@@ -85,6 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+  }
+
+  void _openProduct(Map<String, dynamic> p) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProductDetailScreen(productId: '${p['id']}'),
+      ),
+    );
   }
 
   @override
@@ -110,9 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   _quickGrid(),
                   const SizedBox(height: 22),
-                  _campaignsSection(data.campaigns, snap),
+                  _trendingSection(data.trending, snap),
                   const SizedBox(height: 22),
-                  _recsSection(data.recs, snap),
+                  _campaignsCompact(data.campaigns, snap),
+                  const SizedBox(height: 20),
+                  _recsCompact(data.recs, snap),
                 ],
               );
             },
@@ -122,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Board header: greeting + name + subtitle (left), bell + avatar (right).
+  /// Header: greeting + name + subtitle (left), bell + avatar (right).
   Widget _header(String name) {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'V';
     return Row(
@@ -212,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Board search field → opens the Search screen.
+  /// Search field → opens the Search screen.
   Widget _searchBar() {
     return InkWell(
       onTap: _openSearch,
@@ -247,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 2x2 grid of quick-action cards per the board: Create / Grow / Shop / Learn.
+  /// 2x2 grid of quick-action cards: Create / Grow / Shop / Learn.
   Widget _quickGrid() {
     final cards = [
       _QuickAction(
@@ -325,119 +344,118 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Active Campaigns — real campaigns, real numbers only.
-  Widget _campaignsSection(List<Campaign> campaigns, AsyncSnapshot snap) {
+  // ------------------------------------------------------------------
+  // Trending Products — the hero of Home.
+  // ------------------------------------------------------------------
+
+  Widget _trendingSection(List<Map<String, dynamic>> trending, AsyncSnapshot snap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(s.boardActiveCampaigns, () => requestedTab.value = 3),
-        const SizedBox(height: 12),
+        _trendingBanner(),
+        const SizedBox(height: 14),
         if (snap.connectionState == ConnectionState.waiting)
-          const VShimmerBox(height: 96, radius: 18)
-        else if (campaigns.isEmpty)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: 4,
+            itemBuilder: (_, __) => const VShimmerBox(height: 210, radius: 18),
+          )
+        else if (trending.isEmpty)
           _emptyCard(
-            icon: Icons.rocket_launch_outlined,
-            message: s.boardNoActiveCampaigns,
-            cta: s.boardStartCampaign,
-            onCta: () => requestedTab.value = 3,
+            icon: Icons.local_fire_department_outlined,
+            message: s.boardNoRecommendations,
+            cta: s.boardViewAll,
+            onCta: () => requestedTab.value = 4,
           )
         else
-          Column(
-            children: [
-              for (var i = 0; i < campaigns.length && i < 3; i++) ...[
-                if (i > 0) const SizedBox(height: 10),
-                _campaignCard(campaigns[i]),
-              ],
-            ],
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: trending.length,
+            itemBuilder: (_, i) => _productCard(trending[i]),
           ),
       ],
     );
   }
 
-  /// Board campaign card: rounded thumbnail + title + real stat chips.
-  Widget _campaignCard(Campaign c) {
-    final stats = <String>[];
-    if (c.reach > 0) stats.add('${_fmtNum(c.reach)} ${s.reachLabel}');
-    if (c.clicks > 0) stats.add('${_fmtNum(c.clicks)} ${s.clicksLabel}');
-    if (c.conversions > 0) {
-      stats.add('${_fmtNum(c.conversions)} ${s.salesTitle}');
-    }
+  /// Gradient hero banner for the Trending Products section.
+  Widget _trendingBanner() {
     return InkWell(
-      onTap: () => requestedTab.value = 3,
-      borderRadius: BorderRadius.circular(18),
+      onTap: () => requestedTab.value = 4,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: VirelloColors.boardBorder),
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [VirelloColors.pink, Color(0xFF8E1B3D)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: VirelloColors.pink.withValues(alpha: 0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(14),
-                gradient: const LinearGradient(
-                  colors: [VirelloColors.pink, Color(0xFFC2274E)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
               ),
               child: const Icon(
-                Icons.campaign_outlined,
+                Icons.local_fire_department_rounded,
                 color: Colors.white,
-                size: 30,
+                size: 26,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    c.title.isEmpty ? s.campaignFallbackTitle : c.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    s.shopTrendingProducts,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  if (stats.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        for (final st in stats)
-                          Text(
-                            st,
-                            style: const TextStyle(
-                              color: VirelloColors.boardTextSec,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                      ],
-                    )
-                  else
-                    Text(
-                      s.liveLabel,
-                      style: const TextStyle(
-                        color: VirelloColors.pink,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  const SizedBox(height: 2),
+                  Text(
+                    s.boardViewAll,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
+                  ),
                 ],
               ),
             ),
             const Icon(
-              Icons.chevron_right,
-              color: VirelloColors.boardTextSec,
+              Icons.arrow_forward_rounded,
+              color: Colors.white,
               size: 22,
             ),
           ],
@@ -446,46 +464,207 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// AI Recommendations — top real discovery items by match score.
-  Widget _recsSection(List<DiscoveryItem> recs, AsyncSnapshot snap) {
+  /// Real product card — image, title, price (or "Check price on Amazon").
+  Widget _productCard(Map<String, dynamic> p) {
+    final images =
+        (p['image_urls'] as List? ?? []).map((e) => '$e').toList();
+    final cents = (p['price_cents'] as num?)?.toInt() ?? 0;
+    final title = '${p['title'] ?? ''}';
+    return InkWell(
+      onTap: () => _openProduct(p),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: VirelloColors.boardSurface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: VirelloColors.boardBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.15,
+              child: Container(
+                color: Colors.white,
+                width: double.infinity,
+                child: images.isNotEmpty
+                    ? Image.network(
+                        images.first,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => _imgFallback(),
+                      )
+                    : _imgFallback(),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      cents > 0
+                          ? '${p['price_display'] ?? ''}'
+                          : s.shopCheckPriceAmazon,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: VirelloColors.pink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _imgFallback() {
+    return const Center(
+      child: Icon(
+        Icons.shopping_bag_outlined,
+        color: VirelloColors.boardTextSec,
+        size: 34,
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Active Campaigns — compact strip, below trending.
+  // ------------------------------------------------------------------
+
+  Widget _campaignsCompact(List<Campaign> campaigns, AsyncSnapshot snap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(s.boardAiRecommendations, () => requestedTab.value = 1),
-        const SizedBox(height: 12),
+        _miniSectionHeader(
+          s.boardActiveCampaigns,
+          () => requestedTab.value = 3,
+        ),
+        const SizedBox(height: 10),
         if (snap.connectionState == ConnectionState.waiting)
-          const SizedBox(
-            height: 190,
-            child: Row(
-              children: [
-                Expanded(child: VShimmerBox(height: 190, radius: 18)),
-                SizedBox(width: 12),
-                Expanded(child: VShimmerBox(height: 190, radius: 18)),
-              ],
-            ),
-          )
-        else if (recs.isEmpty)
-          _emptyCard(
-            icon: Icons.auto_awesome_outlined,
-            message: s.boardNoRecommendations,
-            cta: s.boardViewAll,
-            onCta: () => requestedTab.value = 1,
-          )
+          const VShimmerBox(height: 52, radius: 14)
+        else if (campaigns.isEmpty)
+          _miniEmpty(s.boardNoActiveCampaigns)
         else
           SizedBox(
-            height: 200,
+            height: 52,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: recs.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => _recCard(recs[i]),
+              itemCount: campaigns.length.clamp(0, 5),
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final c = campaigns[i];
+                return InkWell(
+                  onTap: () => requestedTab.value = 3,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: VirelloColors.boardSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: VirelloColors.boardBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: VirelloColors.pink,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: Text(
+                            c.title.isEmpty
+                                ? s.campaignFallbackTitle
+                                : c.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          s.liveLabel,
+                          style: const TextStyle(
+                            color: VirelloColors.pink,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
       ],
     );
   }
 
-  Widget _recCard(DiscoveryItem item) {
+  // ------------------------------------------------------------------
+  // AI Recommendations — compact mini-cards, below campaigns.
+  // ------------------------------------------------------------------
+
+  Widget _recsCompact(List<DiscoveryItem> recs, AsyncSnapshot snap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionHeader(
+          s.boardAiRecommendations,
+          () => requestedTab.value = 1,
+        ),
+        const SizedBox(height: 10),
+        if (snap.connectionState == ConnectionState.waiting)
+          const VShimmerBox(height: 76, radius: 14)
+        else if (recs.isEmpty)
+          _miniEmpty(s.boardNoRecommendations)
+        else
+          SizedBox(
+            height: 76,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: recs.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (_, i) => _recMiniCard(recs[i]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _recMiniCard(DiscoveryItem item) {
     final title = item.title.isEmpty ? item.postUrl : item.title;
     return InkWell(
       onTap: () {
@@ -500,33 +679,36 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
         ).push(MaterialPageRoute(builder: (_) => PostReaderScreen(item: item)));
       },
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: 160,
+        width: 210,
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: VirelloColors.boardSurface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: VirelloColors.boardBorder),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            SizedBox(
-              height: 110,
-              width: double.infinity,
-              child: item.thumbnailUrl.isNotEmpty
-                  ? Image.network(
-                      item.thumbnailUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _recThumbFallback(),
-                    )
-                  : _recThumbFallback(),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 60,
+                height: 60,
+                child: item.thumbnailUrl.isNotEmpty
+                    ? Image.network(
+                        item.thumbnailUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _recThumbFallback(),
+                      )
+                    : _recThumbFallback(),
+              ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
+            const SizedBox(width: 10),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     title,
@@ -534,27 +716,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
+                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: VirelloColors.pink.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '✦ ${(item.matchScore * 100).round()}%',
-                      style: const TextStyle(
-                        color: VirelloColors.pink,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '✦ ${(item.matchScore * 100).round()}%',
+                    style: const TextStyle(
+                      color: VirelloColors.pink,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -576,12 +749,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       child: const Center(
-        child: Icon(Icons.auto_awesome, color: Colors.white70, size: 30),
+        child: Icon(Icons.auto_awesome, color: Colors.white70, size: 22),
       ),
     );
   }
 
-  Widget _sectionHeader(String title, VoidCallback onViewAll) {
+  /// Smaller section header for the compact lower sections.
+  Widget _miniSectionHeader(String title, VoidCallback onViewAll) {
     return Row(
       children: [
         Expanded(
@@ -589,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -603,19 +777,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 s.boardViewAll,
                 style: const TextStyle(
                   color: VirelloColors.pink,
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Icon(
                 Icons.chevron_right,
                 color: VirelloColors.pink,
-                size: 18,
+                size: 16,
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _miniEmpty(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: VirelloColors.boardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: VirelloColors.boardBorder),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: VirelloColors.boardTextSec,
+          fontSize: 12.5,
+        ),
+      ),
     );
   }
 
@@ -653,12 +846,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  String _fmtNum(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
-  }
 }
 
 class _QuickAction {
@@ -676,9 +863,11 @@ class _HomeData {
   final String name;
   final List<Campaign> campaigns;
   final List<DiscoveryItem> recs;
+  final List<Map<String, dynamic>> trending;
   const _HomeData({
     this.name = '',
     this.campaigns = const [],
     this.recs = const [],
+    this.trending = const [],
   });
 }
