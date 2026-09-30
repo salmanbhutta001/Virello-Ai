@@ -82,11 +82,32 @@ class _BillingScreenState extends State<BillingScreen> {
   }
 
   Future<_BillingData> _load() async {
-    final me = await apiClient.me();
-    final plans = await apiClient.billingPlans();
-    final packs = await apiClient.billingCreditPacks();
-    final providers = await apiClient.billingProviders();
-    final txns = await apiClient.billingTransactions();
+    // Load each endpoint independently — a single failing endpoint must not
+    // kill the whole page. If we get NOTHING at all, throw so the UI shows
+    // the error state with a retry option.
+    Map<String, dynamic> me = {};
+    Map<String, dynamic> plans = {};
+    Map<String, dynamic> packs = {};
+    Map<String, dynamic> providers = {};
+    Map<String, dynamic> txns = {};
+    try {
+      me = await apiClient.me();
+    } catch (_) {}
+    try {
+      plans = await apiClient.billingPlans();
+    } catch (_) {}
+    try {
+      packs = await apiClient.billingCreditPacks();
+    } catch (_) {}
+    try {
+      providers = await apiClient.billingProviders();
+    } catch (_) {}
+    try {
+      txns = await apiClient.billingTransactions();
+    } catch (_) {}
+    if (me.isEmpty && plans.isEmpty && packs.isEmpty) {
+      throw Exception('billing_load_failed');
+    }
     return _BillingData(
       plan: '${me['plan'] ?? 'free'}',
       credits: (me['credits'] as num? ?? 0).toInt(),
@@ -121,9 +142,19 @@ class _BillingScreenState extends State<BillingScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
-                child: Text(s.growFailed,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: VirelloColors.muted)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(s.growFailed,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: VirelloColors.muted)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _refresh,
+                      child: Text(s.tryAgain),
+                    ),
+                  ],
+                ),
               ),
             );
           }
