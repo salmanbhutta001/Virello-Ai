@@ -10,16 +10,18 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
-/// Board screen 23: "Create Video" — AI Video Storyboard.
+import '../../services/local_tools/storyboard_video_renderer.dart';
+
+/// Board screen 23: "Create Video" — AI Video Storyboard + real MP4 render.
 ///
 /// FULLY FUNCTIONAL: the user enters a video idea, the AI breaks it into
 /// 3 cinematic scenes (establishing → action → finale), generates a real
 /// AI image per scene (free provider, no key), and plays them as a
 /// cinematic auto-advancing storyboard with a Ken Burns effect.
 ///
-/// HONEST: this is an AI storyboard preview, not rendered video. True
-/// text-to-video generation needs a paid provider key — the UI says so
-/// and every scene is labeled "AI-generated". Never fakes a video file.
+/// ADVANCED: "Render Video" turns the storyboard into a REAL MP4 —
+/// on-device FFmpeg slideshow (9:16) with AI-written voiceover narration
+/// (TTS). No provider key needed. Every scene is labeled "AI-generated".
 class CreateVideoScreen extends StatefulWidget {
   const CreateVideoScreen({super.key});
 
@@ -157,6 +159,48 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       _pause();
     } else {
       _play();
+    }
+  }
+
+  bool _rendering = false;
+  double _renderProgress = 0.0;
+
+  /// Renders the storyboard into a REAL MP4 (FFmpeg + AI voiceover) and
+  /// shares it. Fully on-device, no provider key needed.
+  Future<void> _renderVideo() async {
+    if (_scenes.isEmpty || _rendering) return;
+    setState(() {
+      _rendering = true;
+      _renderProgress = 0.0;
+    });
+    try {
+      final renderer = StoryboardVideoRenderer();
+      final mp4Path = await renderer.render(
+        scenes: _scenes
+            .map((s) =>
+                StoryboardSceneInput(title: s.title, imageUrl: s.url))
+            .toList(),
+        idea: _ideaCtrl.text.trim(),
+        localeCode: appState.localeCode,
+        onProgress: (p) {
+          if (mounted) setState(() => _renderProgress = p);
+        },
+      );
+      if (!mounted) return;
+      setState(() => _rendering = false);
+      await Share.shareXFiles(
+        [XFile(mp4Path, mimeType: 'video/mp4')],
+        text: '${_ideaCtrl.text.trim()}\n\nvia Virello',
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _rendering = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  '${s.boardVideoRenderFailed}: ${e.toString().split(':').last.trim()}')),
+        );
+      }
     }
   }
 
@@ -509,6 +553,33 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        // Render real MP4 video from the storyboard.
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: (_rendering || _generating) ? null : _renderVideo,
+            icon: _rendering
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.videocam, size: 18),
+            label: Text(_rendering
+                ? '${s.boardVideoRendering} ${(_renderProgress * 100).round()}%'
+                : s.boardVideoRender),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VirelloColors.pink,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+        if (_rendering) ...[
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: _renderProgress),
+        ],
         const SizedBox(height: 8),
         Text(
           s.boardStoryboardNote,

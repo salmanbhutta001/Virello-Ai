@@ -10258,8 +10258,20 @@ class AppStrings {
         'AI اسٹوری بورڈ',
       );
   String get boardStoryboardNote => _get(
-        'Storyboard preview — full AI video rendering needs a provider key.',
-        'اسٹوری بورڈ پیش نظارہ — مکمل AI ویڈیو کے لیے فراہم کنندہ کی کنجی درکار ہے۔',
+        'Storyboard preview — tap Render Video for a real MP4 with AI voiceover.',
+        'اسٹوری بورڈ پیش نظارہ — AI وائس اوور کے ساتھ اصل MP4 کے لیے رینڈر ویڈیو دبائیں۔',
+      );
+  String get boardVideoRender => _get(
+        'Render Video',
+        'ویڈیو بنائیں',
+      );
+  String get boardVideoRendering => _get(
+        'Rendering',
+        'بن رہی ہے',
+      );
+  String get boardVideoRenderFailed => _get(
+        'Video render failed',
+        'ویڈیو بنانے میں ناکامی',
       );
   String get boardImageRetry => _get(
         'Retry',
