@@ -284,7 +284,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardBorder,
+                    color: VTheme.divider(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -434,12 +434,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         foregroundColor: Colors.white,
                       ),
                       icon: _customizing
-                          ? const SizedBox(
+                          ?  SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: VTheme.onBrand(context),
                               ),
                             )
                           : const Icon(Icons.auto_awesome_outlined,
@@ -610,7 +610,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: VirelloColors.boardBorder,
+              color: VTheme.divider(context),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -703,10 +703,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             ),
             child: Text(
               s.buildPlan,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: VTheme.onBrand(context),
               ),
             ),
           ),
@@ -731,7 +731,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: VirelloColors.boardBorder,
+              color: VTheme.divider(context),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -895,7 +895,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardBorder,
+                    color: VTheme.divider(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -997,12 +997,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         padding: EdgeInsets.zero,
                       ),
                       child: _matching
-                          ? const SizedBox(
+                          ?  SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: VTheme.onBrand(context),
                               ),
                             )
                           : const Icon(Icons.search_rounded, size: 20),
@@ -1057,7 +1057,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                             border: Border.all(
                               color: isMatch
                                   ? VirelloColors.pink
-                                  : VirelloColors.boardBorder,
+                                  : VTheme.divider(context),
                               width: isMatch ? 2 : 1,
                             ),
                           ),

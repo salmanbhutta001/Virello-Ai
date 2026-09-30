@@ -15,7 +15,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -38,10 +38,10 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+               Text(
                 'Virello AI',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: VTheme.onBrand(context),
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.5,
@@ -50,8 +50,8 @@ class SplashScreen extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 s.splashTagline,
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
@@ -61,8 +61,8 @@ class SplashScreen extends StatelessWidget {
               Text(
                 s.boardIdeasAmplified,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                 ),

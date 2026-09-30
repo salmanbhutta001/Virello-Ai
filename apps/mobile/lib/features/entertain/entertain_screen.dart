@@ -210,8 +210,8 @@ class _EntertainScreenState extends State<EntertainScreen> {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.auto_stories,
-                        color: Colors.white, size: 20),
+                    child:  Icon(Icons.auto_stories,
+                        color: VTheme.onBrand(context), size: 20),
                   ),
                   title: Text('${st['title'] ?? ''}',
                       maxLines: 1,
@@ -241,7 +241,7 @@ class _EntertainScreenState extends State<EntertainScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('${st['title'] ?? ''}',
             style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -442,8 +442,8 @@ class _EntertainScreenState extends State<EntertainScreen> {
                         ),
                         child: Center(
                           child: Text('${p['panel'] ?? ''}',
-                              style: const TextStyle(
-                                  color: Colors.white,
+                              style:  TextStyle(
+                                  color: VTheme.onBrand(context),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800)),
                         ),

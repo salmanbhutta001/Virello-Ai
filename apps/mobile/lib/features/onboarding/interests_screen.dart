@@ -109,7 +109,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
               .toList()
         : _topics;
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -120,8 +120,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
               Text(
                 s.boardInterestedIn,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                 ),

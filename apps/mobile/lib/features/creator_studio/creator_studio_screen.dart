@@ -221,12 +221,12 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen>
         child: ElevatedButton.icon(
           onPressed: _working ? null : onTap,
           icon: _working
-              ? const SizedBox(
+              ?  SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: VTheme.text(context),
                   ),
                 )
               : const Icon(Icons.auto_awesome, size: 20),

@@ -492,11 +492,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 IconButton.filled(
                   onPressed: _asking ? null : _askAi,
                   icon: _asking
-                      ? const SizedBox(
+                      ?  SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2, color: VTheme.text(context)))
                       : const Icon(Icons.send_outlined, size: 18),
                   style: IconButton.styleFrom(
                       backgroundColor: VirelloColors.pink),
@@ -756,11 +756,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         ? null
                         : _submitQuiz,
                     child: _submitting
-                        ? const SizedBox(
+                        ?  SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2, color: VTheme.text(context)))
                         : Text(s.submitQuiz),
                   ),
                 ),

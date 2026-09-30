@@ -614,10 +614,10 @@ class _ShopScreenState extends State<ShopScreen> {
                     shape: BoxShape.circle,
                     gradient: _Lavish.avatarGradient,
                   ),
-                  child: const Center(
+                  child:  Center(
                     child: Text('V',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: VTheme.text(context),
                             fontWeight: FontWeight.w800,
                             fontSize: 18)),
                   ),
@@ -654,7 +654,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         ? Container(
                           height: 180,
                           width: double.infinity,
-                          color: Colors.white,
+                          color: VTheme.text(context),
                           child: Image.network(images.first,
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
@@ -668,7 +668,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: VTheme.text(context),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text('${p['price_display'] ?? ''}',
@@ -803,7 +803,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       ? Container(
                         height: 132,
                         width: 190,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                         child: Image.network(images.first,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) =>
@@ -817,7 +817,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: VTheme.text(context),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text('${p['price_display'] ?? ''}',
@@ -1490,7 +1490,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                   children: [
                     images.isNotEmpty
                         ? Container(
-                          color: Colors.white,
+                          color: VTheme.text(context),
                           child: Image.network(images.first,
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
@@ -1506,8 +1506,8 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                         child: Container(
                           width: 36,
                           height: 36,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
+                          decoration:  BoxDecoration(
+                            color: VTheme.text(context),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -1614,8 +1614,8 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                   gradient: VirelloColors.brandGradient,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: const Icon(Icons.shopping_bag_outlined,
-                    color: Colors.white, size: 44),
+                child:  Icon(Icons.shopping_bag_outlined,
+                    color: VTheme.onBrand(context), size: 44),
               ),
               const SizedBox(height: 16),
               Text(s.shopEmptyTitle,

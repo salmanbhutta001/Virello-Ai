@@ -236,7 +236,7 @@ class _ProofSheetState extends State<_ProofSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: VirelloColors.boardBorder,
+                  color: VTheme.divider(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

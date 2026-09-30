@@ -212,7 +212,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.92),
+                  color: VTheme.text(context).withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
@@ -227,10 +227,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           colors: [Color(0xFFF95177), Color(0xFFE63E63)],
                         ),
                       ),
-                      child: const Center(
+                      child:  Center(
                         child: Text('V',
                             style: TextStyle(
-                                color: Colors.white,
+                                color: VTheme.onBrand(context),
                                 fontWeight: FontWeight.w800)),
                       ),
                     ),
@@ -267,7 +267,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               borderRadius: BorderRadius.circular(28),
               child: images.isNotEmpty
                   ? Container(
-                      color: Colors.white,
+                      color: VTheme.text(context),
                       height: 360,
                       child: PageView.builder(
                         itemCount: images.length,
@@ -515,22 +515,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             disabled
                                 ? s.shopOutOfStock
                                 : s.shopThis,
-                            style: const TextStyle(
+                            style:  TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white)),
+                                color: VTheme.text(context))),
                         const SizedBox(width: 10),
                         Container(
                           width: 34,
                           height: 34,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
+                          decoration:  BoxDecoration(
+                            color: VTheme.text(context),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                               Icons.arrow_forward_rounded,
                               size: 18,
-                              color: Colors.black),
+                              color: VTheme.scaffold(context)),
                         ),
                       ],
                     ),

@@ -275,8 +275,8 @@ class _StoryVideoScreenState extends State<StoryVideoScreen> {
                           color: Colors.black54,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close_rounded,
-                            color: Colors.white, size: 14),
+                        child:  Icon(Icons.close_rounded,
+                            color: VTheme.onBrand(context), size: 14),
                       ),
                     ),
                   ),
@@ -341,12 +341,12 @@ class _StoryVideoScreenState extends State<StoryVideoScreen> {
             child: ElevatedButton.icon(
               onPressed: (_images.isEmpty || _assembling) ? null : _assemble,
               icon: _assembling
-                  ? const SizedBox(
+                  ?  SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                       ),
                     )
                   : const Icon(Icons.movie_creation_outlined),

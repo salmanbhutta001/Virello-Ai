@@ -76,7 +76,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,7 +86,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
               child: RefreshIndicator(
                 onRefresh: _refresh,
                 color: VirelloColors.pink,
-                backgroundColor: VirelloColors.boardSurface,
+                backgroundColor: VTheme.card(context),
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: _future,
                   builder: (context, snap) {
@@ -115,7 +115,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+            icon:  Icon(Icons.arrow_back, color: VTheme.text(context), size: 22),
             onPressed: () => Navigator.of(context).pop(),
           ),
           const Icon(
@@ -126,8 +126,8 @@ class _TrendingScreenState extends State<TrendingScreen> {
           const SizedBox(width: 8),
           Text(
             s.boardTrendingNow,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.onBrand(context),
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -162,9 +162,9 @@ class _TrendingScreenState extends State<TrendingScreen> {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -199,16 +199,16 @@ class _TrendingScreenState extends State<TrendingScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                             Icon(
                               Icons.trending_up,
-                              color: Colors.white,
+                              color: VTheme.onBrand(context),
                               size: 12,
                             ),
                             const SizedBox(width: 3),
                             Text(
                               '#$rank',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style:  TextStyle(
+                                color: VTheme.text(context),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -231,8 +231,8 @@ class _TrendingScreenState extends State<TrendingScreen> {
                     query,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.text(context),
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -243,8 +243,8 @@ class _TrendingScreenState extends State<TrendingScreen> {
                       detail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: VirelloColors.boardTextSec,
+                      style:  TextStyle(
+                        color: VTheme.textSec(context),
                         fontSize: 11,
                       ),
                     ),
@@ -292,10 +292,10 @@ class _TrendingScreenState extends State<TrendingScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Icon(
+         Icon(
           Icons.trending_up,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -303,9 +303,9 @@ class _TrendingScreenState extends State<TrendingScreen> {
           child: Text(
             s.nothingHere,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),
@@ -318,10 +318,10 @@ class _TrendingScreenState extends State<TrendingScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Icon(
+         Icon(
           Icons.wifi_off_outlined,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -329,9 +329,9 @@ class _TrendingScreenState extends State<TrendingScreen> {
           child: Text(
             s.analyzeFailed,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

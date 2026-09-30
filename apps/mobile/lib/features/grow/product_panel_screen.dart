@@ -128,7 +128,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         Text(s.p10SelectCampaignFirst,
-            style: const TextStyle(fontSize: 14, color: Colors.white)),
+            style:  TextStyle(fontSize: 14, color: VTheme.text(context))),
         const SizedBox(height: 14),
         if (_loadingCampaigns)
           const Center(child: CircularProgressIndicator())
@@ -136,16 +136,16 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
           VBoardCard(
             child: Column(
               children: [
-                const Icon(Icons.campaign_outlined,
-                    size: 40, color: VirelloColors.boardTextSec),
+                 Icon(Icons.campaign_outlined,
+                    size: 40, color: VTheme.textSec(context)),
                 const SizedBox(height: 10),
                 Text(s.noCampaigns,
                     style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 6),
                 Text(s.noCampaignsHint,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 12, color: VirelloColors.boardTextSec)),
+                    style:  TextStyle(
+                        fontSize: 12, color: VTheme.textSec(context))),
               ],
             ),
           )
@@ -182,14 +182,14 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                                   const TextStyle(fontWeight: FontWeight.w700)),
                           const SizedBox(height: 2),
                           Text(c.status,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 12,
-                                  color: VirelloColors.boardTextSec)),
+                                  color: VTheme.textSec(context))),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right,
-                        color: VirelloColors.boardTextSec),
+                     Icon(Icons.chevron_right,
+                        color: VTheme.textSec(context)),
                   ],
                 ),
               ),
@@ -242,10 +242,10 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                     ),
                 ],
               ),
-              const Padding(
+               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Divider(
-                    color: VirelloColors.boardBorder, height: 1, thickness: 1),
+                    color: VTheme.divider(context), height: 1, thickness: 1),
               ),
               ...List.generate(stages.length, (i) {
                 final stepDone = _stage > i;
@@ -259,8 +259,8 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                   checkColor = _orange;
                   leading = Icon(Icons.check, color: checkColor, size: 24);
                 } else {
-                  leading = const Icon(Icons.check,
-                      color: VirelloColors.boardBorder, size: 24);
+                  leading =  Icon(Icons.check,
+                      color: VTheme.divider(context), size: 24);
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -278,7 +278,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                                 : FontWeight.w400,
                             color: (stepDone || active)
                                 ? Colors.white
-                                : VirelloColors.boardTextSec,
+                                : VTheme.textSec(context),
                           ),
                         ),
                       ),
@@ -295,10 +295,10 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
               if (_dev) ...[
                 const SizedBox(height: 8),
                 Text(s.p10DevHeuristicNote,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
-                        color: VirelloColors.boardTextSec)),
+                        color: VTheme.textSec(context))),
               ],
             ],
           ),
@@ -316,7 +316,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: done ? Colors.white : VirelloColors.boardTextSec,
+                    color: done ? Colors.white : VTheme.textSec(context),
                   ),
                 ),
               ),
@@ -358,7 +358,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
           s.p10ApprovalNote,
           textAlign: TextAlign.center,
           style:
-              const TextStyle(fontSize: 11, color: VirelloColors.boardTextSec),
+              TextStyle(fontSize: 11, color: VTheme.textSec(context)),
         ),
       ],
     );
@@ -390,7 +390,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
     final ins = _insights;
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -407,15 +407,15 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
               const SizedBox(height: 12),
               if (decisions.isEmpty)
                 Text(s.p10NoDecisionsYet,
-                    style: const TextStyle(
-                        fontSize: 13, color: VirelloColors.boardTextSec))
+                    style:  TextStyle(
+                        fontSize: 13, color: VTheme.textSec(context)))
               else
                 Flexible(
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: decisions.length,
-                    separatorBuilder: (_, __) => const Divider(
-                        color: VirelloColors.boardBorder, height: 16),
+                    separatorBuilder: (_, __) =>  Divider(
+                        color: VTheme.divider(context), height: 16),
                     itemBuilder: (_, i) {
                       final d = decisions[i];
                       return Column(
@@ -428,9 +428,9 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Text('• $r',
-                                  style: const TextStyle(
+                                  style:  TextStyle(
                                       fontSize: 12,
-                                      color: VirelloColors.boardTextSec)),
+                                      color: VTheme.textSec(context))),
                             ),
                         ],
                       );
@@ -442,10 +442,10 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
               const SizedBox(height: 8),
               if ((h?.disclaimer ?? '').isNotEmpty)
                 Text(h!.disclaimer,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
-                        color: VirelloColors.boardTextSec)),
+                        color: VTheme.textSec(context))),
             ],
           ),
         ),

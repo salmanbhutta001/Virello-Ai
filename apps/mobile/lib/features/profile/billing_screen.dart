@@ -474,7 +474,7 @@ class _BillingScreenState extends State<BillingScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             child:
-                const Icon(Icons.star_outline, color: Colors.white, size: 24),
+                 Icon(Icons.star_outline, color: VTheme.onBrand(context), size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -890,11 +890,11 @@ class _PlaySheetState extends State<_PlaySheet> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: _busy
-                  ? const SizedBox(
+                  ?  SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: VTheme.text(context)),
                     )
                   : Text(s.playBillingTitle,
                       style:

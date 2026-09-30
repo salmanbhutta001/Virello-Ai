@@ -409,8 +409,8 @@ class _WalletScreenState extends State<WalletScreen> {
               gradient: VirelloColors.brandGradient,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.account_balance_wallet_rounded,
-                color: Colors.white),
+            child:  Icon(Icons.account_balance_wallet_rounded,
+                color: VTheme.onBrand(context)),
           ),
           const SizedBox(width: 12),
           Expanded(

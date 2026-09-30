@@ -157,18 +157,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     onPressed: canSubmit ? _change : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: VirelloColors.pink,
-                      disabledBackgroundColor: VirelloColors.boardBorder,
+                      disabledBackgroundColor: VTheme.divider(context),
                       padding:
                           const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999)),
                     ),
                     child: _working
-                        ? const SizedBox(
+                        ?  SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2, color: VTheme.text(context)))
                         : Text(s.changePasswordTitle,
                             style: const TextStyle(
                                 fontSize: 16,

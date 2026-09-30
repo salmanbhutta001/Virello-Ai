@@ -128,7 +128,7 @@ class _AudienceBrowserScreenState extends State<AudienceBrowserScreen> {
     final chipColor = status == 'ready'
         ? VirelloColors.success
         : status == 'not_configured'
-            ? VirelloColors.boardTextSec
+            ? VTheme.textSec(context)
             : VirelloColors.amber;
     final chipLabel = status == 'ready'
         ? s.aiSourceStatusReady
@@ -145,7 +145,7 @@ class _AudienceBrowserScreenState extends State<AudienceBrowserScreen> {
           children: [
             Chip(
               label: Text(chipLabel,
-                  style: const TextStyle(fontSize: 11, color: Colors.white)),
+                  style:  TextStyle(fontSize: 11, color: VTheme.text(context))),
               backgroundColor: chipColor,
               visualDensity: VisualDensity.compact,
             ),

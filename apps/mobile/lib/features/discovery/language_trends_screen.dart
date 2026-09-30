@@ -98,7 +98,7 @@ class _LanguageTrendsScreenState extends State<LanguageTrendsScreen> {
                   onTap: () => _openTrend(t),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: VTheme.text(context),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -123,8 +123,8 @@ class _LanguageTrendsScreenState extends State<LanguageTrendsScreen> {
                               decoration: const BoxDecoration(
                                 gradient: VirelloColors.brandGradient,
                               ),
-                              child: const Icon(Icons.trending_up,
-                                  color: Colors.white),
+                              child:  Icon(Icons.trending_up,
+                                  color: VTheme.onBrand(context)),
                             ),
                           )
                         else
@@ -134,8 +134,8 @@ class _LanguageTrendsScreenState extends State<LanguageTrendsScreen> {
                             decoration: const BoxDecoration(
                               gradient: VirelloColors.brandGradient,
                             ),
-                            child: const Icon(Icons.trending_up,
-                                color: Colors.white),
+                            child:  Icon(Icons.trending_up,
+                                color: VTheme.onBrand(context)),
                           ),
                         Expanded(
                           child: Padding(

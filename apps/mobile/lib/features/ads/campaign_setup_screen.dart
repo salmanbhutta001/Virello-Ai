@@ -139,24 +139,24 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         Text(s.p10PickProduct,
-            style: const TextStyle(
+            style:  TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white)),
+                color: VTheme.text(context))),
         const SizedBox(height: 12),
         if (_products.isEmpty)
           VBoardCard(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
             child: Column(
               children: [
-                const Icon(Icons.shopping_bag_outlined,
-                    size: 40, color: VirelloColors.boardTextSec),
+                 Icon(Icons.shopping_bag_outlined,
+                    size: 40, color: VTheme.textSec(context)),
                 const SizedBox(height: 10),
                 Text(s.p10NoProductsForCampaign,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 13,
-                        color: VirelloColors.boardTextSec,
+                        color: VTheme.textSec(context),
                         height: 1.5)),
               ],
             ),
@@ -207,8 +207,8 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text('\$0 · ${s.p10EstimateNote}',
-                      style: const TextStyle(
-                          fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                      style:  TextStyle(
+                          fontSize: 11.5, color: VTheme.textSec(context))),
                 ),
             ],
           ),
@@ -221,8 +221,8 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
             _plan == 'paid' && pkg != null
                 ? '${pkg.durationDays} ${s.p10Days} · \$${pkg.priceUsd.toStringAsFixed(0)}'
                 : '7 ${s.p10Days} · \$0',
-            style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+            style:  TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: VTheme.text(context)),
           ),
         ),
         const SizedBox(height: 10),
@@ -250,8 +250,8 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
         const SizedBox(height: 10),
         Text(s.p10ApprovalNote,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 11, color: VirelloColors.boardTextSec)),
+            style:  TextStyle(
+                fontSize: 11, color: VTheme.textSec(context))),
       ],
     );
   }
@@ -281,10 +281,10 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
                 Text('${p['title'] ?? ''}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 const SizedBox(height: 4),
                 Text(_priceLabel(p),
                     style: const TextStyle(
@@ -295,7 +295,7 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
             ),
           ),
           if (onTap != null)
-            const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
+            Icon(Icons.chevron_right, color: VTheme.textSec(context)),
         ],
       ),
     );
@@ -306,11 +306,11 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
       width: 72,
       height: 72,
       decoration: BoxDecoration(
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(Icons.shopping_bag_outlined,
-          color: VirelloColors.boardTextSec),
+      child:  Icon(Icons.shopping_bag_outlined,
+          color: VTheme.textSec(context)),
     );
   }
 
@@ -336,10 +336,10 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: VirelloColors.boardTextSec)),
+                        color: VTheme.textSec(context))),
                 const SizedBox(height: 8),
                 child,
               ],
@@ -358,14 +358,14 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          color: active ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-              color: active ? VirelloColors.pink : VirelloColors.boardBorder),
+              color: active ? VirelloColors.pink : VTheme.divider(context)),
         ),
         child: Text(label,
             style: TextStyle(
-                color: active ? Colors.white : VirelloColors.boardTextSec,
+                color: active ? Colors.white : VTheme.textSec(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 12.5)),
       ),
@@ -382,10 +382,10 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
         decoration: BoxDecoration(
           color: active
               ? VirelloColors.pink.withValues(alpha: 0.16)
-              : VirelloColors.boardField,
+              : VTheme.chip(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: active ? VirelloColors.pink : VirelloColors.boardBorder),
+              color: active ? VirelloColors.pink : VTheme.divider(context)),
         ),
         child: Column(
           children: [
@@ -395,16 +395,18 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
                     fontWeight: FontWeight.w700,
                     color: active
                         ? VirelloColors.pink
-                        : VirelloColors.boardTextSec)),
+                        : VTheme.textSec(context))),
             const SizedBox(height: 2),
             Text('\$${pk.priceUsd.toStringAsFixed(0)}',
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white)),
+                    color: active
+                        ? VirelloColors.pink
+                        : VTheme.text(context))),
             Text('${pk.durationDays}d',
-                style: const TextStyle(
-                    fontSize: 10, color: VirelloColors.boardTextSec)),
+                style:  TextStyle(
+                    fontSize: 10, color: VTheme.textSec(context))),
           ],
         ),
       ),
@@ -419,14 +421,14 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          color: active ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-              color: active ? VirelloColors.pink : VirelloColors.boardBorder),
+              color: active ? VirelloColors.pink : VTheme.divider(context)),
         ),
         child: Text(label,
             style: TextStyle(
-                color: active ? Colors.white : VirelloColors.boardTextSec,
+                color: active ? Colors.white : VTheme.textSec(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 12.5)),
       ),

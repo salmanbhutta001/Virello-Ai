@@ -146,8 +146,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: VirelloColors.boardField,
-          border: Border.all(color: VirelloColors.boardBorder),
+          color: VTheme.chip(context),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         alignment: Alignment.center,
         child: child,
@@ -162,9 +162,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _passwordCtrl.text.length >= 8 &&
         !_working;
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       appBar: AppBar(
-        leading: const BackButton(color: Colors.white),
+        leading:  BackButton(color: VTheme.text(context)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -178,8 +178,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Text(
                   s.boardCreateAccount,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style:  TextStyle(
+                    color: VTheme.text(context),
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                   ),
@@ -212,7 +212,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       _obscure
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
@@ -239,21 +239,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    const Expanded(
-                      child: Divider(color: VirelloColors.boardBorder),
+                     Expanded(
+                      child: Divider(color: VTheme.divider(context)),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Text(
                         s.orContinueWith,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 12,
-                          color: VirelloColors.boardTextSec,
+                          color: VTheme.textSec(context),
                         ),
                       ),
                     ),
-                    const Expanded(
-                      child: Divider(color: VirelloColors.boardBorder),
+                     Expanded(
+                      child: Divider(color: VTheme.divider(context)),
                     ),
                   ],
                 ),
@@ -271,8 +271,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         padding: const EdgeInsets.only(right: 16),
                         child: _socialCircle(
                           onTap: _signInWithApple,
-                          child: const IconTheme(
-                            data: IconThemeData(color: Colors.white),
+                          child:  IconTheme(
+                            data: IconThemeData(color: VTheme.text(context)),
                             child: AppleIcon(size: 24),
                           ),
                         ),
@@ -286,9 +286,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 22),
                 Text.rich(
                   TextSpan(
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 13.5,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                     children: [
                       TextSpan(text: s.alreadyHaveAccountQ),

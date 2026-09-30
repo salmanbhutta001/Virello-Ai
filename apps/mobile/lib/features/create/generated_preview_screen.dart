@@ -28,7 +28,7 @@ class GeneratedPreviewScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: VTheme.chip(context),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VirelloColors.boardBorder),
+                border: Border.all(color: VTheme.divider(context)),
               ),
               child: hasContent
                   ? Padding(

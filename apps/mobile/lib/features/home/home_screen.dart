@@ -107,12 +107,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refresh,
           color: VirelloColors.pink,
-          backgroundColor: VirelloColors.boardSurface,
+          backgroundColor: VTheme.card(context),
           child: FutureBuilder<_HomeData>(
             future: _future,
             builder: (context, snap) {
@@ -153,16 +153,16 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 _greeting(),
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 13,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 name.isEmpty ? 'Virello AI' : name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                 ),
@@ -172,8 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 2),
               Text(
                 s.boardCreateSomething,
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 12,
                 ),
                 maxLines: 1,
@@ -203,8 +203,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Text(
             initial,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.onBrand(context),
               fontWeight: FontWeight.w800,
               fontSize: 18,
             ),
@@ -222,11 +222,11 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: VirelloColors.boardField,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
+        child: Icon(icon, color: VTheme.text(context), size: 22),
       ),
     );
   }
@@ -239,23 +239,23 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: VirelloColors.boardField,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Row(
           children: [
-            const Icon(
+             Icon(
               Icons.search,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
               size: 22,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 s.searchAnything,
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 14,
                 ),
               ),
@@ -309,9 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(16),
           child: Container(
             decoration: BoxDecoration(
-              color: VirelloColors.boardSurface,
+              color: VTheme.card(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: VirelloColors.boardBorder),
+              border: Border.all(color: VTheme.divider(context)),
             ),
             child: Row(
               children: [
@@ -329,8 +329,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Text(
                     c.label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.onBrand(context),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -419,12 +419,12 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: VTheme.text(context).withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
+              child:  Icon(
                 Icons.local_fire_department_rounded,
-                color: Colors.white,
+                color: VTheme.text(context),
                 size: 26,
               ),
             ),
@@ -435,8 +435,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     s.shopTrendingProducts,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.text(context),
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                     ),
@@ -445,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     s.boardViewAll,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: VTheme.text(context).withValues(alpha: 0.85),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -453,9 +453,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const Icon(
+             Icon(
               Icons.arrow_forward_rounded,
-              color: Colors.white,
+              color: VTheme.text(context),
               size: 22,
             ),
           ],
@@ -475,9 +475,9 @@ class _HomeScreenState extends State<HomeScreen> {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -486,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
             AspectRatio(
               aspectRatio: 1.15,
               child: Container(
-                color: Colors.white,
+                color: VTheme.text(context),
                 width: double.infinity,
                 child: images.isNotEmpty
                     ? Image.network(
@@ -507,8 +507,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         height: 1.25,
@@ -538,10 +538,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _imgFallback() {
-    return const Center(
+    return  Center(
       child: Icon(
         Icons.shopping_bag_outlined,
-        color: VirelloColors.boardTextSec,
+        color: VTheme.textSec(context),
         size: 34,
       ),
     );
@@ -582,9 +582,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: VirelloColors.boardSurface,
+                      color: VTheme.card(context),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: VirelloColors.boardBorder),
+                      border: Border.all(color: VTheme.divider(context)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -606,8 +606,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : c.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style:  TextStyle(
+                              color: VTheme.text(context),
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -684,9 +684,9 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 210,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Row(
           children: [
@@ -714,8 +714,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.text(context),
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       height: 1.25,
@@ -761,8 +761,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.text(context),
               fontSize: 14,
               fontWeight: FontWeight.w800,
             ),
@@ -798,14 +798,14 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: VirelloColors.boardSurface,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Text(
         message,
-        style: const TextStyle(
-          color: VirelloColors.boardTextSec,
+        style:  TextStyle(
+          color: VTheme.textSec(context),
           fontSize: 12.5,
         ),
       ),
@@ -821,13 +821,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return VBoardCard(
       child: Row(
         children: [
-          Icon(icon, color: VirelloColors.boardTextSec, size: 28),
+          Icon(icon, color: VTheme.textSec(context), size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                color: VirelloColors.boardTextSec,
+              style:  TextStyle(
+                color: VTheme.textSec(context),
                 fontSize: 13,
               ),
             ),

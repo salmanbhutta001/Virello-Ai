@@ -390,7 +390,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
         'pending_approval' => VirelloColors.amber,
         'paused' => VirelloColors.amber,
         'rejected' => VirelloColors.danger,
-        _ => VirelloColors.boardTextSec,
+        _ => VTheme.textSec(context),
       };
 
   /// Phase 2: refresh delivery stats for delivering campaigns.
@@ -710,7 +710,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon,
-                color: Colors.white,
+                color: VTheme.onBrand(context),
                 size: 22),
           ),
           const SizedBox(width: 12),
@@ -819,8 +819,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           decoration:
               BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
           child: Text(badge,
-              style: const TextStyle(
-                  color: Colors.white,
+              style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 11,
                   fontWeight: FontWeight.w700)),
         ),
@@ -966,8 +966,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(s.packagePopular,
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style:  TextStyle(
+                                color: VTheme.onBrand(context),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700)),
                       ),
@@ -1037,7 +1037,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(free ? Icons.public_outlined : Icons.rocket_launch_outlined,
-              color: Colors.white, size: 22),
+              color: VTheme.onBrand(context), size: 22),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -1359,10 +1359,10 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('${c['cta']}',
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                            color: VTheme.onBrand(context))),
                   ),
                 ],
               ],
@@ -2224,8 +2224,8 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           }).toList();
           return Container(
             height: MediaQuery.of(ctx).size.height * 0.88,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration:  BoxDecoration(
+              color: VTheme.text(context),
               borderRadius:
                   BorderRadius.vertical(top: Radius.circular(24)),
             ),
@@ -2482,10 +2482,10 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                                     ),
                                   ),
                                   child: picked
-                                      ? const Icon(
+                                      ?  Icon(
                                           Icons.check,
                                           size: 16,
-                                          color: Colors.white)
+                                          color: VTheme.text(context))
                                       : null,
                                 ),
                               ]),

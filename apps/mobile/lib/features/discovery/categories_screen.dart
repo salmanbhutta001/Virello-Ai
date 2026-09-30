@@ -30,7 +30,7 @@ class CategoriesScreen extends StatelessWidget {
       _Cat(s.boardCatEducation, Icons.school_outlined, 'education'),
     ];
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,13 +70,13 @@ class CategoriesScreen extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+            icon:  Icon(Icons.arrow_back, color: VTheme.text(context), size: 22),
             onPressed: () => Navigator.of(context).pop(),
           ),
           Text(
             s.boardCategories,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.text(context),
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -104,9 +104,9 @@ class CategoriesScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Row(
           children: [
@@ -124,8 +124,8 @@ class CategoriesScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 cat.label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.onBrand(context),
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -176,9 +176,9 @@ class _AllTopicsScreenState extends State<_AllTopicsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       appBar: AppBar(
-        backgroundColor: VirelloColors.boardBg,
+        backgroundColor: VTheme.scaffold(context),
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
@@ -199,7 +199,7 @@ class _AllTopicsScreenState extends State<_AllTopicsScreen> {
             return Center(
               child: Text(
                 s.nothingHere,
-                style: const TextStyle(color: VirelloColors.boardTextSec),
+                style: TextStyle(color: VTheme.textSec(context)),
               ),
             );
           }
@@ -207,7 +207,7 @@ class _AllTopicsScreenState extends State<_AllTopicsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             itemCount: topics.length,
             separatorBuilder: (_, __) =>
-                const Divider(color: VirelloColors.boardBorder, height: 1),
+                Divider(color: VTheme.divider(context), height: 1),
             itemBuilder: (_, i) {
               final t = topics[i];
               final label = t.name(appState.localeCode);
@@ -229,14 +229,14 @@ class _AllTopicsScreenState extends State<_AllTopicsScreen> {
                 ),
                 title: Text(
                   display,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style:  TextStyle(
+                    color: VTheme.onBrand(context),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                trailing: const Icon(
+                trailing:  Icon(
                   Icons.chevron_right,
-                  color: VirelloColors.boardTextSec,
+                  color: VTheme.textSec(context),
                 ),
                 onTap: () {
                   Navigator.of(context).push(

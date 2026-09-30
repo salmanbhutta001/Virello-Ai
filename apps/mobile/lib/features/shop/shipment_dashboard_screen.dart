@@ -120,14 +120,14 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
                   child: Column(
                     children: [
-                      const Icon(Icons.shopping_bag_outlined,
-                          size: 40, color: VirelloColors.boardTextSec),
+                       Icon(Icons.shopping_bag_outlined,
+                          size: 40, color: VTheme.textSec(context)),
                       const SizedBox(height: 10),
                       Text(s.p10NoProductsForCampaign,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 13,
-                              color: VirelloColors.boardTextSec,
+                              color: VTheme.textSec(context),
                               height: 1.5)),
                     ],
                   ),
@@ -180,10 +180,10 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
                 Text('${p['title'] ?? ''}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 const SizedBox(height: 4),
                 Text(_priceLabel(p),
                     style: const TextStyle(
@@ -193,7 +193,7 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: VirelloColors.boardTextSec),
+          Icon(Icons.chevron_right, color: VTheme.textSec(context)),
         ],
       ),
     );
@@ -204,11 +204,11 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(Icons.shopping_bag_outlined,
-          color: VirelloColors.boardTextSec),
+      child:  Icon(Icons.shopping_bag_outlined,
+          color: VTheme.textSec(context)),
     );
   }
 
@@ -233,16 +233,16 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
               const SizedBox(height: 14),
               Text(s.p10NoShipments,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.onBrand(context))),
               const SizedBox(height: 8),
               Text(s.p10NoShipmentsHint,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 13,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                       height: 1.5)),
             ],
           ),

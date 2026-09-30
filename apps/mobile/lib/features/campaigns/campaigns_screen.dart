@@ -89,17 +89,17 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
-        title: Text(s.delete, style: const TextStyle(color: Colors.white)),
+        backgroundColor: VTheme.card(context),
+        title: Text(s.delete, style:  TextStyle(color: VTheme.text(context))),
         content: Text(
           s.deleteCampaignConfirm,
-          style: const TextStyle(color: VirelloColors.boardTextSec),
+          style: TextStyle(color: VTheme.textSec(context)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dctx).pop(false),
             child: Text(s.cancel,
-                style: const TextStyle(color: VirelloColors.boardTextSec)),
+                style: TextStyle(color: VTheme.textSec(context))),
           ),
           TextButton(
             onPressed: () => Navigator.of(dctx).pop(true),
@@ -146,7 +146,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         CampaignStatus.live => const Color(0xFF22C55E),
         CampaignStatus.optimizing => const Color(0xFF60A5FA),
         CampaignStatus.paused => const Color(0xFFF59E0B),
-        CampaignStatus.completed => VirelloColors.boardTextSec,
+        CampaignStatus.completed => VTheme.textSec(context),
         _ => VirelloColors.pink,
       };
 
@@ -198,7 +198,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           PopupMenuButton<String>(
             tooltip: s.p10MoreGrowTools,
             icon: const Icon(Icons.more_vert),
-            color: VirelloColors.boardSurface,
+            color: VTheme.card(context),
             onSelected: _openTool,
             itemBuilder: (_) => [
               _menuItem('agent', Icons.psychology_outlined, s.p10ProductPanel),
@@ -272,7 +272,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     child: Text(s.nothingHere,
                         textAlign: TextAlign.center,
                         style:
-                            const TextStyle(color: VirelloColors.boardTextSec)),
+                            TextStyle(color: VTheme.textSec(context))),
                   )
                 else
                   for (final cp in items) ...[
@@ -294,7 +294,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         children: [
           Icon(icon, size: 20, color: VirelloColors.pink),
           const SizedBox(width: 12),
-          Text(label, style: const TextStyle(color: Colors.white)),
+          Text(label, style:  TextStyle(color: VTheme.text(context))),
         ],
       ),
     );
@@ -328,19 +328,19 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               gradient: VirelloColors.brandGradient,
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Icon(Icons.rocket_launch_outlined,
-                color: Colors.white, size: 40),
+            child:  Icon(Icons.rocket_launch_outlined,
+                color: VTheme.onBrand(context), size: 40),
           ),
           const SizedBox(height: 16),
           Text(s.noCampaigns,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
           const SizedBox(height: 6),
           Text(s.noCampaignsHint,
-              style: const TextStyle(
-                  color: VirelloColors.boardTextSec, fontSize: 13),
+              style:  TextStyle(
+                  color: VTheme.textSec(context), fontSize: 13),
               textAlign: TextAlign.center),
           const SizedBox(height: 18),
           VPinkButton(
@@ -381,10 +381,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 Text(cp.title.isEmpty ? cp.postUrl : cp.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 const SizedBox(height: 4),
                 Row(children: [
                   Container(
@@ -403,8 +403,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     const SizedBox(width: 10),
                     Text(
                         '${s.p10Reach} ${_fmt(cp.reach)} · ${cp.engagementRate.toStringAsFixed(1)}%',
-                        style: const TextStyle(
-                            fontSize: 11, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 11, color: VTheme.textSec(context))),
                   ],
                 ]),
                 if (cp.budgetUsd > 0) ...[
@@ -414,7 +414,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     child: LinearProgressIndicator(
                       value: (cp.spendUsd / cp.budgetUsd).clamp(0.0, 1.0),
                       minHeight: 5,
-                      backgroundColor: VirelloColors.boardField,
+                      backgroundColor: VTheme.chip(context),
                       valueColor:
                           const AlwaysStoppedAnimation(VirelloColors.pink),
                     ),
@@ -425,8 +425,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.more_vert,
-                size: 20, color: VirelloColors.boardTextSec),
+            icon:  Icon(Icons.more_vert,
+                size: 20, color: VTheme.textSec(context)),
             onPressed: () => _showActions(cp),
           ),
         ],
@@ -524,10 +524,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(s.campInsightsTitle,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white)),
+                    color: VTheme.text(context))),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -573,18 +573,18 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(ins,
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 13,
                             height: 1.5,
-                            color: Colors.white)),
+                            color: VTheme.text(context))),
                   ),
                 ],
               ),
             )
         else
           Text(s.campInsightsEmpty,
-              style: const TextStyle(
-                  fontSize: 12.5, color: VirelloColors.boardTextSec)),
+              style:  TextStyle(
+                  fontSize: 12.5, color: VTheme.textSec(context))),
         const SizedBox(height: 4),
         TextButton.icon(
           onPressed: _insightWorking
@@ -610,7 +610,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         cp.status == CampaignStatus.optimizing;
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -624,10 +624,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               Text(cp.title.isEmpty ? cp.postUrl : cp.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.text(context))),
               const SizedBox(height: 4),
               Text(_statusLabel(cp.status),
                   style: TextStyle(
@@ -643,7 +643,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     MyPostStrings(
                             Localizations.localeOf(context).languageCode)
                         .editCampaign,
-                    style: const TextStyle(color: Colors.white)),
+                    style:  TextStyle(color: VTheme.text(context))),
                 onTap: () {
                   Navigator.of(context).pop();
                   _editCampaign(cp);
@@ -654,7 +654,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 leading: const Icon(Icons.psychology_outlined,
                     color: VirelloColors.pink),
                 title: Text(s.growthEngine,
-                    style: const TextStyle(color: Colors.white)),
+                    style:  TextStyle(color: VTheme.text(context))),
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).push(MaterialPageRoute(
@@ -669,7 +669,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 leading: const Icon(Icons.auto_fix_high_outlined,
                     color: VirelloColors.pink),
                 title: Text(s.p10OptRecommendations,
-                    style: const TextStyle(color: Colors.white)),
+                    style:  TextStyle(color: VTheme.text(context))),
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).push(MaterialPageRoute(
@@ -682,7 +682,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 leading:
                     const Icon(Icons.share_outlined, color: VirelloColors.pink),
                 title:
-                    const Text('Share', style: TextStyle(color: Colors.white)),
+                     Text('Share', style: TextStyle(color: VTheme.text(context))),
                 onTap: () {
                   Navigator.of(context).pop();
                   _shareCampaign(cp);
@@ -694,7 +694,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   leading: const Icon(Icons.pause_outlined,
                       color: VirelloColors.pink),
                   title: Text(s.pause,
-                      style: const TextStyle(color: Colors.white)),
+                      style:  TextStyle(color: VTheme.text(context))),
                   onTap: () {
                     Navigator.of(context).pop();
                     _pause(cp);
@@ -729,7 +729,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -746,21 +746,21 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(ps.editCampaign,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.text(context))),
               const SizedBox(height: 14),
               TextField(
                 controller: titleCtrl,
-                style: const TextStyle(color: Colors.white),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   labelText: ps.titleLabel,
-                  labelStyle: const TextStyle(
-                      color: VirelloColors.boardTextSec),
-                  enabledBorder: const OutlineInputBorder(
+                  labelStyle:  TextStyle(
+                      color: VTheme.textSec(context)),
+                  enabledBorder:  OutlineInputBorder(
                       borderSide: BorderSide(
-                          color: VirelloColors.boardField)),
+                          color: VTheme.chip(context))),
                   focusedBorder: const OutlineInputBorder(
                       borderSide:
                           BorderSide(color: VirelloColors.pink)),
@@ -769,15 +769,15 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<CampaignGoal>(
                 initialValue: goal,
-                dropdownColor: VirelloColors.boardSurface,
-                style: const TextStyle(color: Colors.white),
+                dropdownColor: VTheme.card(context),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   labelText: ps.goalLabel,
-                  labelStyle: const TextStyle(
-                      color: VirelloColors.boardTextSec),
-                  enabledBorder: const OutlineInputBorder(
+                  labelStyle:  TextStyle(
+                      color: VTheme.textSec(context)),
+                  enabledBorder:  OutlineInputBorder(
                       borderSide: BorderSide(
-                          color: VirelloColors.boardField)),
+                          color: VTheme.chip(context))),
                 ),
                 items: CampaignGoal.values
                     .map((g) => DropdownMenuItem(
@@ -792,14 +792,14 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 controller: budgetCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: Colors.white),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   labelText: s.budgetLabel,
-                  labelStyle: const TextStyle(
-                      color: VirelloColors.boardTextSec),
-                  enabledBorder: const OutlineInputBorder(
+                  labelStyle:  TextStyle(
+                      color: VTheme.textSec(context)),
+                  enabledBorder:  OutlineInputBorder(
                       borderSide: BorderSide(
-                          color: VirelloColors.boardField)),
+                          color: VTheme.chip(context))),
                   focusedBorder: const OutlineInputBorder(
                       borderSide:
                           BorderSide(color: VirelloColors.pink)),
@@ -857,7 +857,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       if (!mounted || shareUrl.isEmpty) return;
       showModalBottomSheet(
         context: context,
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -867,30 +867,30 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Share Campaign',
+               Text('Share Campaign',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.text(context))),
               const SizedBox(height: 8),
-              const Text(
+               Text(
                 'Share this trackable link. Every real person who opens it is counted as a genuine click.',
                 style:
-                    TextStyle(fontSize: 13, color: VirelloColors.boardTextSec),
+                    TextStyle(fontSize: 13, color: VTheme.textSec(context)),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: VirelloColors.boardField,
+                  color: VTheme.chip(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(shareUrl,
-                          style: const TextStyle(
-                              fontSize: 13, color: Colors.white),
+                          style:  TextStyle(
+                              fontSize: 13, color: VTheme.text(context)),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis),
                     ),
@@ -942,9 +942,9 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
       showDialog(
         context: context,
         builder: (dctx) => AlertDialog(
-          backgroundColor: VirelloColors.boardSurface,
-          title: const Text('Real Campaign Stats',
-              style: TextStyle(color: Colors.white)),
+          backgroundColor: VTheme.card(context),
+          title:  Text('Real Campaign Stats',
+              style: TextStyle(color: VTheme.text(context))),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,10 +953,10 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               _statRow('Clicks', '${stats['clicks'] ?? 0}'),
               _statRow('Impressions', '${stats['impressions'] ?? 0}'),
               const SizedBox(height: 8),
-              const Text(
+               Text(
                 'Only genuine visits are counted. Zero means no one has opened your link yet — share it!',
                 style:
-                    TextStyle(fontSize: 12, color: VirelloColors.boardTextSec),
+                    TextStyle(fontSize: 12, color: VTheme.textSec(context)),
               ),
             ],
           ),
@@ -978,13 +978,13 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: const TextStyle(
-                    fontSize: 14, color: VirelloColors.boardTextSec)),
+                style:  TextStyle(
+                    fontSize: 14, color: VTheme.textSec(context))),
             Text(value,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white)),
+                    color: VTheme.text(context))),
           ],
         ),
       );

@@ -215,15 +215,15 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
       decoration: BoxDecoration(
         color: detected
             ? VirelloColors.pink.withValues(alpha: 0.12)
-            : VirelloColors.boardField,
+            : VTheme.chip(context),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-            color: detected ? VirelloColors.pink : VirelloColors.boardBorder),
+            color: detected ? VirelloColors.pink : VTheme.divider(context)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(detected ? Icons.check_circle : Icons.link,
             size: 16,
-            color: detected ? VirelloColors.pink : VirelloColors.boardTextSec),
+            color: detected ? VirelloColors.pink : VTheme.textSec(context)),
         const SizedBox(width: 6),
         Text(_platform,
             style: TextStyle(
@@ -231,7 +231,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
                 fontWeight: FontWeight.w700,
                 color: detected
                     ? VirelloColors.pink
-                    : VirelloColors.boardTextSec)),
+                    : VTheme.textSec(context))),
       ]),
     );
   }
@@ -253,10 +253,10 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
             children: [
               Text(
                 s.p10Analyzing,
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: VTheme.text(context),
                 ),
               ),
               const SizedBox(height: 24),
@@ -283,8 +283,8 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
                                       color: VirelloColors.pink,
                                     ),
                                   )
-                                : const Icon(Icons.check,
-                                    color: VirelloColors.boardBorder, size: 22),
+                                :  Icon(Icons.check,
+                                    color: VTheme.divider(context), size: 22),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -296,7 +296,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
                                 done ? FontWeight.w600 : FontWeight.w400,
                             color: done || active
                                 ? Colors.white
-                                : VirelloColors.boardTextSec,
+                                : VTheme.textSec(context),
                           ),
                         ),
                       ),
@@ -314,7 +314,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen>
           TextButton(
             onPressed: _reset,
             child: Text(s.p10Retype,
-                style: const TextStyle(color: VirelloColors.boardTextSec)),
+                style: TextStyle(color: VTheme.textSec(context))),
           ),
         ] else
           const SizedBox(height: 8),
@@ -355,10 +355,10 @@ class _PinkRing extends StatelessWidget {
               ),
               Text(
                 '${v.round()}%',
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: VTheme.onBrand(context),
                 ),
               ),
             ],

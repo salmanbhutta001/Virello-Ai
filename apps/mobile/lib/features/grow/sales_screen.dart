@@ -95,15 +95,15 @@ class _SalesScreenState extends State<SalesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+           Text(
             '\$0.00',
             style: TextStyle(
-                fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white),
+                fontSize: 40, fontWeight: FontWeight.w900, color: VTheme.text(context)),
           ),
           const SizedBox(height: 4),
           Text(s.p10TotalRevenue,
-              style: const TextStyle(
-                  fontSize: 13, color: VirelloColors.boardTextSec)),
+              style:  TextStyle(
+                  fontSize: 13, color: VTheme.textSec(context))),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -122,21 +122,21 @@ class _SalesScreenState extends State<SalesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: VirelloColors.boardField,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Column(
           children: [
             Text(value,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white)),
+                    color: VTheme.text(context))),
             const SizedBox(height: 2),
             Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: VirelloColors.boardTextSec)),
+                style:  TextStyle(
+                    fontSize: 11, color: VTheme.textSec(context))),
           ],
         ),
       ),
@@ -152,10 +152,10 @@ class _SalesScreenState extends State<SalesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(s.p10TotalRevenue,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
           const SizedBox(height: 16),
           SizedBox(
             height: 120,
@@ -168,9 +168,9 @@ class _SalesScreenState extends State<SalesScreen> {
                   width: 22,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardField,
+                    color: VTheme.chip(context),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: VirelloColors.boardBorder),
+                    border: Border.all(color: VTheme.divider(context)),
                   ),
                 ),
               ),
@@ -179,8 +179,8 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(height: 12),
           Center(
             child: Text(s.p10NoSalesYet,
-                style: const TextStyle(
-                    fontSize: 12, color: VirelloColors.boardTextSec)),
+                style:  TextStyle(
+                    fontSize: 12, color: VTheme.textSec(context))),
           ),
         ],
       ),
@@ -197,9 +197,9 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(s.p10NoSalesHint,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 12,
-                    color: VirelloColors.boardTextSec,
+                    color: VTheme.textSec(context),
                     height: 1.5)),
           ),
         ],
@@ -214,10 +214,10 @@ class _SalesScreenState extends State<SalesScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(s.p10Payments,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
         ),
         for (final t in _payments)
           Padding(
@@ -242,14 +242,14 @@ class _SalesScreenState extends State<SalesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('${t['kind'] ?? ''} · ${t['provider'] ?? ''}',
-                            style: const TextStyle(
+                            style:  TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white)),
+                                color: VTheme.text(context))),
                         Text('${t['created_at'] ?? ''}',
-                            style: const TextStyle(
+                            style:  TextStyle(
                                 fontSize: 11.5,
-                                color: VirelloColors.boardTextSec)),
+                                color: VTheme.textSec(context))),
                       ],
                     ),
                   ),
@@ -258,14 +258,14 @@ class _SalesScreenState extends State<SalesScreen> {
                     children: [
                       Text(
                         '\$${((t['amount'] as num?) ?? 0).toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white),
+                            color: VTheme.text(context)),
                       ),
                       Text('${t['status'] ?? ''}',
-                          style: const TextStyle(
-                              fontSize: 11, color: VirelloColors.boardTextSec)),
+                          style:  TextStyle(
+                              fontSize: 11, color: VTheme.textSec(context))),
                     ],
                   ),
                 ],

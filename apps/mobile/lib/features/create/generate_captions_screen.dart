@@ -315,12 +315,12 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                       ),
                     ),
                     child: _working
-                        ? const SizedBox(
+                        ?  SizedBox(
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: VTheme.text(context),
                             ),
                           )
                         : Text(
@@ -410,9 +410,9 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                               ),
                             ),
                             child: checked
-                                ? const Icon(
+                                ?  Icon(
                                     Icons.check_rounded,
-                                    color: Colors.white,
+                                    color: VTheme.onBrand(context),
                                     size: 16,
                                   )
                                 : null,
@@ -488,12 +488,12 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                               ),
                             ),
                             icon: _sharing
-                                ? const SizedBox(
+                                ?  SizedBox(
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: VTheme.text(context),
                                     ),
                                   )
                                 : const Icon(Icons.share_outlined, size: 18),

@@ -58,9 +58,9 @@ class ShoppableProducts extends StatelessWidget {
         margin: const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: VirelloColors.boardField,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Row(
           children: [
@@ -72,9 +72,9 @@ class ShoppableProducts extends StatelessWidget {
                       width: 48,
                       height: 48,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => _ph(48, 48),
+                      errorBuilder: (_, __, ___) => _ph(context, 48, 48),
                     )
-                  : _ph(48, 48),
+                  : _ph(context, 48, 48),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -165,9 +165,9 @@ class ShoppableProducts extends StatelessWidget {
             child: Container(
               width: 150,
               decoration: BoxDecoration(
-                color: VirelloColors.boardSurface,
+                color: VTheme.card(context),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: VirelloColors.boardBorder),
+                border: Border.all(color: VTheme.divider(context)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,9 +184,9 @@ class ShoppableProducts extends StatelessWidget {
                                 height: 104,
                                 width: 150,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => _ph(150, 104),
+                                errorBuilder: (_, __, ___) => _ph(context, 150, 104),
                               )
-                            : _ph(150, 104),
+                            : _ph(context, 150, 104),
                         Positioned(
                           top: 6,
                           left: 6,
@@ -201,10 +201,10 @@ class ShoppableProducts extends StatelessWidget {
                             ),
                             child: Text(
                               s.sponsored,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: VTheme.text(context),
                               ),
                             ),
                           ),
@@ -270,10 +270,10 @@ class ShoppableProducts extends StatelessWidget {
     );
   }
 
-  Widget _ph(double w, double h) => Container(
+  Widget _ph(BuildContext context, double w, double h) => Container(
         width: w,
         height: h,
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         child: const Center(
           child: Icon(
             Icons.shopping_bag_outlined,

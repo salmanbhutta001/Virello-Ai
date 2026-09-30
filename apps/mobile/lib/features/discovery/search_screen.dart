@@ -128,7 +128,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final tabs = [s.boardAll, s.boardPosts, s.boardProductsTab, s.boardUsers];
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -165,23 +165,23 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+            icon:  Icon(Icons.arrow_back, color: VTheme.text(context), size: 22),
             onPressed: () => Navigator.of(context).pop(),
           ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: VirelloColors.boardField,
+                color: VTheme.chip(context),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: VirelloColors.boardBorder),
+                border: Border.all(color: VTheme.divider(context)),
               ),
               child: Row(
                 children: [
-                  const Padding(
+                   Padding(
                     padding: EdgeInsets.only(left: 14),
                     child: Icon(
                       Icons.search,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                       size: 22,
                     ),
                   ),
@@ -189,14 +189,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: TextField(
                       controller: _ctrl,
                       autofocus: true,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
                         hintText: s.boardSearchHint,
-                        hintStyle: const TextStyle(
-                          color: VirelloColors.boardTextSec,
+                        hintStyle:  TextStyle(
+                          color: VTheme.textSec(context),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -230,9 +230,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             color: VirelloColors.pink,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child:  Icon(
                             Icons.close,
-                            color: Colors.white,
+                            color: VTheme.onBrand(context),
                             size: 18,
                           ),
                         ),
@@ -270,19 +270,19 @@ class _SearchScreenState extends State<SearchScreen> {
                   decoration: BoxDecoration(
                     color: _tab == i
                         ? VirelloColors.pink
-                        : VirelloColors.boardField,
+                        : VTheme.chip(context),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
                       color: _tab == i
                           ? VirelloColors.pink
-                          : VirelloColors.boardBorder,
+                          : VTheme.divider(context),
                     ),
                   ),
                   child: Text(
                     tabs[i],
                     style: TextStyle(
                       color:
-                          _tab == i ? Colors.white : VirelloColors.boardTextSec,
+                          _tab == i ? Colors.white : VTheme.textSec(context),
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -303,7 +303,7 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: trends.length,
       separatorBuilder: (_, __) =>
-          const Divider(color: VirelloColors.boardBorder, height: 1),
+          Divider(color: VTheme.divider(context), height: 1),
       itemBuilder: (_, i) {
         final q = '${trends[i]['query'] ?? ''}';
         return InkWell(
@@ -316,26 +316,26 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.symmetric(vertical: 13),
             child: Row(
               children: [
-                const Icon(
+                 Icon(
                   Icons.history,
-                  color: VirelloColors.boardTextSec,
+                  color: VTheme.textSec(context),
                   size: 20,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     q,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.text(context),
                       fontSize: 15,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Icon(
+                 Icon(
                   Icons.north_west,
-                  color: VirelloColors.boardTextSec,
+                  color: VTheme.textSec(context),
                   size: 18,
                 ),
               ],
@@ -412,8 +412,8 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.only(bottom: 6, top: 6),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style:  TextStyle(
+          color: VTheme.text(context),
           fontSize: 15,
           fontWeight: FontWeight.w800,
         ),
@@ -427,7 +427,7 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: posts.length,
       separatorBuilder: (_, __) =>
-          const Divider(color: VirelloColors.boardBorder, height: 1),
+          Divider(color: VTheme.divider(context), height: 1),
       itemBuilder: (_, i) => _postRow(posts[i]),
     );
   }
@@ -445,21 +445,21 @@ class _SearchScreenState extends State<SearchScreen> {
               height: 52,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: VirelloColors.boardField,
+                color: VTheme.chip(context),
               ),
               clipBehavior: Clip.antiAlias,
               child: item.thumbnailUrl.isNotEmpty
                   ? Image.network(
                       item.thumbnailUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, __, ___) =>  Icon(
                         Icons.image_outlined,
-                        color: VirelloColors.boardTextSec,
+                        color: VTheme.textSec(context),
                       ),
                     )
-                  : const Icon(
+                  :  Icon(
                       Icons.image_outlined,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
             ),
             const SizedBox(width: 12),
@@ -471,8 +471,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: VTheme.text(context),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -480,8 +480,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(height: 3),
                   Text(
                     item.platform.isEmpty ? item.postType : item.platform,
-                    style: const TextStyle(
-                      color: VirelloColors.boardTextSec,
+                    style:  TextStyle(
+                      color: VTheme.textSec(context),
                       fontSize: 12,
                     ),
                   ),
@@ -505,7 +505,7 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: _productResults.length,
       separatorBuilder: (_, __) =>
-          const Divider(color: VirelloColors.boardBorder, height: 1),
+          Divider(color: VTheme.divider(context), height: 1),
       itemBuilder: (_, i) => _productRow(_productResults[i]),
     );
   }
@@ -524,21 +524,21 @@ class _SearchScreenState extends State<SearchScreen> {
             height: 52,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: VirelloColors.boardField,
+              color: VTheme.chip(context),
             ),
             clipBehavior: Clip.antiAlias,
             child: img.isNotEmpty
                 ? Image.network(
                     img,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (_, __, ___) =>  Icon(
                       Icons.shopping_bag_outlined,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                   )
-                : const Icon(
+                :  Icon(
                     Icons.shopping_bag_outlined,
-                    color: VirelloColors.boardTextSec,
+                    color: VTheme.textSec(context),
                   ),
           ),
           const SizedBox(width: 12),
@@ -550,8 +550,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style:  TextStyle(
+                    color: VTheme.text(context),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -581,7 +581,7 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: users.length,
       separatorBuilder: (_, __) =>
-          const Divider(color: VirelloColors.boardBorder, height: 1),
+          Divider(color: VTheme.divider(context), height: 1),
       itemBuilder: (_, i) => _userRow(users[i]),
     );
   }
@@ -608,8 +608,8 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             child: Text(
               initial,
-              style: const TextStyle(
-                color: Colors.white,
+              style:  TextStyle(
+                color: VTheme.onBrand(context),
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
               ),
@@ -622,17 +622,17 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style:  TextStyle(
+                    color: VTheme.text(context),
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                 ),
                 Text(
                   '@$handle',
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 12,
-                    color: VirelloColors.boardTextSec,
+                    color: VTheme.textSec(context),
                   ),
                 ),
               ],
@@ -648,10 +648,10 @@ class _SearchScreenState extends State<SearchScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Icon(
+         Icon(
           Icons.search_off_outlined,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -659,9 +659,9 @@ class _SearchScreenState extends State<SearchScreen> {
           child: Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

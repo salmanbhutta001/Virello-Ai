@@ -105,7 +105,7 @@ class _MultilingualAudienceScreenState
                     child: Text(s.boardNoResults,
                         textAlign: TextAlign.center,
                         style:
-                            const TextStyle(color: VirelloColors.boardTextSec)),
+                            TextStyle(color: VTheme.textSec(context))),
                   )
                 else
                   for (final l in langs) ...[
@@ -131,8 +131,8 @@ class _MultilingualAudienceScreenState
           Expanded(
             child: Text(
               s.p10LangStatsNote,
-              style: const TextStyle(
-                  fontSize: 12, color: VirelloColors.boardTextSec, height: 1.5),
+              style:  TextStyle(
+                  fontSize: 12, color: VTheme.textSec(context), height: 1.5),
             ),
           ),
         ],
@@ -155,14 +155,14 @@ class _MultilingualAudienceScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(nameEn,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 if (nameNative.isNotEmpty && nameNative != nameEn)
                   Text(nameNative,
-                      style: const TextStyle(
-                          fontSize: 12.5, color: VirelloColors.boardTextSec)),
+                      style:  TextStyle(
+                          fontSize: 12.5, color: VTheme.textSec(context))),
               ],
             ),
           ),
@@ -171,7 +171,7 @@ class _MultilingualAudienceScreenState
             onPressed: () => _showDetails(l),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
-              side: const BorderSide(color: VirelloColors.boardBorder),
+              side: BorderSide(color: VTheme.divider(context)),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -188,7 +188,7 @@ class _MultilingualAudienceScreenState
     final regions = ((l['regions'] as List?) ?? []).join(', ');
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -208,14 +208,14 @@ class _MultilingualAudienceScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('${l['name_en'] ?? ''}',
-                            style: const TextStyle(
+                            style:  TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white)),
+                                color: VTheme.text(context))),
                         Text('${l['name_native'] ?? ''}',
-                            style: const TextStyle(
+                            style:  TextStyle(
                                 fontSize: 13,
-                                color: VirelloColors.boardTextSec)),
+                                color: VTheme.textSec(context))),
                       ],
                     ),
                   ),
@@ -239,13 +239,13 @@ class _MultilingualAudienceScreenState
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: RichText(
           text: TextSpan(
-            style: const TextStyle(
-                fontSize: 13, color: VirelloColors.boardTextSec),
+            style:  TextStyle(
+                fontSize: 13, color: VTheme.textSec(context)),
             children: [
               TextSpan(
                   text: '$label: ',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, color: Colors.white)),
+                  style:  TextStyle(
+                      fontWeight: FontWeight.w700, color: VTheme.text(context))),
               TextSpan(text: value),
             ],
           ),

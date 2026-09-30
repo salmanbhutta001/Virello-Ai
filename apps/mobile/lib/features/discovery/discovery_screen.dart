@@ -99,7 +99,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final tabs = [s.boardForYou, s.boardTrending, s.boardAllPosts];
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,7 +111,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               child: RefreshIndicator(
                 onRefresh: _refresh,
                 color: VirelloColors.pink,
-                backgroundColor: VirelloColors.boardSurface,
+                backgroundColor: VTheme.card(context),
                 child: FutureBuilder<_DiscoverData>(
                   future: _future,
                   builder: (context, snap) {
@@ -145,8 +145,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           Expanded(
             child: Text(
               s.boardDiscover,
-              style: const TextStyle(
-                color: Colors.white,
+              style:  TextStyle(
+                color: VTheme.text(context),
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
               ),
@@ -182,11 +182,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: VirelloColors.boardField,
+          color: VTheme.chip(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
+        child: Icon(icon, color: VTheme.text(context), size: 20),
       ),
     );
   }
@@ -208,19 +208,19 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 ),
                 decoration: BoxDecoration(
                   color:
-                      _tab == i ? VirelloColors.pink : VirelloColors.boardField,
+                      _tab == i ? VirelloColors.pink : VTheme.chip(context),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: _tab == i
                         ? VirelloColors.pink
-                        : VirelloColors.boardBorder,
+                        : VTheme.divider(context),
                   ),
                 ),
                 child: Text(
                   tabs[i],
                   style: TextStyle(
                     color:
-                        _tab == i ? Colors.white : VirelloColors.boardTextSec,
+                        _tab == i ? Colors.white : VTheme.textSec(context),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -317,9 +317,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           decoration: BoxDecoration(
-            color: VirelloColors.boardSurface,
+            color: VTheme.card(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: VirelloColors.boardBorder),
+            border: Border.all(color: VTheme.divider(context)),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -345,8 +345,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -417,8 +417,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
+        style:  TextStyle(
+          color: VTheme.text(context),
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
@@ -440,8 +440,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   size: 18, color: VirelloColors.pink),
               const SizedBox(width: 6),
               Text(s.shopTrendingProducts,
-                  style: const TextStyle(fontSize: 17,
-                      fontWeight: FontWeight.w800, color: Colors.white)),
+                  style:  TextStyle(fontSize: 17,
+                      fontWeight: FontWeight.w800, color: VTheme.text(context))),
             ],
           ),
           const SizedBox(height: 12),
@@ -461,8 +461,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   size: 18, color: VirelloColors.pink),
               const SizedBox(width: 6),
               Text(s.boardTrendingTopics,
-                  style: const TextStyle(fontSize: 17,
-                      fontWeight: FontWeight.w800, color: Colors.white)),
+                  style:  TextStyle(fontSize: 17,
+                      fontWeight: FontWeight.w800, color: VTheme.text(context))),
             ],
           ),
           const SizedBox(height: 12),
@@ -485,9 +485,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       child: Container(
         width: 150,
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,14 +500,14 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       width: 150, height: 120, fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                           width: 150, height: 120,
-                          color: VirelloColors.boardField,
-                          child: const Icon(Icons.shopping_bag_outlined,
-                              color: VirelloColors.boardTextSec)))
+                          color: VTheme.chip(context),
+                          child:  Icon(Icons.shopping_bag_outlined,
+                              color: VTheme.textSec(context))))
                   : Container(
                       width: 150, height: 120,
-                      color: VirelloColors.boardField,
-                      child: const Icon(Icons.shopping_bag_outlined,
-                          color: VirelloColors.boardTextSec)),
+                      color: VTheme.chip(context),
+                      child:  Icon(Icons.shopping_bag_outlined,
+                          color: VTheme.textSec(context))),
             ),
             Padding(
               padding: const EdgeInsets.all(8),
@@ -522,8 +522,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   const SizedBox(height: 2),
                   Text(title,
                       maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12,
-                          color: Colors.white, fontWeight: FontWeight.w600)),
+                      style:  TextStyle(fontSize: 12,
+                          color: VTheme.onBrand(context), fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -568,9 +568,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           decoration: BoxDecoration(
-            color: VirelloColors.boardSurface,
+            color: VTheme.card(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: VirelloColors.boardBorder),
+            border: Border.all(color: VTheme.divider(context)),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -596,8 +596,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       query,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -617,8 +617,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                               detail,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: VirelloColors.boardTextSec,
+                              style:  TextStyle(
+                                color: VTheme.textSec(context),
                                 fontSize: 11,
                               ),
                             ),
@@ -688,10 +688,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.18),
-        const Icon(
+         Icon(
           Icons.explore_outlined,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -699,9 +699,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           child: Text(
             s.nothingHere,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),
@@ -714,10 +714,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.18),
-        const Icon(
+         Icon(
           Icons.wifi_off_outlined,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -725,9 +725,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           child: Text(
             s.analyzeFailed,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

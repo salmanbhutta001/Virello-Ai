@@ -136,16 +136,16 @@ class _AudienceIntelligenceScreenState
               ),
               const SizedBox(height: 14),
               Text(s.p10NoSegments,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.onBrand(context))),
               const SizedBox(height: 8),
               Text(s.p10NoSegmentsHint,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 13,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                       height: 1.5)),
             ],
           ),
@@ -175,7 +175,7 @@ class _AudienceIntelligenceScreenState
             height: 46,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child:
-                const Icon(Icons.group_outlined, color: Colors.white, size: 22),
+                 Icon(Icons.group_outlined, color: VTheme.text(context), size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -185,27 +185,27 @@ class _AudienceIntelligenceScreenState
                 Text(seg.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 if (seg.path.isNotEmpty && seg.path != seg.name) ...[
                   const SizedBox(height: 2),
                   Text(seg.path,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                      style:  TextStyle(
+                          fontSize: 11.5, color: VTheme.textSec(context))),
                 ],
               ],
             ),
           ),
           const SizedBox(width: 8),
           Text(pct,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
         ],
       ),
     );
@@ -220,7 +220,7 @@ class _AudienceIntelligenceScreenState
   void _showDetail(AudienceSegment seg, Color color) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -239,30 +239,30 @@ class _AudienceIntelligenceScreenState
                       height: 46,
                       decoration:
                           BoxDecoration(color: color, shape: BoxShape.circle),
-                      child: const Icon(Icons.group_outlined,
-                          color: Colors.white, size: 22),
+                      child:  Icon(Icons.group_outlined,
+                          color: VTheme.text(context), size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(seg.name,
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white)),
+                              color: VTheme.text(context))),
                     ),
                     Text('${(seg.confidence * 100).round()}%',
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white)),
+                            color: VTheme.text(context))),
                   ],
                 ),
                 const SizedBox(height: 14),
                 if (seg.explanation.isNotEmpty)
                   Text(seg.explanation,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 13,
-                          color: VirelloColors.boardTextSec,
+                          color: VTheme.textSec(context),
                           height: 1.5)),
                 if (seg.geography.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -279,17 +279,17 @@ class _AudienceIntelligenceScreenState
                 if (seg.sourceBreakdown.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(s.aiSourceBreakdown,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, color: Colors.white)),
+                      style:  TextStyle(
+                          fontWeight: FontWeight.w700, color: VTheme.text(context))),
                   for (final b in seg.sourceBreakdown)
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Row(children: [
                         Expanded(
                             child: Text('${b['source'] ?? ''}',
-                                style: const TextStyle(
+                                style:  TextStyle(
                                     fontSize: 12,
-                                    color: VirelloColors.boardTextSec))),
+                                    color: VTheme.textSec(context)))),
                         SizedBox(
                           width: 110,
                           child: LinearProgressIndicator(
@@ -297,25 +297,25 @@ class _AudienceIntelligenceScreenState
                                 .toDouble()
                                 .clamp(0.0, 1.0),
                             minHeight: 7,
-                            backgroundColor: VirelloColors.boardField,
+                            backgroundColor: VTheme.chip(context),
                             valueColor: AlwaysStoppedAnimation<Color>(color),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                             '${((((b['contribution'] as num?) ?? 0).toDouble()) * 100).round()}%',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.white)),
+                            style:  TextStyle(
+                                fontSize: 12, color: VTheme.text(context))),
                       ]),
                     ),
                 ],
                 if (seg.disclaimer.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Text(seg.disclaimer,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
-                          color: VirelloColors.boardTextSec)),
+                          color: VTheme.textSec(context))),
                 ],
               ],
             ),
@@ -327,13 +327,13 @@ class _AudienceIntelligenceScreenState
 
   Widget _meta(String label, String value) => RichText(
         text: TextSpan(
-          style: const TextStyle(
-              fontSize: 12.5, color: VirelloColors.boardTextSec),
+          style:  TextStyle(
+              fontSize: 12.5, color: VTheme.textSec(context)),
           children: [
             TextSpan(
                 text: '$label: ',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, color: Colors.white)),
+                style:  TextStyle(
+                    fontWeight: FontWeight.w700, color: VTheme.text(context))),
             TextSpan(text: value),
           ],
         ),

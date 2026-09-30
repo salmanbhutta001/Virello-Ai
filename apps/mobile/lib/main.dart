@@ -338,7 +338,7 @@ class _RootShellState extends State<RootShell> {
               ),
             ],
           ),
-          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26),
+          child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 26),
         ),
       ),
     );
@@ -355,13 +355,13 @@ class _RootShellState extends State<RootShell> {
     ];
     return Container(
       decoration: BoxDecoration(
-        color: VirelloColors.boardBg,
-        border: const Border(
-          top: BorderSide(color: VirelloColors.boardBorder, width: 1),
+        color: VTheme.scaffold(context),
+        border: Border(
+          top: BorderSide(color: VTheme.divider(context), width: 1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -385,7 +385,7 @@ class _RootShellState extends State<RootShell> {
                         active ? it.activeIcon : it.icon,
                         color: active
                             ? VirelloColors.pink
-                            : VirelloColors.boardTextSec,
+                            : VTheme.textSec(context),
                         size: 24,
                       ),
                       const SizedBox(height: 3),
@@ -408,7 +408,7 @@ class _RootShellState extends State<RootShell> {
                               active ? FontWeight.w700 : FontWeight.w500,
                           color: active
                               ? VirelloColors.pink
-                              : VirelloColors.boardTextSec,
+                              : VTheme.textSec(context),
                         ),
                       ),
                     ],
@@ -446,7 +446,7 @@ class _RootShellState extends State<RootShell> {
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 26),
+            child:  Icon(Icons.add, color: VTheme.onBrand(context), size: 26),
           ),
         ),
       ),

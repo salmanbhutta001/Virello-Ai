@@ -17,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -45,8 +45,8 @@ class WelcomeScreen extends StatelessWidget {
               Text(
                 s.boardWelcomeTitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                 ),
@@ -55,8 +55,8 @@ class WelcomeScreen extends StatelessWidget {
               Text(
                 s.boardWelcomeDesc,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: VirelloColors.boardTextSec,
+                style:  TextStyle(
+                  color: VTheme.textSec(context),
                   fontSize: 14,
                   height: 1.6,
                 ),
@@ -71,9 +71,9 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text.rich(
                 TextSpan(
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 13.5,
-                    color: VirelloColors.boardTextSec,
+                    color: VTheme.textSec(context),
                   ),
                   children: [
                     TextSpan(text: s.alreadyHaveAccountQ),

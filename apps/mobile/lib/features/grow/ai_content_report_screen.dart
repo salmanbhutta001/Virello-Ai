@@ -131,15 +131,15 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(s.p10AiContentReport,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white)),
+                          color: VTheme.text(context))),
                   const SizedBox(height: 2),
                   Text(s.p10DayOverview,
                       style: TextStyle(
                           fontSize: 12.5,
-                          color: Colors.white.withValues(alpha: 0.75))),
+                          color: VTheme.text(context).withValues(alpha: 0.75))),
                 ],
               ),
             ),
@@ -197,13 +197,13 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
           Icon(icon, size: 18, color: VirelloColors.pink),
           const SizedBox(height: 8),
           Text(value,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 11.5, color: VirelloColors.boardTextSec)),
+              style:  TextStyle(
+                  fontSize: 11.5, color: VTheme.textSec(context))),
         ],
       ),
     );
@@ -219,10 +219,10 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(s.campaigns,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+                  color: VTheme.text(context))),
         ),
         for (final c in list.take(5)) ...[
           VBoardCard(
@@ -244,23 +244,23 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
                   child: Text(c.title.isEmpty ? c.postUrl : c.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white)),
+                          color: VTheme.onBrand(context))),
                 ),
                 const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(c.reach.toStringAsFixed(0),
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white)),
+                            color: VTheme.text(context))),
                     Text(s.p10Reach,
-                        style: const TextStyle(
-                            fontSize: 10, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 10, color: VTheme.textSec(context))),
                   ],
                 ),
               ],
@@ -271,10 +271,10 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(s.p10EstimateNote,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
-                  color: VirelloColors.boardTextSec)),
+                  color: VTheme.textSec(context))),
         ),
       ],
     );
@@ -297,16 +297,16 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
           ),
           const SizedBox(height: 14),
           Text(s.p10AiContentReport,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+                  color: VTheme.onBrand(context))),
           const SizedBox(height: 8),
           Text(s.p10ReportEmpty,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                   fontSize: 13,
-                  color: VirelloColors.boardTextSec,
+                  color: VTheme.textSec(context),
                   height: 1.5)),
         ],
       ),

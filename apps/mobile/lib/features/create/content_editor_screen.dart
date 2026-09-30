@@ -26,21 +26,21 @@ class ContentEditorScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VirelloColors.boardBorder),
+          side: BorderSide(color: VTheme.divider(context)),
         ),
         title: Text(
           tool,
-          style: const TextStyle(
-            color: Colors.white,
+          style:  TextStyle(
+            color: VTheme.text(context),
             fontWeight: FontWeight.w800,
           ),
         ),
         content: Text(
           s.boardProviderKeyNeeded,
-          style: const TextStyle(color: VirelloColors.boardTextSec),
+          style: TextStyle(color: VTheme.textSec(context)),
         ),
         actions: [
           TextButton(
@@ -68,7 +68,7 @@ class ContentEditorScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: VTheme.chip(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: VirelloColors.boardBorder),
+              border: Border.all(color: VTheme.divider(context)),
             ),
             child: Icon(icon, color: VirelloColors.pink, size: 24),
           ),
@@ -140,9 +140,9 @@ class ContentEditorScreen extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.55),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child:  Icon(
                           Icons.play_arrow_rounded,
-                          color: Colors.white,
+                          color: VTheme.onBrand(context),
                           size: 36,
                         ),
                       ),
@@ -182,10 +182,10 @@ class ContentEditorScreen extends StatelessWidget {
           // Bottom toolbar (board: Fonts, Photos, Music, Edit, Effects).
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            decoration: const BoxDecoration(
-              color: VirelloColors.boardSurface,
+            decoration:  BoxDecoration(
+              color: VTheme.card(context),
               border: Border(
-                top: BorderSide(color: VirelloColors.boardBorder),
+                top: BorderSide(color: VTheme.divider(context)),
               ),
             ),
             child: Row(

@@ -200,9 +200,9 @@ class _UploadReviewScreenState extends State<UploadReviewScreen> {
               ),
             ],
           ),
-          child: const Icon(
+          child:  Icon(
             Icons.cloud_upload_outlined,
-            color: Colors.white,
+            color: VTheme.onBrand(context),
             size: 48,
           ),
         ),

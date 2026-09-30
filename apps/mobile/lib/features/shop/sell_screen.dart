@@ -273,11 +273,11 @@ class _SellScreenState extends State<SellScreen> {
                     borderRadius: BorderRadius.circular(14)),
               ),
               child: _submitting
-                  ? const SizedBox(
+                  ?  SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: VTheme.text(context)),
                     )
                   : Text(s.sellSubmit),
             ),

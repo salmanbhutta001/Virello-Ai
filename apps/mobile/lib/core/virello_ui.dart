@@ -45,15 +45,15 @@ class VGradientButton extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.text(context),
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
                 ),
               ),
               if (icon != null) ...[
                 const SizedBox(width: 8),
-                Icon(icon, color: Colors.white, size: 20),
+                Icon(icon, color: VTheme.text(context), size: 20),
               ],
             ],
           ),
@@ -531,12 +531,12 @@ class VPinkButton extends StatelessWidget {
             ),
           ),
           child: loading
-              ? const SizedBox(
+              ?  SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: Colors.white,
+                    color: VTheme.text(context),
                   ),
                 )
               : Text(label),
@@ -546,8 +546,9 @@ class VPinkButton extends StatelessWidget {
   }
 }
 
-/// Board-style dark text field: dark fill, subtle border, prefix icon,
-/// gray hint, white text. Always dark — matches the board exactly.
+/// Board-style text field: theme-aware fill, subtle border, prefix icon,
+/// readable text in both themes. (Kept the historic name; it is no longer
+/// dark-only.)
 class VDarkField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -580,22 +581,22 @@ class VDarkField extends StatelessWidget {
       obscureText: obscure,
       autocorrect: false,
       enableSuggestions: !obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
+      style: TextStyle(color: VTheme.text(context), fontSize: 15),
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-          color: VirelloColors.boardTextSec,
+        hintStyle: TextStyle(
+          color: VTheme.textSec(context),
           fontSize: 14,
         ),
-        prefixIcon: Icon(icon, color: VirelloColors.boardTextSec, size: 20),
+        prefixIcon: Icon(icon, color: VTheme.textSec(context), size: 20),
         suffixIcon: suffix,
         filled: true,
-        fillColor: VirelloColors.boardField,
+        fillColor: VTheme.chip(context),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: VirelloColors.boardBorder),
+          borderSide: BorderSide(color: VTheme.divider(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -610,7 +611,7 @@ class VDarkField extends StatelessWidget {
   }
 }
 
-/// Multi-select interest chip: dark pill, pink when selected.
+/// Multi-select interest chip: theme-aware pill, pink when selected.
 class VSelectChip extends StatelessWidget {
   final String label;
   final IconData? icon;
@@ -632,10 +633,10 @@ class VSelectChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
-          color: selected ? VirelloColors.pink : VirelloColors.boardField,
+          color: selected ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? VirelloColors.pink : VirelloColors.boardBorder,
+            color: selected ? VirelloColors.pink : VTheme.divider(context),
           ),
         ),
         child: Row(
@@ -645,14 +646,18 @@ class VSelectChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: selected ? Colors.white : VirelloColors.boardTextSec,
+                color: selected
+                    ? VTheme.onBrand(context)
+                    : VTheme.textSec(context),
               ),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : VirelloColors.boardTextSec,
+                color: selected
+                    ? VTheme.onBrand(context)
+                    : VTheme.textSec(context),
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 fontSize: 13.5,
               ),
@@ -664,7 +669,7 @@ class VSelectChip extends StatelessWidget {
   }
 }
 
-/// Board-style dark card: dark surface, subtle border, generous radius.
+/// Board-style card: theme-aware surface, subtle border, generous radius.
 class VBoardCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -681,9 +686,9 @@ class VBoardCard extends StatelessWidget {
     final card = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: VirelloColors.boardSurface,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VirelloColors.boardBorder, width: 1),
+        border: Border.all(color: VTheme.divider(context), width: 1),
       ),
       child: child,
     );

@@ -140,8 +140,8 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
           ),
           child: Text(
             initial,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.onBrand(context),
               fontWeight: FontWeight.w800,
               fontSize: 32,
             ),
@@ -159,9 +159,9 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
         Text(
           '@$handle',
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 14,
-            color: VirelloColors.boardTextSec,
+            color: VTheme.textSec(context),
           ),
         ),
         const SizedBox(height: 16),
@@ -172,7 +172,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
             onPressed: _busy ? null : _toggle,
             style: FilledButton.styleFrom(
               backgroundColor:
-                  _following ? VirelloColors.boardField : VirelloColors.pink,
+                  _following ? VTheme.chip(context) : VirelloColors.pink,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -183,12 +183,12 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
               ),
             ),
             child: _busy
-                ? const SizedBox(
+                ?  SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: VTheme.text(context),
                     ),
                   )
                 : Text(_following ? s.boardFollowingBtn : s.boardFollow),
@@ -230,7 +230,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
           style: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.w700,
-            color: active ? Colors.white : VirelloColors.boardTextSec,
+            color: active ? Colors.white : VTheme.textSec(context),
           ),
         ),
       ),
@@ -242,10 +242,10 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
     return Column(
       children: [
         const SizedBox(height: 32),
-        const Icon(
+         Icon(
           Icons.grid_on_rounded,
           size: 48,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 12),
         Padding(
@@ -253,9 +253,9 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
           child: Text(
             s.boardNoCreatorPosts,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 13.5,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
               height: 1.5,
             ),
           ),

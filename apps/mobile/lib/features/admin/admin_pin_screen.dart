@@ -132,7 +132,7 @@ class _AdminPinScreenState extends State<AdminPinScreen>
                       shape: BoxShape.circle,
                       color: i < _pin.length
                           ? VirelloColors.pink
-                          : VirelloColors.boardBorder,
+                          : VTheme.divider(context),
                     ),
                   ),
                 ),
@@ -222,7 +222,7 @@ class _KeyButton extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: VirelloColors.boardBorder),
+              border: Border.all(color: VTheme.divider(context)),
             ),
             child: digit != null
                 ? Text(

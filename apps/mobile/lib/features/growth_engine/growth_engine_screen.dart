@@ -26,8 +26,6 @@ class GrowthEngineScreen extends StatefulWidget {
   State<GrowthEngineScreen> createState() => _GrowthEngineScreenState();
 }
 
-const _darkCard = VirelloColors.boardSurface;
-
 enum _AgentState { done, working, standby }
 
 class _AgentInfo {
@@ -148,8 +146,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: VirelloColors.boardBg,
-        cardColor: _darkCard,
+        scaffoldBackgroundColor: VTheme.scaffold(context),
+        cardColor: VTheme.card(context),
         colorScheme: const ColorScheme.dark(primary: VirelloColors.pink),
       ),
       child: Builder(
@@ -203,12 +201,12 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget _header(BuildContext ctx) => Row(children: [
         IconButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon:  Icon(Icons.arrow_back, color: VTheme.text(context)),
         ),
         Expanded(
           child: Text(s.aiGrowthAgent,
-              style: const TextStyle(
-                  color: Colors.white,
+              style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 20,
                   fontWeight: FontWeight.w800)),
         ),
@@ -226,8 +224,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+          style:  TextStyle(
+              color: VTheme.text(context), fontWeight: FontWeight.w700, fontSize: 15)),
       const SizedBox(height: 8),
       _statusPill(status),
     ]);
@@ -237,7 +235,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
     final Color dot;
     final String label;
     if (_detail == null) {
-      dot = Colors.white24;
+      dot = VTheme.textSec(context).withValues(alpha: 0.35);
       label = s.engineTagline;
     } else if (status == 'running') {
       dot = VirelloColors.success;
@@ -249,13 +247,13 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       dot = Colors.lightBlue;
       label = _prettyStatus(status);
     } else {
-      dot = Colors.white38;
+      dot = VTheme.textSec(context).withValues(alpha: 0.5);
       label = _prettyStatus(status);
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: VTheme.text(context).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: dot.withValues(alpha: 0.4)),
       ),
@@ -266,8 +264,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
         const SizedBox(width: 8),
         Text(label,
-            style: const TextStyle(
-                color: Colors.white,
+            style:  TextStyle(
+                color: VTheme.text(context),
                 fontSize: 12,
                 fontWeight: FontWeight.w700)),
       ]),
@@ -361,19 +359,19 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                 _narrativeTried = false;
                 _generatePlanNarrative();
               },
-              child: const Icon(Icons.refresh,
-                  size: 16, color: Colors.white38),
+              child:  Icon(Icons.refresh,
+                  size: 16, color: VTheme.textSec(context).withValues(alpha: 0.38)),
             ),
           ]),
           const SizedBox(height: 6),
           Text(_narrative!,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 13.5, height: 1.6)),
+              style:  TextStyle(
+                  color: VTheme.text(context), fontSize: 13.5, height: 1.6)),
         ],
       );
     }
     return Text(s.engineProposalBody,
-        style: const TextStyle(color: Colors.white60, fontSize: 13));
+        style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.6), fontSize: 13));
   }
 
   /// Smart approval card: summarizes the real AI proposal, one tap to launch.
@@ -388,7 +386,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _darkCard,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color: Colors.amber.withValues(alpha: 0.5), width: 1.2),
@@ -413,8 +411,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(s.engineProposalTitle,
-                style: const TextStyle(
-                    color: Colors.white,
+                style:  TextStyle(
+                    color: VTheme.text(context),
                     fontWeight: FontWeight.w800,
                     fontSize: 16)),
           ),
@@ -442,7 +440,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget _factChip(IconData icon, String text) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: VTheme.text(context).withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -586,14 +584,14 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
         stateLabel = s.engineWorking;
         break;
       case _AgentState.standby:
-        glow = Colors.white24;
+        glow = VTheme.textSec(context).withValues(alpha: 0.35);
         stateLabel = s.engineStandby;
         break;
     }
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _darkCard,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: a.state == _AgentState.working
@@ -615,8 +613,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             child: Text(a.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: Colors.white,
+                style:  TextStyle(
+                    color: VTheme.text(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w700)),
           ),
@@ -627,7 +625,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style:
-                const TextStyle(color: Colors.white54, fontSize: 11)),
+                 TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.54), fontSize: 11)),
         const SizedBox(height: 2),
         Text(stateLabel,
             style: TextStyle(
@@ -676,7 +674,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _darkCard,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -695,19 +693,19 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
     switch (p.state) {
       case _PhaseState.done:
         ring = VirelloColors.success;
-        icon = const Icon(Icons.check, size: 14, color: Colors.white);
+        icon =  Icon(Icons.check, size: 14, color: VTheme.onBrand(context));
         break;
       case _PhaseState.active:
         ring = VirelloColors.pink;
-        icon = const SizedBox(
+        icon =  SizedBox(
           width: 12,
           height: 12,
           child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white),
+              strokeWidth: 2, color: VTheme.onBrand(context)),
         );
         break;
       case _PhaseState.pending:
-        ring = Colors.white24;
+        ring = VTheme.textSec(context).withValues(alpha: 0.35);
         icon = const SizedBox.shrink();
         break;
     }
@@ -742,7 +740,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 color: p.state == _PhaseState.done
                     ? VirelloColors.success.withValues(alpha: 0.5)
-                    : Colors.white10,
+                    : VTheme.divider(context),
               ),
             ),
         ]),
@@ -757,7 +755,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                   Text(p.label,
                       style: TextStyle(
                           color: p.state == _PhaseState.pending
-                              ? Colors.white38
+                              ? VTheme.textSec(context)
                               : Colors.white,
                           fontSize: 13,
                           fontWeight: p.state == _PhaseState.done
@@ -771,8 +769,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                   ] else if (p.state == _PhaseState.pending) ...[
                     const SizedBox(height: 2),
                     Text(s.pendingLabel,
-                        style: const TextStyle(
-                            color: Colors.white24, fontSize: 11)),
+                        style:  TextStyle(
+                            color: VTheme.textSec(context).withValues(alpha: 0.24), fontSize: 11)),
                   ],
                 ]),
           ),
@@ -795,18 +793,18 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: _darkCard,
+            color: VTheme.card(context),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(s.engineNoActivity,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white38, fontSize: 13)),
+              style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.38), fontSize: 13)),
         )
       else
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _darkCard,
+            color: VTheme.card(context),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(children: [
@@ -841,7 +839,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           ),
           if (!last)
             Expanded(
-                child: Container(width: 2, color: Colors.white10)),
+                child: Container(width: 2, color: VTheme.textSec(context).withValues(alpha: 0.1))),
         ]),
         const SizedBox(width: 12),
         Expanded(
@@ -850,23 +848,23 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: VTheme.text(context).withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 dense: true,
-                iconColor: Colors.white38,
-                collapsedIconColor: Colors.white24,
+                iconColor: VTheme.textSec(context),
+                collapsedIconColor: VTheme.textSec(context).withValues(alpha: 0.5),
                 title: Text(
                     '${d.agent} · ${d.action.replaceAll('_', ' ')}',
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style:  TextStyle(
+                        color: VTheme.text(context),
                         fontWeight: FontWeight.w700,
                         fontSize: 12)),
                 subtitle: Text('${s.engineRound} ${d.round}',
-                    style: const TextStyle(
-                        fontSize: 10, color: Colors.white38)),
+                    style:  TextStyle(
+                        fontSize: 10, color: VTheme.textSec(context).withValues(alpha: 0.38))),
                 children: [
                   for (final r in d.reasons)
                     Padding(
@@ -886,8 +884,8 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                     ),
                   if (d.reasons.isEmpty)
                     Text(s.nothingHere,
-                        style: const TextStyle(
-                            fontSize: 11, color: Colors.white24)),
+                        style:  TextStyle(
+                            fontSize: 11, color: VTheme.textSec(context).withValues(alpha: 0.24))),
                 ],
               ),
             ),
@@ -902,7 +900,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget _startCard() => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _darkCard,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: VirelloColors.pink.withValues(alpha: 0.35), width: 1),
@@ -914,18 +912,18 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               gradient: VirelloColors.brandGradient,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.psychology_outlined,
-                color: Colors.white, size: 28),
+            child:  Icon(Icons.psychology_outlined,
+                color: VTheme.onBrand(context), size: 28),
           ),
           const SizedBox(height: 14),
           Text(s.engineWhatItDoes,
-              style: const TextStyle(
-                  color: Colors.white,
+              style:  TextStyle(
+                  color: VTheme.onBrand(context),
                   fontWeight: FontWeight.w800,
                   fontSize: 16)),
           const SizedBox(height: 8),
           Text(s.engineWhatItDoesBody,
-              style: const TextStyle(color: Colors.white60, fontSize: 13)),
+              style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.6), fontSize: 13)),
           const SizedBox(height: 18),
           VGradientButton(
             label: _busy ? '…' : s.engineStart,
@@ -949,7 +947,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       const SizedBox(height: 10),
       Text(s.usuallyTakes,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white38, fontSize: 12)),
+          style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.38), fontSize: 12)),
       const SizedBox(height: 16),
       _controlsRow(loop),
       const SizedBox(height: 20),
@@ -965,13 +963,13 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       const SizedBox(height: 8),
       if (d.learnings.isEmpty)
         Text(s.engineNoLearningsYet,
-            style: const TextStyle(color: Colors.white38, fontSize: 13)),
+            style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.38), fontSize: 13)),
       for (final l in d.learnings.take(5)) _learningCard(l),
       const SizedBox(height: 14),
       OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white70,
-          side: const BorderSide(color: Colors.white24),
+          side:  BorderSide(color: VTheme.textSec(context).withValues(alpha: 0.24)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -990,27 +988,27 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget _statTile(String value, String label) => Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: _darkCard,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(children: [
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 24,
                   fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
           Text(label,
-              style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.6), fontSize: 12)),
           const SizedBox(height: 2),
           Text('· ${s.adMeasured} ·',
-              style: const TextStyle(color: Colors.white30, fontSize: 10)),
+              style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.3), fontSize: 10)),
         ]),
       );
 
   Widget _sectionTitle(String t) => Text(t,
-      style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white));
+      style:  TextStyle(
+          fontSize: 16, fontWeight: FontWeight.w800, color: VTheme.text(context)));
 
   Widget _controlsRow(GrowthLoop loop) => Wrap(
         spacing: 8,
@@ -1020,7 +1018,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white70,
-                side: const BorderSide(color: Colors.white24),
+                side:  BorderSide(color: VTheme.textSec(context).withValues(alpha: 0.24)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
@@ -1045,7 +1043,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white70,
-                side: const BorderSide(color: Colors.white24),
+                side:  BorderSide(color: VTheme.textSec(context).withValues(alpha: 0.24)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
@@ -1073,15 +1071,15 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _darkCard,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Expanded(
               child: Text(seg.name,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700))),
+                  style:  TextStyle(
+                      color: VTheme.text(context), fontWeight: FontWeight.w700))),
           if (paused)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1105,11 +1103,11 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                            color: Colors.white10,
+                            color: VTheme.textSec(context).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10)),
                         child: Text(t,
-                            style: const TextStyle(
-                                fontSize: 11, color: Colors.white70)),
+                            style:  TextStyle(
+                                fontSize: 11, color: VTheme.textSec(context).withValues(alpha: 0.7))),
                       ))
                   .toList()),
         ],
@@ -1120,7 +1118,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               value: (seg.weight / 2).clamp(0.0, 1.0),
               minHeight: 6,
               borderRadius: BorderRadius.circular(6),
-              backgroundColor: Colors.white10,
+              backgroundColor: VTheme.divider(context),
               valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
             ),
           ),
@@ -1136,18 +1134,18 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: _darkCard,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ExpansionTile(
-        iconColor: Colors.white70,
-        collapsedIconColor: Colors.white38,
+        iconColor: VTheme.textSec(context),
+        collapsedIconColor: VTheme.textSec(context).withValues(alpha: 0.5),
         leading: Icon(
             v.isOriginal ? Icons.person_outline : Icons.auto_awesome_outlined,
-            color: v.isOriginal ? Colors.white38 : VirelloColors.pink),
+            color: v.isOriginal ? VTheme.textSec(context).withValues(alpha: 0.38) : VirelloColors.pink),
         title: Text(v.label,
-            style: const TextStyle(
-                color: Colors.white,
+            style:  TextStyle(
+                color: VTheme.text(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 14)),
         subtitle: Column(
@@ -1158,7 +1156,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               value: v.weight.clamp(0.0, 1.0),
               minHeight: 5,
               borderRadius: BorderRadius.circular(6),
-              backgroundColor: Colors.white10,
+              backgroundColor: VTheme.divider(context),
               valueColor: const AlwaysStoppedAnimation(VirelloColors.pink),
             ),
             const SizedBox(height: 6),
@@ -1175,7 +1173,7 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
               if (v.caption.isNotEmpty) ...[
                 Text(v.caption,
                     style:
-                        const TextStyle(fontSize: 13, color: Colors.white70)),
+                         TextStyle(fontSize: 13, color: VTheme.textSec(context).withValues(alpha: 0.7))),
                 const SizedBox(height: 6),
               ],
               if (v.hashtags.isNotEmpty)
@@ -1196,13 +1194,13 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _darkCard,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${s.engineRound} ${l.round} · ${_prettyAction(l.action)}',
-              style: const TextStyle(
-                  color: Colors.white,
+              style:  TextStyle(
+                  color: VTheme.text(context),
                   fontWeight: FontWeight.w700,
                   fontSize: 13)),
           if (l.reasons.isNotEmpty) ...[
@@ -1213,11 +1211,11 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
                 child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('• ', style: TextStyle(color: Colors.white38)),
+                       Text('• ', style: TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.38))),
                       Expanded(
                           child: Text(r,
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.white54))),
+                              style:  TextStyle(
+                                  fontSize: 12, color: VTheme.textSec(context).withValues(alpha: 0.54)))),
                     ]),
               ),
           ],
@@ -1229,11 +1227,11 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
   Widget _disclaimerCard() => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: VTheme.text(context).withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(s.engineDisclaimer,
-            style: const TextStyle(fontSize: 11, color: Colors.white38)),
+            style:  TextStyle(fontSize: 11, color: VTheme.textSec(context).withValues(alpha: 0.38))),
       );
 }
 
@@ -1384,9 +1382,9 @@ class _PulseOrbState extends State<_PulseOrb>
                 ],
               ),
               alignment: Alignment.center,
-              child: const Text('AI',
+              child:  Text('AI',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: VTheme.text(context),
                       fontSize: 36,
                       fontWeight: FontWeight.w900)),
             ),
@@ -1508,14 +1506,14 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: VirelloColors.boardBg,
-        cardColor: _darkCard,
+        scaffoldBackgroundColor: VTheme.scaffold(context),
+        cardColor: VTheme.card(context),
         colorScheme: const ColorScheme.dark(primary: VirelloColors.pink),
       ),
       child: Builder(
         builder: (ctx) => Scaffold(
           appBar: AppBar(
-            backgroundColor: VirelloColors.boardBg,
+            backgroundColor: VTheme.scaffold(context),
             foregroundColor: Colors.white,
             title: Text(s.engineAuditTrail),
           ),
@@ -1529,7 +1527,7 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
               if (items.isEmpty) {
                 return Center(
                     child: Text(s.nothingHere,
-                        style: const TextStyle(color: Colors.white38)));
+                        style:  TextStyle(color: VTheme.textSec(context).withValues(alpha: 0.38))));
               }
               return ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -1539,23 +1537,23 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
-                      color: _darkCard,
+                      color: VTheme.card(context),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: ExpansionTile(
                       iconColor: Colors.white70,
                       collapsedIconColor: Colors.white38,
                       leading: Icon(_agentIcons[d.agent] ?? Icons.info_outline,
-                          color: Colors.white70),
+                          color: VTheme.textSec(context).withValues(alpha: 0.7)),
                       title: Text(
                           '${d.agent} · ${d.action.replaceAll('_', ' ')}',
-                          style: const TextStyle(
-                              color: Colors.white,
+                          style:  TextStyle(
+                              color: VTheme.text(context),
                               fontWeight: FontWeight.w700,
                               fontSize: 13)),
                       subtitle: Text('${s.engineRound} ${d.round}',
-                          style: const TextStyle(
-                              fontSize: 11, color: Colors.white38)),
+                          style:  TextStyle(
+                              fontSize: 11, color: VTheme.textSec(context).withValues(alpha: 0.38))),
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -1569,14 +1567,14 @@ class _GrowthAuditScreenState extends State<GrowthAuditScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text('• ',
+                                           Text('• ',
                                               style: TextStyle(
-                                                  color: Colors.white38)),
+                                                  color: VTheme.textSec(context).withValues(alpha: 0.38))),
                                           Expanded(
                                               child: Text(r,
-                                                  style: const TextStyle(
+                                                  style:  TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.white54))),
+                                                      color: VTheme.textSec(context).withValues(alpha: 0.54)))),
                                         ]),
                                   ),
                               ]),

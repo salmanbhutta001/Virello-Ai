@@ -259,7 +259,7 @@ class _LinkCardState extends State<LinkCard> {
       child: Icon(
         broken ? Icons.broken_image_outlined : Icons.link_rounded,
         size: 40,
-        color: Colors.white,
+        color: VTheme.onBrand(context),
       ),
     );
   }

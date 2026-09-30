@@ -129,8 +129,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const Divider(
-                        color: VirelloColors.boardBorder,
+                      separatorBuilder: (_, __) =>  Divider(
+                        color: VTheme.divider(context),
                         height: 1,
                       ),
                       itemBuilder: (_, i) => _row(items[i]),
@@ -197,7 +197,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 18),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          color: active ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(19),
         ),
         child: Text(
@@ -205,7 +205,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w700,
-            color: active ? Colors.white : VirelloColors.boardTextSec,
+            color: active ? Colors.white : VTheme.textSec(context),
           ),
         ),
       ),
@@ -262,8 +262,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   ? Icon(icon, color: VirelloColors.pink, size: 20)
                   : Text(
                       initial,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.onBrand(context),
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                       ),
@@ -288,9 +288,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 12.5,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                   ),
                 ],
@@ -299,9 +299,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
             if (ago != null)
               Text(
                 ago,
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 11.5,
-                  color: VirelloColors.boardTextSec,
+                  color: VTheme.textSec(context),
                 ),
               ),
           ],
@@ -320,10 +320,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.16),
-        const Icon(
+         Icon(
           Icons.notifications_outlined,
           size: 56,
-          color: VirelloColors.boardTextSec,
+          color: VTheme.textSec(context),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -331,9 +331,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
           child: Text(
             s.boardNoActivity,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

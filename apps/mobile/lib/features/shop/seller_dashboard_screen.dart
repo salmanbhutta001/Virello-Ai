@@ -78,7 +78,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     final s = AppStrings(appState.localeCode);
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -92,7 +92,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: VirelloColors.boardBorder,
+                  color: VTheme.divider(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -154,12 +154,12 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.fiber_manual_record,
-                          size: 10, color: Colors.white),
+                       Icon(Icons.fiber_manual_record,
+                          size: 10, color: VTheme.onBrand(context)),
                       const SizedBox(width: 6),
                       Text(s.p11GoLive,
-                          style: const TextStyle(
-                              color: Colors.white,
+                          style:  TextStyle(
+                              color: VTheme.text(context),
                               fontWeight: FontWeight.w700,
                               fontSize: 13)),
                     ],

@@ -44,9 +44,9 @@ class CompanyScreen extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: const Text('V',
+                  child:  Text('V',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: VTheme.onBrand(context),
                           fontSize: 44,
                           fontWeight: FontWeight.w900)),
                 ),

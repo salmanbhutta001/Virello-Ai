@@ -94,16 +94,16 @@ class _OptimizationRecommendationsScreenState
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
-        title: Text(s.p10ApplyAll, style: const TextStyle(color: Colors.white)),
+        backgroundColor: VTheme.card(context),
+        title: Text(s.p10ApplyAll, style:  TextStyle(color: VTheme.text(context))),
         content: Text(s.p10ApplyAllWhy,
-            style: const TextStyle(
-                color: VirelloColors.boardTextSec, height: 1.5)),
+            style:  TextStyle(
+                color: VTheme.textSec(context), height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(s.p10Cancel,
-                style: const TextStyle(color: VirelloColors.boardTextSec)),
+                style: TextStyle(color: VTheme.textSec(context))),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: VirelloColors.pink),
@@ -183,20 +183,20 @@ class _OptimizationRecommendationsScreenState
             controller: _ctrl,
             maxLines: 3,
             minLines: 2,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style:  TextStyle(color: VTheme.text(context), fontSize: 14),
             decoration: InputDecoration(
               hintText: s.pasteLinkOrText,
-              hintStyle: const TextStyle(
-                  color: VirelloColors.boardTextSec, fontSize: 13),
+              hintStyle:  TextStyle(
+                  color: VTheme.textSec(context), fontSize: 13),
               filled: true,
-              fillColor: VirelloColors.boardField,
+              fillColor: VTheme.chip(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: VirelloColors.boardBorder),
+                borderSide: BorderSide(color: VTheme.divider(context)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: VirelloColors.boardBorder),
+                borderSide: BorderSide(color: VTheme.divider(context)),
               ),
               contentPadding: const EdgeInsets.all(12),
             ),
@@ -240,16 +240,16 @@ class _OptimizationRecommendationsScreenState
               children: [
                 Text(
                   s.p10GreatStart,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white),
+                      color: VTheme.text(context)),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   s.p10RecsHeadline(n),
-                  style: const TextStyle(
-                      fontSize: 12.5, color: VirelloColors.boardTextSec),
+                  style:  TextStyle(
+                      fontSize: 12.5, color: VTheme.textSec(context)),
                 ),
               ],
             ),
@@ -269,15 +269,15 @@ class _OptimizationRecommendationsScreenState
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: VirelloColors.boardField,
+            color: VTheme.chip(context),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: VirelloColors.boardBorder),
+            border: Border.all(color: VTheme.divider(context)),
           ),
           child: Text(
             '${e.key}: ${e.value}',
-            style: const TextStyle(
+            style:  TextStyle(
                 fontSize: 11.5,
-                color: VirelloColors.boardTextSec,
+                color: VTheme.textSec(context),
                 fontWeight: FontWeight.w600),
           ),
         );
@@ -316,24 +316,24 @@ class _OptimizationRecommendationsScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('${it['title']}',
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white)),
+                              color: VTheme.text(context))),
                       const SizedBox(height: 3),
                       Text('${it['suggestion']}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 12.5,
-                              color: VirelloColors.boardTextSec,
+                              color: VTheme.textSec(context),
                               height: 1.4)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.copy,
-                      size: 18, color: VirelloColors.boardTextSec),
+                  icon:  Icon(Icons.copy,
+                      size: 18, color: VTheme.textSec(context)),
                   onPressed: () => _copy('${it['suggestion']}'),
                 ),
               ],
@@ -346,10 +346,10 @@ class _OptimizationRecommendationsScreenState
           child: Text(
             s.p10DevHeuristicNote,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
-                color: VirelloColors.boardTextSec),
+                color: VTheme.textSec(context)),
           ),
         ),
     ];
@@ -378,17 +378,17 @@ class _OptimizationRecommendationsScreenState
               ),
               const SizedBox(height: 14),
               Text(s.p10Creators,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: VTheme.onBrand(context))),
               const SizedBox(height: 8),
               Text(
                 s.p10NoSegmentsHint,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 13,
-                    color: VirelloColors.boardTextSec,
+                    color: VTheme.textSec(context),
                     height: 1.5),
               ),
             ],
@@ -412,9 +412,9 @@ class _Segmented extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Row(
         children: List.generate(tabs.length, (i) {
@@ -433,7 +433,7 @@ class _Segmented extends StatelessWidget {
                 child: Text(
                   tabs[i],
                   style: TextStyle(
-                    color: active ? Colors.white : VirelloColors.boardTextSec,
+                    color: active ? Colors.white : VTheme.textSec(context),
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
                   ),

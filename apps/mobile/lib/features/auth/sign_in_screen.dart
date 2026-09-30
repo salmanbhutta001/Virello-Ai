@@ -207,8 +207,8 @@ class _SignInScreenState extends State<SignInScreen> {
         height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: VirelloColors.boardField,
-          border: Border.all(color: VirelloColors.boardBorder),
+          color: VTheme.chip(context),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         alignment: Alignment.center,
         child: child,
@@ -219,18 +219,18 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget _orDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: VirelloColors.boardBorder)),
+        Expanded(child: Divider(color: VTheme.divider(context))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Text(
             s.orContinueWith,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 12,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),
-        const Expanded(child: Divider(color: VirelloColors.boardBorder)),
+        Expanded(child: Divider(color: VTheme.divider(context))),
       ],
     );
   }
@@ -249,8 +249,8 @@ class _SignInScreenState extends State<SignInScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: _socialCircle(
               onTap: _signInWithApple,
-              child: const IconTheme(
-                data: IconThemeData(color: Colors.white),
+              child:  IconTheme(
+                data: IconThemeData(color: VTheme.text(context)),
                 child: AppleIcon(size: 24),
               ),
             ),
@@ -267,7 +267,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final canPop = Navigator.of(context).canPop();
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Stack(
           children: [
@@ -283,8 +283,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     Text(
                       s.boardWelcomeBack,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
                       ),
@@ -311,7 +311,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             _obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: VirelloColors.boardTextSec,
+                            color: VTheme.textSec(context),
                           ),
                           onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword,
@@ -368,9 +368,9 @@ class _SignInScreenState extends State<SignInScreen> {
                           onPressed: _working ? null : _sendCode,
                           child: Text(
                             s.emailMeCode,
-                            style: const TextStyle(
+                            style:  TextStyle(
                               fontSize: 13,
-                              color: VirelloColors.boardTextSec,
+                              color: VTheme.textSec(context),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -383,9 +383,9 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 22),
                       Text.rich(
                         TextSpan(
-                          style: const TextStyle(
+                          style:  TextStyle(
                             fontSize: 13.5,
-                            color: VirelloColors.boardTextSec,
+                            color: VTheme.textSec(context),
                           ),
                           children: [
                             TextSpan(text: s.newToVirello),
@@ -413,8 +413,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       Text(
                         s.enterCode,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style:  TextStyle(
+                          color: VTheme.text(context),
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
@@ -423,9 +423,9 @@ class _SignInScreenState extends State<SignInScreen> {
                       Text(
                         _emailCtrl.text.trim(),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 13.5,
-                          color: VirelloColors.boardTextSec,
+                          color: VTheme.textSec(context),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -476,7 +476,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 top: 4,
                 left: 4,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon:  Icon(Icons.arrow_back, color: VTheme.text(context)),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),

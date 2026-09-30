@@ -110,9 +110,9 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: VirelloColors.boardSurface,
+            color: VTheme.card(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: VirelloColors.boardBorder),
+            border: Border.all(color: VTheme.divider(context)),
           ),
           child: Row(
             children: [
@@ -206,9 +206,9 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: VirelloColors.boardSurface,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,10 +295,10 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          const Icon(
+           Icon(
             Icons.bar_chart_outlined,
             size: 48,
-            color: VirelloColors.boardTextSec,
+            color: VTheme.textSec(context),
           ),
           const SizedBox(height: 12),
           Padding(
@@ -306,9 +306,9 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
             child: Text(
               s.boardNoStatsYet,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 13.5,
-                color: VirelloColors.boardTextSec,
+                color: VTheme.textSec(context),
               ),
             ),
           ),
@@ -325,7 +325,7 @@ class _StatDivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 44,
-      color: VirelloColors.boardBorder,
+      color: VTheme.divider(context),
     );
   }
 }

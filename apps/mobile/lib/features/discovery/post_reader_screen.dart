@@ -117,9 +117,9 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
       child: Container(
         width: 150,
         decoration: BoxDecoration(
-          color: VirelloColors.boardSurface,
+          color: VTheme.card(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VirelloColors.boardBorder),
+          border: Border.all(color: VTheme.divider(context)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,10 +154,10 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                         ),
                         child: Text(
                           s.affiliateBadge,
-                          style: const TextStyle(
+                          style:  TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: VTheme.text(context),
                           ),
                         ),
                       ),
@@ -201,7 +201,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     return Container(
       height: 104,
       width: 150,
-      color: VirelloColors.boardField,
+      color: VTheme.chip(context),
       child: const Center(
         child: Icon(
           Icons.shopping_bag_outlined,
@@ -349,9 +349,9 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: VirelloColors.boardSurface,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -360,7 +360,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             icon: _liked
                 ? Icons.favorite_rounded
                 : Icons.favorite_border_rounded,
-            color: _liked ? VirelloColors.pink : VirelloColors.boardTextSec,
+            color: _liked ? VirelloColors.pink : VTheme.textSec(context),
             label: _liked ? s.boardLiked : s.boardLike,
             onTap: _toggleLike,
           ),
@@ -379,7 +379,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             icon: saved
                 ? Icons.bookmark_rounded
                 : Icons.bookmark_border_rounded,
-            color: saved ? VirelloColors.pink : VirelloColors.boardTextSec,
+            color: saved ? VirelloColors.pink : VTheme.textSec(context),
             label: saved ? s.readerSaved : s.readerSave,
             onTap: _toggleSave,
           ),
@@ -417,14 +417,14 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: color ?? VirelloColors.boardTextSec),
+            Icon(icon, size: 22, color: color ?? VTheme.textSec(context)),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: color ?? VirelloColors.boardTextSec,
+                color: color ?? VTheme.textSec(context),
               ),
             ),
           ],
@@ -440,7 +440,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         Container(
           height: 200,
           decoration: BoxDecoration(
-            color: VirelloColors.boardField,
+            color: VTheme.chip(context),
             borderRadius: BorderRadius.circular(20),
           ),
         ),
@@ -463,7 +463,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
       width: width,
       height: 14,
       decoration: BoxDecoration(
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(7),
       ),
     );
@@ -661,8 +661,8 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               for (final t in topics)
                 Chip(
                   label: Text(t, style: const TextStyle(fontSize: 12)),
-                  backgroundColor: VirelloColors.boardField,
-                  side: const BorderSide(color: VirelloColors.boardBorder),
+                  backgroundColor: VTheme.chip(context),
+                  side: BorderSide(color: VTheme.divider(context)),
                 ),
             ],
           ),

@@ -159,7 +159,7 @@ class _FollowingScreenState extends State<FollowingScreen> {
         height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          color: active ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
@@ -167,7 +167,7 @@ class _FollowingScreenState extends State<FollowingScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: active ? Colors.white : VirelloColors.boardTextSec,
+            color: active ? Colors.white : VTheme.textSec(context),
           ),
         ),
       ),
@@ -192,8 +192,8 @@ class _FollowingScreenState extends State<FollowingScreen> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: list.length,
-          separatorBuilder: (_, __) => const Divider(
-            color: VirelloColors.boardBorder,
+          separatorBuilder: (_, __) =>  Divider(
+            color: VTheme.divider(context),
             height: 1,
           ),
           itemBuilder: (_, i) => _creatorRow(list[i]),
@@ -227,8 +227,8 @@ class _FollowingScreenState extends State<FollowingScreen> {
               ),
               child: Text(
                 initial,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.onBrand(context),
                   fontWeight: FontWeight.w800,
                   fontSize: 19,
                 ),
@@ -253,9 +253,9 @@ class _FollowingScreenState extends State<FollowingScreen> {
                     '@$handle',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 12.5,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                   ),
                 ],
@@ -279,12 +279,12 @@ class _FollowingScreenState extends State<FollowingScreen> {
                   ),
                 ),
                 child: busy
-                    ? const SizedBox(
+                    ?  SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: VTheme.text(context),
                         ),
                       )
                     : Text(s.boardFollowingBtn),
@@ -312,8 +312,8 @@ class _FollowingScreenState extends State<FollowingScreen> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: topics.length,
-          separatorBuilder: (_, __) => const Divider(
-            color: VirelloColors.boardBorder,
+          separatorBuilder: (_, __) =>  Divider(
+            color: VTheme.divider(context),
             height: 1,
           ),
           itemBuilder: (_, i) => _topicRow(topics[i], topics),
@@ -373,7 +373,7 @@ class _FollowingScreenState extends State<FollowingScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -473,16 +473,16 @@ class _FollowingScreenState extends State<FollowingScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.16),
-        Icon(icon, size: 56, color: VirelloColors.boardTextSec),
+        Icon(icon, size: 56, color: VTheme.textSec(context)),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

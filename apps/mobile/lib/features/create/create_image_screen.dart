@@ -175,7 +175,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
               decoration: BoxDecoration(
                 color: VTheme.chip(context),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VirelloColors.boardBorder),
+                border: Border.all(color: VTheme.divider(context)),
               ),
               clipBehavior: Clip.antiAlias,
               child: _buildPreview(),
@@ -291,8 +291,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
               ),
               child: Text(
                 s.boardImageAiLabel,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.onBrand(context),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),

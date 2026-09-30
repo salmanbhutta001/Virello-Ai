@@ -156,9 +156,9 @@ class _CommentsScreenState extends State<CommentsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VirelloColors.boardSurface,
+        color: VTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,8 +173,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
             ),
             child: Text(
               initial,
-              style: const TextStyle(
-                color: Colors.white,
+              style:  TextStyle(
+                color: VTheme.onBrand(context),
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
               ),
@@ -201,17 +201,17 @@ class _CommentsScreenState extends State<CommentsScreen> {
                     if (ago != null)
                       Text(
                         ago,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 11.5,
-                          color: VirelloColors.boardTextSec,
+                          color: VTheme.textSec(context),
                         ),
                       ),
                     if (mine)
                       IconButton(
-                        icon: const Icon(
+                        icon:  Icon(
                           Icons.delete_outline,
                           size: 18,
-                          color: VirelloColors.boardTextSec,
+                          color: VTheme.textSec(context),
                         ),
                         tooltip: s.delete,
                         onPressed: () => _delete(c),
@@ -236,8 +236,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: VirelloColors.boardBorder)),
+        decoration:  BoxDecoration(
+          border: Border(top: BorderSide(color: VTheme.divider(context))),
         ),
         child: Row(
           children: [
@@ -251,7 +251,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                 decoration: InputDecoration(
                   hintText: s.boardWriteComment,
                   filled: true,
-                  fillColor: VirelloColors.boardField,
+                  fillColor: VTheme.chip(context),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -271,17 +271,17 @@ class _CommentsScreenState extends State<CommentsScreen> {
               ),
               child: IconButton(
                 icon: _posting
-                    ? const SizedBox(
+                    ?  SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: VTheme.onBrand(context),
                         ),
                       )
-                    : const Icon(
+                    :  Icon(
                         Icons.send_rounded,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                         size: 20,
                       ),
                 onPressed: _post,
@@ -298,16 +298,16 @@ class _CommentsScreenState extends State<CommentsScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.18),
-        Icon(icon, size: 56, color: VirelloColors.boardTextSec),
+        Icon(icon, size: 56, color: VTheme.textSec(context)),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: VirelloColors.boardTextSec,
+              color: VTheme.textSec(context),
             ),
           ),
         ),

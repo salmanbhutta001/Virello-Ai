@@ -84,10 +84,10 @@ class _ProgressDialogState extends State<_ProgressDialog> {
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
     return AlertDialog(
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: VirelloColors.boardBorder),
+        side: BorderSide(color: VTheme.divider(context)),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -106,10 +106,10 @@ class _ProgressDialogState extends State<_ProgressDialog> {
                 ),
                 Text(
                   '${(_p * 100).round()}%',
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: VTheme.onBrand(context),
                   ),
                 ),
               ],
@@ -119,8 +119,8 @@ class _ProgressDialogState extends State<_ProgressDialog> {
           Text(
             widget.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: VTheme.text(context),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -179,15 +179,15 @@ class _ResultDialogState extends State<_ResultDialog> {
     final s = widget.strings;
     final ready = _ctrl?.value.isInitialized ?? false;
     return AlertDialog(
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: VirelloColors.boardBorder),
+        side: BorderSide(color: VTheme.divider(context)),
       ),
       title: Text(
         s.videoReady,
-        style: const TextStyle(
-          color: Colors.white,
+        style:  TextStyle(
+          color: VTheme.text(context),
           fontWeight: FontWeight.w800,
         ),
       ),

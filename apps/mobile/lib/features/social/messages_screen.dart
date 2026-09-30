@@ -171,7 +171,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final pending = status == 'pending';
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -187,7 +187,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardBorder,
+                    color: VTheme.divider(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -279,7 +279,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final s = AppStrings(appState.localeCode);
     showModalBottomSheet(
       context: context,
-      backgroundColor: VirelloColors.boardSurface,
+      backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -295,7 +295,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardBorder,
+                    color: VTheme.divider(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -415,9 +415,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 4, 16, 24),
                                 itemCount: rows.length,
-                                separatorBuilder: (_, __) => const Divider(
+                                separatorBuilder: (_, __) =>  Divider(
                                     height: 1,
-                                    color: VirelloColors.boardBorder),
+                                    color: VTheme.divider(context)),
                                 itemBuilder: (_, i) {
                                   final r = rows[i];
                                   final ago = boardTimeAgo(
@@ -484,8 +484,8 @@ class _Avatar extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(ch,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+          style:  TextStyle(
+              color: VTheme.onBrand(context), fontWeight: FontWeight.w800, fontSize: 18)),
     );
   }
 }

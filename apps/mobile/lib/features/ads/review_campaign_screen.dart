@@ -118,16 +118,16 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
-        title: Text(s.p10GoLive, style: const TextStyle(color: Colors.white)),
+        backgroundColor: VTheme.card(context),
+        title: Text(s.p10GoLive, style:  TextStyle(color: VTheme.text(context))),
         content: Text(s.p10ConfirmGoLive,
-            style: const TextStyle(
-                color: VirelloColors.boardTextSec, height: 1.5)),
+            style:  TextStyle(
+                color: VTheme.textSec(context), height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(s.p10Cancel,
-                style: const TextStyle(color: VirelloColors.boardTextSec)),
+                style: TextStyle(color: VTheme.textSec(context))),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: VirelloColors.pink),
@@ -209,7 +209,7 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
         'approved' => const Color(0xFF60A5FA),
         'pending_approval' => const Color(0xFFF59E0B),
         'rejected' => VirelloColors.danger,
-        _ => VirelloColors.boardTextSec,
+        _ => VTheme.textSec(context),
       };
 
   String _statusLabel(String st) {
@@ -247,14 +247,14 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
           child: Column(
             children: [
-              const Icon(Icons.rate_review_outlined,
-                  size: 40, color: VirelloColors.boardTextSec),
+               Icon(Icons.rate_review_outlined,
+                  size: 40, color: VTheme.textSec(context)),
               const SizedBox(height: 12),
               Text(s.p10NoCampaignToReview,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style:  TextStyle(
                       fontSize: 13,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                       height: 1.5)),
             ],
           ),
@@ -282,23 +282,23 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(s.p10SelectProducts,
-                  style: const TextStyle(
-                      fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                  style:  TextStyle(
+                      fontSize: 11.5, color: VTheme.textSec(context))),
               const SizedBox(height: 2),
               Text(
                 c.contentRef.isEmpty ? '—' : c.contentRef,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white),
+                    color: VTheme.text(context)),
               ),
             ],
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                size: 18, color: VirelloColors.boardTextSec),
+            icon:  Icon(Icons.edit_outlined,
+                size: 18, color: VTheme.textSec(context)),
             tooltip: s.p10CampaignSetup,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const CampaignSetupScreen(),
@@ -314,17 +314,17 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(s.p10AdSetName,
-                  style: const TextStyle(
-                      fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                  style:  TextStyle(
+                      fontSize: 11.5, color: VTheme.textSec(context))),
               const SizedBox(height: 2),
               Text(
                 c.contentRef.isEmpty ? '—' : c.contentRef,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white),
+                    color: VTheme.text(context)),
               ),
             ],
           ),
@@ -340,20 +340,20 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(s.p10Budget,
-                        style: const TextStyle(
-                            fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 11.5, color: VTheme.textSec(context))),
                     TextField(
                       controller: _budgetCtrl,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style:  TextStyle(
+                          color: VTheme.text(context),
                           fontSize: 14,
                           fontWeight: FontWeight.w600),
-                      decoration: const InputDecoration(
+                      decoration:  InputDecoration(
                         isDense: true,
                         border: InputBorder.none,
                         prefixText: '\$ ',
-                        prefixStyle: TextStyle(color: Colors.white),
+                        prefixStyle: TextStyle(color: VTheme.text(context)),
                       ),
                       onSubmitted: (v) {
                         final b = double.tryParse(v);
@@ -378,13 +378,13 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(s.p10Duration,
-                        style: const TextStyle(
-                            fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 11.5, color: VTheme.textSec(context))),
                     TextField(
                       controller: _durationCtrl,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style:  TextStyle(
+                          color: VTheme.text(context),
                           fontSize: 14,
                           fontWeight: FontWeight.w600),
                       decoration: InputDecoration(
@@ -392,7 +392,7 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
                         border: InputBorder.none,
                         suffixText: s.p10Days,
                         suffixStyle:
-                            const TextStyle(color: VirelloColors.boardTextSec),
+                            TextStyle(color: VTheme.textSec(context)),
                       ),
                       onSubmitted: (v) {
                         final d = int.tryParse(v);
@@ -414,8 +414,8 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(s.objective,
-                  style: const TextStyle(
-                      fontSize: 11.5, color: VirelloColors.boardTextSec)),
+                  style:  TextStyle(
+                      fontSize: 11.5, color: VTheme.textSec(context))),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -434,8 +434,8 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(s.p10Status,
-                      style: const TextStyle(
-                          fontSize: 13, color: VirelloColors.boardTextSec)),
+                      style:  TextStyle(
+                          fontSize: 13, color: VTheme.textSec(context))),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -457,32 +457,32 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(s.p10EstimatedReach,
-                        style: const TextStyle(
-                            fontSize: 13, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 13, color: VTheme.textSec(context))),
                     Text(
                       '${c.estimate!.low}–${c.estimate!.high}',
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white),
+                          color: VTheme.text(context)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(s.p10EstimateNote,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
-                        color: VirelloColors.boardTextSec)),
+                        color: VTheme.textSec(context))),
               ],
               if (c.dev)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(s.p10DevHeuristicNote,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
-                          color: VirelloColors.boardTextSec)),
+                          color: VTheme.textSec(context))),
                 ),
             ],
           ),
@@ -500,8 +500,8 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
         const SizedBox(height: 10),
         Text(s.p10ApprovalNote,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 11, color: VirelloColors.boardTextSec)),
+            style:  TextStyle(
+                fontSize: 11, color: VTheme.textSec(context))),
       ],
     );
   }
@@ -540,14 +540,14 @@ class _ReviewCampaignScreenState extends State<ReviewCampaignScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: active ? VirelloColors.pink : VirelloColors.boardField,
+          color: active ? VirelloColors.pink : VTheme.chip(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-              color: active ? VirelloColors.pink : VirelloColors.boardBorder),
+              color: active ? VirelloColors.pink : VTheme.divider(context)),
         ),
         child: Text(o,
             style: TextStyle(
-                color: active ? Colors.white : VirelloColors.boardTextSec,
+                color: active ? Colors.white : VTheme.textSec(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 12)),
       ),

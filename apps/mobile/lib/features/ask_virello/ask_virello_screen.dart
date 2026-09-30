@@ -271,7 +271,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
     if (_historyItems.isEmpty) {
       return Center(
         child: Text(s.nothingHere,
-            style: const TextStyle(color: VirelloColors.boardTextSec)),
+            style: TextStyle(color: VTheme.textSec(context))),
       );
     }
     return ListView.separated(
@@ -295,16 +295,16 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                     Text('${it['title'] ?? 'Chat'}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, color: Colors.white)),
+                        style:  TextStyle(
+                            fontWeight: FontWeight.w700, color: VTheme.onBrand(context))),
                     Text('${it['updated_at'] ?? ''}',
-                        style: const TextStyle(
-                            fontSize: 11, color: VirelloColors.boardTextSec)),
+                        style:  TextStyle(
+                            fontSize: 11, color: VTheme.textSec(context))),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right,
-                  color: VirelloColors.boardTextSec),
+               Icon(Icons.chevron_right,
+                  color: VTheme.textSec(context)),
             ],
           ),
         );
@@ -322,20 +322,20 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
             Expanded(
               child: TextField(
                 controller: _inputCtrl,
-                style: const TextStyle(color: Colors.white),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   hintText: s.askVirelloHint,
-                  hintStyle: const TextStyle(color: VirelloColors.boardTextSec),
+                  hintStyle: TextStyle(color: VTheme.textSec(context)),
                   filled: true,
-                  fillColor: VirelloColors.boardField,
+                  fillColor: VTheme.chip(context),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
                       borderSide:
-                          const BorderSide(color: VirelloColors.boardBorder)),
+                          BorderSide(color: VTheme.divider(context))),
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
                       borderSide:
-                          const BorderSide(color: VirelloColors.boardBorder)),
+                          BorderSide(color: VTheme.divider(context))),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
@@ -463,9 +463,9 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
       margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: VirelloColors.boardField,
+        color: VTheme.chip(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VirelloColors.boardBorder),
+        border: Border.all(color: VTheme.divider(context)),
       ),
       child: Row(
         children: [
@@ -479,15 +479,15 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                     errorBuilder: (_, __, ___) => Container(
                         width: 52,
                         height: 52,
-                        color: VirelloColors.boardSurface,
-                        child: const Icon(Icons.shopping_bag_outlined,
-                            color: VirelloColors.boardTextSec)))
+                        color: VTheme.card(context),
+                        child:  Icon(Icons.shopping_bag_outlined,
+                            color: VTheme.textSec(context))))
                 : Container(
                     width: 52,
                     height: 52,
-                    color: VirelloColors.boardSurface,
-                    child: const Icon(Icons.shopping_bag_outlined,
-                        color: VirelloColors.boardTextSec)),
+                    color: VTheme.card(context),
+                    child:  Icon(Icons.shopping_bag_outlined,
+                        color: VTheme.textSec(context))),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -497,10 +497,10 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
                 Text('${p['title'] ?? ''}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white)),
+                        color: VTheme.text(context))),
                 if (price.isNotEmpty && price != 'null')
                   Padding(
                     padding: const EdgeInsets.only(top: 2),

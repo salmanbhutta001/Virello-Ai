@@ -168,8 +168,8 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
         padding: const EdgeInsets.fromLTRB(24, 120, 24, 120),
         child: Text(
           _ctrl.text,
-          style: const TextStyle(
-            color: Colors.white,
+          style:  TextStyle(
+            color: VTheme.onBrand(context),
             fontSize: 30,
             height: 1.9,
             fontWeight: FontWeight.w600,
@@ -196,7 +196,7 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
                 label: Text(s.boardWriteScript),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white24),
+                  side:  BorderSide(color: VTheme.textSec(context).withValues(alpha: 0.24)),
                 ),
               ),
             ),

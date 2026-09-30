@@ -247,12 +247,12 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                       padding: EdgeInsets.zero,
                     ),
                     child: _generating
-                        ? const SizedBox(
+                        ?  SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: VTheme.onBrand(context),
                             ),
                           )
                         : const Icon(Icons.send_rounded, size: 20),
@@ -299,7 +299,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                             color: VTheme.chip(context),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: VirelloColors.boardBorder,
+                              color: VTheme.divider(context),
                             ),
                           ),
                           child: Text(
@@ -370,7 +370,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: VirelloColors.boardBorder),
+              border: Border.all(color: VTheme.divider(context)),
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -422,8 +422,8 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                     ),
                     child: Text(
                       '${_current + 1}/3 · ${scene.title}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style:  TextStyle(
+                        color: VTheme.text(context),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -445,7 +445,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                       ),
                       child: Icon(
                         _playing ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
+                        color: VTheme.onBrand(context),
                         size: 20,
                       ),
                     ),

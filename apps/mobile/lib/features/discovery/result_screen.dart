@@ -101,11 +101,11 @@ class _ResultScreenState extends State<ResultScreen> {
           FilledButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
-                ? const SizedBox(
+                ?  SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
+                        strokeWidth: 2, color: VTheme.text(context)))
                 : const Icon(Icons.bookmark_add_outlined),
             label: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -161,7 +161,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   color: Colors.black.withValues(alpha: 0.55),
                 ),
                 child:
-                    const Icon(Icons.play_arrow, color: Colors.white, size: 30),
+                     Icon(Icons.play_arrow, color: VTheme.onBrand(context), size: 30),
               ),
           ]),
         if (r.thumbnailUrl.isNotEmpty) const SizedBox(height: 12),

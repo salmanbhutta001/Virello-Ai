@@ -211,8 +211,8 @@ class _TemplateRenderScreenState extends State<TemplateRenderScreen> {
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close_rounded,
-                              color: Colors.white, size: 12),
+                          child:  Icon(Icons.close_rounded,
+                              color: VTheme.onBrand(context), size: 12),
                         ),
                       ),
                     ),
@@ -304,12 +304,12 @@ class _TemplateRenderScreenState extends State<TemplateRenderScreen> {
             child: ElevatedButton.icon(
               onPressed: (_images.isEmpty || _rendering) ? null : _render,
               icon: _rendering
-                  ? const SizedBox(
+                  ?  SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                       ),
                     )
                   : const Icon(Icons.movie_creation_outlined),

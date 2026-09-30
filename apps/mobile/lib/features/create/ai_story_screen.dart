@@ -237,12 +237,12 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                 ),
               ),
               child: _working
-                  ? const SizedBox(
+                  ?  SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                       ),
                     )
                   : Text(

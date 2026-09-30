@@ -195,8 +195,8 @@ class _GrowFlowState extends State<GrowFlow> {
                 Text('Budget: \$${_budget.toStringAsFixed(0)} / 7 days'),
                 Slider(value: _budget, min: 5, max: 500, divisions: 99,
                   onChanged: (v) => setState(() => _budget = v)),
-                const Text('AI will never exceed your approved budget.',
-                  style: TextStyle(fontSize: 12, color: VirelloColors.boardTextSec)),
+                 Text('AI will never exceed your approved budget.',
+                  style: TextStyle(fontSize: 12, color: VTheme.textSec(context))),
               ],
             ]),
           ),
@@ -225,7 +225,7 @@ class _GrowFlowState extends State<GrowFlow> {
   Widget _row(String k, String v) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(children: [
-      SizedBox(width: 90, child: Text(k, style: const TextStyle(color: VirelloColors.boardTextSec, fontSize: 13))),
+      SizedBox(width: 90, child: Text(k, style: TextStyle(color: VTheme.textSec(context), fontSize: 13))),
       Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
     ]),
   );
@@ -249,7 +249,7 @@ class _GrowFlowState extends State<GrowFlow> {
             width: 120, height: 120,
             decoration: BoxDecoration(shape: BoxShape.circle, gradient: VirelloTheme.growGradient,
               boxShadow: [BoxShadow(color: const Color(0xFFF95177).withValues(alpha: 0.4), blurRadius: 40)]),
-            child: Icon(done ? Icons.check : Icons.auto_awesome, size: 56, color: Colors.white),
+            child: Icon(done ? Icons.check : Icons.auto_awesome, size: 56, color: VTheme.onBrand(context)),
           ),
           const SizedBox(height: 32),
           Text(_stageLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
@@ -258,7 +258,7 @@ class _GrowFlowState extends State<GrowFlow> {
           const SizedBox(height: 32),
           if (done) ...[
             Text(s.campaignLive,
-              textAlign: TextAlign.center, style: const TextStyle(color: VirelloColors.boardTextSec)),
+              textAlign: TextAlign.center, style: TextStyle(color: VTheme.textSec(context))),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
@@ -274,8 +274,8 @@ class _GrowFlowState extends State<GrowFlow> {
               child: Text(s.viewCampaign),
             ),
           ] else
-            const Text('Content Analysis → Audience → Strategy → Creative → Launch',
-              style: TextStyle(fontSize: 12, color: VirelloColors.boardTextSec), textAlign: TextAlign.center),
+             Text('Content Analysis → Audience → Strategy → Creative → Launch',
+              style: TextStyle(fontSize: 12, color: VTheme.textSec(context)), textAlign: TextAlign.center),
         ]),
       ),
     );
@@ -307,7 +307,7 @@ class _ModeCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            Text(desc, style: const TextStyle(fontSize: 12, color: VirelloColors.boardTextSec)),
+            Text(desc, style: TextStyle(fontSize: 12, color: VTheme.textSec(context))),
           ])),
           if (selected) Icon(Icons.check_circle, color: scheme.primary),
         ]),
@@ -333,9 +333,9 @@ class _GrowButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           decoration: BoxDecoration(gradient: VirelloTheme.growGradient, borderRadius: BorderRadius.circular(16)),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.auto_awesome, color: Colors.white),
+             Icon(Icons.auto_awesome, color: VTheme.onBrand(context)),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+            Text(label, style:  TextStyle(color: VTheme.onBrand(context), fontWeight: FontWeight.w800, fontSize: 16)),
           ]),
         ),
       ),

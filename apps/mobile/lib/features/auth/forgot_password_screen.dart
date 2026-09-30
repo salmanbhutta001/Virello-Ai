@@ -105,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget _eye(bool obscured, VoidCallback onTap) => IconButton(
     icon: Icon(
       obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-      color: VirelloColors.boardTextSec,
+      color: VTheme.textSec(context),
     ),
     onPressed: onTap,
   );
@@ -113,9 +113,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       appBar: AppBar(
-        leading: const BackButton(color: Colors.white),
+        leading:  BackButton(color: VTheme.text(context)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -129,8 +129,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Text(
                   s.resetPasswordTitle,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style:  TextStyle(
+                    color: VTheme.text(context),
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                   ),
@@ -169,9 +169,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   Text(
                     '${s.codeSentTo} ${_emailCtrl.text.trim()}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 13.5,
-                      color: VirelloColors.boardTextSec,
+                      color: VTheme.textSec(context),
                     ),
                   ),
                   const SizedBox(height: 16),

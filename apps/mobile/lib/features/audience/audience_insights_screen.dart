@@ -428,7 +428,7 @@ class _AudienceInsightsScreenState extends State<AudienceInsightsScreen> {
             borderRadius: BorderRadius.circular(12),
             gradient: VirelloColors.brandGradient,
           ),
-          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+          child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(

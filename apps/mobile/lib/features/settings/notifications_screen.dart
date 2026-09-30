@@ -71,7 +71,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('${n['title'] ?? ''}',
             style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -166,9 +166,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 4, 16, 24),
                                 itemCount: rows.length,
-                                separatorBuilder: (_, __) => const Divider(
+                                separatorBuilder: (_, __) =>  Divider(
                                     height: 1,
-                                    color: VirelloColors.boardBorder),
+                                    color: VTheme.divider(context)),
                                 itemBuilder: (_, i) {
                                   final n = rows[i];
                                   final unread = !_read.contains(_idOf(n));
@@ -191,9 +191,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                           end: Alignment.bottomRight,
                                         ),
                                       ),
-                                      child: const Icon(
+                                      child:  Icon(
                                           Icons.notifications_outlined,
-                                          color: Colors.white,
+                                          color: VTheme.onBrand(context),
                                           size: 22),
                                     ),
                                     title: Text(

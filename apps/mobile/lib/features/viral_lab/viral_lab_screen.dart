@@ -138,20 +138,20 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
             controller: _ctrl,
             maxLines: 3,
             minLines: 2,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style:  TextStyle(color: VTheme.text(context), fontSize: 14),
             decoration: InputDecoration(
               hintText: s.pasteLinkOrText,
-              hintStyle: const TextStyle(
-                  color: VirelloColors.boardTextSec, fontSize: 13),
+              hintStyle:  TextStyle(
+                  color: VTheme.textSec(context), fontSize: 13),
               filled: true,
-              fillColor: VirelloColors.boardField,
+              fillColor: VTheme.chip(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: VirelloColors.boardBorder),
+                borderSide: BorderSide(color: VTheme.divider(context)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: VirelloColors.boardBorder),
+                borderSide: BorderSide(color: VTheme.divider(context)),
               ),
               contentPadding: const EdgeInsets.all(12),
             ),
@@ -177,7 +177,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
             const SizedBox(width: 10),
             Expanded(
                 child:
-                    Text(_error!, style: const TextStyle(color: Colors.white))),
+                    Text(_error!, style:  TextStyle(color: VTheme.text(context)))),
           ],
         ),
       ),
@@ -204,15 +204,15 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: VirelloColors.boardField,
+                    color: VTheme.chip(context),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: VirelloColors.boardBorder),
+                    border: Border.all(color: VTheme.divider(context)),
                   ),
                   child: Text(
                     '${e.key}: ${e.value}',
-                    style: const TextStyle(
+                    style:  TextStyle(
                         fontSize: 11.5,
-                        color: VirelloColors.boardTextSec,
+                        color: VTheme.textSec(context),
                         fontWeight: FontWeight.w600),
                   ),
                 );
@@ -223,10 +223,10 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
             Text(
               s.p10DevHeuristicNote,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
-                color: VirelloColors.boardTextSec,
+                color: VTheme.textSec(context),
               ),
             ),
           ],
@@ -274,27 +274,27 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                       children: [
                         Text(
                           '${it['title']}',
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white),
+                              color: VTheme.text(context)),
                         ),
                         const SizedBox(height: 3),
                         Text(
                           '${it['suggestion']}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style:  TextStyle(
                               fontSize: 12.5,
-                              color: VirelloColors.boardTextSec,
+                              color: VTheme.textSec(context),
                               height: 1.4),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy,
-                        size: 18, color: VirelloColors.boardTextSec),
+                    icon:  Icon(Icons.copy,
+                        size: 18, color: VTheme.textSec(context)),
                     onPressed: () => _copy('${it['suggestion']}'),
                   ),
                 ],
@@ -316,8 +316,8 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(
             s.variations,
-            style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+            style:  TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w800, color: VTheme.text(context)),
           ),
         ),
         for (final v in items)
@@ -345,17 +345,17 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text('${v['text']}',
-                      style: const TextStyle(
-                          fontSize: 14, height: 1.5, color: Colors.white)),
+                      style:  TextStyle(
+                          fontSize: 14, height: 1.5, color: VTheme.text(context))),
                   if ((v['why_it_works'] ?? '').toString().isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         '${s.whyItWorks}: ${v['why_it_works']}',
-                        style: const TextStyle(
+                        style:  TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
-                            color: VirelloColors.boardTextSec),
+                            color: VTheme.textSec(context)),
                       ),
                     ),
                   Align(
@@ -407,15 +407,15 @@ class _BoardRing extends StatelessWidget {
             children: [
               Text(
                 '${v.round()}%',
-                style: const TextStyle(
+                style:  TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white),
+                    color: VTheme.text(context)),
               ),
               Text(
                 s.p10ContentScore,
-                style: const TextStyle(
-                    fontSize: 11, color: VirelloColors.boardTextSec),
+                style:  TextStyle(
+                    fontSize: 11, color: VTheme.textSec(context)),
               ),
             ],
           ),

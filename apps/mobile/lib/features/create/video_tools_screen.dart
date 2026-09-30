@@ -81,14 +81,14 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: VirelloColors.boardSurface,
+          backgroundColor: VTheme.card(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: VirelloColors.boardBorder),
+            side: BorderSide(color: VTheme.divider(context)),
           ),
           title: Text(s.toolTrim,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800)),
+              style:  TextStyle(
+                  color: VTheme.text(context), fontWeight: FontWeight.w800)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -96,7 +96,7 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
                 controller: startCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: Colors.white),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   labelText: s.startTimeSec,
                   labelStyle:
@@ -108,7 +108,7 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
                 controller: endCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: Colors.white),
+                style:  TextStyle(color: VTheme.text(context)),
                 decoration: InputDecoration(
                   labelText: s.endTimeSec,
                   labelStyle:
@@ -162,24 +162,24 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
     final h = await showDialog<int>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VirelloColors.boardBorder),
+          side: BorderSide(color: VTheme.divider(context)),
         ),
         title: Text(s.qualityLabel,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800)),
+            style:  TextStyle(
+                color: VTheme.text(context), fontWeight: FontWeight.w800)),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop(720),
-            child: const Text('720p — small file',
-                style: TextStyle(color: Colors.white)),
+            child:  Text('720p — small file',
+                style: TextStyle(color: VTheme.text(context))),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop(1080),
-            child: const Text('1080p — sharper, slower',
-                style: TextStyle(color: Colors.white)),
+            child:  Text('1080p — sharper, slower',
+                style: TextStyle(color: VTheme.text(context))),
           ),
         ],
       ),
@@ -195,18 +195,18 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
     final f = await showDialog<double>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VirelloColors.boardBorder),
+          side: BorderSide(color: VTheme.divider(context)),
         ),
         title: Text(s.toolSpeed,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800)),
+            style:  TextStyle(
+                color: VTheme.text(context), fontWeight: FontWeight.w800)),
         children: [0.5, 1.5, 2.0].map((x) {
           return SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop(x),
-            child: Text('${x}x', style: const TextStyle(color: Colors.white)),
+            child: Text('${x}x', style:  TextStyle(color: VTheme.text(context))),
           );
         }).toList(),
       ),
@@ -222,29 +222,29 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
     final wh = await showDialog<(int, int)>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        backgroundColor: VirelloColors.boardSurface,
+        backgroundColor: VTheme.card(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VirelloColors.boardBorder),
+          side: BorderSide(color: VTheme.divider(context)),
         ),
         title: Text(s.toolAspect,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800)),
+            style:  TextStyle(
+                color: VTheme.text(context), fontWeight: FontWeight.w800)),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop((1080, 1920)),
-            child: const Text('9:16 — Reels / Shorts / TikTok',
-                style: TextStyle(color: Colors.white)),
+            child:  Text('9:16 — Reels / Shorts / TikTok',
+                style: TextStyle(color: VTheme.text(context))),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop((1080, 1080)),
-            child: const Text('1:1 — Square',
-                style: TextStyle(color: Colors.white)),
+            child:  Text('1:1 — Square',
+                style: TextStyle(color: VTheme.text(context))),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop((1920, 1080)),
-            child: const Text('16:9 — Widescreen',
-                style: TextStyle(color: Colors.white)),
+            child:  Text('16:9 — Widescreen',
+                style: TextStyle(color: VTheme.text(context))),
           ),
         ],
       ),
@@ -282,18 +282,18 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: VirelloColors.boardSurface,
+          backgroundColor: VTheme.card(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: VirelloColors.boardBorder),
+            side: BorderSide(color: VTheme.divider(context)),
           ),
           title: Text(s.toolBurnCaptions,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800)),
+              style:  TextStyle(
+                  color: VTheme.text(context), fontWeight: FontWeight.w800)),
           content: TextField(
             controller: ctrl,
             maxLines: 4,
-            style: const TextStyle(color: Colors.white),
+            style:  TextStyle(color: VTheme.text(context)),
             decoration: InputDecoration(
               hintText: s.openingTitle,
               hintStyle: TextStyle(color: VTheme.textSec(context)),
@@ -341,14 +341,14 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: VirelloColors.boardSurface,
+          backgroundColor: VTheme.card(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: VirelloColors.boardBorder),
+            side: BorderSide(color: VTheme.divider(context)),
           ),
           title: Text(s.toolThumbnail,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800)),
+              style:  TextStyle(
+                  color: VTheme.text(context), fontWeight: FontWeight.w800)),
           content: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.file(

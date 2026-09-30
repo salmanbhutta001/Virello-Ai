@@ -198,7 +198,7 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
             decoration: BoxDecoration(
               color: VTheme.chip(context),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: VirelloColors.boardBorder),
+              border: Border.all(color: VTheme.divider(context)),
             ),
             child: _uploading
                 ? const Center(child: CircularProgressIndicator())
@@ -339,12 +339,12 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
                 ),
               ),
               child: _analyzing
-                  ? const SizedBox(
+                  ?  SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: VTheme.text(context),
                       ),
                     )
                   : Text(

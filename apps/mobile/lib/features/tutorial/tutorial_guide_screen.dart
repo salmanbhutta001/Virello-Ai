@@ -154,7 +154,7 @@ class _TutorialGuideScreenState extends State<TutorialGuideScreen> {
           line,
           textAlign: TextAlign.center,
           style:
-              const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
+               TextStyle(color: VTheme.onBrand(context), fontSize: 13, height: 1.35),
         ),
       ),
     );
@@ -407,8 +407,8 @@ class _ControlsOverlay extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(16),
-                child: const Icon(Icons.play_arrow_rounded,
-                    size: 48, color: Colors.white),
+                child:  Icon(Icons.play_arrow_rounded,
+                    size: 48, color: VTheme.onBrand(context)),
               ),
             ),
           ),

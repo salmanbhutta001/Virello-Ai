@@ -113,9 +113,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gradient: VirelloColors.brandGradient,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child:  Icon(
                 Icons.account_balance_wallet_rounded,
-                color: Colors.white,
+                color: VTheme.onBrand(context),
                 size: 22,
               ),
             ),
@@ -213,8 +213,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Expanded(
                           child: Text(
                             s.profile,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style:  TextStyle(
+                              color: VTheme.text(context),
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
@@ -223,9 +223,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         IconButton(
                           tooltip:
                               AppStrings(appState.localeCode).settingsTitle,
-                          icon: const Icon(
+                          icon:  Icon(
                             Icons.settings_outlined,
-                            color: Colors.white,
+                            color: VTheme.text(context),
                           ),
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
@@ -246,8 +246,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 76,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(color: Colors.white, width: 3),
+                    color: VTheme.text(context),
+                    border: Border.all(color: VTheme.text(context), width: 3),
                     boxShadow: VirelloColors.cardShadow,
                   ),
                   alignment: Alignment.center,
@@ -746,12 +746,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             }
                           },
                     child: saving
-                        ? const SizedBox(
+                        ?  SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: VTheme.text(context),
                             ),
                           )
                         : Text(s.saveChanges),
@@ -801,9 +801,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: const BoxDecoration(
                         gradient: VirelloColors.brandGradient,
                       ),
-                      child: const Icon(
+                      child:  Icon(
                         Icons.image_outlined,
-                        color: Colors.white,
+                        color: VTheme.onBrand(context),
                         size: 32,
                       ),
                     )
@@ -818,9 +818,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: const BoxDecoration(
                           gradient: VirelloColors.brandGradient,
                         ),
-                        child: const Icon(
+                        child:  Icon(
                           Icons.image_outlined,
-                          color: Colors.white,
+                          color: VTheme.onBrand(context),
                           size: 32,
                         ),
                       ),
@@ -879,9 +879,9 @@ class _SavedAllScreen extends StatelessWidget {
                               decoration: const BoxDecoration(
                                 gradient: VirelloColors.brandGradient,
                               ),
-                              child: const Icon(
+                              child:  Icon(
                                 Icons.image_outlined,
-                                color: Colors.white,
+                                color: VTheme.onBrand(context),
                                 size: 22,
                               ),
                             )
@@ -896,9 +896,9 @@ class _SavedAllScreen extends StatelessWidget {
                                 decoration: const BoxDecoration(
                                   gradient: VirelloColors.brandGradient,
                                 ),
-                                child: const Icon(
+                                child:  Icon(
                                   Icons.image_outlined,
-                                  color: Colors.white,
+                                  color: VTheme.onBrand(context),
                                   size: 22,
                                 ),
                               ),

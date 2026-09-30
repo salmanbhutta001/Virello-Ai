@@ -59,7 +59,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VirelloColors.boardBg,
+      backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -70,8 +70,8 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
               Text(
                 s.boardSelectLanguage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: VTheme.text(context),
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                 ),
@@ -94,12 +94,12 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: VirelloColors.boardField,
+                          color: VTheme.chip(context),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: selected
                                 ? VirelloColors.pink
-                                : VirelloColors.boardBorder,
+                                : VTheme.divider(context),
                             width: selected ? 1.5 : 1,
                           ),
                         ),
@@ -110,8 +110,8 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                             Expanded(
                               child: Text(
                                 name,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style:  TextStyle(
+                                  color: VTheme.text(context),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -123,7 +123,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                                   : Icons.radio_button_unchecked,
                               color: selected
                                   ? VirelloColors.pink
-                                  : VirelloColors.boardTextSec,
+                                  : VTheme.textSec(context),
                             ),
                           ],
                         ),

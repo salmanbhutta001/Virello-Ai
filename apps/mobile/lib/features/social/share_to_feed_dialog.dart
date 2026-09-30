@@ -343,12 +343,12 @@ class _ShareToFeedDialogState extends State<ShareToFeedDialog> {
                     ),
                   ),
                   child: _sharing
-                      ? const SizedBox(
+                      ?  SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: VTheme.text(context),
                           ),
                         )
                       : Text(s.shareToFeed),
