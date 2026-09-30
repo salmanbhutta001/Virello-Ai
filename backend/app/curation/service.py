@@ -11,6 +11,7 @@ listing junk.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import secrets
@@ -247,6 +248,20 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
         report["departments"][dept] = dept_info
 
     await db.commit()
+    # Autonomous gallery publishing: push new self-hosted gallery images
+    # to GitHub so auto-deploy serves them. Runs in a thread (blocking
+    # git/network I/O), only when this cycle built new galleries, and can
+    # never fail the cycle.
+    if created_total > 0:
+        try:
+            from app.curation.git_push import push_new_galleries
+            push_report = await asyncio.to_thread(
+                push_new_galleries, str(config.gallery_dir()))
+        except Exception as e:  # never fails the cycle
+            log.warning("curation git push crashed: %s", type(e).__name__)
+            push_report = {"pushed": False, "new_files": 0,
+                           "reason": type(e).__name__}
+        report["git_push"] = push_report
     status = ("ok" if covered == len(config.DEPARTMENTS)
               else "partial" if covered else "error")
     return await _finish(db, run, report, status=status,

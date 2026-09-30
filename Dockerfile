@@ -9,7 +9,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv/virello
 
 COPY backend/requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# git: the autonomous curation cycle pushes new gallery images to GitHub
+# itself (backend/app/curation/git_push.py); the slim image has no git.
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip && pip install -r requirements.txt
 
 COPY backend/alembic.ini .
 COPY backend/alembic ./alembic
