@@ -495,19 +495,19 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(14)),
-              child: imgUrl.isNotEmpty
-                  ? Image.network(imgUrl,
-                      width: 150, height: 120, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                          width: 150, height: 120,
-                          color: VTheme.chip(context),
-                          child:  Icon(Icons.shopping_bag_outlined,
-                              color: VTheme.textSec(context))))
-                  : Container(
-                      width: 150, height: 120,
-                      color: VTheme.chip(context),
-                      child:  Icon(Icons.shopping_bag_outlined,
-                          color: VTheme.textSec(context))),
+              child: Container(
+                width: 150,
+                height: 120,
+                color: Colors.white,
+                child: imgUrl.isNotEmpty
+                    ? Image.network(imgUrl,
+                        width: 150, height: 120, fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                            Icons.shopping_bag_outlined,
+                            color: VTheme.textSec(context)))
+                    : Icon(Icons.shopping_bag_outlined,
+                        color: VTheme.textSec(context)),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8),
@@ -523,7 +523,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   Text(title,
                       maxLines: 2, overflow: TextOverflow.ellipsis,
                       style:  TextStyle(fontSize: 12,
-                          color: VTheme.onBrand(context), fontWeight: FontWeight.w600)),
+                          color: VTheme.text(context), fontWeight: FontWeight.w600)),
                 ],
               ),
             ),

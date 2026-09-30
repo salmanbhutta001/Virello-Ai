@@ -267,7 +267,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               borderRadius: BorderRadius.circular(28),
               child: images.isNotEmpty
                   ? Container(
-                      color: VTheme.text(context),
+                      color: Colors.white,
                       height: 360,
                       child: PageView.builder(
                         itemCount: images.length,
