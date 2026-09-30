@@ -6,6 +6,12 @@ class AdminApi {
   final ApiClient _c;
   AdminApi(this._c);
 
+  /// PIN unlock: POST /api/v1/admin/unlock. Authenticated call — the caller
+  /// is not an admin yet, a correct PIN elevates them server-side.
+  /// Throws [AdminForbiddenException] on wrong PIN (403).
+  Future<void> unlock(String pin) =>
+      _c.adminPost('/api/v1/admin/unlock', {'pin': pin});
+
   Future<Map<String, dynamic>> overview() =>
       _c.adminGet('/api/v1/admin/overview');
   Future<Map<String, dynamic>> analyticsSummary() =>

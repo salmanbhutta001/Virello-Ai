@@ -1478,6 +1478,14 @@ class AppStrings {
         'Ringkasan',
         'সারসংক্ষেপ'
       );
+  // Hidden PIN entry -> admin panel (profile version tapped 5x).
+  String get adminPinTitle => _get('Admin Access', 'ایڈمن رسائی', 'دخول المسؤول');
+  String get adminPinHint =>
+      _get('Enter admin PIN', 'ایڈمن PIN درج کریں', 'أدخل رمز المسؤول');
+  String get adminPinWrong => _get(
+      'Wrong PIN, try again', 'غلط PIN، دوبارہ کوشش کریں', 'رمز خاطئ، حاول مرة أخرى');
+  String get adminPinLocked => _get('Too many attempts, try later',
+      'بہت زیادہ کوششیں، بعد میں کوشش کریں', 'محاولات كثيرة، حاول لاحقًا');
   String get adminUsers => _get('Users', 'صارفین', 'المستخدمون',
         'यूज़र्स',
         'Utilisateurs',

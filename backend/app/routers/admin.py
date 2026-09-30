@@ -9,6 +9,7 @@ must sit behind the real JWT auth (never dev_noauth).
 """
 from __future__ import annotations
 
+import hmac
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -17,8 +18,14 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.security import (
+    check_login_throttle,
+    clear_login_attempts,
+    record_login_failure,
+)
 from app.models.billing import Broadcast, CountryConfig, PlanConfig, SystemSetting, Transaction
 from app.models.core import (
     AgentRun, AuditLog, Campaign, CampaignStatus, FraudFlag, Subscription, User,
@@ -33,6 +40,36 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(403, "Admin access required")
     return user
+
+
+# ---------------------------------------------------------------- PIN unlock
+# Hidden mobile entry (profile version text tapped 5x -> PIN screen).
+# The PIN genuinely elevates server-side: a correct PIN sets is_admin=True
+# on the signed-in user. The PIN value is never logged. Brute-force guard:
+# 5 wrong attempts / 15 min per user -> 429 (same throttle style as login).
+class PinUnlockBody(BaseModel):
+    pin: str
+
+
+@router.post("/unlock")
+async def unlock_admin(body: PinUnlockBody,
+                       user: User = Depends(get_current_user),
+                       db: AsyncSession = Depends(get_db)) -> dict:
+    throttle_key = f"admin_pin:{user.id}"
+    try:
+        check_login_throttle(throttle_key)
+    except PermissionError:
+        raise HTTPException(429, "Too many attempts. Try again in a few minutes.")
+    if not settings.admin_pin or not hmac.compare_digest(body.pin or "",
+                                                         settings.admin_pin):
+        record_login_failure(throttle_key)
+        raise HTTPException(403, "Wrong PIN")
+    clear_login_attempts(throttle_key)
+    user.is_admin = True
+    db.add(AuditLog(user_id=user.id, action="admin.pin.unlock",
+                    details="self-elevated via PIN"))
+    await db.commit()
+    return {"ok": True, "is_admin": True}
 
 
 # ---------------------------------------------------------------- overview

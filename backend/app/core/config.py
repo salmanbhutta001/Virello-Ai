@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # PAT with Contents: read+write on the repo. Empty -> push skipped.
     github_token: str = ""  # VIRELLO_GITHUB_TOKEN
     github_repo: str = "salmanbhutta001/Virello-Ai"  # VIRELLO_GITHUB_REPO
+    # --- Admin panel: hidden PIN entry (profile version tapped 5x -> PIN
+    # screen). A correct PIN elevates the signed-in user to admin server-side.
+    admin_pin: str = "0000"  # VIRELLO_ADMIN_PIN
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
     celery_eager: bool = True  # dev: run Celery tasks inline, no Redis needed
     dev_noauth: bool = False  # dev only: bypass JWT, use demo user

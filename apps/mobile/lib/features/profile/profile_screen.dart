@@ -6,6 +6,7 @@ import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../admin/admin_pin_screen.dart';
 import '../admin/admin_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../discovery/result_screen.dart';
@@ -35,6 +36,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int? _campaignCount;
   Set<String> _interests = {};
   Map<String, String> _topicNames = {};
+  // Hidden admin entry: 5 taps on the version footer within 3 seconds.
+  int _verTaps = 0;
+  DateTime? _firstVerTap;
 
   @override
   void initState() {
@@ -455,12 +459,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                // Subtle version footer — tap 5x within 3s for the hidden
+                // admin PIN entry.
+                Center(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _onVersionTap,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        'v0.1.0',
+                        style: TextStyle(
+                          color: VirelloColors.muted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Hidden admin entry: 5 taps on the version footer within 3 seconds opens
+  /// the PIN screen. A correct PIN elevates server-side; on success we
+  /// refresh /users/me and open the admin dashboard.
+  Future<void> _onVersionTap() async {
+    final now = DateTime.now();
+    if (_firstVerTap == null ||
+        now.difference(_firstVerTap!) > const Duration(seconds: 3)) {
+      _firstVerTap = now;
+      _verTaps = 1;
+      return;
+    }
+    _verTaps++;
+    if (_verTaps < 5) return;
+    _verTaps = 0;
+    _firstVerTap = null;
+    final unlocked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AdminPinScreen()),
+    );
+    if (unlocked == true && mounted) {
+      apiClient.me().then((m) {
+        if (!mounted) return;
+        setState(() => _me = m);
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AdminScreen()),
+        );
+      }).catchError((_) {});
+    }
   }
 
   Widget _menuRow({
