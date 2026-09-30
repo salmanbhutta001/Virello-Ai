@@ -79,7 +79,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   /// forever. After 2 minutes without a loaded image, show retry.
   void _armTimeout() {
     _genTimer?.cancel();
-    _genTimer = Timer(const Duration(seconds: 60), () {
+    _genTimer = Timer(const Duration(seconds: 150), () {
       if (mounted && _loading) {
         setState(() {
           _loading = false;

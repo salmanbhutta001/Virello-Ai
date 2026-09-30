@@ -66,7 +66,13 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
   }
 
   Future<String?> _askAi(String prompt) async {
-    return AiTextService.instance.generate(prompt: prompt);
+    return AiTextService.instance.generate(
+      prompt: prompt,
+      system:
+          'You are Virello AI, a world-class short-form video scriptwriter. You write scripts that hook in 3 seconds, build tension, and end with a viral CTA. Every line is speakable, punchy, and made for retention. Never write generic filler.',
+      maxTokens: 1500,
+      temperature: 0.9,
+    );
   }
 
   /// Attempt 1: real AI provider. Returns null on any failure.

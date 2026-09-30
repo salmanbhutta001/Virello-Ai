@@ -74,10 +74,6 @@ class _ConversionScreenState extends State<ConversionScreen> {
     }
   }
 
-  Future<String?> _askAi(String prompt) async {
-    return AiTextService.instance.generate(prompt: prompt);
-  }
-
   /// Backend fallback: renders the selected format from transform response.
   String _formatBackend(Map<String, dynamic> result) {
     final platforms = (result['platforms'] as List?) ?? [];
@@ -116,8 +112,13 @@ class _ConversionScreenState extends State<ConversionScreen> {
 
   Future<({String output, bool ai})?> _aiAttempt(String raw) async {
     try {
-      final output = await _askAi(
-        _buildAiPrompt(raw, _formatKeys[_format], appState.localeCode),
+      final output = await AiTextService.instance.generate(
+        prompt:
+            _buildAiPrompt(raw, _formatKeys[_format], appState.localeCode),
+        system:
+            'You are Virello AI, an expert viral content strategist. You write scroll-stopping, high-converting social media content. Be creative, punchy, and specific — never generic. Match the energy of top creators.',
+        maxTokens: 1500,
+        temperature: 0.9,
       );
       if (output == null || output.isEmpty) return null;
       return (output: output, ai: true);

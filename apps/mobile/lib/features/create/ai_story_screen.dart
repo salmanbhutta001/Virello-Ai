@@ -59,7 +59,13 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
   }
 
   Future<String?> _askAi(String prompt) async {
-    return AiTextService.instance.generate(prompt: prompt);
+    return AiTextService.instance.generate(
+      prompt: prompt,
+      system:
+          'You are Virello AI, a master storyteller for social media. You craft emotional, cinematic, share-worthy stories with vivid imagery and irresistible hooks. Your stories feel human, urgent, and unforgettable.',
+      maxTokens: 1500,
+      temperature: 0.9,
+    );
   }
 
   Future<({String title, String body, bool ai})?> _aiAttempt(

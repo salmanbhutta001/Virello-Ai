@@ -20,12 +20,39 @@ class AiTextService {
 
   /// Generate text from a prompt. [system] sets the assistant's role.
   /// Returns the generated text, or null on failure.
+  /// Retries once on failure for reliability.
   Future<String?> generate({
     required String prompt,
     String? system,
-    int maxTokens = 1200,
-    double temperature = 0.8,
-    Duration timeout = const Duration(seconds: 90),
+    int maxTokens = 1500,
+    double temperature = 0.85,
+    Duration timeout = const Duration(seconds: 120),
+  }) async {
+    // First attempt.
+    var result = await _attempt(
+      prompt: prompt,
+      system: system,
+      maxTokens: maxTokens,
+      temperature: temperature,
+      timeout: timeout,
+    );
+    // One retry on failure (transient network/model hiccups).
+    result ??= await _attempt(
+      prompt: prompt,
+      system: system,
+      maxTokens: maxTokens,
+      temperature: temperature,
+      timeout: timeout,
+    );
+    return result;
+  }
+
+  Future<String?> _attempt({
+    required String prompt,
+    String? system,
+    required int maxTokens,
+    required double temperature,
+    required Duration timeout,
   }) async {
     final messages = <Map<String, String>>[];
     if (system != null && system.isNotEmpty) {
