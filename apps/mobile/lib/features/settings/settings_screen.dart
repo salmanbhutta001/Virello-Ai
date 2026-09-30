@@ -5,6 +5,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../tutorial/tutorial_guide_screen.dart';
+import '../tour/app_tour.dart';
 import 'change_password_screen.dart';
 import 'company_screen.dart';
 import 'language_analytics_screen.dart';
@@ -230,6 +231,17 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const TutorialGuideScreen())),
               ),
+              _row(
+                icon: Icons.tour_outlined,
+                iconColor: VirelloColors.pink,
+                title: s.takeAppTour,
+                subtitle: s.takeAppTourSub,
+                onTap: () async {
+                  await AppTourService.resetTour();
+                  if (!context.mounted) return;
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                },
+              ),
             ]),
             _section(s.aboutSection, [
               _row(
@@ -238,6 +250,12 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: 'Virello AI',
                 onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CompanyScreen())),
+              ),
+              _row(
+                icon: Icons.cleaning_services_outlined,
+                title: s.clearCache,
+                subtitle: s.clearCacheSub,
+                onTap: () => _clearCache(context),
               ),
               _row(
                 icon: Icons.info_outline,

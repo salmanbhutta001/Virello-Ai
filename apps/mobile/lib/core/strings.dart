@@ -1481,6 +1481,39 @@ class AppStrings {
   // Hidden PIN entry -> admin panel (profile version tapped 5x).
   String get adminPinTitle => _get('Admin Access', 'ایڈمن رسائی', 'دخول المسؤول');
   String get adminPanel => _get('Admin Panel', 'ایڈمن پینل', 'لوحة المسؤول');
+  String get settingsSubtitle => _get(
+        'App settings, legal & support',
+        'ایپ سیٹنگز، قانونی و سپورٹ',
+        'إعدادات التطبيق والقانون والدعم',
+      );
+  String get takeAppTour => _get('Take App Tour', 'ایپ ٹور لیں', 'خذ جولة في التطبيق');
+  String get takeAppTourSub => _get(
+        'See what each tab does',
+        'دیکھیں ہر ٹیب کیا کرتا ہے',
+        'شاهد ما يفعله كل تبويب',
+      );
+  String get inviteFriends => _get('Invite Friends', 'دوستوں کو بلائیں', 'ادعُ الأصدقاء');
+  String get inviteFriendsSub => _get(
+        'Share Virello with others',
+        'ویریلو دوسروں کے ساتھ شیئر کریں',
+        'شارك Virello مع الآخرين',
+      );
+  String get inviteFriendsMessage => _get(
+        'Join me on Virello — Your AI Growth Manager! Grow your social media with AI.',
+        'میرے ساتھ Virello جوائن کریں — آپ کا AI Growth Manager! AI کے ساتھ اپنا سوشل میڈیا بڑھائیں۔',
+        'انضم إليّ في Virello — مدير النمو بالذكاء الاصطناعي! نمِّ وسائل التواصل الاجتماعي بالذكاء الاصطناعي.',
+      );
+  String get clearCache => _get('Clear Cache', 'کیش صاف کریں', 'مسح ذاكرة التخزين المؤقت');
+  String get clearCacheSub => _get(
+        'Free up space used by cached images',
+        'کیش شدہ تصاویر سے جگہ خالی کریں',
+        'تحرير المساحة المستخدمة بالصور المخزنة',
+      );
+  String get cacheCleared => _get(
+        'Cache cleared',
+        'کیش صاف ہو گیا',
+        'تم مسح ذاكرة التخزين المؤقت',
+      );
   String get retry => _get('Retry', 'دوبارہ کوشش', 'إعادة المحاولة');
   String get documentLoadError => _get(
         'Could not load the document. Please try again.',

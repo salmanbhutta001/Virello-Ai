@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -10,9 +11,8 @@ import '../admin/admin_pin_screen.dart';
 import '../admin/admin_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../discovery/result_screen.dart';
-import '../settings/language_settings_screen.dart';
-import '../settings/notifications_screen.dart';
 import '../settings/settings_screen.dart';
+import '../tour/app_tour.dart';
 import '../shop/seller_dashboard_screen.dart';
 import '../wallet/wallet_screen.dart';
 import '../../services/rewards_api.dart';
@@ -20,9 +20,6 @@ import '../social/activity_screen.dart';
 import '../social/creator_dashboard_screen.dart';
 import '../social/following_screen.dart';
 import '../social/messages_screen.dart';
-import '../tutorial/tutorial_guide_screen.dart';
-import 'billing_screen.dart';
-import 'support_chat_screen.dart';
 
 /// Profile: board-styled cover, real stats (campaigns / credits / interests),
 /// saved collections, and the full menu — settings, Trust Center, support.
@@ -499,105 +496,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
+                      // "Take App Tour" — replay the professional app tour.
                       _menuRow(
-                        icon: Icons.language_outlined,
-                        title: s.langSettings,
-                        subtitle: appState.localeCode.toUpperCase(),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const LanguageSettingsScreen(),
-                          ),
-                        ),
-                      ),
-                      _menuRow(
-                        icon: Icons.notifications_outlined,
-                        title: s.notifications,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const NotificationsScreen(),
-                          ),
-                        ),
-                      ),
-                      _menuRow(
-                        icon: Icons.play_circle_outline_rounded,
+                        icon: Icons.tour_outlined,
                         iconColor: VirelloColors.pink,
-                        title: s.tutorialMenu,
-                        subtitle: s.tutorialMenuSub,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const TutorialGuideScreen(),
-                          ),
-                        ),
+                        title: s.takeAppTour,
+                        subtitle: s.takeAppTourSub,
+                        onTap: () async {
+                          await AppTourService.resetTour();
+                          if (!context.mounted) return;
+                          // Close profile and show tour on home shell.
+                          Navigator.of(context).popUntil((r) => r.isFirst);
+                        },
                       ),
+                      // "Invite Friends" — share the app.
                       _menuRow(
-                        icon: Icons.dark_mode_outlined,
-                        title: 'Theme',
-                        trailing: ListenableBuilder(
-                          listenable: appState,
-                          builder: (_, __) => Switch(
-                            value: appState.themeMode == ThemeMode.dark,
-                            onChanged: (_) => appState.toggleTheme(),
-                          ),
-                        ),
-                      ),
-                      if (isAdmin)
-                        _menuRow(
-                          icon: Icons.admin_panel_settings_outlined,
-                          iconColor: VirelloColors.pink,
-                          title: s.adminDashboard,
-                          subtitle: s.adminOverview,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const AdminScreen(),
-                            ),
-                          ),
-                        ),
-                      _menuRow(
-                        icon: Icons.credit_card_outlined,
-                        title: s.billingTitle,
-                        subtitle: '$planLabel Plan · $_credits',
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const BillingScreen(),
-                          ),
+                        icon: Icons.person_add_alt_outlined,
+                        title: s.inviteFriends,
+                        subtitle: s.inviteFriendsSub,
+                        onTap: () => Share.share(
+                          s.inviteFriendsMessage,
+                          subject: 'Virello',
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                VSectionHeader(title: s.trustTitle),
-                const SizedBox(height: 10),
+                // Trust, legal, support & app settings live in Settings
+                // (gear icon) — single shortcut here, no duplicates.
                 VCard(
                   padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      _menuRow(
-                        icon: Icons.verified_user_outlined,
-                        iconColor: VirelloColors.pink,
-                        title: s.howVirelloGrows,
-                        onTap: () => _showDialog(
-                          s.howVirelloGrows,
-                          '${s.neverFake}\n\n${s.noGuarantees}',
-                        ),
+                  child: _menuRow(
+                    icon: Icons.settings_outlined,
+                    iconColor: VirelloColors.pink,
+                    title: s.settingsTitle,
+                    subtitle: s.settingsSubtitle,
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SettingsScreen(),
                       ),
-                      _menuRow(
-                        icon: Icons.block_outlined,
-                        iconColor: VirelloColors.danger,
-                        title: s.whatWeNeverDo,
-                        onTap: () =>
-                            _showDialog(s.whatWeNeverDo, s.neverDoList),
-                      ),
-                      _menuRow(
-                        icon: Icons.support_agent_outlined,
-                        title: s.liveChatSupport,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SupportChatScreen(),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -798,22 +738,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ).whenComplete(nameCtrl.dispose);
   }
 
-  void _showDialog(String title, String body) {
-    final s = AppStrings(appState.localeCode);
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(s.back),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _savedCard(PostAnalysisResult r) {
     final title = r.title.isEmpty ? r.url : r.title;
