@@ -20,6 +20,9 @@ from app.services.discovery import (
     get_feed, get_my_interests, get_placement_stats, record_interaction,
     request_placement, set_my_interests, seed_topics,
 )
+from app.services.discovery.trend_images import (  # noqa: F401 — registers TrendImageCache model
+    resolve_trend_thumbnails,
+)
 
 router = APIRouter()
 
@@ -332,6 +335,7 @@ async def trending_now(
     limit: int = 10,
     lang: str = "en",
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Real trending topics from free public sources.
 
@@ -454,6 +458,12 @@ async def trending_now(
                         sources_used.append("Google News")
         except Exception:
             pass
+
+    # Fill display images for topics missing one: real Wikipedia pageimage
+    # first, cached value second, stylized illustration generated in the
+    # background otherwise. Shape unchanged — mobile already renders
+    # `thumbnail_url` (gradient fallback when empty).
+    await resolve_trend_thumbnails(trends, db, lang)
 
     return {
         "trends": trends[:limit],
