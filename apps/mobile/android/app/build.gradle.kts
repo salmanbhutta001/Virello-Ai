@@ -19,7 +19,10 @@ android {
         applicationId = "com.virello.virello"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Phase B: ffmpeg_kit_flutter_new needs API 24+ (MediaCodec, 16KB pages).
+        // Drops Android 5.0-7.0 (<2% of devices in 2026); required for the
+        // on-device video engine (trim/compress/captions burn/story assembly).
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)

@@ -6,6 +6,9 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/local_tools/caption_tools.dart';
+import '../../services/local_tools/templates_engine.dart';
+import 'template_render_screen.dart';
 
 /// Board screen 29: "Templates" — fully functional.
 ///
@@ -257,6 +260,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   }
 
   void _openTemplate(_Template t) {
+    // Local project plans (Phase A) exist for a subset of the catalog.
+    final engineT = TemplatesEngine.byId(t.id);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -444,10 +449,381 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   ),
                 ],
               ),
+              // Phase B: render the filled template into a real video
+              // on-device (ffmpeg slideshow → voice/music mix → captions).
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TemplateRenderScreen(
+                          template: _toContentTemplate(t),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.movie_creation_outlined, size: 18),
+                  label: Text(s.renderVideo),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VirelloColors.pink,
+                    side: const BorderSide(color: VirelloColors.pink),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+              // Local project plan (Phase A): shot list + caption timing,
+              // built on-device from the user's slot values.
+              if (engineT != null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _openPlanBuilder(engineT);
+                    },
+                    icon: const Icon(Icons.list_alt_outlined, size: 18),
+                    label: Text(s.buildPlan),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: VirelloColors.pink,
+                      side: const BorderSide(color: VirelloColors.pink),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Maps a board [_Template] to a renderable [ContentTemplate].
+  ///
+  /// Prefers Phase A's curated slot definitions when they exist
+  /// ([TemplatesEngine.byId]); otherwise builds a generic template from the
+  /// board structure prose, deriving a slot (and rough duration) per line.
+  ContentTemplate _toContentTemplate(_Template t) {
+    final builtin = TemplatesEngine.byId(t.id);
+    if (builtin != null) return builtin;
+    final slots = <TemplateSlot>[];
+    final lines = t.structure
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      var secs = 8;
+      var label = line;
+      final m = RegExp(r'^(\d+)\s*-\s*(\d+)s\s*:?\s*(.*)$').firstMatch(line);
+      if (m != null) {
+        final a = int.parse(m.group(1)!);
+        final b = int.parse(m.group(2)!);
+        secs = (b - a).clamp(2, 60);
+        label = m.group(3)!.trim();
+      } else {
+        final ci = line.indexOf(':');
+        if (ci > 0 && ci < 30) label = line.substring(0, ci).trim();
+      }
+      if (label.length > 40) label = '${label.substring(0, 37)}…';
+      slots.add(TemplateSlot(
+        id: 'beat$i',
+        label: label.isEmpty ? 'Beat ${i + 1}' : label,
+        hint: line,
+        maxSeconds: secs,
+      ));
+    }
+    return ContentTemplate(
+      id: t.id,
+      name: t.name,
+      category: t.category,
+      description: t.description,
+      slots: slots,
+      defaultCta: 'Follow for more.',
+    );
+  }
+
+  /// Local template project builder: fills each slot, then produces a
+  /// structured plan (shot list + caption timing) via [TemplatesEngine].
+  void _openPlanBuilder(ContentTemplate template) {
+    final ctrls = <String, TextEditingController>{
+      for (final sl in template.slots) sl.id: TextEditingController(),
+    };
+    final ctaCtrl = TextEditingController(text: template.defaultCta);
+    TemplateProject? project;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, scroll) => StatefulBuilder(
+          builder: (ctx2, setB) => Container(
+            decoration: BoxDecoration(
+              color: VTheme.card(ctx2),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: project == null
+                ? _planForm(ctx2, scroll, template, ctrls, ctaCtrl, setB,
+                    (p) => setB(() => project = p))
+                : _planResult(ctx2, scroll, project!, setB,
+                    () => setB(() => project = null)),
+          ),
+        ),
+      ),
+    ).whenComplete(() {
+      for (final c in ctrls.values) {
+        c.dispose();
+      }
+      ctaCtrl.dispose();
+    });
+  }
+
+  Widget _planForm(
+    BuildContext ctx,
+    ScrollController scroll,
+    ContentTemplate template,
+    Map<String, TextEditingController> ctrls,
+    TextEditingController ctaCtrl,
+    StateSetter setB,
+    ValueChanged<TemplateProject> onBuilt,
+  ) {
+    return ListView(
+      controller: scroll,
+      children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: VirelloColors.boardBorder,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          '${s.buildPlan}: ${template.name}',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: VTheme.text(ctx),
+          ),
+        ),
+        Text(
+          template.description,
+          style: TextStyle(fontSize: 12.5, color: VTheme.textSec(ctx)),
+        ),
+        const SizedBox(height: 16),
+        for (final sl in template.slots) ...[
+          Text(
+            '${sl.label} (~${sl.maxSeconds}s)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: VTheme.textSec(ctx),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: VTheme.chip(ctx),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TextField(
+              controller: ctrls[sl.id],
+              maxLines: 2,
+              minLines: 1,
+              style: TextStyle(color: VTheme.text(ctx), fontSize: 14),
+              decoration: InputDecoration(
+                hintText: sl.hint,
+                hintStyle: TextStyle(color: VTheme.textSec(ctx)),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        Text(
+          'CTA',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: VTheme.textSec(ctx),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: VTheme.chip(ctx),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: TextField(
+            controller: ctaCtrl,
+            style: TextStyle(color: VTheme.text(ctx), fontSize: 14),
+            decoration: const InputDecoration(border: InputBorder.none),
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton(
+            onPressed: () {
+              final values = {
+                for (final e in ctrls.entries) e.key: e.value.text,
+              };
+              onBuilt(TemplatesEngine.buildProject(
+                template: template,
+                slotValues: values,
+                cta: ctaCtrl.text,
+              ));
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: VirelloColors.pink,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Text(
+              s.buildPlan,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _planResult(
+    BuildContext ctx,
+    ScrollController scroll,
+    TemplateProject project,
+    StateSetter setB,
+    VoidCallback onEdit,
+  ) {
+    final plan = project.shotList();
+    return ListView(
+      controller: scroll,
+      children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: VirelloColors.boardBorder,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                s.projectPlan,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: VTheme.text(ctx),
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(s.boardWriteScript),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          s.shotList,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: VTheme.textSec(ctx),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: VTheme.chip(ctx),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: SelectableText(
+            plan,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.7,
+              color: VTheme.text(ctx),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          s.captionTiming,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: VTheme.textSec(ctx),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: VTheme.chip(ctx),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: SelectableText(
+            CaptionTools.toSrt(project.captions),
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.7,
+              color: VTheme.text(ctx),
+              fontFamily: 'monospace',
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: plan));
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(content: Text(s.boardCopied)),
+              );
+            },
+            icon: const Icon(Icons.copy_outlined, size: 18),
+            label: Text(s.copyText),
+          ),
+        ),
+      ],
     );
   }
 

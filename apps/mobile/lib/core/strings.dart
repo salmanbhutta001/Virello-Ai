@@ -13341,4 +13341,445 @@ class AppStrings {
         'Siap saat Anda butuh bantuan',
         'সাহায্য লাগলে হাজির',
       );
+
+  // ---- Create Phase A: local tools (on-device, no account needed) ----
+  String get imageTools => _get(
+        'Image Tools',
+        'امیج ٹولز',
+        'أدوات الصور',
+      );
+  String get imageToolsDesc => _get(
+        'Crop, filters, text & more — on your phone',
+        'کراپ، فلٹرز، ٹیکسٹ اور مزید — آپ کے فون پر',
+        'قصّ وفلترة ونصوص والمزيد — على هاتفك',
+      );
+  String get teleprompter => _get(
+        'Teleprompter',
+        'ٹیلی پرامپٹر',
+        'المُلقِّن',
+      );
+  String get teleprompterDesc => _get(
+        'Read your script hands-free while recording',
+        'ریکارڈنگ کے دوران اسکرپٹ ہاتھ آزاد پڑھیں',
+        'اقرأ النص أثناء التسجيل دون استخدام يديك',
+      );
+  String get voiceover => _get(
+        'Voiceover',
+        'وائس اوور',
+        'التعليق الصوتي',
+      );
+  String get voiceoverDesc => _get(
+        'Turn text into speech with your phone\u2019s voice',
+        'متن کو اپنے فون کی آواز میں بدلیں',
+        'حوّل النص إلى كلام بصوت هاتفك',
+      );
+  String get pickImage => _get('Pick an image', 'تصویر منتخب کریں');
+  String get filters => _get('Filters', 'فلٹرز');
+  String get cropSquare => _get('Square crop', 'مربع کراپ');
+  String get rotate => _get('Rotate', 'گھمائیں');
+  String get flipH => _get('Flip', 'پلٹائیں');
+  String get brightness => _get('Brightness', 'چمک');
+  String get contrast => _get('Contrast', 'کنٹراسٹ');
+  String get saturation => _get('Saturation', 'سیچوریشن');
+  String get addText => _get('Add text', 'متن شامل کریں');
+  String get watermark => _get('Watermark', 'واٹر مارک');
+  String get reelsFrame => _get('9:16 Reels frame', '9:16 ریلز فریم');
+  String get saveImage => _get('Save image', 'تصویر محفوظ کریں');
+  String get imageSaved => _get('Image saved', 'تصویر محفوظ ہو گئی');
+  String get noImagePicked =>
+      _get('Pick an image first', 'پہلے تصویر منتخب کریں');
+  String get enterText => _get('Enter text', 'متن لکھیں');
+  String get teleprompterSpeed => _get('Speed', 'رفتار');
+  String get scriptHint => _get(
+        'Paste or write your script here…',
+        'اپنا اسکرپٹ یہاں لکھیں یا پیسٹ کریں…',
+      );
+  String get voiceoverTextHint => _get(
+        'Type what the voice should say…',
+        'وہ متن لکھیں جو آواز بولے…',
+      );
+  String get voice => _get('Voice', 'آواز');
+  String get pitch => _get('Pitch', 'سُر');
+  String get speak => _get('Speak', 'بولیں');
+  String get stop => _get('Stop', 'روکیں');
+  String get exportAudio => _get('Export audio', 'آڈیو ایکسپورٹ کریں');
+  String get audioExported => _get('Audio exported', 'آڈیو ایکسپورٹ ہو گیا');
+  String get ttsUnavailable => _get(
+        'Voice not available on this device',
+        'اس ڈیوائس پر آواز دستیاب نہیں',
+      );
+  String get projectPlan => _get('Project plan', 'پروجیکٹ پلان');
+  String get shotList => _get('Shot list', 'شاٹ لسٹ');
+  String get buildPlan => _get('Build plan', 'پلان بنائیں');
+  String get captionTiming => _get('Timing & SRT', 'ٹائمنگ اور SRT');
+  String get wordsPerSecond => _get('Words per second', 'الفاظ فی سیکنڈ');
+  String get exportSrt => _get('Export SRT', 'SRT ایکسپورٹ کریں');
+  String get srtCopied => _get('SRT copied', 'SRT کاپی ہو گیا');
+  String get selectCaptionFirst =>
+      _get('Select a caption first', 'پہلے کوئی کیپشن منتخب کریں');
+  // --- Phase B: on-device video engine (ffmpeg) ---
+  String get videoTools => _get(
+        'Video tools',
+        'ویڈیو ٹولز',
+        'أدوات الفيديو',
+        'वीडियो टूल्स',
+        'Outils vidéo',
+        'Herramientas de video',
+        'Ferramentas de vídeo',
+        'Videotools',
+        'Video araçları',
+        'Alat video',
+        'ভিডিও টুলস',
+      );
+  String get storyVideo => _get(
+        'Story Video',
+        'اسٹوری ویڈیو',
+        'فيديو القصة',
+        'स्टोरी वीडियो',
+        'Vidéo story',
+        'Video de historia',
+        'Vídeo de story',
+        'Story-Video',
+        'Hikaye videosu',
+        'Video cerita',
+        'স্টোরি ভিডিও',
+      );
+  String get storyVideoDesc => _get(
+        'Turn photos into a 9:16 story video with music',
+        'تصویروں سے میوزک والی 9:16 اسٹوری ویڈیو بنائیں',
+        'حوّل الصور إلى فيديو قصة 9:16 مع موسيقى',
+        'तस्वीरों से म्यूज़िक वाली 9:16 स्टोरी वीडियो बनाएं',
+        'Transformez des photos en story vidéo 9:16 avec musique',
+        'Convierte fotos en un video de historia 9:16 con música',
+        'Transforme fotos em um vídeo de story 9:16 com música',
+        'Mache aus Fotos ein 9:16-Story-Video mit Musik',
+        'Fotoğraflardan müzikli 9:16 hikaye videosu oluşturun',
+        'Ubah foto menjadi video cerita 9:16 dengan musik',
+        'ছবি থেকে মিউজিকসহ 9:16 স্টোরি ভিডিও বানান',
+      );
+  String get renderVideo => _get(
+        'Render video',
+        'ویڈیو رینڈر کریں',
+        'إنشاء الفيديو',
+        'वीडियो रेंडर करें',
+        'Générer la vidéo',
+        'Generar video',
+        'Gerar vídeo',
+        'Video rendern',
+        'Videoyu oluştur',
+        'Render video',
+        'ভিডিও রেন্ডার করুন',
+      );
+  String get pickVideo => _get(
+        'Pick a video',
+        'ویڈیو چنیں',
+        'اختر فيديو',
+        'वीडियो चुनें',
+        'Choisir une vidéo',
+        'Elige un video',
+        'Escolha um vídeo',
+        'Video wählen',
+        'Video seçin',
+        'Pilih video',
+        'ভিডিও বেছে নিন',
+      );
+  String get pickImages => _get(
+        'Pick photos',
+        'تصویریں چنیں',
+        'اختر الصور',
+        'तस्वीरें चुनें',
+        'Choisir des photos',
+        'Elige fotos',
+        'Escolha fotos',
+        'Fotos wählen',
+        'Fotoğraf seçin',
+        'Pilih foto',
+        'ছবি বেছে নিন',
+      );
+  String get pickAudio => _get(
+        'Pick audio',
+        'آڈیو چنیں',
+        'اختر الصوت',
+        'ऑडियो चुनें',
+        'Choisir un audio',
+        'Elige audio',
+        'Escolha áudio',
+        'Audio wählen',
+        'Ses seçin',
+        'Pilih audio',
+        'অডিও বেছে নিন',
+      );
+  String get photosPicked => _get(
+        'photos selected',
+        'تصویریں منتخب',
+        'صور محددة',
+        'तस्वीरें चुनी गईं',
+        'photos sélectionnées',
+        'fotos seleccionadas',
+        'fotos selecionadas',
+        'Fotos ausgewählt',
+        'fotoğraf seçildi',
+        'foto dipilih',
+        'ছবি নির্বাচিত',
+      );
+  String get toolTrim => _get(
+        'Trim',
+        'تراشیں',
+        'قص',
+        'ट्रिम करें',
+        'Rogner',
+        'Recortar',
+        'Cortar',
+        'Zuschneiden',
+        'Kırp',
+        'Pangkas',
+        'ছাঁটুন',
+      );
+  String get toolCompress => _get(
+        'Compress',
+        'کمپریس کریں',
+        'ضغط',
+        'कंप्रेस करें',
+        'Compresser',
+        'Comprimir',
+        'Comprimir',
+        'Komprimieren',
+        'Sıkıştır',
+        'Kompres',
+        'কম্প্রেস করুন',
+      );
+  String get toolAddMusic => _get(
+        'Add music',
+        'میوزک ڈالیں',
+        'أضف موسيقى',
+        'म्यूज़िक जोड़ें',
+        'Ajouter de la musique',
+        'Añadir música',
+        'Adicionar música',
+        'Musik hinzufügen',
+        'Müzik ekle',
+        'Tambah musik',
+        'মিউজিক যোগ করুন',
+      );
+  String get toolVoiceover => _get(
+        'Voiceover mix',
+        'وائس اوور مکس',
+        'مزيج التعليق الصوتي',
+        'वॉयसओवर मिक्स',
+        'Mix voix off',
+        'Mezcla de voz en off',
+        'Mix de narração',
+        'Voiceover-Mix',
+        'Seslendirme miksi',
+        'Campuran sulih suara',
+        'ভয়েসওভার মিক্স',
+      );
+  String get toolBurnCaptions => _get(
+        'Burn captions',
+        'کیپشنز جلائیں',
+        'دمج الترجمة',
+        'कैप्शन जलाएं',
+        'Incruster les sous-titres',
+        'Incrustar subtítulos',
+        'Incrustar legendas',
+        'Untertitel einbrennen',
+        'Altyazıları göm',
+        'Bakar teks',
+        'ক্যাপশন বসান',
+      );
+  String get toolSpeed => _get(
+        'Speed',
+        'رفتار',
+        'السرعة',
+        'गति',
+        'Vitesse',
+        'Velocidad',
+        'Velocidade',
+        'Tempo',
+        'Hız',
+        'Kecepatan',
+        'গতি',
+      );
+  String get toolAspect => _get(
+        'Aspect ratio',
+        'پہلو کا تناسب',
+        'نسبة العرض',
+        'आस्पेक्ट रेशियो',
+        'Format d\u2019image',
+        'Relación de aspecto',
+        'Proporção',
+        'Seitenverhältnis',
+        'En-boy oranı',
+        'Rasio aspek',
+        'আসপেক্ট রেশিও',
+      );
+  String get toolThumbnail => _get(
+        'Thumbnail',
+        'تھمب نیل',
+        'صورة مصغرة',
+        'थंबनेल',
+        'Vignette',
+        'Miniatura',
+        'Miniatura',
+        'Vorschaubild',
+        'Küçük resim',
+        'Gambar mini',
+        'থাম্বনেইল',
+      );
+  String get toolGif => _get(
+        'GIF preview',
+        'GIF پیش منظر',
+        'معاينة GIF',
+        'GIF प्रीव्यू',
+        'Aperçu GIF',
+        'Vista previa GIF',
+        'Prévia GIF',
+        'GIF-Vorschau',
+        'GIF önizleme',
+        'Pratinjau GIF',
+        'GIF প্রিভিউ',
+      );
+  String get processingVideo => _get(
+        'Processing video…',
+        'ویڈیو پروسیس ہو رہی ہے…',
+        'جارٍ معالجة الفيديو…',
+        'वीडियो प्रोसेस हो रहा है…',
+        'Traitement de la vidéo…',
+        'Procesando video…',
+        'Processando vídeo…',
+        'Video wird verarbeitet…',
+        'Video işleniyor…',
+        'Memproses video…',
+        'ভিডিও প্রসেস হচ্ছে…',
+      );
+  String get videoReady => _get(
+        'Video ready',
+        'ویڈیو تیار ہے',
+        'الفيديو جاهز',
+        'वीडियो तैयार है',
+        'Vidéo prête',
+        'Video listo',
+        'Vídeo pronto',
+        'Video fertig',
+        'Video hazır',
+        'Video siap',
+        'ভিডিও তৈরি',
+      );
+  String get processingFailed => _get(
+        'Processing failed — please try again.',
+        'پروسیسنگ ناکام — دوبارہ کوشش کریں۔',
+        'فشلت المعالجة — حاول مرة أخرى.',
+        'प्रोसेसिंग विफल — कृपया पुनः प्रयास करें।',
+        'Échec du traitement — réessayez.',
+        'Falló el procesamiento — inténtalo de nuevo.',
+        'Falha no processamento — tente novamente.',
+        'Verarbeitung fehlgeschlagen — bitte erneut versuchen.',
+        'İşleme başarısız — lütfen tekrar deneyin.',
+        'Pemrosesan gagal — silakan coba lagi.',
+        'প্রসেসিং ব্যর্থ — আবার চেষ্টা করুন।',
+      );
+  String get useVideo => _get(
+        'Use this video',
+        'یہ ویڈیو استعمال کریں',
+        'استخدم هذا الفيديو',
+        'यह वीडियो इस्तेमाल करें',
+        'Utiliser cette vidéo',
+        'Usar este video',
+        'Usar este vídeo',
+        'Dieses Video verwenden',
+        'Bu videoyu kullan',
+        'Gunakan video ini',
+        'এই ভিডিও ব্যবহার করুন',
+      );
+  String get startTimeSec => _get(
+        'Start (seconds)',
+        'آغاز (سیکنڈ)',
+        'البداية (ثوانٍ)',
+        'शुरुआत (सेकंड)',
+        'Début (secondes)',
+        'Inicio (segundos)',
+        'Início (segundos)',
+        'Start (Sekunden)',
+        'Başlangıç (saniye)',
+        'Mulai (detik)',
+        'শুরু (সেকেন্ড)',
+      );
+  String get endTimeSec => _get(
+        'End (seconds)',
+        'اختتام (سیکنڈ)',
+        'النهاية (ثوانٍ)',
+        'अंत (सेकंड)',
+        'Fin (secondes)',
+        'Fin (segundos)',
+        'Fim (segundos)',
+        'Ende (Sekunden)',
+        'Bitiş (saniye)',
+        'Selesai (detik)',
+        'শেষ (সেকেন্ড)',
+      );
+  String get qualityLabel => _get(
+        'Quality',
+        'کوالٹی',
+        'الجودة',
+        'क्वालिटी',
+        'Qualité',
+        'Calidad',
+        'Qualidade',
+        'Qualität',
+        'Kalite',
+        'Kualitas',
+        'কোয়ালিটি',
+      );
+  String get assembleStory => _get(
+        'Assemble story video',
+        'اسٹوری ویڈیو بنائیں',
+        'إنشاء فيديو القصة',
+        'स्टोरी वीडियो बनाएं',
+        'Assembler la story vidéo',
+        'Crear video de historia',
+        'Montar vídeo de story',
+        'Story-Video erstellen',
+        'Hikaye videosu oluştur',
+        'Rakit video cerita',
+        'স্টোরি ভিডিও বানান',
+      );
+  String get secondsPerPhoto => _get(
+        'Seconds per photo',
+        'فی تصویر سیکنڈ',
+        'ثوانٍ لكل صورة',
+        'प्रति तस्वीर सेकंड',
+        'Secondes par photo',
+        'Segundos por foto',
+        'Segundos por foto',
+        'Sekunden pro Foto',
+        'Fotoğraf başına saniye',
+        'Detik per foto',
+        'প্রতি ছবিতে সেকেন্ড',
+      );
+  String get openingTitle => _get(
+        'Opening title (optional)',
+        'ابتدائی عنوان (اختیاری)',
+        'العنوان الافتتاحي (اختياري)',
+        'शुरुआती शीर्षक (वैकल्पिक)',
+        'Titre d\u2019ouverture (facultatif)',
+        'Título inicial (opcional)',
+        'Título inicial (opcional)',
+        'Anfangstitel (optional)',
+        'Açılış başlığı (isteğe bağlı)',
+        'Judul pembuka (opsional)',
+        'শুরুর শিরোনাম (ঐচ্ছিক)',
+      );
+  String get burnIntoVideo => _get(
+        'Burn into video',
+        'ویڈیو میں جلائیں',
+        'دمج في الفيديو',
+        'वीडियो में जलाएं',
+        'Incruster dans la vidéo',
+        'Incrustar en el video',
+        'Incrustar no vídeo',
+        'Ins Video einbrennen',
+        'Videoya göm',
+        'Bakar ke video',
+        'ভিডিওতে বসান',
+      );
 }

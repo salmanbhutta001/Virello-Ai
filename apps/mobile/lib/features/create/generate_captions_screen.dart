@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/local_creator.dart';
+import '../../services/local_tools/caption_tools.dart';
+import '../../services/local_tools/ffmpeg_service.dart';
+import 'video_render_dialogs.dart';
 
 /// Board screen 31: "Generate Captions" — fully functional AI caption studio.
 ///
@@ -38,6 +42,8 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
   final Set<int> _selected = {};
   bool _isAi = false;
   bool _sharing = false;
+  // Phase A local caption tools: adjustable speech pace for timing.
+  double _wps = 2.5;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -185,6 +191,79 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
+  }
+
+  /// Phase A local tool: builds timed caption lines from the selected
+  /// captions and shows the SRT for copy/share. Timing is estimated from
+  /// word count at [_wps] words per second (adjustable).
+  void _exportSrt() {
+    if (_selected.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.selectCaptionFirst)));
+      return;
+    }
+    final texts = _selected.map((i) => _captions[i].text).join('\n');
+    final lines = CaptionTools.timedCaptions(texts, wordsPerSecond: _wps);
+    final srt = CaptionTools.toSrt(lines);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.captionTiming),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: SelectableText(
+              srt,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: srt));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(s.srtCopied)));
+            },
+            child: Text(s.copyText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Phase B: pick a video, burn the selected captions into it with ffmpeg,
+  /// and hand back a shareable/downloadable result via the render dialog.
+  Future<void> _burnIntoVideo() async {
+    if (_selected.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.selectCaptionFirst)));
+      return;
+    }
+    final picked = await FilePicker.pickFile(type: FileType.video);
+    final video = picked?.path;
+    if (video == null || !mounted) return;
+    final texts = _selected.map((i) => _captions[i].text).join('\n');
+    final lines =
+        CaptionTools.timedCaptions(texts, wordsPerSecond: _wps);
+    if (lines.isEmpty || !mounted) return;
+    final srtPath =
+        await FfmpegService.instance.writeSrt(CaptionTools.toSrt(lines));
+    if (!mounted) return;
+    await runVideoTaskDialog(
+      context,
+      title: s.burnIntoVideo,
+      task: (onProgress) => FfmpegService.instance.burnSubtitles(
+        video: video,
+        srtPath: srtPath,
+        onProgress: onProgress,
+      ),
+    );
   }
 
   @override
@@ -431,6 +510,91 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
                     onPressed: _working ? null : _generate,
                     icon: const Icon(Icons.refresh, size: 18),
                     label: Text(s.boardImageRegenerate),
+                  ),
+                ],
+                // Phase A local tool: timing + SRT export for subtitles.
+                if (_captions.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  VBoardCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.captionTiming,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: VTheme.text(context),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                s.wordsPerSecond,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: VTheme.textSec(context),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              _wps.toStringAsFixed(1),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: VTheme.text(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Slider(
+                          value: _wps,
+                          min: 1.5,
+                          max: 4.0,
+                          divisions: 10,
+                          onChanged: (v) => setState(() => _wps = v),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _exportSrt,
+                            icon: const Icon(Icons.subtitles_outlined,
+                                size: 18),
+                            label: Text(s.exportSrt),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: VirelloColors.pink,
+                              side: const BorderSide(
+                                  color: VirelloColors.pink),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Phase B: burn the selected captions into a video with ffmpeg.
+                if (_captions.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _working ? null : _burnIntoVideo,
+                      icon: const Icon(Icons.closed_caption_outlined,
+                          size: 18),
+                      label: Text(s.burnIntoVideo),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: VirelloColors.pink,
+                        side: const BorderSide(
+                            color: VirelloColors.pink),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ],

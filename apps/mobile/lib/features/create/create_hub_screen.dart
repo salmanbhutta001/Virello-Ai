@@ -9,8 +9,12 @@ import 'conversion_screen.dart';
 import 'create_image_screen.dart';
 import 'create_video_screen.dart';
 import 'generate_captions_screen.dart';
+import 'image_tools_screen.dart';
+import 'story_video_screen.dart';
+import 'teleprompter_screen.dart';
 import 'templates_screen.dart';
 import 'upload_content_screen.dart';
+import 'voiceover_screen.dart';
 import 'write_script_screen.dart';
 
 /// Board screen 21: "Create Hub" — "What do you want to create?"
@@ -139,6 +143,20 @@ class CreateHubScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const AiStoryScreen()),
             ),
           ),
+          // Phase B: assemble a 9:16 story video from photos on-device.
+          _row(
+            context: context,
+            icon: Icons.movie_creation_outlined,
+            iconColor: const Color(0xFF3B82F6),
+            title: s.storyVideo,
+            desc: s.storyVideoDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const StoryVideoScreen(),
+              ),
+            ),
+          ),
           _row(
             context: context,
             icon: Icons.upload_outlined,
@@ -183,6 +201,46 @@ class CreateHubScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => const GenerateCaptionsScreen(),
+              ),
+            ),
+          ),
+          // Phase A local tools: on-device, no account or setup needed.
+          _row(
+            context: context,
+            icon: Icons.tune_outlined,
+            iconColor: const Color(0xFFEC4899),
+            title: s.imageTools,
+            desc: s.imageToolsDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ImageToolsScreen(),
+              ),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.speaker_notes_outlined,
+            iconColor: const Color(0xFF14B8A6),
+            title: s.teleprompter,
+            desc: s.teleprompterDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const TeleprompterScreen(),
+              ),
+            ),
+          ),
+          _row(
+            context: context,
+            icon: Icons.record_voice_over_outlined,
+            iconColor: const Color(0xFFA855F7),
+            title: s.voiceover,
+            desc: s.voiceoverDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const VoiceoverScreen(),
               ),
             ),
           ),

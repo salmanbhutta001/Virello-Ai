@@ -7,6 +7,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import 'teleprompter_screen.dart';
 import '../../services/local_creator.dart';
 
 /// Board screen 24: "Write Script" — fully functional AI script writer.
@@ -341,6 +342,30 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
               onPressed: _working ? null : _generate,
               icon: const Icon(Icons.refresh, size: 18),
               label: Text(s.boardImageRegenerate),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TeleprompterScreen(
+                      initialScript:
+                          '${_scriptTitle ?? ''}\n\n${_scriptBody ?? ''}',
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.speaker_notes_outlined, size: 18),
+                label: Text(s.teleprompter),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
             ),
           ],
         ],

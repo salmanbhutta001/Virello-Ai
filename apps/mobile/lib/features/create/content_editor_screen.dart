@@ -5,6 +5,7 @@ import '../../core/theme.dart';
 import '../../main.dart';
 import '../transform/transform_screen.dart';
 import 'generated_preview_screen.dart';
+import 'video_tools_screen.dart';
 
 /// Board screen 27: "Content Editor".
 ///
@@ -147,6 +148,33 @@ class ContentEditorScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ),
+          ),
+          // Phase B: on-device video tools (trim, compress, music, captions…).
+          // Kept as an additive entry — the board toolbar above is untouched.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        VideoToolsScreen(initialVideoPath: mediaPath),
+                  ),
+                ),
+                icon: const Icon(Icons.handyman_outlined, size: 18),
+                label: Text(s.videoTools),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
