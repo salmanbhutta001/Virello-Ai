@@ -145,7 +145,7 @@ void main() {
     test('4x chains atempo filters (each stays within 0.5-2.0)', () {
       final cmd = FfmpegCommands.changeSpeed(
           input: '/v/in.mp4', factor: 4, output: '/v/o.mp4', hwH264: true);
-      expect(cmd, contains('-af "atempo=2.0,atempo=2.0"'));
+      expect(cmd, contains('-af "atempo=2,atempo=2"'));
       expect(cmd, contains('setpts=0.25*PTS'));
       expect(cmd, isNot(contains('atempo=4')));
     });

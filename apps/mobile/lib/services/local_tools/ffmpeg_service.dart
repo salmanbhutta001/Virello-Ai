@@ -179,11 +179,11 @@ class FfmpegCommands {
     final parts = <String>[];
     var f = factor;
     while (f > 2.0) {
-      parts.add('atempo=2.0');
+      parts.add('atempo=${_f(2.0)}');
       f /= 2.0;
     }
     while (f < 0.5) {
-      parts.add('atempo=0.5');
+      parts.add('atempo=${_f(0.5)}');
       f /= 0.5;
     }
     parts.add('atempo=${_f(f)}');
