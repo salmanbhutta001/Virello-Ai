@@ -14041,9 +14041,9 @@ class AppStrings {
   // ----------------------------- Wallet (HYBRID) -----------------------------
   String get wallet => _get('Wallet', 'والیٹ', 'المحفظة');
   String get walletTagline => _get(
-        'Post to earn points. Share & sell to earn cash.',
-        'پوسٹ کرو ← پوائنٹس۔ شیئر کرو، بکواؤ ← کیش۔',
-        'انشر لتربح نقاطًا. شارك وبِع لتربح نقدًا.',
+        'Post to earn points. Share products to earn more points.',
+        'پوسٹ کرو ← پوائنٹس۔ پروڈکٹس شیئر کرو ← مزید پوائنٹس۔',
+        'انشر لتربح نقاطًا. شارك المنتجات لتربح المزيد من النقاط.',
       );
   String get cashWallet => _get('Cash Wallet', 'کیش والیٹ', 'محفظة النقد');
   String get cashBalance => _get('Cash balance', 'کیش بیلنس', 'الرصيد النقدي');

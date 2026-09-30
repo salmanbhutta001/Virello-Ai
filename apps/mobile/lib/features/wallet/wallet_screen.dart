@@ -314,7 +314,7 @@ class _WalletScreenState extends State<WalletScreen> {
         final d = snap.data ?? {};
         final balance = (d['balance'] as num? ?? 0).toInt();
         final level = '${d['level'] ?? 'Sprout'}';
-        final next = d['next_level'] as Map<String, dynamic>?;
+        final next = d['next_level'] as String?;
         final progress = (d['progress'] as num? ?? 0).toDouble().clamp(0, 1);
         final waiting = snap.connectionState == ConnectionState.waiting;
         return VCard(
@@ -373,7 +373,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${next['name'] ?? ''} ${s.level} · '
+                  '$next ${s.level} · '
                   '${(progress * 100).round()}% ${s.toNextLevel}',
                   style: const TextStyle(
                     fontSize: 12,
