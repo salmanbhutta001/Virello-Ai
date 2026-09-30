@@ -6,7 +6,7 @@ import '../../core/virello_ui.dart';
 import '../../main.dart';
 
 /// Board screen 01 — cinematic splash: full-bleed hero image with scrim,
-/// pink V mark, "Virello AI", "Create • Discover • Grow • Earn • Real",
+/// pink V mark, "Virello AI", "Create • Discover • Grow • Earn • Viral",
 /// tagline, pink circular arrow button.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, required this.onGetStarted});
