@@ -3,11 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from app.core.config import settings
 from app.core.database import init_db
+from app.curation import routes as curation_routes  # registers curation models
 from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws
 from app.routers import analysis as analysis_router
 from app.routers import viral_lab as viral_lab_router
@@ -35,7 +34,23 @@ from app.routers import entertain as entertain_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()  # dev bootstrap; production uses Alembic migrations
-    yield
+    # Autonomous hourly product curation — must never crash the app.
+    _sched = None
+    try:
+        from app.curation.scheduler import start_curation_scheduler
+        _sched = start_curation_scheduler()
+    except Exception:
+        import logging
+        logging.getLogger("virello").exception(
+            "curation scheduler wiring failed; continuing without it")
+    try:
+        yield
+    finally:
+        try:
+            from app.curation.scheduler import stop_curation_scheduler
+            stop_curation_scheduler(_sched)
+        except Exception:
+            pass
 
 
 app = FastAPI(
@@ -45,11 +60,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Public product gallery images (AI-generated angles).
-# Served at /gallery/{asin}_angle{N}.jpg — no auth needed for product display.
-_GALLERY_DIR = Path(__file__).resolve().parent / "static" / "gallery"
-_GALLERY_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/gallery", StaticFiles(directory=str(_GALLERY_DIR)), name="gallery")
+# Product gallery images.
+# GET /gallery/{filename} is served by the curation routes: volume-first
+# (VIRELLO_GALLERY_DIR, e.g. Railway /data/gallery), falling back to the
+# git-committed backend/app/static/gallery. No auth needed for display.
+# GET /api/v1/curation/status is the admin-only curation monitor.
+app.include_router(curation_routes.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -795,12 +795,16 @@ async def curate_products(
     db: AsyncSession = Depends(get_db),
     x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
 ):
-    """AI curator bulk-imports affiliate products.
+    """Curator bulk-imports affiliate products.
 
     Auth: X-Curator-Token header (service token, not user JWT).
     For each product: validates ASIN, builds the affiliate URL server-side
     from the partner tag, creates the Product (is_affiliate=true) + ProductPage.
     Skips ASINs already in the catalog (idempotent — safe to re-run daily).
+
+    Listing itself goes through app.curation.service.curate_product — the
+    same function the autonomous hourly loop uses, so the API and the loop
+    can never drift apart.
     """
     _check_curator_token(x_curator_token or "")
 
@@ -815,61 +819,30 @@ async def curate_products(
     if creator is None:
         raise HTTPException(404, f"Creator account not found: {body.creator_email}")
 
+    from app.curation.service import curate_product
     created: list[dict] = []
     skipped: list[str] = []
     for item in body.products:
-        asin = item.asin.strip().upper()
-        affiliate_url = provider.build_affiliate_url(asin)
-        # Idempotent: update existing products (e.g. backfill missing images)
-        # instead of skipping them silently.
-        existing = (
-            await db.execute(
-                select(Product).where(Product.affiliate_url == affiliate_url)
-            )
-        ).scalar_one_or_none()
-        if existing is not None:
-            image_urls = [u.strip() for u in item.image_urls if u.strip()][:10]
-            updated_fields = []
-            if image_urls and not (existing.image_urls or []):
-                existing.image_urls = image_urls
-                updated_fields.append("image_urls")
-            if updated_fields:
-                await db.commit()
-                created.append({"asin": asin, "product_id": str(existing.id),
-                                "title": existing.title, "updated": updated_fields})
-            else:
-                skipped.append(asin)
-            continue
-        category = (item.category or "all").lower()
-        if category not in PRODUCT_CATEGORIES:
-            category = "all"
-        image_urls = [u.strip() for u in item.image_urls if u.strip()][:10]
-        product = Product(
-            creator_id=creator.id,
-            title=item.title.strip(),
-            description=item.description.strip(),
+        out = await curate_product(
+            db,
+            asin=item.asin,
+            title=item.title,
+            description=item.description,
+            category=item.category,
             price_cents=item.price_cents,
-            currency=item.currency.upper(),
-            category=category,
-            image_urls=image_urls,
-            stock_qty=0,  # affiliate: stock tracked by Amazon, not us
-            is_active=True,
-            is_affiliate=True,
-            affiliate_url=affiliate_url,
-            affiliate_provider="amazon",
+            currency=item.currency,
+            image_urls=item.image_urls,
+            creator=creator,
         )
-        db.add(product)
-        await db.flush()
-        slug = _slugify(product.title)
-        for _ in range(3):
-            exists = (
-                await db.execute(select(ProductPage.id).where(ProductPage.slug == slug))
-            ).scalar_one_or_none()
-            if exists is None:
-                break
-            slug = _slugify(product.title)
-        db.add(ProductPage(product_id=product.id, slug=slug))
-        created.append({"asin": asin, "product_id": str(product.id), "title": product.title})
+        if out["skipped"]:
+            skipped.append(out["asin"])
+        else:
+            entry: dict = {"asin": out["asin"],
+                           "product_id": out["product_id"],
+                           "title": out["title"]}
+            if out.get("updated"):
+                entry["updated"] = out["updated"]
+            created.append(entry)
     await db.commit()
     return {
         "created": created,
