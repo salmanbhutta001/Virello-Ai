@@ -1,9 +1,11 @@
 """AI endpoints: analysis, scoring, insights, recommendations."""
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.services.ai.base import (
     AIProviderError,
     AIProviderNotConfigured,
@@ -93,9 +95,10 @@ _SYSTEM_SUPPORT_BASE = (
     "manager: creators paste a post, pick a goal, optionally set a budget, "
     "and AI grows it through legitimate discovery and advertising. "
     "Free Grow = organic, $0. Paid Boost = paid packages (Starter $10/7d, "
-    "Growth $25/14d, Pro $50/30d, Scale $100/30d). Payments: PayPal, Payoneer "
-    "and Google Pay only. Sign-in: email OTP, Google, Apple (iOS), or Virello "
-    "email + password.\n"
+    "Growth $25/14d, Pro $50/30d, Scale $100/30d). Payments: Google Play "
+    "Billing for all digital goods (credits, subscriptions) — never "
+    "PayPal, Payoneer, or manual transfers. Sign-in: email OTP, Google, "
+    "Apple (iOS), or Virello email + password.\n"
     "STRICT RULES:\n"
     "1. Always reply in the user's language given below.\n"
     "2. Never suggest fake engagement, bots, click farms, traffic exchanges, "
@@ -340,23 +343,28 @@ _SUPPORT_FAQ = [
                    "استرداد"],
         },
         "answers": {
-            "en": ("Virello accepts PayPal, Payoneer, and Google Pay only — "
-                   "every payment is verified on our servers before anything "
-                   "is activated. Never share your card details or passwords "
-                   "in chat; our team will never ask for them. If a payment "
-                   "fails, check with your payment provider first, then "
-                   "contact support from the app."),
-            "ur": ("Virello sirf PayPal, Payoneer aur Google Pay accept "
-                   "karta hai — har payment hamare servers par verify hoti "
-                   "hai. Apne card ki details ya passwords kabhi chat mein "
-                   "share na karein; hamari team kabhi nahi maangegi. Agar "
-                   "payment fail ho jaye to pehle apne payment provider se "
-                   "check karein, phir app se support se rabta karein."),
-            "ar": ("يقبل Virello الدفع عبر PayPal وPayoneer وGoogle Pay فقط، "
-                   "ويتم التحقق من كل عملية دفع على خوادمنا قبل تفعيل أي "
-                   "شيء. لا تشارك بيانات بطاقتك أو كلمات مرورك في الدردشة "
-                   "أبدًا؛ فلن يطلبها فريقنا منك. إذا فشل الدفع، تحقق من "
-                   "مزود الدفع أولًا ثم تواصل مع الدعم من التطبيق."),
+            "en": ("Virello uses Google Play Billing for all digital "
+                   "purchases — credits, subscriptions, and premium "
+                   "features. Google processes your payment, so we never "
+                   "see or store your card details. Never share your card "
+                   "details or passwords in chat; our team will never ask "
+                   "for them. If a payment fails, check your Play Store "
+                   "receipt first, then contact support from the app."),
+            "ur": ("Virello tamam digital khareedari ke liye Google Play "
+                   "Billing istemal karta hai — credits, subscriptions aur "
+                   "premium features. Aapki payment Google process karta "
+                   "hai, is liye hum aapke card ki details kabhi dekhte ya "
+                   "save nahi karte. Apne card ki details ya passwords kabhi "
+                   "chat mein share na karein; hamari team kabhi nahi "
+                   "maangegi. Agar payment fail ho jaye to pehle apni Play "
+                   "Store receipt check karein, phir app se support se "
+                   "rabta karein."),
+            "ar": ("يستخدم Virello خدمة Google Play Billing لجميع المشتريات "
+                   "الرقمية — الأرصدة والاشتراكات والمزايا المميزة. تعالج "
+                   "Google دفعتك، لذلك لا نرى بيانات بطاقتك ولا نخزنها "
+                   "أبدًا. لا تشارك بيانات بطاقتك أو كلمات مرورك في الدردشة "
+                   "أبدًا؛ فلن يطلبها فريقنا منك. إذا فشل الدفع، تحقق أولًا "
+                   "من إيصال متجر Play ثم تواصل مع الدعم من التطبيق."),
         },
         "suggestions": {
             "en": ["What is Free Grow?",
@@ -461,66 +469,32 @@ class SupportIn(BaseModel):
     language: str = "auto"
 
 
+
 @router.post("/support")
-async def support(body: SupportIn) -> dict:
-    """Real support agent: reviewed FAQ first, AI provider for the rest.
+async def support(body: SupportIn, user=Depends(get_current_user),
+                  db=Depends(get_db)) -> dict:
+    """DEPRECATED alias — use POST /api/v1/support/chat instead.
 
-    Replies in any of the 44 supported languages ("auto" detects it from
-    the question). Every answer passes honesty_check() before being served,
-    and the response is labeled with its "source": "faq", "ai", or
-    "fallback".
+    Thin wrapper over the deterministic support brain. The external
+    AI-provider tier has been removed entirely: support answers come only
+    from reviewed copy + real server tools, never an AI provider.
+
+    Keeps the old response keys (answer, language, suggestions) and adds
+    the new ones (actions, escalated, intent).
     """
-    lang = _resolve_support_language(body.language, body.question)
+    from app.services.support import brain
 
-    topic = _match_support_topic(body.question, lang) if lang in _FAQ_LANGS else None
-    if topic is not None:
-        answer = topic["answers"][lang]
-        if not honesty_check(answer):  # defense in depth; copy is pre-checked
-            topic = None
-        else:
-            return {
-                "answer": answer,
-                "language": lang,
-                "automated": True,
-                "source": "faq",
-                "suggestions": topic["suggestions"][lang],
-            }
-
-    # No FAQ match: ask the configured AI provider (skipping the dev
-    # template provider, whose output is not a user-facing answer).
-    provider = get_ai_provider()
-    if getattr(provider, "name", "") != "dev":
-        try:
-            resp = await provider.complete(
-                AIRequest(
-                    agent="support",
-                    system=_system_support(lang),
-                    user=f"[{lang}] {body.question.strip()}",
-                    max_tokens=512,
-                    temperature=0.4,
-                    json_mode=False,
-                )
-            )
-            answer = (resp.text or "").strip()
-            if answer and honesty_check(answer):
-                return {
-                    "answer": answer,
-                    "language": lang,
-                    "automated": True,
-                    "source": "ai",
-                    "ai_provider": resp.provider,
-                    "ai_model": resp.model,
-                    "dev": resp.dev,
-                    "suggestions": _SUPPORT_FALLBACK["suggestions"]["en"],
-                }
-        except (AIProviderError, AIProviderNotConfigured, Exception) as exc:
-            logger.warning("support AI provider failed: %s", exc)
-
-    fb_lang = lang if lang in _FAQ_LANGS else "en"
+    result = await brain.handle_message(
+        body.question, language=body.language or "auto",
+        history=[], user=user, db=db)
     return {
-        "answer": _SUPPORT_FALLBACK["answers"][fb_lang],
-        "language": lang,
+        "answer": result["answer"],
+        "language": result["language"],
         "automated": True,
-        "source": "fallback",
-        "suggestions": _SUPPORT_FALLBACK["suggestions"][fb_lang],
+        "source": "brain",
+        "suggestions": result["suggestions"],
+        # New keys from the Live Chat Support brain:
+        "actions": result["actions"],
+        "escalated": result["escalated"],
+        "intent": result["intent"],
     }

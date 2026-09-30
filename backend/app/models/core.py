@@ -107,6 +107,21 @@ class UserActivity(Base):
         DateTime(timezone=True), server_default=func.now(), index=True)
 
 
+class SupportTicket(Base):
+    """Live-chat support ticket (deterministic support brain creates these).
+
+    Human handoff queue: open → in_progress → closed.
+    """
+    __tablename__ = "support_ticket"
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    subject: Mapped[str] = mapped_column(String(255), default="")
+    message: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(16), default="open", index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True)
+
+
 class SocialConnection(Base):
     """OAuth-only platform connections. Tokens encrypted at rest. No passwords ever."""
     __tablename__ = "social_connections"

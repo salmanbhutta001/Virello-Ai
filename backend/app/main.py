@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db
 from app.curation import routes as curation_routes  # registers curation models
-from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws
+from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws, support
 from app.routers import analysis as analysis_router
 from app.routers import viral_lab as viral_lab_router
 from app.routers import create as create_router
@@ -79,6 +79,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(campaigns.router, prefix="/api/v1/campaigns", tags=["campaigns"])
 app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
+app.include_router(support.router, prefix="/api/v1/support", tags=["support"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
