@@ -16,7 +16,13 @@ import 'sell_screen.dart';
 /// The curator-set backend category wins when it is already a known shop
 /// slug; otherwise a weighted keyword model classifies the product text.
 /// Deterministic and on-device. Nothing about this is shown to the user.
-const aiCatSlugs = {'tech', 'fashion', 'home', 'fitness', 'beauty'};
+const aiCatSlugs = {
+  'tech', 'fashion', 'home', 'fitness', 'beauty',
+  'computers', 'smart_home', 'arts_crafts', 'automotive', 'baby',
+  'health', 'industrial', 'luggage', 'movies_tv', 'pet_supplies',
+  'software', 'sports', 'tools', 'toys', 'video_games', 'grocery',
+  'handmade', 'books', 'office', 'phones', 'collectibles',
+};
 
 String aiDetectCategory(Map<String, dynamic> p) {
   final backend = '${p['category'] ?? ''}'.toLowerCase().trim();
@@ -56,6 +62,93 @@ String aiDetectCategory(Map<String, dynamic> p) {
       'mascara', 'shampoo', 'conditioner', 'lotion', 'face wash',
       'cleanser', 'beauty', 'cosmetic', 'hair dryer', 'straightener',
       'lipstick', 'cream', 'toner',
+    ],
+    'computers': [
+      'laptop', 'desktop', 'macbook', 'chromebook', 'monitor', 'keyboard',
+      'mouse', 'printer', 'scanner', 'ssd', 'hard drive', 'webcam',
+      'computer', 'pc ', 'notebook computer', 'all-in-one',
+    ],
+    'smart_home': [
+      'smart home', 'alexa', 'echo dot', 'google nest', 'ring doorbell',
+      'smart lock', 'smart bulb', 'philips hue', 'thermostat',
+      'security camera', 'smart plug', 'smart speaker', 'home assistant',
+    ],
+    'arts_crafts': [
+      'craft', 'art supplies', 'paint set', 'canvas', 'knitting',
+      'crochet', 'sewing', 'beads', 'scrapbook', 'sketchbook', 'yarn',
+      'embroidery', 'drawing',
+    ],
+    'automotive': [
+      'car ', 'automotive', 'tire', 'dashboard', 'car charger',
+      'car mount', 'windshield', 'car detailing', 'jumper cable',
+      'motor oil', 'car vacuum',
+    ],
+    'baby': [
+      'baby', 'diaper', 'stroller', 'onesie', 'baby monitor',
+      'pacifier', 'baby bottle', 'crib', 'toddler', 'baby wipes',
+    ],
+    'health': [
+      'vitamin', 'supplement', 'first aid', 'thermometer', 'bandage',
+      'hand sanitizer', 'detergent', 'cleaning', 'tissue', 'household',
+      'medicine',
+    ],
+    'industrial': [
+      'industrial', 'lab ', 'safety goggles', 'workbench', 'scientific',
+    ],
+    'luggage': [
+      'luggage', 'suitcase', 'backpack', 'duffel', 'carry-on',
+      'packing cube', 'travel bag',
+    ],
+    'movies_tv': [
+      'dvd', 'blu-ray', '4k uhd', 'movie', 'tv series', 'box set',
+    ],
+    'pet_supplies': [
+      'pet ', 'dog ', 'cat ', 'pet food', 'pet toy', 'litter',
+      'aquarium', 'leash', 'collar', 'pet bed',
+    ],
+    'software': [
+      'software', 'antivirus', 'microsoft 365', 'office suite',
+      'adobe', 'subscription',
+    ],
+    'sports': [
+      'camping', 'tent', 'hiking', 'fishing', 'bicycle', 'bike ',
+      'kayak', 'golf', 'tennis', 'soccer', 'basketball', 'outdoor',
+      'cooler',
+    ],
+    'tools': [
+      'drill', 'screwdriver', 'wrench', 'hammer', 'saw ', 'tool set',
+      'ladder', 'tape measure', 'home improvement', 'toolkit',
+    ],
+    'toys': [
+      'lego', 'action figure', 'doll', 'board game', 'puzzle',
+      'plush', 'rc car', 'toy ', 'kids game',
+    ],
+    'video_games': [
+      'playstation', 'xbox', 'nintendo', 'ps5', 'game controller',
+      'gaming console', 'video game',
+    ],
+    'grocery': [
+      'coffee', 'tea ', 'chocolate', 'honey', 'pasta', 'snack',
+      'gourmet', 'grocery', 'olive oil', 'granola', 'beverage',
+    ],
+    'handmade': [
+      'handmade', 'artisan', 'handcrafted',
+    ],
+    'books': [
+      'book', 'novel', 'paperback', 'hardcover', 'textbook',
+      'cookbook', 'biography', 'kindle edition',
+    ],
+    'office': [
+      'office', 'desk organizer', 'stationery', 'notebook',
+      'shredder', 'filing', 'printer paper', 'desk lamp', 'planner',
+    ],
+    'phones': [
+      'phone case', 'iphone', 'galaxy', 'screen protector',
+      'magsafe', 'phone mount', 'smartphone',
+    ],
+    'collectibles': [
+      'collectible', 'figurine', 'funko', 'memorabilia',
+      'limited edition',
     ],
   };
   var best = 'other';
@@ -845,7 +938,13 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
   String? _sortNote;
   final Set<String> _liked = {};
 
-  static const _tabs = ['tech', 'fashion', 'home', 'fitness', 'beauty'];
+  static const _tabs = [
+    'tech', 'fashion', 'home', 'fitness', 'beauty',
+    'computers', 'smart_home', 'arts_crafts', 'automotive', 'baby',
+    'health', 'industrial', 'luggage', 'movies_tv', 'pet_supplies',
+    'software', 'sports', 'tools', 'toys', 'video_games', 'grocery',
+    'handmade', 'books', 'office', 'phones', 'collectibles',
+  ];
 
   @override
   void initState() {
@@ -876,6 +975,48 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
         return s.shopCatFitness;
       case 'beauty':
         return s.shopCatBeauty;
+      case 'computers':
+        return s.shopCatComputers;
+      case 'smart_home':
+        return s.shopCatSmartHome;
+      case 'arts_crafts':
+        return s.shopCatArtsCrafts;
+      case 'automotive':
+        return s.shopCatAutomotive;
+      case 'baby':
+        return s.shopCatBaby;
+      case 'health':
+        return s.shopCatHealth;
+      case 'industrial':
+        return s.shopCatIndustrial;
+      case 'luggage':
+        return s.shopCatLuggage;
+      case 'movies_tv':
+        return s.shopCatMoviesTv;
+      case 'pet_supplies':
+        return s.shopCatPetSupplies;
+      case 'software':
+        return s.shopCatSoftware;
+      case 'sports':
+        return s.shopCatSports;
+      case 'tools':
+        return s.shopCatTools;
+      case 'toys':
+        return s.shopCatToys;
+      case 'video_games':
+        return s.shopCatVideoGames;
+      case 'grocery':
+        return s.shopCatGrocery;
+      case 'handmade':
+        return s.shopCatHandmade;
+      case 'books':
+        return s.shopCatBooks;
+      case 'office':
+        return s.shopCatOffice;
+      case 'phones':
+        return s.shopCatPhones;
+      case 'collectibles':
+        return s.shopCatCollectibles;
       case 'men':
         return s.shopCatMen;
       case 'women':

@@ -9129,6 +9129,216 @@ class AppStrings {
         'Kecantikan',
         'বিউটি'
       );
+  String get shopCatComputers => _get('Computers', 'کمپیوٹر', 'كمبيوتر',
+        'कंप्यूटर',
+        'Ordinateurs',
+        'Computadoras',
+        'Computadores',
+        'Computer',
+        'Bilgisayarlar',
+        'Komputer',
+        'কম্পিউটার'
+      );
+  String get shopCatSmartHome => _get('Smart Home', 'اسمارٹ ہوم', 'المنزل الذكي',
+        'स्मार्ट होम',
+        'Maison connectée',
+        'Hogar inteligente',
+        'Casa inteligente',
+        'Smart Home',
+        'Akıllı Ev',
+        'Rumah Pintar',
+        'স্মার্ট হোম'
+      );
+  String get shopCatArtsCrafts => _get('Arts & Crafts', 'آرٹس اور کرافٹس', 'الفنون والحرف',
+        'कला और शिल्प',
+        'Arts créatifs',
+        'Arte y manualidades',
+        'Artesanato',
+        'Basteln',
+        'El Sanatları',
+        'Seni & Kerajinan',
+        'হস্তশিল্প'
+      );
+  String get shopCatAutomotive => _get('Automotive', 'آٹوموٹو', 'السيارات',
+        'ऑटोमोटिव',
+        'Automobile',
+        'Automoción',
+        'Automotivo',
+        'Auto',
+        'Otomotiv',
+        'Otomotif',
+        'অটোমোটিভ'
+      );
+  String get shopCatBaby => _get('Baby', 'بچے', 'الأطفال',
+        'बच्चे',
+        'Bébé',
+        'Bebé',
+        'Bebê',
+        'Baby',
+        'Bebek',
+        'Bayi',
+        'শিশু'
+      );
+  String get shopCatHealth => _get('Health', 'صحت', 'الصحة',
+        'स्वास्थ्य',
+        'Santé',
+        'Salud',
+        'Saúde',
+        'Gesundheit',
+        'Sağlık',
+        'Kesehatan',
+        'স্বাস্থ্য'
+      );
+  String get shopCatIndustrial => _get('Industrial', 'صنعتی', 'صناعي',
+        'औद्योगिक',
+        'Industriel',
+        'Industrial',
+        'Industrial',
+        'Industrie',
+        'Endüstriyel',
+        'Industri',
+        'শিল্প'
+      );
+  String get shopCatLuggage => _get('Luggage', 'سامان سفر', 'الأمتعة',
+        'सामान',
+        'Bagages',
+        'Equipaje',
+        'Bagagem',
+        'Gepäck',
+        'Bavul',
+        'Bagasi',
+        'লাগেজ'
+      );
+  String get shopCatMoviesTv => _get('Movies & TV', 'فلمیں اور ٹی وی', 'أفلام وتلفاز',
+        'फिल्में',
+        'Films et TV',
+        'Cine y TV',
+        'Filmes e TV',
+        'Filme & TV',
+        'Film & TV',
+        'Film & TV',
+        'সিনেমা'
+      );
+  String get shopCatPetSupplies => _get('Pet Supplies', 'پالتو سامان', 'مستلزمات الحيوانات',
+        'पालतू सामान',
+        'Animalerie',
+        'Mascotas',
+        'Pets',
+        'Haustierbedarf',
+        'Evcil Hayvan',
+        'Hewan Peliharaan',
+        'পোষা প্রাণী'
+      );
+  String get shopCatSoftware => _get('Software', 'سافٹ ویئر', 'برمجيات',
+        'सॉफ्टवेयर',
+        'Logiciels',
+        'Software',
+        'Software',
+        'Software',
+        'Yazılım',
+        'Perangkat Lunak',
+        'সফটওয়্যার'
+      );
+  String get shopCatSports => _get('Sports', 'کھیل', 'الرياضة',
+        'खेल',
+        'Sports',
+        'Deportes',
+        'Esportes',
+        'Sport',
+        'Spor',
+        'Olahraga',
+        'খেলাধুলা'
+      );
+  String get shopCatTools => _get('Tools', 'اوزار', 'أدوات',
+        'उपकरण',
+        'Outils',
+        'Herramientas',
+        'Ferramentas',
+        'Werkzeuge',
+        'Aletler',
+        'Perkakas',
+        'যন্ত্রপাতি'
+      );
+  String get shopCatToys => _get('Toys & Games', 'کھلونے', 'ألعاب',
+        'खिलौने',
+        'Jouets',
+        'Juguetes',
+        'Brinquedos',
+        'Spielzeug',
+        'Oyuncaklar',
+        'Mainan',
+        'খেলনা'
+      );
+  String get shopCatVideoGames => _get('Video Games', 'ویڈیو گیمز', 'ألعاب الفيديو',
+        'वीडियो गेम',
+        'Jeux vidéo',
+        'Videojuegos',
+        'Videogames',
+        'Videospiele',
+        'Video Oyunları',
+        'Video Game',
+        'ভিডিও গেম'
+      );
+  String get shopCatGrocery => _get('Grocery', 'کریانہ', 'بقالة',
+        'किराना',
+        'Épicerie',
+        'Comestibles',
+        'Mercearia',
+        'Lebensmittel',
+        'Market',
+        'Kelontong',
+        'মুদি'
+      );
+  String get shopCatHandmade => _get('Handmade', 'ہاتھ سے بنا', 'مصنوع يدويًا',
+        'हस्तनिर्मित',
+        'Fait main',
+        'Hecho a mano',
+        'Artesanal',
+        'Handgemacht',
+        'El Yapımı',
+        'Buatan Tangan',
+        'হস্তনির্মিত'
+      );
+  String get shopCatBooks => _get('Books', 'کتابیں', 'كتب',
+        'किताबें',
+        'Livres',
+        'Libros',
+        'Livros',
+        'Bücher',
+        'Kitaplar',
+        'Buku',
+        'বই'
+      );
+  String get shopCatOffice => _get('Office', 'دفتری سامان', 'مستلزمات مكتبية',
+        'कार्यालय',
+        'Bureau',
+        'Oficina',
+        'Escritório',
+        'Büro',
+        'Ofis',
+        'Kantor',
+        'অফিস'
+      );
+  String get shopCatPhones => _get('Phones', 'فون', 'هواتف',
+        'फोन',
+        'Téléphones',
+        'Teléfonos',
+        'Celulares',
+        'Handys',
+        'Telefon',
+        'Ponsel',
+        'ফোন'
+      );
+  String get shopCatCollectibles => _get('Collectibles', 'نایاب اشیاء', 'مقتنيات',
+        'संग्रहणीय',
+        'Collections',
+        'Coleccionables',
+        'Colecionáveis',
+        'Sammlerstücke',
+        'Koleksiyon',
+        'Koleksi',
+        'সংগ্রহ'
+      );
   String get shopTrendingProducts => _get('Trending Products', 'ٹرینڈنگ پروڈکٹس', 'منتجات رائجة',
         'ट्रेंडिंग उत्पाद', 'Produits tendance', 'Productos en tendencia',
         'Produtos em alta', 'Trendprodukte', 'Trend Ürünler',

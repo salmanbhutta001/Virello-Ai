@@ -130,10 +130,16 @@ class CommerceOrder(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
-# Displayed in the Shop UI category chips (matches Hafiz's reference).
+# Displayed in the Shop UI category chips — full Amazon department list
+# (Hafiz: "sari amazon wali categories add kar do", 2026-09-30).
 PRODUCT_CATEGORIES = [
     "all", "tech", "fashion", "home", "fitness", "beauty",
     "men", "women", "sale", "best_sellers",
+    # Amazon departments
+    "computers", "smart_home", "arts_crafts", "automotive", "baby",
+    "health", "industrial", "luggage", "movies_tv", "pet_supplies",
+    "software", "sports", "tools", "toys", "video_games", "grocery",
+    "handmade", "books", "office", "phones", "collectibles",
 ]
 
 
