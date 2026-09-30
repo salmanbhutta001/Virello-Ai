@@ -1458,15 +1458,15 @@ class AppStrings {
 
   // Admin Dashboard
   String get adminDashboard =>
-      _get('Admin Dashboard', 'ایڈمن ڈیش بورڈ', 'لوحة الإدارة',
-        'एडमिन डैशबोर्ड',
-        'Tableau de bord admin',
+      _get('Admin Panel', 'ایڈمن پینل', 'لوحة الإدارة',
+        'एडमिन पैनल',
+        'Panneau d\u2019administration',
         'Panel de administración',
         'Painel do administrador',
-        'Admin-Dashboard',
+        'Admin-Panel',
         'Yönetici Paneli',
-        'Dasbor Admin',
-        'অ্যাডমিন ড্যাশবোর্ড'
+        'Panel Admin',
+        'অ্যাডমিন প্যানেল'
       );
   String get adminOverview => _get('Overview', 'جائزہ', 'نظرة عامة',
         'अवलोकन',
@@ -1484,6 +1484,10 @@ class AppStrings {
       _get('Enter admin PIN', 'ایڈمن PIN درج کریں', 'أدخل رمز المسؤول');
   String get adminPinWrong => _get(
       'Wrong PIN, try again', 'غلط PIN، دوبارہ کوشش کریں', 'رمز خاطئ، حاول مرة أخرى');
+  String get adminPinNotAllowed => _get(
+      'This account is not authorized for admin access',
+      'یہ اکاؤنٹ ایڈمن رسائی کے لیے مجاز نہیں ہے',
+      'هذا الحساب غير مصرّح له بالوصول الإداري');
   String get adminPinLocked => _get('Too many attempts, try later',
       'بہت زیادہ کوششیں، بعد میں کوشش کریں', 'محاولات كثيرة، حاول لاحقًا');
   String get adminUsers => _get('Users', 'صارفین', 'المستخدمون',
@@ -1774,6 +1778,151 @@ class AppStrings {
         'Penggunaan AI',
         'AI ব্যবহার'
       );
+  // ---- Admin Panel: full edit/delete (posts, products, users, campaigns,
+  // broadcasts, discovery, fraud flags, tickets) ----
+  String get adminPosts => _get('Posts', 'پوسٹس', 'المنشورات');
+  String get adminProducts => _get('Products', 'پراڈکٹس', 'المنتجات');
+  String get adminTickets => _get('Tickets', 'ٹکٹ', 'التذاكر');
+  // ---- Admin Panel: withdrawals + reward rates ----
+  String get adminWithdrawals => _get('Withdrawals', 'رقوم کی واپسی', 'السحوبات');
+  String get wdPending => _get('Pending', 'زیر التواء', 'قيد الانتظار');
+  String get wdApproved => _get('Approved', 'منظور شدہ', 'معتمدة');
+  String get wdPaid => _get('Paid', 'ادا شدہ', 'مدفوعة');
+  String get wdRejected => _get('Rejected', 'مسترد شدہ', 'مرفوضة');
+  String get wdApprove => _get('Approve', 'منظور کریں', 'اعتماد');
+  String get wdReject => _get('Reject', 'مسترد کریں', 'رفض');
+  String get wdMarkPaid => _get('Mark paid', 'ادا شدہ نشان لگائیں', 'تحديد كمدفوع');
+  String get wdBankName => _get('Bank', 'بینک', 'البنك');
+  String get wdAccountTitle => _get('Account title', 'اکاؤنٹ کا نام', 'اسم الحساب');
+  String get wdIban => _get('IBAN', 'آئی بین', 'الآيبان');
+  String get wdAgeConfirmed => _get('18+ confirmed', '18+ کی تصدیق', 'تم تأكيد 18+');
+  String get wdRequested => _get('Requested', 'درخواست', 'طُلب');
+  String get wdAdminNote => _get('Admin note (optional)', 'ایڈمن نوٹ (اختیاری)', 'ملاحظة المشرف (اختياري)');
+  String get wdRejectReason => _get('Rejection reason', 'مسترد کرنے کی وجہ', 'سبب الرفض');
+  String get wdPaymentRef => _get('Payment reference', 'ادائیگی کا حوالہ', 'مرجع الدفع');
+  String get wdApproveConfirm => _get(
+      'Approve this withdrawal?', 'کیا یہ واپسی منظور کر دیں؟', 'اعتماد هذا السحب؟');
+  String get wdRejectConfirm => _get(
+      'Reject this withdrawal? The amount returns to the user balance.',
+      'کیا یہ واپسی مسترد کر دیں؟ رقم صارف کے بیلنس میں واپس آ جائے گی۔',
+      'رفض هذا السحب؟ سيعود المبلغ إلى رصيد المستخدم.');
+  String get wdMarkPaidConfirm => _get(
+      'Mark as paid? Confirm the bank transfer is done.',
+      'ادا شدہ نشان لگائیں؟ تصدیق کریں کہ بینک ٹرانسفر ہو گیا ہے۔',
+      'تحديد كمدفوع؟ تأكد من إتمام التحويل البنكي.');
+  String get wdReasonRequired => _get(
+      'Please enter a reason.', 'براہ کرم وجہ لکھیں۔', 'يرجى إدخال السبب.');
+  String get wdRefRequired => _get(
+      'Please enter the payment reference.', 'براہ کرم ادائیگی کا حوالہ لکھیں۔', 'يرجى إدخال مرجع الدفع.');
+  String get wdNoPending => _get(
+      'No pending withdrawals.', 'کوئی زیر التواء واپسی نہیں۔', 'لا توجد سحوبات قيد الانتظار.');
+  String get wdNoApproved => _get(
+      'No approved withdrawals awaiting payment.', 'ادائیگی کے منتظر کوئی منظور شدہ واپسی نہیں۔', 'لا توجد سحوبات معتمدة بانتظار الدفع.');
+  String get wdNoPaid => _get(
+      'No paid withdrawals yet.', 'ابھی کوئی ادا شدہ واپسی نہیں۔', 'لا توجد سحوبات مدفوعة بعد.');
+  String get wdNoRejected => _get(
+      'No rejected withdrawals.', 'کوئی مسترد شدہ واپسی نہیں۔', 'لا توجد سحوبات مرفوضة.');
+  // ---- Admin Panel: reward claims (proof-review queue) ----
+  String get adminClaims => _get('Claims', 'دعوے', 'المطالبات');
+  String get clPending => _get('Pending', 'زیر التواء', 'قيد الانتظار');
+  String get clApproved => _get('Approved', 'منظور شدہ', 'معتمدة');
+  String get clRejected => _get('Rejected', 'مسترد شدہ', 'مرفوضة');
+  String get clApprove => _get('Approve', 'منظور کریں', 'اعتماد');
+  String get clReject => _get('Reject', 'مسترد کریں', 'رفض');
+  String get clProof => _get('Proof', 'ثبوت', 'إثبات');
+  String get clViewProof => _get('Tap to view full proof', 'مکمل ثبوت دیکھنے کے لیے تھپتھپائیں', 'انقر لعرض الإثبات الكامل');
+  String get clType => _get('Type', 'قسم', 'النوع');
+  String get clAmount => _get('Reward', 'انعام', 'المكافأة');
+  String get clFiled => _get('Filed', 'درج', 'قُدم');
+  String get clAdminNote => _get('Admin note (optional)', 'ایڈمن نوٹ (اختیاری)', 'ملاحظة المشرف (اختياري)');
+  String get clRejectReason => _get('Rejection reason', 'مسترد کرنے کی وجہ', 'سبب الرفض');
+  String get clApproveConfirm => _get(
+      'Approve this claim? The reward will be credited.',
+      'کیا یہ دعویٰ منظور کر دیں؟ انعام کریڈٹ ہو جائے گا۔',
+      'اعتماد هذه المطالبة؟ سيتم إضافة المكافأة.');
+  String get clRejectConfirm => _get(
+      'Reject this claim? Nothing will be credited.',
+      'کیا یہ دعویٰ مسترد کر دیں؟ کوئی انعام نہیں ملے گا۔',
+      'رفض هذه المطالبة؟ لن يتم إضافة أي مكافأة.');
+  String get clReasonRequired => _get(
+      'Please enter a reason.', 'براہ کرم وجہ لکھیں۔', 'يرجى إدخال السبب.');
+  String get clNoPending => _get(
+      'No pending claims.', 'کوئی زیر التواء دعویٰ نہیں۔', 'لا توجد مطالبات قيد الانتظار.');
+  String get clNoApproved => _get(
+      'No approved claims.', 'کوئی منظور شدہ دعویٰ نہیں۔', 'لا توجد مطالبات معتمدة.');
+  String get clNoRejected => _get(
+      'No rejected claims.', 'کوئی مسترد شدہ دعویٰ نہیں۔', 'لا توجد مطالبات مرفوضة.');
+  // ---- Admin Panel: per-post reward badge ----
+  String get clPostReward => _get('Post reward', 'پوسٹ کا انعام', 'مكافأة المنشور');
+  String get clSetReward => _get(
+      'Set reward (cents)', 'انعام مقرر کریں (سینٹ)', 'تعيين المكافأة (سنت)');
+  String get clRewardHint => _get(
+      'e.g. 5 = \$0.05. 0 = default badge.',
+      'مثلاً 5 = \$0.05۔ 0 = ڈیفالٹ بیج۔',
+      'مثال: 5 = \$0.05. 0 = الشارة الافتراضية.');
+  String get clInvalidAmount => _get(
+      'Enter a valid non-negative number.', 'درست غیر منفی عدد لکھیں۔', 'أدخل رقمًا صحيحًا غير سالب.');
+  String get rewardRates => _get('Reward Rates', 'انعامی شرحیں', 'أسعار المكافآت');
+  String get rrSaved => _get('Rates saved.', 'شرحیں محفوظ ہو گئیں۔', 'تم حفظ الأسعار.');
+  String get rrShareCents => _get('Per share (cents)', 'فی شیئر (سینٹ)', 'لكل مشاركة (سنت)');
+  String get rrShareDailyCap => _get('Shares per day (cap)', 'روزانہ شیئر کی حد', 'حد المشاركات اليومي');
+  String get rrShareClickCents => _get('Per share click (cents)', 'فی شیئر کلک (سینٹ)', 'لكل نقرة مشاركة (سنت)');
+  String get rrShareClickDailyCap => _get('Share clicks per day (cap)', 'روزانہ شیئر کلکس کی حد', 'حد نقرات المشاركة اليومي');
+  String get rrProductClickCents => _get('Per product click (cents)', 'فی پراڈکٹ کلک (سینٹ)', 'لكل نقرة منتج (سنت)');
+  String get rrProductClickDailyCap => _get('Product clicks per day (cap)', 'روزانہ پراڈکٹ کلکس کی حد', 'حد نقرات المنتج اليومي');
+  String get rrWeeklyTopSeller => _get('Weekly top seller (cents)', 'ہفتہ وار ٹاپ سیلر (سینٹ)', 'أفضل بائع أسبوعي (سنت)');
+  String get rrMonthlyTopSeller => _get('Monthly top seller (cents)', 'ماہانہ ٹاپ سیلر (سینٹ)', 'أفضل بائع شهري (سنت)');
+  String get rrMinWithdraw => _get('Min withdrawal (cents)', 'کم از کم واپسی (سینٹ)', 'الحد الأدنى للسحب (سنت)');
+  String get rrPointsToCash => _get('Points→cash per 1000 (cents)', 'پوائنٹس→کیش فی 1000 (سینٹ)', 'النقاط→نقد لكل 1000 (سنت)');
+  String get rrMinConvertPoints => _get('Min points to convert', 'کنورٹ کے لیے کم از کم پوائنٹس', 'الحد الأدنى للنقاط للتحويل');
+  String get rrVolumeThresholds => _get('Volume bonus thresholds (JSON)', 'والیوم بونس حدیں (JSON)', 'عتبات مكافأة الحجم (JSON)');
+  String get rrInvalidNumber => _get(
+      'Please enter valid numbers.', 'براہ کرم درست اعداد لکھیں۔', 'يرجى إدخال أرقام صحيحة.');
+  String get searchComments => _get('Search comments…', 'تبصرے تلاش کریں…', 'ابحث في التعليقات…');
+  String get editComment => _get('Edit comment', 'تبصرہ ایڈٹ کریں', 'تعديل التعليق');
+  String get deleteComment => _get('Delete comment', 'تبصرہ حذف کریں', 'حذف التعليق');
+  String get deleteCommentConfirm => _get(
+      'Delete this comment?', 'کیا یہ تبصرہ حذف کر دیں؟', 'حذف هذا التعليق؟');
+  String get commentLabel => _get('Comment', 'تبصرہ', 'التعليق');
+  String get editProduct => _get('Edit product', 'پراڈکٹ ایڈٹ کریں', 'تعديل المنتج');
+  String get deleteProduct => _get('Delete product', 'پراڈکٹ حذف کریں', 'حذف المنتج');
+  String get deleteProductConfirm => _get(
+      'Delete this product?', 'کیا یہ پراڈکٹ حذف کر دیں؟', 'حذف هذا المنتج؟');
+  String get productTitleLabel => _get('Title', 'عنوان', 'العنوان');
+  String get productPriceLabel => _get('Price (USD)', 'قیمت (USD)', 'السعر (دولار)');
+  String get productCategoryLabel => _get('Category', 'کیٹیگری', 'الفئة');
+  String get productActiveLabel => _get('Active', 'فعال', 'نشط');
+  String get editName => _get('Edit name', 'نام ایڈٹ کریں', 'تعديل الاسم');
+  String get deleteUser => _get('Delete user', 'صارف حذف کریں', 'حذف المستخدم');
+  String get deleteUserConfirm => _get(
+      'Delete this user and everything they own? This cannot be undone.',
+      'کیا یہ صارف اور اس کا تمام ڈیٹا حذف کر دیں؟ یہ واپس نہیں ہوگا۔',
+      'حذف هذا المستخدم وكل ما يملك؟ لا يمكن التراجع عن هذا.');
+  String get editCampaign => _get('Edit campaign', 'مہم ایڈٹ کریں', 'تعديل الحملة');
+  String get deleteCampaign => _get('Delete campaign', 'مہم حذف کریں', 'حذف الحملة');
+  String get statusLabel => _get('Status', 'حیثیت', 'الحالة');
+  String get budgetLabel => _get('Budget (USD)', 'بجٹ (USD)', 'الميزانية (دولار)');
+  String get editBroadcast => _get('Edit broadcast', 'براڈکاسٹ ایڈٹ کریں', 'تعديل البث');
+  String get deleteBroadcast => _get('Delete broadcast', 'براڈکاسٹ حذف کریں', 'حذف البث');
+  String get deleteBroadcastConfirm => _get(
+      'Delete this broadcast?', 'کیا یہ براڈکاسٹ حذف کر دیں؟', 'حذف هذا البث؟');
+  String get deletePlacement => _get('Delete placement', 'پلیسمنٹ حذف کریں', 'حذف الموضع');
+  String get deletePlacementConfirm => _get(
+      'Remove this placement from discovery?',
+      'کیا یہ پلیسمنٹ ڈسکوری سے ہٹا دیں؟',
+      'إزالة هذا الموضع من الاكتشاف؟');
+  String get deleteFlag => _get('Delete flag', 'فلیگ حذف کریں', 'حذف العلامة');
+  String get deleteFlagConfirm => _get(
+      'Permanently dismiss this fraud flag?',
+      'کیا یہ فراڈ فلیگ مستقل طور پر ختم کر دیں؟',
+      'تجاهل علامة الاحتيال هذه نهائيًا؟');
+  String get deleteTicket => _get('Delete ticket', 'ٹکٹ حذف کریں', 'حذف التذكرة');
+  String get deleteTicketConfirm => _get(
+      'Delete this support ticket?',
+      'کیا یہ سپورٹ ٹکٹ حذف کر دیں؟',
+      'حذف تذكرة الدعم هذه؟');
+  String get confirmDeleteTitle => _get('Are you sure?', 'کیا آپ کو یقین ہے؟', 'هل أنت متأكد؟');
+  String get confirmDeleteAction => _get('Delete', 'حذف کریں', 'حذف');
   String get totalUsers => _get('Users', 'صارفین', 'المستخدمون',
         'यूज़र्स',
         'Utilisateurs',
@@ -13816,5 +13965,333 @@ class AppStrings {
         'Videoya göm',
         'Bakar ke video',
         'ভিডিওতে বসান',
+      );
+  String get rewards => _get('Wallet', 'والیٹ', 'المحفظة');
+  String get virelloPoints =>
+      _get('Virello Points', 'ویریلو پوائنٹس', 'نقاط Virello');
+  String get pointsBalance =>
+      _get('Points balance', 'پوائنٹس بیلنس', 'رصيد النقاط');
+  String get howToEarn => _get('How to earn', 'کمائیں کیسے', 'كيفية الكسب');
+  String get redeemPoints =>
+      _get('Redeem points', 'پوائنٹس ریڈیم کریں', 'استبدال النقاط');
+  String get enterPoints =>
+      _get('Enter points', 'پوائنٹس درج کریں', 'أدخل النقاط');
+  String get redeem => _get('Redeem', 'ریڈیم کریں', 'استبدال');
+  String get history => _get('History', 'ہسٹری', 'السجل');
+  String get leaderboard =>
+      _get('Leaderboard', 'لیڈر بورڈ', 'لوحة الصدارة');
+  String get weeklyRace =>
+      _get("This week's race", 'اس ہفتے کی دوڑ', 'سباق هذا الأسبوع');
+  String get monthlyRace =>
+      _get("This month's race", 'اس ماہ کی دوڑ', 'سباق هذا الشهر');
+  String get endsIn => _get('Ends in', 'اختتام میں باقی', 'ينتهي بعد');
+  String get pastWinners =>
+      _get('Past winners', 'پچھلے فاتحین', 'الفائزون السابقون');
+  String get noWinnersYet => _get(
+        'No winners yet — announced after each race ends.',
+        'ابھی کوئی فاتح نہیں — ہر ریس ختم ہونے کے بعد اعلان کیا جائے گا۔',
+        'لا يوجد فائزون بعد — يُعلن عنهم بعد انتهاء كل سباق.',
+      );
+  String get noRacersYet => _get(
+        'No racers yet — be the first to post!',
+        'ابھی کوئی ریسلر نہیں — سب سے پہلے پوسٹ کریں!',
+        'لا يوجد متسابقون بعد — كن أول من ينشر!',
+      );
+  String get tagProducts =>
+      _get('Tag products', 'مصنوعات ٹیگ کریں', 'وسم المنتجات');
+  String get searchProducts =>
+      _get('Search products', 'مصنوعات تلاش کریں', 'ابحث عن المنتجات');
+  String get addProducts =>
+      _get('Add products', 'مصنوعات شامل کریں', 'أضف منتجات');
+  String get shareToFeed =>
+      _get('Share to Feed', 'فیڈ پر شیئر کریں', 'شارك في الخلاصة');
+  String get shareToFeedTitle => _get(
+        'Share to the discovery feed',
+        'ڈسکوری فیڈ پر شیئر کریں',
+        'شارك في خلاصة الاكتشاف',
+      );
+  String get selectTopics =>
+      _get('Select topics', 'موضوعات چنیں', 'اختر المواضيع');
+  String pointsEarnedSnackbar(int points) => _get(
+        '$points points earned!',
+        '$points پوائنٹس حاصل ہوئے!',
+        'حصلت على $points نقطة!',
+      );
+  String get checkPriceOnAmazon => _get(
+        'Check price on Amazon',
+        'ایمیزون پر قیمت دیکھیں',
+        'تحقق من السعر على أمازون',
+      );
+  String get level => _get('Level', 'لیول', 'المستوى');
+  String get toNextLevel =>
+      _get('to next level', 'اگلے لیول تک', 'إلى المستوى التالي');
+
+  // ----------------------------- Wallet (HYBRID) -----------------------------
+  String get wallet => _get('Wallet', 'والیٹ', 'المحفظة');
+  String get walletTagline => _get(
+        'Post to earn points. Share & sell to earn cash.',
+        'پوسٹ کرو ← پوائنٹس۔ شیئر کرو، بکواؤ ← کیش۔',
+        'انشر لتربح نقاطًا. شارك وبِع لتربح نقدًا.',
+      );
+  String get cashWallet => _get('Cash Wallet', 'کیش والیٹ', 'محفظة النقد');
+  String get cashBalance => _get('Cash balance', 'کیش بیلنس', 'الرصيد النقدي');
+  String get convertToCash =>
+      _get('Convert to Cash', 'کیش میں بدلیں', 'تحويل إلى نقد');
+  String get getCredits => _get('Get Credits', 'کریڈٹس لیں', 'الحصول على أرصدة');
+  String convertRate(String rate) =>
+      _get('Rate: $rate', 'ریٹ: $rate', 'السعر: $rate');
+  String convertHint(int minPts) => _get(
+        'Minimum $minPts points per conversion',
+        'تبدیلی کے لیے کم از کم $minPts پوائنٹس',
+        'الحد الأدنى $minPts نقطة لكل تحويل',
+      );
+  String get convertConfirm =>
+      _get('How many points to convert?', 'کتنے پوائنٹس تبدیل کریں؟',
+          'كم عدد النقاط التي تريد تحويلها؟');
+  String convertSuccess(String cash) => _get(
+        'Converted — +$cash cash',
+        'تبدیل ہو گئے — +$cash کیش',
+        'تم التحويل — +$cash نقدًا',
+      );
+  String get withdraw => _get('Withdraw', 'نکالیں', 'سحب');
+  String get withdrawCash =>
+      _get('Withdraw cash', 'کیش نکالیں', 'سحب النقد');
+  String get withdrawAmount => _get(
+        'Amount (USD)',
+        'رقم (ڈالر)',
+        'المبلغ (دولار)',
+      );
+  String get bankName => _get('Bank name', 'بینک کا نام', 'اسم البنك');
+  String get accountTitle =>
+      _get('Account title', 'اکاؤنٹ کا نام', 'اسم صاحب الحساب');
+  String get iban => _get('IBAN', 'آئی بین', 'الآيبان');
+  String get ageConfirmLabel => _get(
+        'I confirm I am 18 years or older',
+        'میں تصدیق کرتا/کرتی ہوں کہ میری عمر 18 سال یا اس سے زیادہ ہے',
+        'أؤكد أن عمري 18 عامًا أو أكثر',
+      );
+  String get submitWithdrawal =>
+      _get('Submit withdrawal', 'نکاسی کی درخواست دیں', 'تقديم طلب السحب');
+  String get withdrawalSubmitted => _get(
+        'Withdrawal submitted — it will be reviewed, usually within 7 days.',
+        'نکاسی کی درخواست موصول ہو گئی — عام طور پر 7 دن کے اندر جائزہ لیا جائے گا۔',
+        'تم تقديم طلب السحب — ستتم مراجعته عادةً خلال 7 أيام.',
+      );
+  String get pendingWithdrawal => _get(
+        'Withdrawal pending review',
+        'نکاسی جائزے کے لیے زیرِ التوا ہے',
+        'طلب السحب قيد المراجعة',
+      );
+  String get minWithdrawalNote =>
+      _get('Minimum withdrawal: \$10.00', 'کم از کم نکاسی: \$10.00',
+          'الحد الأدنى للسحب: \$10.00');
+  String get withdrawalReviewNote => _get(
+        'Reviewed & paid manually, usually within 7 days',
+        'دستی جائزہ اور ادائیگی، عام طور پر 7 دن کے اندر',
+        'تتم المراجعة والدفع يدويًا، عادةً خلال 7 أيام',
+      );
+  String errWithdraw(String reason) =>
+      _get('Withdrawal failed: $reason', 'نکاسی ناکام: $reason',
+          'فشل السحب: $reason');
+  String get errBelowMinimum =>
+      _get('Amount is below the \$10.00 minimum', 'رقم \$10.00 کم از کم سے کم ہے',
+          'المبلغ أقل من الحد الأدنى \$10.00');
+  String get errAgeNotConfirmed =>
+      _get('Please confirm you are 18 or older', 'براہ کرم 18+ کی تصدیق کریں',
+          'يرجى تأكيد أن عمرك 18 عامًا أو أكثر');
+  String get errEmailNotVerified =>
+      _get('Verify your email first', 'پہلے اپنا ای میل تصدیق کریں',
+          'تحقق من بريدك الإلكتروني أولًا');
+  String get errAccountTooNew => _get(
+        'Your account must be at least 7 days old',
+        'آپ کا اکاؤنٹ کم از کم 7 دن پرانا ہونا چاہیے',
+        'يجب أن يكون حسابك أقدم من 7 أيام على الأقل',
+      );
+  String get errProfileIncomplete =>
+      _get('Complete your profile first', 'پہلے اپنا پروفائل مکمل کریں',
+          'أكمل ملفك الشخصي أولًا');
+  String get errPendingExists => _get(
+        'You already have a pending withdrawal',
+        'آپ کی ایک درخواست پہلے سے زیرِ التوا ہے',
+        'لديك بالفعل طلب سحب قيد الانتظار',
+      );
+  String get errInsufficientCash =>
+      _get('Not enough cash balance', 'کیش بیلنس ناکافی ہے',
+          'الرصيد النقدي غير كافٍ');
+  String get errInvalidMethod =>
+      _get('Check your bank details', 'اپنی بینک تفصیلات چیک کریں',
+          'تحقق من تفاصيل حسابك البنكي');
+  String get topSellers =>
+      _get('Top Sellers', 'ٹاپ سیلرز', 'أفضل البائعين');
+  String get verifiedClicks =>
+      _get('verified clicks', 'تصدیق شدہ کلکس', 'نقرات موثقة');
+  String clicksCount(int n) =>
+      _get('$n clicks', '$n کلکس', '$n نقرة');
+  String get weeklyPrize =>
+      _get('Weekly prize', 'ہفتہ وار انعام', 'الجائزة الأسبوعية');
+  String get monthlyPrize =>
+      _get('Monthly prize', 'ماہانہ انعام', 'الجائزة الشهرية');
+  String get volumeBonus =>
+      _get('Volume bonus', 'والیوم بونس', 'مكافأة الحجم');
+  String get sellerWinners =>
+      _get('Seller winners', 'سیلر فاتحین', 'الفائزون من البائعين');
+  String get shareEarnHint =>
+      _get('Share & earn \$0.05', 'شیئر کریں اور \$0.05 کمائیں',
+          'شارك واربح \$0.05');
+  String shareEarned(String cash) => _get(
+        '+$cash earned for sharing!',
+        'شیئر کرنے پر +$cash حاصل ہوئے!',
+        '+$cash ربحتها من المشاركة!',
+      );
+  String get shareFailed =>
+      _get('Could not start sharing', 'شیئر شروع نہیں ہو سکا',
+          'تعذر بدء المشاركة');
+  // Proof-based share rewards (screenshot + admin approval).
+  String shareToEarn(String display) => _get(
+        'Share to earn $display',
+        'شیئر کر کے $display کمائیں',
+        'شارك لتربح $display',
+      );
+  String get shareToEarnDesc => _get(
+        'Share this post with the system share sheet, then upload a screenshot of the shared post. After admin review, the cash is credited to your wallet.',
+        'یہ پوسٹ سسٹم شیئر شیٹ سے شیئر کریں، پھر شیئر کی گئی پوسٹ کا اسکرین شاٹ اپ لوڈ کریں۔ ایڈمن کے جائزے کے بعد کیش آپ کے والیٹ میں آ جائے گا۔',
+        'شارك هذه المشاركة عبر ورقة المشاركة، ثم ارفع لقطة شاشة للمنشور المشترك. بعد مراجعة المشرف، تُضاف النقود إلى محفظتك.',
+      );
+  String get shareNow =>
+      _get('Share now', 'ابھی شیئر کریں', 'شارك الآن');
+  String uploadProofToEarn(String display) => _get(
+        'Upload proof to earn $display',
+        'ثبوت اپ لوڈ کریں اور $display کمائیں',
+        'ارفع الدليل لتربح $display',
+      );
+  String get proofSheetHint => _get(
+        'Take a screenshot of your shared post, then pick it here. JPG, PNG, WEBP or GIF, max 5MB.',
+        'اپنی شیئر کی گئی پوسٹ کا اسکرین شاٹ لیں، پھر یہاں منتخب کریں۔ JPG، PNG، WEBP یا GIF، زیادہ سے زیادہ 5MB۔',
+        'التقط لقطة شاشة لمنشورك المشترك، ثم اخترها هنا. JPG أو PNG أو WEBP أو GIF، بحد أقصى 5 ميجابايت.',
+      );
+  String get pickScreenshot => _get(
+      'Pick screenshot', 'اسکرین شاٹ منتخب کریں', 'اختر لقطة الشاشة');
+  String get noProofPicked => _get('Pick a screenshot first',
+      'پہلے اسکرین شاٹ منتخب کریں', 'اختر لقطة الشاشة أولًا');
+  String get submitClaim => _get('Submit claim', 'دعویٰ جمع کریں', 'تقديم المطالبة');
+  String get proofTooBig => _get('Image must be under 5MB',
+      'تصویر 5MB سے کم ہونی چاہیے', 'يجب أن تكون الصورة أقل من 5 ميجابايت');
+  String get proofInvalidType => _get('Only image files up to 5MB are accepted',
+      'صرف 5MB تک کی تصویریں قبول ہیں', 'تُقبل ملفات الصور حتى 5 ميجابايت فقط');
+  String get proofRequiredMsg => _get('A screenshot proof is required',
+      'اسکرین شاٹ کا ثبوت ضروری ہے', 'يلزم دليل لقطة الشاشة');
+  String get alreadyClaimedPost => _get(
+      'Already claimed for this post',
+      'اس پوسٹ کے لیے پہلے ہی دعویٰ جمع ہو چکا ہے',
+      'تم تقديم مطالبة لهذه المشاركة من قبل');
+  String get underReview => _get('Under review', 'زیرِ جائزہ', 'قيد المراجعة');
+  String get claimFailedMsg => _get('Could not submit the claim',
+      'دعویٰ جمع نہیں ہو سکا', 'تعذر تقديم المطالبة');
+  String get myClaims =>
+      _get('My claims', 'میرے دعوے', 'مطالباتي');
+  String get noClaimsYet => _get(
+      'No claims yet — share a post to earn.',
+      'ابھی کوئی دعویٰ نہیں — کمانے کے لیے پوسٹ شیئر کریں۔',
+      'لا توجد مطالبات بعد — شارك منشورًا للربح.');
+  String get terms => _get('Terms', 'شرائط', 'الشروط');
+  String get rewardsTerms =>
+      _get('Rewards Terms', 'انعامی شرائط', 'شروط المكافآت');
+  String get viewFullTerms =>
+      _get('View full terms', 'مکمل شرائط دیکھیں', 'عرض الشروط الكاملة');
+  String get termsAgree => _get('I agree', 'میں متفق ہوں', 'أوافق');
+  String get walletAgreeTitle =>
+      _get('Before you use Cash Wallet', 'کیش والیٹ استعمال سے پہلے',
+          'قبل استخدام محفظة النقد');
+  String get agree1 =>
+      _get('Cash rewards are 18+ only.', 'کیش انعامات صرف 18+ کے لیے ہیں۔',
+          'المكافآت النقدية لمن هم 18 عامًا فأكثر فقط.');
+  String get agree2 =>
+      _get('Minimum withdrawal is \$10.00.', 'کم از کم نکاسی \$10.00 ہے۔',
+          'الحد الأدنى للسحب هو \$10.00.');
+  String get agree3 => _get(
+        'Withdrawals are reviewed & paid manually, usually within 7 days.',
+        'نکاسی کی دستی جائزہ اور ادائیگی ہوتی ہے، عام طور پر 7 دن کے اندر۔',
+        'تتم مراجعة طلبات السحب ودفعها يدويًا، عادةً خلال 7 أيام.',
+      );
+  String get agree4 => _get(
+        'Genuine activity only — no bots, fake accounts, or self-clicks.',
+        'صرف حقیقی سرگرمی — کوئی بوٹس، جعلی اکاؤنٹس یا خود کلکس نہیں۔',
+        'النشاط الحقيقي فقط — لا روبوتات ولا حسابات مزيفة ولا نقرات ذاتية.',
+      );
+  String get noSellersYet =>
+      _get('No sellers yet — share a product to join the race!',
+          'ابھی کوئی سیلر نہیں — ریس میں شامل ہونے کے لیے کوئی پروڈکٹ شیئر کریں!',
+          'لا يوجد بائعون بعد — شارك منتجًا للانضمام إلى السباق!');
+  String get noVolumeYet =>
+      _get('Share products to start unlocking volume bonuses.',
+          'والیوم بونس حاصل کرنے کے لیے پروڈکٹس شیئر کریں۔',
+          'شارك المنتجات لبدء فتح مكافآت الحجم.');
+  String volumeRow(String progress, String bonus) => _get(
+        '$progress clicks → $bonus bonus',
+        '$progress کلکس ← $bonus بونس',
+        '$progress نقرة ← مكافأة $bonus',
+      );
+  String get convert => _get('Convert', 'تبدیل کریں', 'تحويل');
+  String get status => _get('Status', 'حیثیت', 'الحالة');
+  String get pending => _get('Pending', 'زیرِ التوا', 'قيد الانتظار');
+  String get approved => _get('Approved', 'منظور شدہ', 'مقبول');
+  String get rejected => _get('Rejected', 'مسترد', 'مرفوض');
+  String get wdPaidStatus => _get('Paid', 'ادا شدہ', 'مدفوع');
+  String get myWithdrawals =>
+      _get('My withdrawals', 'میری نکاسیاں', 'طلبات السحب الخاصة بي');
+  String get walletHistoryEmpty => _get(
+        'No cash activity yet — share products to earn.',
+        'ابھی کوئی کیش سرگرمی نہیں — کمانے کے لیے پروڈکٹس شیئر کریں۔',
+        'لا يوجد نشاط نقدي بعد — شارك المنتجات للربح.',
+      );
+  // Rewards terms (short, bundled in-app). Canonical numbers mirror
+  // ~/workspace/virello/store_listing/rewards_terms.html.
+  String get rtSummary => _get(
+        'Earn Points for posting and engaging, and Cash (USD) for sharing products that lead to real shopping clicks. You never pay anything to participate — no wagering, no entry fee, no purchase necessary.',
+        'پوسٹنگ اور شرکت پر پوائنٹس، اور پروڈکٹس شیئر کرنے پر کیش (USD) کمائیں جس سے حقیقی خریداری کلکس ہوں۔ شرکت کے لیے آپ کو کچھ نہیں دینا — کوئی شرط، کوئی فیس، کوئی خریداری ضروری نہیں۔',
+        'اربح نقاطًا للنشر والتفاعل، ونقدًا (دولار أمريكي) لمشاركة المنتجات التي تؤدي إلى نقرات تسوق حقيقية. لا تدفع شيئًا أبدًا للمشاركة — لا مراهنة ولا رسوم دخول ولا شراء مطلوب.',
+      );
+  String get rtEligibilityT => _get('1. Eligibility', '1. اہلیت', '1. الأهلية');
+  String get rtEligibility => _get(
+        'Cash rewards and withdrawals require you to be 18 years or older (or the age of majority in your country). Verify your email, complete your profile, and hold your account for at least 7 days before your first withdrawal. One account per person — duplicate or fake accounts forfeit all rewards.',
+        'کیش انعامات اور نکاسی کے لیے آپ کی عمر 18 سال یا اس سے زیادہ ہونی چاہیے (یا آپ کے ملک میں بالغ ہونے کی عمر)۔ پہلی نکاسی سے پہلے اپنا ای میل تصدیق کریں، پروفائل مکمل کریں اور اکاؤنٹ کم از کم 7 دن پرانا ہو۔ ایک شخص ایک اکاؤنٹ — نقل یا جعلی اکاؤنٹس کے تمام انعامات ضبط۔',
+        'تتطلب المكافآت النقدية والسحوبات أن يكون عمرك 18 عامًا أو أكثر (أو سن الرشد في بلدك). تحقق من بريدك الإلكتروني وأكمل ملفك الشخصي واحتفظ بحسابك لمدة 7 أيام على الأقل قبل أول سحب. حساب واحد لكل شخص — الحسابات المكررة أو المزيفة تفقد جميع المكافآت.',
+      );
+  String get rtPointsT => _get('2. Points', '2. پوائنٹس', '2. النقاط');
+  String get rtPoints => _get(
+        'Points are a non-monetary engagement score with no cash value — they cannot be sold or transferred. 100 Points = 10 Grow credits (in-app features), or convert points into Cash at the rate shown in the Wallet (currently 1,000 pts = \$1.00, minimum 1,000 pts).',
+        'پوائنٹس غیر مالی مصروفیتی اسکور ہیں جن کی کوئی نقد قیمت نہیں — انہیں بیچا یا منتقل نہیں کیا جا سکتا۔ 100 پوائنٹس = 10 گرو کریڈٹس (ان-ایپ فیچرز)، یا والیٹ میں دکھائے گئے ریٹ پر کیش میں بدلیں (فی الحال 1,000 پوائنٹس = \$1.00، کم از کم 1,000 پوائنٹس)۔',
+        'النقاط هي درجة تفاعل غير نقدية بلا قيمة نقدية — لا يمكن بيعها أو نقلها. 100 نقطة = 10 أرصدة نمو (ميزات داخل التطبيق)، أو حوّل النقاط إلى نقد بالسعر المعروض في المحفظة (حاليًا 1,000 نقطة = \$1.00، بحد أدنى 1,000 نقطة).',
+      );
+  String get rtCashT => _get('3. Cash rewards', '3. کیش انعامات', '3. المكافآت النقدية');
+  String get rtCash => _get(
+        'Cash is earned only for actions that can generate real shopping activity: \$0.05 per product shared via your personal link (max 20/day), \$0.03 per verified click on your shared link (max 50/day, no self-clicks), volume bonuses of \$2.00 at 100 and \$10.00 at 500 verified clicks in 7 days. Rates may change with notice in the app; shown earnings are estimates until clicks are verified. Share rewards need a screenshot proof and admin approval.',
+        'کیش صرف ان اقدامات پر ملتا ہے جن سے حقیقی خریداری سرگرمی ہو: آپ کے ذاتی لنک سے ہر پروڈکٹ شیئر پر \$0.05 (زیادہ سے زیادہ 20/دن)، آپ کے شیئرڈ لنک پر ہر تصدیق شدہ کلک پر \$0.03 (زیادہ سے زیادہ 50/دن، خود کلک نہیں)، 7 دن میں 100 تصدیق شدہ کلکس پر \$2.00 اور 500 پر \$10.00 والیوم بونس۔ ریٹس ایپ میں اطلاع کے ساتھ بدل سکتے ہیں؛ دکھائی گئی آمدنی کلکس کی تصدیق تک تخمینہ ہے۔ شیئر انعامات کے لیے اسکرین شاٹ کا ثبوت اور ایڈمن کی منظوری ضروری ہے۔',
+        'تُربح النقود فقط مقابل إجراءات يمكن أن تولد نشاط تسوق حقيقي: \$0.05 لكل منتج تتم مشاركته عبر رابطك الشخصي (بحد أقصى 20/يوم)، و\$0.03 لكل نقرة موثقة على رابطك (بحد أقصى 50/يوم، دون نقرات ذاتية)، ومكافآت حجم بقيمة \$2.00 عند 100 نقرة و\$10.00 عند 500 نقرة موثقة خلال 7 أيام. قد تتغير الأسعار بإشعار في التطبيق؛ الأرباح المعروضة تقديرية حتى يتم التحقق من النقرات. مكافآت المشاركة تتطلب لقطة شاشة كدليل وموافقة المشرف.',
+      );
+  String get rtContestsT =>
+      _get('4. Contests (skill-based)', '4. مقابلے (مہارت پر مبنی)', '4. المسابقات (قائمة على المهارة)');
+  String get rtContests => _get(
+        'Weekly Top Seller (most verified share-clicks, Mon–Sun): \$10.00 cash. Monthly Top Seller (calendar month): \$50.00 cash. Weekly/Monthly Top Poster (most Points): 500 / 300 / 150 and 2000 / 1000 / 500 Points. Winners are decided purely by measured activity — never by random draw. Ties go to the earlier achiever. No lottery, no wagering, no purchase necessary — ever.',
+        'ہفتہ وار ٹاپ سیلر (سب سے زیادہ تصدیق شدہ شیئر کلکس، پیر–اتوار): \$10.00 کیش۔ ماہانہ ٹاپ سیلر (کیلنڈر مہینہ): \$50.00 کیش۔ ہفتہ وار/ماہانہ ٹاپ پوسٹر (سب سے زیادہ پوائنٹس): 500 / 300 / 150 اور 2000 / 1000 / 500 پوائنٹس۔ فاتحین صرف ناپی گئی سرگرمی سے طے ہوتے ہیں — کبھی قرعہ اندازی سے نہیں۔ برابر ہونے پر پہلے حاصل کرنے والا جیتتا ہے۔ کوئی لاٹری، کوئی شرط، کوئی خریداری ضروری نہیں — کبھی نہیں۔',
+        'أفضل بائع أسبوعي (أكثر النقرات الموثقة، الاثنين–الأحد): \$10.00 نقدًا. أفضل بائع شهري (الشهر الميلادي): \$50.00 نقدًا. أفضل ناشر أسبوعي/شهري (أكثر النقاط): 500 / 300 / 150 و2000 / 1000 / 500 نقطة. يُحدد الفائزون بالنشاط المقاس فقط — أبدًا بالسحب العشوائي. عند التعادل يفوز الأسبق. لا يانصيب ولا مراهنة ولا شراء مطلوب — أبدًا.',
+      );
+  String get rtWithdrawT => _get('5. Withdrawals', '5. نکاسی', '5. السحوبات');
+  String get rtWithdraw => _get(
+        'Minimum withdrawal: \$10.00 USD. Withdrawals are paid by manual bank transfer to the bank details you provide. Every withdrawal is manually reviewed, usually within 7 days — we may ask for identity verification. One pending withdrawal at a time. You are responsible for any taxes on your earnings in your country.',
+        'کم از کم نکاسی: \$10.00 USD۔ نکاسی آپ کی دی گئی بینک تفصیلات پر دستی بینک ٹرانسفر سے ادا کی جاتی ہے۔ ہر نکاسی کا دستی جائزہ لیا جاتا ہے، عام طور پر 7 دن کے اندر — ہم شناخت کی تصدیق مانگ سکتے ہیں۔ ایک وقت میں ایک زیرِ التوا درخواست۔ آپ اپنے ملک میں اپنی آمدنی پر ٹیکس کے ذمہ دار ہیں۔',
+        'الحد الأدنى للسحب: \$10.00 دولار أمريكي. تُدفع السحوبات بتحويل بنكي يدوي إلى التفاصيل البنكية التي تقدمها. تتم مراجعة كل سحب يدويًا، عادةً خلال 7 أيام — وقد نطلب التحقق من الهوية. طلب سحب واحد قيد الانتظار في كل مرة. أنت مسؤول عن أي ضرائب على أرباحك في بلدك.',
+      );
+  String get rtFairPlayT => _get('6. Fair play', '6. منصفانہ کھیل', '6. اللعب النظيف');
+  String get rtFairPlay => _get(
+        'Rewards are for genuine activity only. The following forfeit earnings and may lead to account suspension: fake accounts, bots, click farms or automated clicking/sharing; clicking your own links or coordinating reciprocal clicks; spam — mass-sharing to uninterested audiences; anything that violates Virello\u2019s no-fake-engagement rule. We use automated limits and manual review. Decisions on abuse are final.',
+        'انعامات صرف حقیقی سرگرمی کے لیے ہیں۔ درج ذیل سے آمدنی ضبط ہوتی ہے اور اکاؤنٹ معطل ہو سکتا ہے: جعلی اکاؤنٹس، بوٹس، کلک فارمز یا خودکار کلکنگ/شیئرنگ؛ اپنے لنکس پر خود کلک یا باہمی کلکس؛ اسپام — غیر دلچسپی رکھنے والے سامعین کو بڑے پیمانے پر شیئرنگ؛ Virello کے جعلی مصروفیت مخالف اصول کی کوئی بھی خلاف ورزی۔ ہم خودکار حدود اور دستی جائزہ استعمال کرتے ہیں۔ بدسلوکی پر فیصلے حتمی ہیں۔',
+        'المكافآت للنشاط الحقيقي فقط. ما يلي يؤدي إلى مصادرة الأرباح وقد يؤدي إلى تعليق الحساب: الحسابات المزيفة والروبوتات ومزارع النقرات أو النقر/المشاركة الآلية؛ النقر على روابطك الخاصة أو تنسيق النقرات المتبادلة؛ البريد المزعج — المشاركة الجماعية لجمهور غير مهتم؛ أي شيء ينتهك قاعدة Virello ضد التفاعل المزيف. نستخدم حدودًا آلية ومراجعة يدوية. قرارات إساءة الاستخدام نهائية.',
+      );
+  String get rtChangesT => _get('7. Changes & contact', '7. تبدیلیاں اور رابطہ', '7. التغييرات والتواصل');
+  String get rtChanges => _get(
+        'We may change rates, limits, or these terms with reasonable notice in the app. Continued use after changes means you accept them. We may end the rewards program with 30 days\u2019 notice; earned Cash balances above the withdrawal minimum will still be payable. Questions: privacy@virello.com.',
+        'ہم ایپ میں معقول اطلاع کے ساتھ ریٹس، حدود یا یہ شرائط بدل سکتے ہیں۔ تبدیلیوں کے بعد استعمال جاری رکھنا قبولیت ہے۔ ہم 30 دن کی اطلاع کے ساتھ انعامی پروگرام ختم کر سکتے ہیں؛ نکاسی کی کم از کم رقم سے زیادہ کیش بیلنس پھر بھی قابلِ ادائیگی ہو گا۔ سوالات: privacy@virello.com۔',
+        'قد نغير الأسعار أو الحدود أو هذه الشروط بإشعار معقول في التطبيق. استمرار الاستخدام بعد التغييرات يعني قبولك لها. قد ننهي برنامج المكافآت بإشعار 30 يومًا؛ ستظل أرصدة النقد المكتسبة فوق الحد الأدنى للسحب مستحقة الدفع. للأسئلة: privacy@virello.com.',
       );
 }

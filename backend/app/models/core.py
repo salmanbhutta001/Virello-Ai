@@ -82,6 +82,9 @@ class User(Base):
     credits: Mapped[int] = mapped_column(Integer, default=300)  # free starter credits
     is_admin: Mapped[bool] = mapped_column(default=False)
     suspended: Mapped[bool] = mapped_column(default=False)
+    # True once the user proves email ownership (OTP verify) or signs in
+    # via a provider (Google/Apple) that already verified the email.
+    email_verified: Mapped[bool] = mapped_column(default=False)
     # Email+password auth (optional; NULL = OTP / OAuth only).
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     password_updated_at: Mapped[datetime | None] = mapped_column(

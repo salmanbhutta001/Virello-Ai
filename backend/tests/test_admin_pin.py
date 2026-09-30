@@ -61,6 +61,23 @@ async def _is_admin(uid: str) -> bool:
         return bool(u.is_admin)
 
 
+async def _user_email(uid: str) -> str:
+    async with SessionLocal() as db:
+        u = (await db.execute(select(User).where(User.id == uuid.UUID(uid)))).scalar_one()
+        return u.email
+
+
+async def _make_user_with_email(email: str) -> str:
+    async with SessionLocal() as db:
+        u = User(email=email, name="Email Gate Tester", preferred_language="en")
+        db.add(u)
+        await db.commit()
+        await db.refresh(u)
+        uid = str(u.id)
+    clear_login_attempts(f"admin_pin:{uid}")
+    return uid
+
+
 async def _audit_count(uid: str, action: str) -> int:
     async with SessionLocal() as db:
         rows = (await db.execute(
@@ -75,8 +92,9 @@ async def _audit_count(uid: str, action: str) -> int:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_correct_pin_elevates_and_audits(client, user, pin_env):
+async def test_correct_pin_elevates_and_audits(client, user, pin_env, monkeypatch):
     assert not await _is_admin(user)
+    monkeypatch.setattr(settings, "admin_emails", await _user_email(user))
     r = await client.post("/api/v1/admin/unlock", json={"pin": TEST_PIN},
                           headers=_auth(user))
     assert r.status_code == 200
@@ -140,3 +158,43 @@ async def test_pin_never_in_logs(client, user, pin_env, caplog):
         msg = record.getMessage()
         assert secret_wrong not in msg
         assert TEST_PIN not in msg
+
+
+# ---------------------------------------------------------------------------
+# Email allowlist (Hafiz 2026-09-30): Admin panel is his alone. Correct PIN +
+# non-allowlisted email -> 403, no elevation, denial audited. require_admin
+# also blocks previously-elevated non-allowlisted users.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_correct_pin_non_allowlisted_email_403(client, pin_env, monkeypatch):
+    uid = await _make_user_with_email(f"stranger_{uuid.uuid4().hex[:8]}@test.com")
+    monkeypatch.setattr(settings, "admin_emails", "someone@else.com")
+    r = await client.post("/api/v1/admin/unlock", json={"pin": TEST_PIN},
+                          headers=_auth(uid))
+    assert r.status_code == 403
+    assert not await _is_admin(uid)
+    assert await _audit_count(uid, "admin.pin.unlock") == 0
+    assert await _audit_count(uid, "admin.pin.denied") == 1
+
+
+@pytest.mark.asyncio
+async def test_allowlisted_email_unlocks_case_insensitive(client, pin_env, monkeypatch):
+    uid = await _make_user_with_email("Boss@Test.com")
+    monkeypatch.setattr(settings, "admin_emails", "boss@test.com")
+    r = await client.post("/api/v1/admin/unlock", json={"pin": TEST_PIN},
+                          headers=_auth(uid))
+    assert r.status_code == 200
+    assert await _is_admin(uid)
+
+
+@pytest.mark.asyncio
+async def test_require_admin_blocks_non_allowlisted_elevated(client, pin_env, monkeypatch):
+    uid = await _make_user_with_email(f"ex_{uuid.uuid4().hex[:8]}@test.com")
+    monkeypatch.setattr(settings, "admin_emails", "someone@else.com")
+    async with SessionLocal() as db:
+        u = (await db.execute(select(User).where(User.id == uuid.UUID(uid)))).scalar_one()
+        u.is_admin = True
+        await db.commit()
+    r = await client.get("/api/v1/admin/overview", headers=_auth(uid))
+    assert r.status_code == 403

@@ -7,9 +7,11 @@ import '../../data/discovery_models.dart';
 import '../../main.dart';
 import '../settings/notifications_screen.dart';
 import '../shop/product_detail_screen.dart';
+import '../wallet/share_proof_flow.dart';
 import 'categories_screen.dart';
 import 'post_reader_screen.dart';
 import 'search_screen.dart';
+import 'shoppable_products.dart';
 import 'trending_screen.dart';
 
 /// Board screen 08: "Discover Feed" — pixel-faithful rebuild.
@@ -350,24 +352,45 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: VirelloColors.pink.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        '✦ ${(item.matchScore * 100).round()}%',
-                        style: const TextStyle(
-                          color: VirelloColors.pink,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: VirelloColors.pink.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '✦ ${(item.matchScore * 100).round()}%',
+                            style: const TextStyle(
+                              color: VirelloColors.pink,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
+                        // Proof-based share reward: small green cash badge
+                        // with the post's own reward_display amount.
+                        if (item.hasShareReward) ...[
+                          const SizedBox(width: 6),
+                          ShareRewardBadge(
+                            item: item,
+                            onTap: () =>
+                                ShareProofFlow.start(context, item),
+                          ),
+                        ],
+                      ],
                     ),
+                    // Shoppable post: creator-tagged products, compact card.
+                    if (item.taggedProducts.isNotEmpty)
+                      ShoppableProducts(
+                        tagged: item.taggedProducts,
+                        placementId: item.placementId,
+                        compact: true,
+                      ),
                   ],
                 ),
               ),
@@ -529,53 +552,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Widget _trendsMasonry(List<Map<String, dynamic>> trends) {
-    if (trends.isEmpty) return _emptyState();
-    final left = <Map<String, dynamic>>[];
-    final right = <Map<String, dynamic>>[];
-    for (var i = 0; i < trends.length; i++) {
-      (i.isEven ? left : right).add(trends[i]);
-    }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                children: [for (final t in left) _trendCard(t)],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                children: [for (final t in right) _trendCard(t)],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Center(
-          child: TextButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TrendingScreen()),
-              );
-            },
-            child: Text(
-              s.boardViewAll,
-              style: const TextStyle(
-                color: VirelloColors.pink,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _trendCard(Map<String, dynamic> t) {
     final query = '${t['query'] ?? ''}';

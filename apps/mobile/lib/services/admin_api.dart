@@ -1,6 +1,8 @@
+import 'dart:typed_data';
+
 import 'api_client.dart';
 
-/// Admin Dashboard API (backend /api/v1/admin/*, require_admin).
+/// Admin Panel API (backend /api/v1/admin/*, require_admin).
 /// 403 means the signed-in user is not an admin.
 class AdminApi {
   final ApiClient _c;
@@ -36,6 +38,15 @@ class AdminApi {
       _c.adminPost('/api/v1/admin/users/$id/credits',
           {'delta': delta, 'reason': reason});
 
+  /// Rename a user (display name only).
+  Future<void> editUser(String id, String name) =>
+      _c.adminPatch('/api/v1/admin/users/$id', {'name': name});
+
+  /// Delete a user and everything they own. The backend refuses self-delete
+  /// and deleting the last admin (400).
+  Future<void> deleteUser(String id) =>
+      _c.adminDelete('/api/v1/admin/users/$id');
+
   Future<List<dynamic>> subscriptions() async {
     final j = await _c.adminGet('/api/v1/admin/subscriptions');
     return j['subscriptions'] as List? ?? [];
@@ -56,6 +67,14 @@ class AdminApi {
   Future<void> pauseCampaign(String id) =>
       _c.adminPost('/api/v1/admin/campaigns/$id/pause');
 
+  /// Edit a campaign's title / status / budget.
+  Future<void> editCampaign(String id, Map<String, dynamic> body) =>
+      _c.adminPatch('/api/v1/admin/campaigns/$id', body);
+
+  /// Delete a campaign with all its children (metrics, runs, placements…).
+  Future<void> deleteCampaign(String id) =>
+      _c.adminDelete('/api/v1/admin/campaigns/$id');
+
   Future<Map<String, dynamic>> aiUsage() =>
       _c.adminGet('/api/v1/admin/ai-usage');
 
@@ -67,6 +86,10 @@ class AdminApi {
 
   Future<void> resolveFlag(String id) =>
       _c.adminPost('/api/v1/admin/fraud-flags/$id/resolve');
+
+  /// Permanently dismiss a fraud flag.
+  Future<void> deleteFlag(String id) =>
+      _c.adminDelete('/api/v1/admin/fraud-flags/$id');
 
   Future<List<dynamic>> plans() async {
     final j = await _c.adminGet('/api/v1/admin/plans');
@@ -98,6 +121,14 @@ class AdminApi {
         'translations': translations,
       });
 
+  /// Edit a broadcast's title / body / audience.
+  Future<void> editBroadcast(String id, Map<String, dynamic> body) =>
+      _c.adminPatch('/api/v1/admin/broadcasts/$id', body);
+
+  /// Delete a broadcast.
+  Future<void> deleteBroadcast(String id) =>
+      _c.adminDelete('/api/v1/admin/broadcasts/$id');
+
   Future<Map<String, dynamic>> settings() async {
     final j = await _c.adminGet('/api/v1/admin/settings');
     return Map<String, dynamic>.from(j['settings'] as Map? ?? {});
@@ -120,4 +151,115 @@ class AdminApi {
       _c.adminPost('/api/v1/admin/discovery/$id/approve', {'note': note});
   Future<void> rejectPlacement(String id, String note) =>
       _c.adminPost('/api/v1/admin/discovery/$id/reject', {'note': note});
+
+  /// Remove a discovery placement from the queue entirely.
+  Future<void> deletePlacement(String id) =>
+      _c.adminDelete('/api/v1/admin/discovery/$id');
+
+  // ------------------------------------------------------- comments ("posts")
+  /// Moderate what users wrote on posts: the feed items themselves are
+  /// external (Google News / Wikipedia) and cannot be edited by design —
+  /// this moderates the user-written comments on them.
+  Future<List<dynamic>> comments({String q = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/comments?q=${Uri.encodeQueryComponent(q)}');
+    return j['comments'] as List? ?? [];
+  }
+
+  Future<void> editComment(String id, String text) =>
+      _c.adminPatch('/api/v1/admin/comments/$id', {'text': text});
+
+  Future<void> deleteComment(String id) =>
+      _c.adminDelete('/api/v1/admin/comments/$id');
+
+  // ------------------------------------------------------------- products
+  Future<List<dynamic>> products({String q = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/products?q=${Uri.encodeQueryComponent(q)}');
+    return j['products'] as List? ?? [];
+  }
+
+  /// Edit a product's title / description / price_cents / category /
+  /// is_active. Category must be one of the 26 department slugs.
+  Future<void> editProduct(String id, Map<String, dynamic> body) =>
+      _c.adminPatch('/api/v1/admin/products/$id', body);
+
+  Future<void> deleteProduct(String id) =>
+      _c.adminDelete('/api/v1/admin/products/$id');
+
+  // -------------------------------------------------------- support tickets
+  Future<List<dynamic>> tickets({String status = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/tickets${status.isEmpty ? '' : '?status=$status'}');
+    return j['tickets'] as List? ?? [];
+  }
+
+  Future<void> resolveTicket(String id) =>
+      _c.adminPost('/api/v1/admin/tickets/$id/resolve');
+
+  Future<void> deleteTicket(String id) =>
+      _c.adminDelete('/api/v1/admin/tickets/$id');
+
+  // -------------------------------------------------------- withdrawals
+  /// GET /api/v1/admin/withdrawals — pending first. status = pending |
+  /// approved | paid | rejected ('' = all).
+  Future<List<dynamic>> withdrawals({String status = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/withdrawals${status.isEmpty ? '' : '?status=$status'}');
+    return j['withdrawals'] as List? ?? [];
+  }
+
+  /// Approve a pending withdrawal; optional admin note is audit-logged.
+  Future<void> approveWithdrawal(String id, {String? adminNote}) =>
+      _c.adminPost('/api/v1/admin/withdrawals/$id/approve',
+          {'admin_note': adminNote ?? ''});
+
+  /// Reject a pending withdrawal; the cash returns to the user balance.
+  Future<void> rejectWithdrawal(String id, String reason) =>
+      _c.adminPost(
+          '/api/v1/admin/withdrawals/$id/reject', {'reason': reason});
+
+  /// Mark an approved withdrawal as paid (manual bank transfer done).
+  Future<void> markWithdrawalPaid(String id, String paymentRef) =>
+      _c.adminPost('/api/v1/admin/withdrawals/$id/mark-paid',
+          {'payment_ref': paymentRef});
+
+  // -------------------------------------------------------- reward claims
+  /// GET /api/v1/admin/reward-claims — proof-review queue, pending first.
+  /// status = pending | approved | rejected ('' = all).
+  Future<List<dynamic>> rewardClaims({String status = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/reward-claims${status.isEmpty ? '' : '?status=$status'}');
+    return j['claims'] as List? ?? [];
+  }
+
+  /// Approve a pending claim (credits the ledger once); optional admin note.
+  Future<void> approveClaim(String id, {String? adminNote}) =>
+      _c.adminPost('/api/v1/admin/reward-claims/$id/approve',
+          {'admin_note': adminNote ?? ''});
+
+  /// Reject a pending claim with a reason; nothing is credited.
+  Future<void> rejectClaim(String id, String reason) =>
+      _c.adminPost(
+          '/api/v1/admin/reward-claims/$id/reject', {'reason': reason});
+
+  /// Set the per-post cash reward badge (integer cents).
+  Future<void> setPostReward(String postId, int cents) =>
+      _c.adminPatch('/api/v1/admin/posts/$postId', {'reward_cents': cents});
+
+  /// Fetch owner/admin-only proof image bytes (auth header attached).
+  Future<Uint8List> proofBytes(String path) => _c.adminBytes(path);
+
+  // -------------------------------------------------------- earnings rules
+  /// GET /api/v1/admin/earnings/rules → the cash rate card (cents).
+  Future<Map<String, dynamic>> earningsRules() async {
+    final j = await _c.adminGet('/api/v1/admin/earnings/rules');
+    final rules = j['rules'] as Map<String, dynamic>?;
+    if (rules != null) return rules;
+    return (j['rates'] as Map<String, dynamic>?) ?? {};
+  }
+
+  /// PUT /api/v1/admin/earnings/rules — partial patch, integer cents.
+  Future<void> updateEarningsRules(Map<String, dynamic> patch) =>
+      _c.adminPut('/api/v1/admin/earnings/rules', patch);
 }

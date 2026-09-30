@@ -8,6 +8,9 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.curation import routes as curation_routes  # registers curation models
 from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws, support
+from app.routers import rewards as rewards_router
+from app.routers import notifications as notifications_router
+from app.routers import wallet as wallet_router
 from app.routers import analysis as analysis_router
 from app.routers import viral_lab as viral_lab_router
 from app.routers import create as create_router
@@ -29,6 +32,7 @@ from app.routers import commerce as commerce_router
 from app.routers import ctr as ctr_router
 from app.routers import academy as academy_router
 from app.routers import entertain as entertain_router
+from app.routers import shop as shop_router
 
 
 @asynccontextmanager
@@ -107,6 +111,14 @@ app.include_router(entertain_router.router, prefix="/api/v1", tags=["entertain"]
 app.include_router(commerce_router.router, prefix="/api/v1", tags=["commerce"])
 app.include_router(ctr_router.router, prefix="/api/v1/content", tags=["content"])
 app.include_router(ws.router, prefix="/api/v1")  # WebSocket: /api/v1/campaigns/{id}/stream
+app.include_router(rewards_router.router, prefix="/api/v1/rewards", tags=["rewards"])
+# Share-to-earn public redirect links live at the root: /s/{code}
+app.include_router(rewards_router.share_redirect_router, tags=["share"])
+app.include_router(wallet_router.router, prefix="/api/v1/wallet", tags=["wallet"])
+app.include_router(wallet_router.admin_router, prefix="/api/v1/admin", tags=["admin-wallet"])
+app.include_router(notifications_router.router, prefix="/api/v1/notifications",
+                   tags=["notifications"])
+app.include_router(shop_router.router, prefix="/api/v1", tags=["shop"])
 # User posts: edit/delete own feed posts (DiscoveryPlacement), owner-only.
 from app.routers import posts as posts_router
 app.include_router(posts_router.router, prefix="/api/v1/posts", tags=["posts"])

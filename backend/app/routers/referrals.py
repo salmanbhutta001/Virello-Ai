@@ -156,6 +156,17 @@ async def award_referral_credits(db: AsyncSession, user_id: uuid.UUID) -> dict:
                         REFERRAL_REASON)
     await grant_credits(db, event.referred_user_id, REFERRAL_BONUS_CREDITS,
                         REFERRAL_REASON)
+    # Virello Points for both sides too (+50 each, idempotent per event).
+    try:
+        from app.services import rewards as rewards_svc
+        await rewards_svc.award_referral(db, event.referrer_id, event.id)
+        await rewards_svc.award(
+            db, event.referred_user_id, rewards_svc.REFERRAL_POINTS,
+            "referral", f"{event.id}:referred")
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "rewards: referral points hook failed")
     return {"awarded": True, "credits": REFERRAL_BONUS_CREDITS}
 
 

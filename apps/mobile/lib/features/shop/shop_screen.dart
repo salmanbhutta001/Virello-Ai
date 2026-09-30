@@ -8,6 +8,7 @@ import '../../services/api_client.dart';
 import '../../main.dart';
 import 'product_detail_screen.dart';
 import 'sell_screen.dart';
+import '../wallet/share_earn.dart';
 
 /// Smart category detection (runs silently in the background): reads a
 /// product's title + description and assigns it to one of the shop's top
@@ -340,15 +341,21 @@ class _ShopScreenState extends State<ShopScreen> {
     _load();
   }
 
+  /// Share-to-earn: personal share link -> OS share sheet -> $0.05 credit
+  /// only when the share actually completes (server-side). Falls back to
+  /// copying the link (no earnings) when the product has no trackable ASIN.
   Future<void> _shareProduct(Map<String, dynamic> p) async {
-    final url = '${p['affiliate_url'] ?? ''}';
-    final text = url.isNotEmpty
-        ? '${p['title'] ?? ''}\n$url'
-        : '${p['title'] ?? ''}';
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.shopLinkCopied)));
+    final credited = await ShareEarn.shareProduct(context, product: p);
+    if (!credited && mounted && ShareEarn.asinOf(p) == null) {
+      final url = '${p['affiliate_url'] ?? ''}';
+      final text = url.isNotEmpty
+          ? '${p['title'] ?? ''}\n$url'
+          : '${p['title'] ?? ''}';
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.shopLinkCopied)));
+    }
   }
 
   @override
@@ -691,9 +698,12 @@ class _ShopScreenState extends State<ShopScreen> {
                       : _liked.add(id)),
                 ),
                 const SizedBox(width: 8),
-                _actionBtn(
-                  icon: Icons.send_outlined,
-                  onTap: () => _shareProduct(p),
+                Tooltip(
+                  message: s.shareEarnHint,
+                  child: _actionBtn(
+                    icon: Icons.send_outlined,
+                    onTap: () => _shareProduct(p),
+                  ),
                 ),
               ],
             ),

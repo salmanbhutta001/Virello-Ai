@@ -1,20 +1,76 @@
 """Discovery service: interests, feed, interactions, placements."""
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+log = logging.getLogger(__name__)
+
+from app.models.commerce import PostProduct, Product
 from app.models.core import AuditLog, Campaign, CampaignStatus, FraudFlag, User
 from app.models.growth import (
     DiscoveryInteraction, DiscoveryPlacement, PostAnalysis, Topic, UserInterest,
 )
+from app.services.affiliate.amazon import AmazonAffiliateProvider
 from .matcher import score_candidate
 from .topics_seed import seed_topics
 
 INTERACTION_KINDS = {"view", "save", "visit", "dismiss", "like"}
+
+# ---------------------------------------------------------------- tagged products
+# Shoppable posts: each feed item carries placement_id + tagged_products
+# (product cards with an affiliate disclosure flag for the mobile UI).
+# Batched: one query for PostProduct rows, one for the matching Products.
+
+
+def _price_display(price_cents: int, currency: str) -> str:
+    symbols = {"USD": "$", "EUR": "€", "GBP": "£", "PKR": "Rs ",
+               "INR": "₹", "AED": "د.إ "}
+    cur = (currency or "USD").upper()
+    return f"{symbols.get(cur, cur + ' ')}{price_cents / 100:,.2f}"
+
+
+def _product_card(asin: str, p: Product) -> dict:
+    images = p.image_urls or []
+    return {
+        "asin": asin,
+        "title": p.title,
+        "image_url": images[0] if images else "",
+        "price_cents": p.price_cents,
+        "currency": p.currency,
+        "price_display": _price_display(p.price_cents, p.currency),
+        "is_affiliate": True,  # mobile shows "Affiliate link" disclosure
+    }
+
+
+async def tagged_products_for_placements(
+        db: AsyncSession, placement_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[dict]]:
+    """Map placement_id -> tagged product cards. Two queries, no N+1."""
+    out: dict[uuid.UUID, list[dict]] = {}
+    if not placement_ids:
+        return out
+    pp_rows = (await db.execute(select(PostProduct).where(
+        PostProduct.post_id.in_(placement_ids)))).scalars().all()
+    if not pp_rows:
+        return out
+    provider = AmazonAffiliateProvider()
+    asins = sorted({r.asin for r in pp_rows})
+    urls = [provider.build_affiliate_url(a) for a in asins]
+    prods = (await db.execute(select(Product).where(
+        Product.affiliate_url.in_(urls),
+        Product.is_active.is_(True)))).scalars().all()
+    by_url = {p.affiliate_url: p for p in prods}
+    for r in pp_rows:
+        p = by_url.get(provider.build_affiliate_url(r.asin))
+        if p is None:
+            continue
+        out.setdefault(r.post_id, []).append(_product_card(r.asin, p))
+    return out
 
 
 async def get_my_interests(db: AsyncSession, user_id: uuid.UUID) -> list[str]:
@@ -174,11 +230,24 @@ async def get_feed(db: AsyncSession, user: User, limit: int = 20,
                        growth, variant))
     scored.sort(key=lambda x: x[0], reverse=True)
 
+    page = scored[offset:offset + limit]
+    tagged = await tagged_products_for_placements(
+        db, [placement.id for _, _, placement, _, _, _ in page])
+
+    # Per-post cash badge: each placement's own reward_cents, else the
+    # admin-tunable default (Hafiz: +$0.05). Fetched once for the page.
+    from app.services import reward_claims as _claims
+    default_reward = await _claims.get_default_post_reward_cents(db)
+
     items = []
-    for final_score, match, placement, campaign, growth, variant in scored[offset:offset + limit]:
+    for final_score, match, placement, campaign, growth, variant in page:
         lang_info = analyses[campaign.id]
+        reward_cents = (placement.reward_cents
+                        if placement.reward_cents is not None
+                        else default_reward)
         item = {
             "campaign_id": str(campaign.id),
+            "placement_id": str(placement.id),
             "title": campaign.title,
             "platform": campaign.platform,
             "goal": campaign.goal.value,
@@ -186,10 +255,15 @@ async def get_feed(db: AsyncSession, user: User, limit: int = 20,
             "thumbnail_url": "",
             "match_score": match["score"],
             "match_reasons": match["reasons"],
+            # Cash badge for the share row: "+$0.05". Tapping it shows
+            # "Share to earn $0.05". Per-post amounts differ.
+            "reward_cents": reward_cents,
+            "reward_display": _claims.fmt_reward(reward_cents),
             # Original-language badge + cross-language match info.
             "content_language": lang_info["primary"],
             "content_languages": lang_info["languages"],
             "language_uncertain": lang_info["uncertain"],
+            "tagged_products": tagged.get(placement.id, []),
         }
         if growth:
             item["growth"] = growth
@@ -233,9 +307,20 @@ async def record_interaction(db: AsyncSession, user_id: uuid.UUID,
         DiscoveryInteraction.campaign_id == campaign_id,
         DiscoveryInteraction.kind == kind))).scalar_one_or_none()
     if existing is None:
-        db.add(DiscoveryInteraction(user_id=user_id, campaign_id=campaign_id,
-                                    kind=kind, variant_id=variant_id))
+        interaction = DiscoveryInteraction(user_id=user_id,
+                                           campaign_id=campaign_id,
+                                           kind=kind, variant_id=variant_id)
+        db.add(interaction)
         await db.commit()
+        await db.refresh(interaction)
+        if kind == "like":
+            # Points to the post owner for a genuine like (no self-likes).
+            try:
+                from app.services import rewards as rewards_svc
+                await rewards_svc.award_like_received(
+                    db, campaign_id, user_id, interaction.id)
+            except Exception:
+                log.exception("rewards: like_received hook failed")
         return {"recorded": True, "kind": kind}
     return {"recorded": False, "kind": kind, "note": "already recorded"}
 

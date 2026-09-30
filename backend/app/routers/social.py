@@ -4,6 +4,10 @@ Honesty: a follow is only ever created by the authenticated user's explicit
 request. Handles are normalized ('@Name' -> 'name') so duplicates cannot
 sneak in under different casing.
 """
+from __future__ import annotations
+
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -13,6 +17,8 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.core import User
 from app.models.social import Follow, PostComment
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -160,6 +166,15 @@ async def post_comment(body: CommentIn,
     db.add(comment)
     await db.commit()
     await db.refresh(comment)
+    # Points to the post owner for a genuine comment (no self-comments).
+    # The campaign is resolved by post_url; external URLs we cannot
+    # attribute simply earn nothing — no points invented.
+    try:
+        from app.services import rewards as rewards_svc
+        await rewards_svc.award_comment_received(
+            db, url, user.id, str(comment.id))
+    except Exception:
+        log.exception("rewards: comment_received hook failed")
     return {"ok": True, "comment": _comment_to_dict(comment, user.id)}
 
 

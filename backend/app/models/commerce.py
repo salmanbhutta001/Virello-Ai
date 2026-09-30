@@ -1,6 +1,16 @@
 """AI Commerce (Phase 4): product catalog, shareable product pages, leads,
 orders.
 
+Shoppable Posts (2026-09-30):
+- PostProduct links a feed post (DiscoveryPlacement) to tagged Amazon
+  affiliate products by ASIN. The canonical product identity is the
+  affiliate URL built server-side as
+  https://www.amazon.com/dp/{ASIN}?tag=topitems0c1-20 via
+  AmazonAffiliateProvider().build_affiliate_url(asin); the client never
+  supplies a tag.
+- ShopClick records every outbound tap through GET /shop/go/{asin} so
+  product clicks are auditable and reward the post owner (+2, capped).
+
 Honesty rules:
 - No fake products, prices, ratings, or sales anywhere. An empty catalog
   returns an empty list.
@@ -20,7 +30,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import (
+    JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text,
+    UniqueConstraint, func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -154,3 +167,39 @@ class WishlistItem(Base):
         GUID(), ForeignKey("products.id"), index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now())
+
+
+class PostProduct(Base):
+    """A product tagged on a feed post (DiscoveryPlacement). ASIN only —
+    the canonical identity is the server-built affiliate URL, so the
+    catalog match is ``Product.affiliate_url == provider.build_affiliate_url(asin)``.
+    One row per (post, asin); retagging the same product is a no-op."""
+    __tablename__ = "post_products"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("discovery_placements.id"), index=True)
+    asin: Mapped[str] = mapped_column(String(10), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("post_id", "asin", name="uq_post_product_asin"),
+    )
+
+
+class ShopClick(Base):
+    """One verified outbound tap through GET /shop/go/{asin}.
+    post_id/user_id are best-effort attribution (nullable); ip_hash lets
+    anonymous clicks dedupe per day for the +2 owner reward."""
+    __tablename__ = "shop_clicks"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    asin: Mapped[str] = mapped_column(String(10), index=True)
+    post_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("discovery_placements.id"), nullable=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("users.id"), nullable=True, index=True)
+    ip_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True)

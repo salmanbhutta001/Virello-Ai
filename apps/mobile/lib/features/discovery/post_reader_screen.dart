@@ -12,6 +12,8 @@ import '../audience/audience_intelligence_screen.dart';
 import '../discovery/analyze_screen.dart';
 import '../shop/product_detail_screen.dart';
 import '../social/comments_screen.dart';
+import '../wallet/share_proof_flow.dart';
+import 'shoppable_products.dart';
 
 /// In-app post reader: every post card in Home (For You / Trending /
 /// AI Picks) and Discovery opens here — never kicks the user out to a
@@ -386,6 +388,16 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
             label: s.boardShare,
             onTap: () => _share(originalUrl),
           ),
+          // Proof-based share reward: small green cash badge with the
+          // post's own reward_display amount, next to the share button.
+          if (item.hasShareReward)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ShareRewardBadge(
+                item: item,
+                onTap: () => ShareProofFlow.start(context, item),
+              ),
+            ),
         ],
       ),
     );
@@ -653,6 +665,16 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
                   side: const BorderSide(color: VirelloColors.boardBorder),
                 ),
             ],
+          ),
+        ],
+        // Shoppable post: creator-tagged products with the Sponsored
+        // disclosure; tap opens the tracked shop/go redirect externally.
+        // Renders only when the feed item carries real tagged_products.
+        if (item.taggedProducts.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          ShoppableProducts(
+            tagged: item.taggedProducts,
+            placementId: item.placementId,
           ),
         ],
         // "Shop this" — real catalog matches only; hidden when empty.

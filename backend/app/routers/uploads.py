@@ -28,6 +28,13 @@ router = APIRouter()
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# Proof screenshots for reward claims (share rewards). Kept separate from
+# general uploads: owner-or-admin-only serving, never public.
+PROOF_DIR = Path(__file__).resolve().parent.parent / "static" / "proofs"
+PROOF_DIR.mkdir(parents=True, exist_ok=True)
+MAX_PROOF_BYTES = 5 * 1024 * 1024  # 5 MB
+_PROOF_EXTS = {"jpg", "jpeg", "png", "webp", "gif"}
+
 MAX_BYTES = 50 * 1024 * 1024  # 50 MB
 
 _ALLOWED = {
@@ -97,6 +104,49 @@ def _resolve(upload_id: str) -> Path:
     if not matches:
         raise HTTPException(404, "Upload not found")
     return matches[0]
+
+
+@router.post("/proof")
+async def upload_proof(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Screenshot proof for a reward claim (share rewards). Image only,
+    max 5 MB. Returns a private URL — only the uploader and admins can
+    fetch it; admins see it in the claim review queue."""
+    name = _safe_name(file.filename or "proof")
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if ext not in _PROOF_EXTS:
+        raise HTTPException(
+            400, "Proof must be an image (jpg, jpeg, png, webp, gif).")
+    data = await file.read()
+    if not data:
+        raise HTTPException(400, "Empty file")
+    if len(data) > MAX_PROOF_BYTES:
+        raise HTTPException(400, "Proof image too large (max 5 MB)")
+    # stored name embeds the uploader so serving can enforce ownership:
+    # {file_uuid}_{user_uuid_hex}_{original_name}
+    stored = f"{uuid.uuid4().hex}_{user.id.hex}_{name}"
+    (PROOF_DIR / stored).write_bytes(data)
+    return {"url": f"/api/v1/uploads/proofs/{stored}",
+            "size": len(data), "mime": file.content_type or "image/*"}
+
+
+@router.get("/proofs/{stored}")
+async def get_proof(
+    stored: str, user: User = Depends(get_current_user)
+) -> FileResponse:
+    """Serve a claim proof. Owner or admin only — never public."""
+    if not re.fullmatch(r"[0-9a-f]{32}_[0-9a-f]{32}_[A-Za-z0-9._-]+",
+                        stored or ""):
+        raise HTTPException(404, "Proof not found")
+    _file_uid, owner_hex = stored.split("_", 2)[:2]
+    if not user.is_admin and owner_hex != user.id.hex:
+        raise HTTPException(403, "Not your proof")
+    path = PROOF_DIR / stored
+    if not path.is_file():
+        raise HTTPException(404, "Proof not found")
+    return FileResponse(path, filename=stored.split("_", 2)[2])
 
 
 @router.get("/{upload_id}")

@@ -7,12 +7,22 @@ from app.core.deps import get_current_user
 from app.models.billing import Broadcast
 from app.models.core import User
 from app.services import language as lang_svc
+from app.services import rewards as rewards_svc
+from app.services import wallet as wallet_svc
 
 router = APIRouter()
 
 
 @router.get("/me")
-async def me(user: User = Depends(get_current_user)) -> dict:
+async def me(user: User = Depends(get_current_user),
+             db: AsyncSession = Depends(get_db)) -> dict:
+    # Daily login points: idempotent per day, never breaks the profile read.
+    try:
+        login_pts = await rewards_svc.award_daily_login(db, user.id)
+    except Exception:
+        login_pts = 0
+    bal = await rewards_svc.get_balance(db, user.id)
+    cash_cents = await wallet_svc.cash_balance(db, user.id)
     return {
         "id": str(user.id),
         "email": user.email,
@@ -25,12 +35,20 @@ async def me(user: User = Depends(get_current_user)) -> dict:
         "all_relevant_languages": bool(user.all_relevant_languages),
         "is_admin": user.is_admin,
         "suspended": user.suspended,
+        "email_verified": bool(user.email_verified),
+        "profile_completed": wallet_svc.profile_is_completed(user),
+        "points_balance": bal["balance"],
+        "points_level": bal["level"],
+        "daily_login_points": login_pts,
+        "cash_balance_cents": cash_cents,
+        "cash_display": wallet_svc.fmt_cents(cash_cents),
     }
 
 
 @router.patch("/me")
 async def update_me(payload: dict, user: User = Depends(get_current_user),
                     db: AsyncSession = Depends(get_db)) -> dict:
+    was_complete = wallet_svc.profile_is_completed(user)
     if "name" in payload and payload["name"]:
         user.name = str(payload["name"])[:255]
     if "locale" in payload and payload["locale"] in ("en", "ur", "ar"):
@@ -51,7 +69,16 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
         user.all_relevant_languages = bool(
             payload["all_relevant_languages"])
     await db.commit()
-    return {"updated": True}
+    # Profile-completed points: +20 once, when the profile newly counts as
+    # completed (a real display name set). Never breaks the update.
+    profile_pts = 0
+    if not was_complete and wallet_svc.profile_is_completed(user):
+        try:
+            profile_pts = await rewards_svc.award_profile_completed(
+                db, user.id, user.name, user.preferred_language)
+        except Exception:
+            profile_pts = 0
+    return {"updated": True, "profile_points": profile_pts}
 
 
 @router.get("/notifications")

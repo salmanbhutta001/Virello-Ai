@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
@@ -8,6 +6,7 @@ import '../../core/theme.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import '../ask_virello/ask_virello_screen.dart';
+import '../wallet/share_earn.dart';
 import 'affiliate_disclosure.dart';
 
 /// Lavish POST DETAILS screen (dark-first).
@@ -99,13 +98,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return s.timeDaysAgo(d.inDays);
   }
 
+  /// Share-to-earn: personal share link -> OS share sheet -> $0.05 credit
+  /// only when the share actually completes. Falls back to the plain
+  /// affiliate URL (no earnings) when the product has no trackable ASIN.
   Future<void> _share(Map<String, dynamic> p) async {
-    final url = '${p['affiliate_url'] ?? ''}';
-    final title = '${p['title'] ?? ''}';
-    final text = url.isNotEmpty
-        ? '$title\n$url\n\nvia Virello Shop'
-        : '$title\nvia Virello Shop';
-    await Share.share(text, subject: title);
+    await ShareEarn.shareProduct(context, product: p);
   }
 
   /// Wishlist: save/remove product.
@@ -305,9 +302,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 onTap: () => _toggleWishlist(p),
               ),
                   const SizedBox(width: 12),
-                  _floatBtn(
-                    icon: Icons.send_outlined,
-                    onTap: () => _share(p),
+                  Tooltip(
+                    message: s.shareEarnHint,
+                    child: _floatBtn(
+                      icon: Icons.send_outlined,
+                      onTap: () => _share(p),
+                    ),
                   ),
                 ],
               ),

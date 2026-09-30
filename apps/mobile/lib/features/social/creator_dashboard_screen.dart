@@ -4,7 +4,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
 import '../../main.dart';
-import '../../services/api_client.dart';
+import 'share_to_feed_dialog.dart';
 
 /// Board screen 18: Creator Dashboard — pixel-faithful.
 ///
@@ -204,7 +204,7 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
   Widget _postTile(Campaign p) {
     final title = p.title;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: VirelloColors.boardSurface,
         borderRadius: BorderRadius.circular(14),
@@ -212,25 +212,80 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.campaign_outlined,
-            color: VirelloColors.pink,
-            size: 22,
+          Row(
+            children: [
+              const Icon(
+                Icons.campaign_outlined,
+                color: VirelloColors.pink,
+                size: 20,
+              ),
+              const Spacer(),
+              if (p.status == CampaignStatus.live)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    p.status.name,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            title.isNotEmpty ? title : s.untitled,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              height: 1.35,
+          const SizedBox(height: 4),
+          Expanded(
+            child: Text(
+              title.isNotEmpty ? title : s.untitled,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () => _openShareDialog(p),
+              icon: const Icon(Icons.share_outlined, size: 15),
+              label: Text(
+                s.shareToFeed,
+                style: const TextStyle(fontSize: 12),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: VirelloColors.pink,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                minimumSize: const Size(0, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openShareDialog(Campaign p) {
+    showDialog(
+      context: context,
+      builder: (_) => ShareToFeedDialog(
+        campaign: p,
+        onShared: _refresh,
       ),
     );
   }

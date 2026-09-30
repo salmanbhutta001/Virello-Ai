@@ -5,6 +5,7 @@ relevant creators. All engagement here is real by construction.
 """
 from __future__ import annotations
 
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,12 +15,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.models.commerce import PostProduct, Product
 from app.models.core import User
 from app.models.growth import DiscoveryPlacement, Topic
+from app.services.affiliate.amazon import AmazonAffiliateProvider
 from app.services.discovery import (
     get_feed, get_my_interests, get_placement_stats, record_interaction,
     request_placement, set_my_interests, seed_topics,
 )
+from app.services.discovery.service import tagged_products_for_placements
 from app.services.discovery.trend_images import (  # noqa: F401 — registers TrendImageCache model
     resolve_trend_thumbnails,
 )
@@ -125,19 +129,86 @@ async def my_interactions(kind: str | None = None,
 class PlacementIn(BaseModel):
     campaign_id: str
     topics: list[str] = []
+    # Shoppable post: Amazon ASINs to tag on the post (max 5). Each must
+    # match a live catalog product's server-built affiliate URL, else 400.
+    asins: list[str] = []
+    # Create & Earn: "virello" when the post was made with Virello's AI
+    # tools -> +5 creator_bonus points on top of the normal post points.
+    created_with: str | None = None
 
 
-@router.post("/placements")
+_ASIN_RE = re.compile(r"^[A-Z0-9]{10}$")
+
+
+@router.post("/placements", status_code=201)
 async def opt_in(body: PlacementIn, db: AsyncSession = Depends(get_db),
                  user: User = Depends(get_current_user)) -> dict:
     """Creator opts a campaign into the discovery pool."""
+    from app.services import rewards as rewards_svc
+
+    raw_asins = [(a or "").strip().upper() for a in (body.asins or [])]
+    if len(raw_asins) > 5:
+        raise HTTPException(400, "At most 5 tagged products per post")
+    for asin in raw_asins:
+        if not _ASIN_RE.match(asin):
+            raise HTTPException(400, f"Invalid ASIN: {asin}")
+
     try:
         p = await request_placement(db, user.id, uuid.UUID(body.campaign_id),
                                     body.topics)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+
+    # Shoppable tags: every ASIN must resolve to an active catalog product
+    # via the server-built affiliate URL (the client never supplies a tag).
+    if raw_asins:
+        provider = AmazonAffiliateProvider()
+        for asin in raw_asins:
+            url = provider.build_affiliate_url(asin)
+            prod = (await db.execute(select(Product).where(
+                Product.affiliate_url == url,
+                Product.is_active.is_(True)))).scalar_one_or_none()
+            if prod is None:
+                raise HTTPException(
+                    400, f"ASIN {asin} is not an active catalog product")
+        existing = set((await db.execute(select(PostProduct.asin).where(
+            PostProduct.post_id == p.id))).scalars().all())
+        for asin in raw_asins:
+            if asin not in existing:
+                db.add(PostProduct(post_id=p.id, asin=asin))
+                existing.add(asin)
+        await db.commit()
+
+    points_earned = 0
+    try:
+        if raw_asins:
+            points_earned = await rewards_svc.award_post_with_products(
+                db, user.id, uuid.UUID(body.campaign_id))
+        else:
+            points_earned = await rewards_svc.award_post_created(
+                db, user.id, uuid.UUID(body.campaign_id))
+    except Exception:
+        log.exception("rewards: post_created hook failed")
+
+    # Create & Earn: content made with Virello's AI tools earns a +5 bonus
+    # on top of the normal post points. Idempotent per placement.
+    created_with = (body.created_with or "").strip().lower() or None
+    if created_with:
+        p.created_with = created_with
+        await db.commit()
+    creator_bonus = 0
+    if created_with == "virello":
+        try:
+            creator_bonus = await rewards_svc.award_creator_bonus(
+                db, user.id, p.id)
+        except Exception:
+            log.exception("rewards: creator_bonus hook failed")
+    points_earned += creator_bonus
     return {"placement_id": str(p.id), "status": p.status,
-            "topics": p.topics, "review_note": p.review_note}
+            "topics": p.topics, "review_note": p.review_note,
+            "asins": raw_asins, "created_with": p.created_with,
+            "points_earned": points_earned,
+            "creator_bonus": creator_bonus}
 
 
 @router.get("/placements/mine")
@@ -148,10 +219,13 @@ async def my_placements(db: AsyncSession = Depends(get_db),
             .join(Campaign, Campaign.id == DiscoveryPlacement.campaign_id)
             .where(Campaign.user_id == user.id))
     rows = (await db.execute(stmt)).all()
+    tagged = await tagged_products_for_placements(
+        db, [p.id for p, _ in rows])
     return {"placements": [
         {"placement_id": str(p.id), "campaign_id": str(c.id),
          "title": c.title, "status": p.status, "topics": p.topics,
-         "review_note": p.review_note} for p, c in rows]}
+         "review_note": p.review_note,
+         "tagged_products": tagged.get(p.id, [])} for p, c in rows]}
 
 
 @router.get("/placements/{campaign_id}/stats")

@@ -84,6 +84,14 @@ class DiscoveryPlacement(Base):
     review_note: Mapped[str] = mapped_column(String(512), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Create & Earn: how the post's content was made ("virello" = Virello's
+    # AI tools -> +5 creator_bonus points). Nullable, informational.
+    created_with: Mapped[str | None] = mapped_column(String(16),
+                                                     nullable=True)
+    # Per-post cash reward in cents for share claims. NULL = fall back to
+    # the rewards.default_post_reward_cents setting (default 5). Shown on
+    # every post card as a small "+$0.05" badge; admin-editable per post.
+    reward_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class DiscoveryInteraction(Base):

@@ -15,11 +15,11 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import delete as sa_delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import Base, get_db
 from app.core.deps import get_current_user
 from app.core.security import (
     check_login_throttle,
@@ -27,10 +27,19 @@ from app.core.security import (
     record_login_failure,
 )
 from app.models.billing import Broadcast, CountryConfig, PlanConfig, SystemSetting, Transaction
+from app.models.commerce import (
+    PRODUCT_CATEGORIES,
+    Product,
+    ProductPage,
+    WishlistItem,
+)
 from app.models.core import (
     AgentRun, AuditLog, Campaign, CampaignStatus, FraudFlag, Subscription, User,
-    UserActivity,
+    UserActivity, SupportTicket,
 )
+from app.models.growth import DiscoveryPlacement
+from app.models.social import PostComment
+from app.services.campaign_delete import delete_campaign_cascade
 from app.services.payments.ledger import grant_credits
 
 router = APIRouter()
@@ -39,7 +48,17 @@ router = APIRouter()
 async def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(403, "Admin access required")
+    if not is_admin_email(user.email):
+        raise HTTPException(403, "Admin access required")
     return user
+
+
+def is_admin_email(email: str | None) -> bool:
+    """True only for the allowlisted admin email(s). Hafiz 2026-09-30:
+    the Admin panel belongs to him alone — no other user may access it."""
+    allowed = {e.strip().lower() for e in
+               (settings.admin_emails or "").split(",") if e.strip()}
+    return bool(email) and email.strip().lower() in allowed
 
 
 # ---------------------------------------------------------------- PIN unlock
@@ -65,6 +84,11 @@ async def unlock_admin(body: PinUnlockBody,
         record_login_failure(throttle_key)
         raise HTTPException(403, "Wrong PIN")
     clear_login_attempts(throttle_key)
+    if not is_admin_email(user.email):
+        db.add(AuditLog(user_id=user.id, action="admin.pin.denied",
+                        details="correct PIN but email not allowlisted"))
+        await db.commit()
+        raise HTTPException(403, "This account is not authorized for admin access")
     user.is_admin = True
     db.add(AuditLog(user_id=user.id, action="admin.pin.unlock",
                     details="self-elevated via PIN"))
@@ -356,6 +380,34 @@ async def adjust_credits(user_id: str, body: CreditAdjust,
     return {"ok": True, "balance": balance}
 
 
+class PointsAdjustIn(BaseModel):
+    delta: int
+    reason: str = "admin_adjust"
+
+
+@router.post("/users/{user_id}/points")
+async def adjust_points(user_id: str, body: PointsAdjustIn,
+                       db: AsyncSession = Depends(get_db),
+                       admin: User = Depends(require_admin)) -> dict:
+    """Grant or revoke Virello Points. Audited. Backend only."""
+    from app.services import rewards as rewards_svc
+    target = (await db.execute(select(User).where(
+        User.id == uuid.UUID(user_id)))).scalar_one_or_none()
+    if target is None:
+        raise HTTPException(404, "User not found")
+    if body.delta == 0:
+        raise HTTPException(400, "delta must not be zero")
+    granted = await rewards_svc.award(
+        db, target.id, body.delta, "admin_adjust",
+        f"admin:{admin.id}:{uuid.uuid4().hex}")
+    db.add(AuditLog(user_id=admin.id, action="admin.points.adjust",
+                    details=f"target={user_id} delta={body.delta} "
+                            f"reason={body.reason}"))
+    await db.commit()
+    return {"ok": True, "delta_granted": granted,
+            **await rewards_svc.get_balance(db, target.id)}
+
+
 # ---------------------------------------------------------------- campaigns
 @router.get("/campaigns")
 async def list_campaigns(status: str = "", limit: int = 100,
@@ -632,6 +684,7 @@ async def discovery_queue(db: AsyncSession = Depends(get_db),
         {"placement_id": str(p.id), "campaign_id": str(c.id),
          "title": c.title, "platform": c.platform, "user_id": str(c.user_id),
          "topics": p.topics, "status": p.status,
+         "reward_cents": p.reward_cents or 0,
          "created_at": p.created_at.isoformat()} for p, c in rows]}
 
 
@@ -671,6 +724,106 @@ async def discovery_reject(placement_id: str, body: DiscoveryReviewIn,
                     details=f"placement={placement_id}"))
     await db.commit()
     return {"ok": True, "status": "rejected"}
+
+
+# ---------------------------------------------------------------- reward claims
+# Proof-based rewards (Hafiz): share claims need a screenshot proof and
+# wait here for admin approval. Contract for the Admin Panel claims tab.
+from app.models.rewards import RewardClaim
+from app.services import reward_claims as claims_svc
+
+
+class ClaimApproveIn(BaseModel):
+    admin_note: str | None = None
+
+
+class ClaimRejectIn(BaseModel):
+    reason: str = ""
+
+
+@router.get("/reward-claims")
+async def admin_reward_claims(status: str = "", limit: int = 50,
+                              offset: int = 0,
+                              db: AsyncSession = Depends(get_db),
+                              _admin: User = Depends(require_admin)) -> dict:
+    """Review queue: pending first, then newest. Each row carries the
+    proof_url, the user's email, and a post preview for share claims."""
+    limit = max(1, min(limit, 100))
+    offset = max(0, offset)
+    status = (status or "").strip().lower() or None
+    if status and status not in ("pending", "approved", "rejected"):
+        raise HTTPException(400, "status must be pending|approved|rejected")
+    rows = await claims_svc.admin_list_claims(
+        db, status=status, limit=limit, offset=offset)
+    return {"claims": await claims_svc.claims_with_context(db, rows)}
+
+
+async def _claim_or_404(db: AsyncSession, claim_id: str) -> RewardClaim:
+    try:
+        cid = uuid.UUID(str(claim_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Claim not found")
+    claim = (await db.execute(
+        select(RewardClaim).where(RewardClaim.id == cid)
+    )).scalar_one_or_none()
+    if claim is None:
+        raise HTTPException(404, "Claim not found")
+    return claim
+
+
+@router.post("/reward-claims/{claim_id}/approve")
+async def admin_claim_approve(claim_id: str, body: ClaimApproveIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    """Approve a claim: credits the cash/points ledger exactly once.
+    Idempotent — approving an already-decided claim changes nothing."""
+    claim = await _claim_or_404(db, claim_id)
+    claim = await claims_svc.decide_claim(db, claim, True, admin.id,
+                                          body.admin_note)
+    return {"ok": True, "claim": claims_svc.claim_to_dict(claim)}
+
+
+@router.post("/reward-claims/{claim_id}/reject")
+async def admin_claim_reject(claim_id: str, body: ClaimRejectIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    """Reject a claim: nothing is credited. The user is notified with the
+    reason and can re-file with a clearer screenshot."""
+    reason = (body.reason or "").strip()
+    if not reason:
+        raise HTTPException(422, "reason_required")
+    claim = await _claim_or_404(db, claim_id)
+    claim = await claims_svc.decide_claim(db, claim, False, admin.id, reason)
+    return {"ok": True, "claim": claims_svc.claim_to_dict(claim)}
+
+
+class PostRewardIn(BaseModel):
+    reward_cents: int
+
+
+@router.patch("/posts/{post_id}")
+async def admin_post_reward(post_id: str, body: PostRewardIn,
+                            db: AsyncSession = Depends(get_db),
+                            admin: User = Depends(require_admin)) -> dict:
+    """Set a post's cash reward badge (cents). Different posts can carry
+    different amounts; NULL/omitted means the default badge applies."""
+    try:
+        pid = uuid.UUID(str(post_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Post not found")
+    p = (await db.execute(select(DiscoveryPlacement).where(
+        DiscoveryPlacement.id == pid))).scalar_one_or_none()
+    if p is None:
+        raise HTTPException(404, "Post not found")
+    cents = int(body.reward_cents)
+    if cents < 0 or cents > 100_000:
+        raise HTTPException(422, "reward_cents must be 0..100000")
+    p.reward_cents = cents
+    db.add(AuditLog(user_id=admin.id, action="admin.post.reward",
+                    details=f"post={post_id} reward_cents={cents}"))
+    await db.commit()
+    return {"ok": True, "post_id": str(pid), "reward_cents": cents,
+            "reward_display": claims_svc.fmt_reward(cents)}
 
 
 # ---------------------------------------------------------------- ads phase 1: segments
@@ -1173,3 +1326,515 @@ async def ads_adjust_conversion(conversion_id: str, body: ConversionAdjustIn,
     await db.commit()
     return {"ok": True, "conversion_id": str(conv.id),
             "old_value": old_value, "new_value": new_value}
+
+
+# ---------------------------------------------------------------- moderation CRUD
+# Full edit/delete for the admin panel: community comments (what users wrote
+# on posts — the app's feed items themselves are external Google News /
+# Wikipedia content and cannot be edited by design), products, users,
+# campaigns, broadcasts, discovery placements, support tickets, fraud flags.
+# Every mutation is audit-logged. Destructive actions are confirmed on the
+# client before the call is made.
+
+def _audit(db, admin_id, action: str, details: str) -> None:
+    db.add(AuditLog(user_id=admin_id, action=action, details=details))
+
+
+def _iso(dt) -> str | None:
+    return dt.isoformat() if dt else None
+
+
+# ------------------------------------------------------------- comments ("posts")
+@router.get("/comments")
+async def admin_comments(q: str = "", limit: int = 50,
+                         db: AsyncSession = Depends(get_db),
+                         _admin: User = Depends(require_admin)) -> dict:
+    """Moderate what users wrote on posts: search text/author, newest first."""
+    stmt = (select(PostComment, User.email)
+            .join(User, User.id == PostComment.user_id)
+            .order_by(PostComment.created_at.desc())
+            .limit(min(limit, 200)))
+    if q:
+        like = f"%{q}%"
+        stmt = stmt.where((PostComment.text.ilike(like))
+                         | (PostComment.author_name.ilike(like)))
+    rows = (await db.execute(stmt)).all()
+    return {"comments": [
+        {"id": c.id, "user_id": str(c.user_id), "author": c.author_name,
+         "email": email, "post_url": c.post_url, "text": c.text,
+         "created_at": _iso(c.created_at)}
+        for c, email in rows]}
+
+
+class CommentEditIn(BaseModel):
+    text: str
+
+
+@router.patch("/comments/{comment_id}")
+async def admin_comment_edit(comment_id: str, body: CommentEditIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    c = (await db.execute(select(PostComment).where(
+        PostComment.id == comment_id))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Comment not found")
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(400, "Text must not be empty")
+    c.text = text[:2000]
+    _audit(db, admin.id, "admin.comment.edit", f"comment={comment_id}")
+    await db.commit()
+    return {"ok": True, "id": c.id}
+
+
+@router.delete("/comments/{comment_id}")
+async def admin_comment_delete(comment_id: str,
+                               db: AsyncSession = Depends(get_db),
+                               admin: User = Depends(require_admin)) -> dict:
+    c = (await db.execute(select(PostComment).where(
+        PostComment.id == comment_id))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Comment not found")
+    _audit(db, admin.id, "admin.comment.delete", f"comment={comment_id}")
+    await db.delete(c)
+    await db.commit()
+    return {"ok": True, "deleted": comment_id}
+
+
+# ----------------------------------------------------------------- products
+@router.get("/products")
+async def admin_products(q: str = "", limit: int = 50,
+                         db: AsyncSession = Depends(get_db),
+                         _admin: User = Depends(require_admin)) -> dict:
+    stmt = (select(Product).order_by(Product.created_at.desc())
+            .limit(min(limit, 200)))
+    if q:
+        stmt = stmt.where(Product.title.ilike(f"%{q}%"))
+    rows = (await db.execute(stmt)).scalars().all()
+    return {"products": [
+        {"id": str(p.id), "title": p.title, "category": p.category,
+         "price_cents": p.price_cents, "currency": p.currency,
+         "is_active": p.is_active, "is_affiliate": p.is_affiliate,
+         "views": p.views,
+         "thumbnail": (p.image_urls or [None])[0],
+         "created_at": _iso(p.created_at)}
+        for p in rows]}
+
+
+class ProductEditIn(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    price_cents: int | None = None
+    category: str | None = None
+    is_active: bool | None = None
+
+
+@router.patch("/products/{product_id}")
+async def admin_product_edit(product_id: str, body: ProductEditIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    p = (await db.execute(select(Product).where(
+        Product.id == uuid.UUID(product_id)))).scalar_one_or_none()
+    if not p:
+        raise HTTPException(404, "Product not found")
+    if body.title is not None:
+        title = body.title.strip()
+        if not title:
+            raise HTTPException(400, "Title must not be empty")
+        p.title = title[:200]
+    if body.description is not None:
+        p.description = body.description.strip()
+    if body.price_cents is not None:
+        if body.price_cents < 0:
+            raise HTTPException(400, "price_cents must be >= 0")
+        p.price_cents = body.price_cents
+    if body.category is not None:
+        if body.category not in PRODUCT_CATEGORIES:
+            raise HTTPException(
+                400, f"category must be one of {PRODUCT_CATEGORIES}")
+        p.category = body.category
+    if body.is_active is not None:
+        p.is_active = body.is_active
+    _audit(db, admin.id, "admin.product.edit", f"product={product_id}")
+    await db.commit()
+    return {"ok": True, "id": str(p.id)}
+
+
+@router.delete("/products/{product_id}")
+async def admin_product_delete(product_id: str,
+                               db: AsyncSession = Depends(get_db),
+                               admin: User = Depends(require_admin)) -> dict:
+    p = (await db.execute(select(Product).where(
+        Product.id == uuid.UUID(product_id)))).scalar_one_or_none()
+    if not p:
+        raise HTTPException(404, "Product not found")
+    await db.execute(sa_delete(ProductPage).where(
+        ProductPage.product_id == p.id))
+    await db.execute(sa_delete(WishlistItem).where(
+        WishlistItem.product_id == p.id))
+    _audit(db, admin.id, "admin.product.delete", f"product={product_id}")
+    await db.delete(p)
+    await db.commit()
+    return {"ok": True, "deleted": product_id}
+
+
+# -------------------------------------------------------------------- users
+class UserEditIn(BaseModel):
+    name: str | None = None
+
+
+@router.patch("/users/{user_id}")
+async def admin_user_edit(user_id: str, body: UserEditIn,
+                          db: AsyncSession = Depends(get_db),
+                          admin: User = Depends(require_admin)) -> dict:
+    u = (await db.execute(select(User).where(
+        User.id == uuid.UUID(user_id)))).scalar_one_or_none()
+    if not u:
+        raise HTTPException(404, "User not found")
+    if body.name is not None:
+        name = body.name.strip()
+        if not name:
+            raise HTTPException(400, "Name must not be empty")
+        u.name = name[:255]
+    _audit(db, admin.id, "admin.user.edit", f"target={user_id}")
+    await db.commit()
+    return {"ok": True, "id": str(u.id)}
+
+
+async def _delete_user_cascade(db: AsyncSession, u: User) -> None:
+    """Delete a user and every row referencing them.
+
+    Campaigns go through the deep campaign cascade first (their children
+    reference campaigns.id, not users.id). Everything else that carries a
+    FK to users.id is swept generically via the model registry, so new
+    tables are covered without code changes. The users row itself is
+    deleted last.
+    """
+    campaigns = (await db.execute(
+        select(Campaign).where(Campaign.user_id == u.id))).scalars().all()
+    for c in campaigns:
+        await delete_campaign_cascade(
+            db, c, actor_id=u.id, audit_action="admin.user.delete.campaign")
+    seen_tables: set[str] = set()
+    for mapper in Base.registry.mappers:
+        table = mapper.local_table
+        if table.name in seen_tables or table.name == "users":
+            continue
+        seen_tables.add(table.name)
+        for fk in table.foreign_keys:
+            if fk.column.table.name == "users" and fk.column.name == "id":
+                await db.execute(
+                    sa_delete(mapper.class_).where(fk.parent == u.id))
+
+
+@router.delete("/users/{user_id}")
+async def admin_user_delete(user_id: str,
+                            db: AsyncSession = Depends(get_db),
+                            admin: User = Depends(require_admin)) -> dict:
+    if user_id == str(admin.id):
+        raise HTTPException(400, "You cannot delete your own account")
+    u = (await db.execute(select(User).where(
+        User.id == uuid.UUID(user_id)))).scalar_one_or_none()
+    if not u:
+        raise HTTPException(404, "User not found")
+    if u.is_admin:
+        remaining = (await db.execute(
+            select(func.count()).select_from(User).where(
+                User.is_admin == True,  # noqa: E712
+                User.id != u.id))).scalar() or 0
+        if remaining == 0:
+            raise HTTPException(400, "Cannot delete the last admin account")
+    await _delete_user_cascade(db, u)
+    _audit(db, admin.id, "admin.user.delete", f"target={user_id}")
+    await db.delete(u)
+    await db.commit()
+    return {"ok": True, "deleted": user_id}
+
+
+# ---------------------------------------------------------------- campaigns
+class CampaignEditIn(BaseModel):
+    title: str | None = None
+    status: str | None = None
+    budget_usd: float | None = None
+
+
+@router.patch("/campaigns/{campaign_id}")
+async def admin_campaign_edit(campaign_id: str, body: CampaignEditIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    c = (await db.execute(select(Campaign).where(
+        Campaign.id == uuid.UUID(campaign_id)))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Campaign not found")
+    if body.title is not None:
+        title = body.title.strip()
+        if not title:
+            raise HTTPException(400, "Title must not be empty")
+        c.title = title[:255]
+    if body.status is not None:
+        try:
+            c.status = CampaignStatus(body.status)
+        except ValueError:
+            raise HTTPException(
+                400,
+                f"status must be one of {[s.value for s in CampaignStatus]}")
+    if body.budget_usd is not None:
+        if body.budget_usd < 0:
+            raise HTTPException(400, "budget_usd must be >= 0")
+        c.budget_usd = body.budget_usd
+    _audit(db, admin.id, "admin.campaign.edit", f"campaign={campaign_id}")
+    await db.commit()
+    return {"ok": True, "id": str(c.id)}
+
+
+@router.delete("/campaigns/{campaign_id}")
+async def admin_campaign_delete(campaign_id: str,
+                                db: AsyncSession = Depends(get_db),
+                                admin: User = Depends(require_admin)) -> dict:
+    c = (await db.execute(select(Campaign).where(
+        Campaign.id == uuid.UUID(campaign_id)))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Campaign not found")
+    await delete_campaign_cascade(
+        db, c, actor_id=admin.id, audit_action="admin.campaign.delete")
+    await db.commit()
+    return {"ok": True, "deleted": campaign_id}
+
+
+# ---------------------------------------------------------------- broadcasts
+class BroadcastEditIn(BaseModel):
+    title: str | None = None
+    body: str | None = None
+    audience: str | None = None
+
+
+@router.patch("/broadcasts/{broadcast_id}")
+async def admin_broadcast_edit(broadcast_id: str, body: BroadcastEditIn,
+                               db: AsyncSession = Depends(get_db),
+                               admin: User = Depends(require_admin)) -> dict:
+    b = (await db.execute(select(Broadcast).where(
+        Broadcast.id == uuid.UUID(broadcast_id)))).scalar_one_or_none()
+    if not b:
+        raise HTTPException(404, "Broadcast not found")
+    if body.title is not None:
+        title = body.title.strip()
+        if not title:
+            raise HTTPException(400, "Title must not be empty")
+        b.title = title[:128]
+    if body.body is not None:
+        b.body = body.body.strip()
+    if body.audience is not None:
+        if body.audience not in ("all", "free", "paid"):
+            raise HTTPException(400, "audience must be all|free|paid")
+        b.audience = body.audience
+    _audit(db, admin.id, "admin.broadcast.edit",
+           f"broadcast={broadcast_id}")
+    await db.commit()
+    return {"ok": True, "id": str(b.id)}
+
+
+@router.delete("/broadcasts/{broadcast_id}")
+async def admin_broadcast_delete(broadcast_id: str,
+                                 db: AsyncSession = Depends(get_db),
+                                 admin: User = Depends(require_admin)) -> dict:
+    b = (await db.execute(select(Broadcast).where(
+        Broadcast.id == uuid.UUID(broadcast_id)))).scalar_one_or_none()
+    if not b:
+        raise HTTPException(404, "Broadcast not found")
+    _audit(db, admin.id, "admin.broadcast.delete",
+           f"broadcast={broadcast_id}")
+    await db.delete(b)
+    await db.commit()
+    return {"ok": True, "deleted": broadcast_id}
+
+
+# ------------------------------------------------------- discovery placements
+@router.delete("/discovery/{placement_id}")
+async def admin_discovery_delete(placement_id: str,
+                                 db: AsyncSession = Depends(get_db),
+                                 admin: User = Depends(require_admin)) -> dict:
+    p = (await db.execute(select(DiscoveryPlacement).where(
+        DiscoveryPlacement.id == uuid.UUID(placement_id)))).scalar_one_or_none()
+    if not p:
+        raise HTTPException(404, "Placement not found")
+    _audit(db, admin.id, "admin.discovery.delete",
+           f"placement={placement_id}")
+    await db.delete(p)
+    await db.commit()
+    return {"ok": True, "deleted": placement_id}
+
+
+# ---------------------------------------------------------- support tickets
+@router.get("/tickets")
+async def admin_tickets(status: str = "", limit: int = 100,
+                        db: AsyncSession = Depends(get_db),
+                        _admin: User = Depends(require_admin)) -> dict:
+    stmt = (select(SupportTicket, User.email)
+            .join(User, User.id == SupportTicket.user_id)
+            .order_by(SupportTicket.created_at.desc())
+            .limit(min(limit, 200)))
+    if status:
+        stmt = stmt.where(SupportTicket.status == status)
+    rows = (await db.execute(stmt)).all()
+    return {"tickets": [
+        {"id": str(t.id), "user_id": str(t.user_id), "email": email,
+         "subject": t.subject, "message": t.message, "status": t.status,
+         "created_at": _iso(t.created_at)}
+        for t, email in rows]}
+
+
+@router.post("/tickets/{ticket_id}/resolve")
+async def admin_ticket_resolve(ticket_id: str,
+                               db: AsyncSession = Depends(get_db),
+                               admin: User = Depends(require_admin)) -> dict:
+    t = (await db.execute(select(SupportTicket).where(
+        SupportTicket.id == uuid.UUID(ticket_id)))).scalar_one_or_none()
+    if not t:
+        raise HTTPException(404, "Ticket not found")
+    t.status = "closed"
+    _audit(db, admin.id, "admin.ticket.resolve", f"ticket={ticket_id}")
+    await db.commit()
+    return {"ok": True, "status": "closed"}
+
+
+@router.delete("/tickets/{ticket_id}")
+async def admin_ticket_delete(ticket_id: str,
+                              db: AsyncSession = Depends(get_db),
+                              admin: User = Depends(require_admin)) -> dict:
+    t = (await db.execute(select(SupportTicket).where(
+        SupportTicket.id == uuid.UUID(ticket_id)))).scalar_one_or_none()
+    if not t:
+        raise HTTPException(404, "Ticket not found")
+    _audit(db, admin.id, "admin.ticket.delete", f"ticket={ticket_id}")
+    await db.delete(t)
+    await db.commit()
+    return {"ok": True, "deleted": ticket_id}
+
+
+# -------------------------------------------------------------- fraud flags
+@router.delete("/fraud-flags/{flag_id}")
+async def admin_flag_delete(flag_id: str,
+                            db: AsyncSession = Depends(get_db),
+                            admin: User = Depends(require_admin)) -> dict:
+    f = (await db.execute(select(FraudFlag).where(
+        FraudFlag.id == uuid.UUID(flag_id)))).scalar_one_or_none()
+    if not f:
+        raise HTTPException(404, "Flag not found")
+    _audit(db, admin.id, "admin.fraud_flag.delete", f"flag={flag_id}")
+    await db.delete(f)
+    await db.commit()
+    return {"ok": True, "deleted": flag_id}
+
+
+# ------------------------------------------------------- reward claims
+class ClaimApproveIn(BaseModel):
+    admin_note: str = ""
+
+
+class ClaimRejectIn(BaseModel):
+    reason: str = ""
+
+
+class PostRewardIn(BaseModel):
+    reward_cents: int
+
+
+@router.get("/reward-claims")
+async def admin_reward_claims(status: str = "",
+                             db: AsyncSession = Depends(get_db),
+                             _admin: User = Depends(require_admin)) -> dict:
+    """Proof-backed reward claims, pending first. Admin reviews the proof
+    image and approves (credits the ledger) or rejects (with reason)."""
+    from sqlalchemy import case
+
+    from app.models.rewards import RewardClaim
+    from app.services import reward_claims as claims_svc
+    stmt = (select(RewardClaim, User.email)
+            .join(User, User.id == RewardClaim.user_id))
+    if status:
+        if status not in ("pending", "approved", "rejected"):
+            raise HTTPException(400, "bad status")
+        stmt = stmt.where(RewardClaim.status == status)
+    stmt = (stmt.order_by(case((RewardClaim.status == "pending", 0), else_=1),
+                          RewardClaim.created_at.desc()).limit(200))
+    rows = (await db.execute(stmt)).all()
+    out = []
+    for c, email in rows:
+        d = claims_svc.claim_to_dict(c)
+        d["user_email"] = email
+        out.append(d)
+    return {"claims": out}
+
+
+async def _get_claim(db: AsyncSession, claim_id: str):
+    from app.models.rewards import RewardClaim
+    try:
+        cid = uuid.UUID(claim_id)
+    except ValueError:
+        raise HTTPException(404, "Claim not found")
+    c = (await db.execute(
+        select(RewardClaim).where(RewardClaim.id == cid))).scalar_one_or_none()
+    if c is None:
+        raise HTTPException(404, "Claim not found")
+    if c.status != "pending":
+        raise HTTPException(422, f"claim already {c.status}")
+    return c
+
+
+@router.post("/reward-claims/{claim_id}/approve")
+async def admin_claim_approve(claim_id: str, body: ClaimApproveIn,
+                             db: AsyncSession = Depends(get_db),
+                             admin: User = Depends(require_admin)) -> dict:
+    """Approve a claim: the proof-backed service credits the ledger
+    (idempotent), notifies the user, and audits the admin action."""
+    from app.services import reward_claims as claims_svc
+
+    c = await _get_claim(db, claim_id)
+    note = (body.admin_note or "").strip() or None
+    c = await claims_svc.decide_claim(db, c, True, admin.id, note)
+    return {"ok": True, "status": c.status,
+            "claim": claims_svc.claim_to_dict(c)}
+
+
+@router.post("/reward-claims/{claim_id}/reject")
+async def admin_claim_reject(claim_id: str, body: ClaimRejectIn,
+                            db: AsyncSession = Depends(get_db),
+                            admin: User = Depends(require_admin)) -> dict:
+    """Reject a claim with a reason. Nothing is credited; the user may
+    re-file with a clearer screenshot."""
+    from app.services import reward_claims as claims_svc
+
+    reason = (body.reason or "").strip()
+    if not reason:
+        raise HTTPException(422, "reason is required")
+    c = await _get_claim(db, claim_id)
+    c = await claims_svc.decide_claim(db, c, False, admin.id, reason)
+    return {"ok": True, "status": c.status,
+            "claim": claims_svc.claim_to_dict(c)}
+
+
+@router.patch("/posts/{post_id}")
+async def admin_post_reward(post_id: str, body: PostRewardIn,
+                           db: AsyncSession = Depends(get_db),
+                           admin: User = Depends(require_admin)) -> dict:
+    """Set the per-post cash reward badge (integer cents) shown on the feed
+    post. Different posts carry different rewards; empty = the admin-tunable
+    default badge."""
+    from app.models.growth import DiscoveryPlacement
+
+    if body.reward_cents < 0:
+        raise HTTPException(422, "reward_cents must be >= 0")
+    try:
+        pid = uuid.UUID(post_id)
+    except ValueError:
+        raise HTTPException(404, "Post not found")
+    p = (await db.execute(select(DiscoveryPlacement).where(
+        DiscoveryPlacement.id == pid))).scalar_one_or_none()
+    if p is None:
+        raise HTTPException(404, "Post not found")
+    p.reward_cents = body.reward_cents
+    _audit(db, admin.id, "admin.post.reward",
+           f"post={post_id} reward_cents={body.reward_cents}")
+    await db.commit()
+    return {"ok": True, "placement_id": post_id,
+            "reward_cents": body.reward_cents}

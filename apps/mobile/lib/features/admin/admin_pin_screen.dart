@@ -65,9 +65,11 @@ class _AdminPinScreenState extends State<AdminPinScreen>
       await AdminApi(apiClient).unlock(_pin);
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } on AdminForbiddenException {
+    } on AdminForbiddenException catch (e) {
       if (!mounted) return;
-      _fail(s.adminPinWrong);
+      _fail(e.detail.contains('not authorized')
+          ? s.adminPinNotAllowed
+          : s.adminPinWrong);
     } on ApiException catch (e) {
       if (!mounted) return;
       _fail(e.status == 429 ? s.adminPinLocked : s.tryAgain);

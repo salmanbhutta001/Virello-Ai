@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -570,13 +571,22 @@ class ApiClient {
       _patchJson('/api/v1/users/me', {'name': name});
 
   // ------------------------------ admin ------------------------------
-  // Admin Dashboard (require_admin on the backend; 403 for non-admins).
+  // Admin Panel (require_admin on the backend; 403 for non-admins).
   Future<Map<String, dynamic>> adminGet(String path) async {
     final res = await http.get(Uri.parse('$baseUrl$path'), headers: _headers);
     if (res.statusCode == 401) throw const AuthException();
-    if (res.statusCode == 403) throw const AdminForbiddenException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  /// GET raw bytes with admin auth (owner/admin-only images like claim proofs).
+  Future<Uint8List> adminBytes(String path) async {
+    final res = await http.get(Uri.parse('$baseUrl$path'), headers: _headers);
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return res.bodyBytes;
   }
 
   Future<Map<String, dynamic>> adminPost(
@@ -589,7 +599,7 @@ class ApiClient {
       body: jsonEncode(body ?? {}),
     );
     if (res.statusCode == 401) throw const AuthException();
-    if (res.statusCode == 403) throw const AdminForbiddenException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
@@ -604,7 +614,31 @@ class ApiClient {
       body: jsonEncode(body),
     );
     if (res.statusCode == 401) throw const AuthException();
-    if (res.statusCode == 403) throw const AdminForbiddenException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> adminPatch(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await http.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> adminDelete(String path) async {
+    final res =
+        await http.delete(Uri.parse('$baseUrl$path'), headers: _headers);
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode == 403) throw AdminForbiddenException(_detailOf(res.body));
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
@@ -748,6 +782,41 @@ class ApiClient {
     return (j['items'] as List? ?? [])
         .map((e) => DiscoveryItem.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Public authenticated GET helper (non-admin endpoints), mirroring the
+  /// adminGet pattern. Returns the decoded JSON map.
+  Future<Map<String, dynamic>> get(String path) => _getJson(path);
+
+  /// Public authenticated POST helper (non-admin endpoints), mirroring
+  /// the adminPost pattern. Returns the decoded JSON map.
+  Future<Map<String, dynamic>> post(
+    String path, [
+    Map<String, dynamic>? body,
+  ]) =>
+      _postJson(path, body ?? {});
+
+  /// POST /api/v1/discovery/placements — share a campaign to the discovery
+  /// feed, optionally tagging up to 5 Amazon ASINs (shoppable post).
+  /// Returns {placement_id, status, topics, review_note, points_earned}.
+  Future<Map<String, dynamic>> shareToFeed({
+    required String campaignId,
+    required List<String> topics,
+    List<String> asins = const [],
+  }) =>
+      _postJson('/api/v1/discovery/placements', {
+        'campaign_id': campaignId,
+        'topics': topics,
+        'asins': asins,
+      });
+
+  /// External redirect URL for click tracking: GET /api/v1/shop/go/{asin}.
+  /// [placementId] becomes the `post` query param. Open via url_launcher
+  /// with LaunchMode.externalApplication — never an in-app WebView.
+  String shopGoUrl(String asin, [String? placementId]) {
+    final base = '$baseUrl/api/v1/shop/go/$asin';
+    if (placementId == null || placementId.isEmpty) return base;
+    return '$base?post=${Uri.encodeComponent(placementId)}';
   }
 
   /// GET /api/v1/discovery/trending — real Google Trends data.
@@ -1144,6 +1213,27 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  /// POST /api/v1/uploads/proof — multipart form, field `file` = the
+  /// screenshot image (jpg/png/webp/gif, max 5MB, auth required).
+  /// Returns {url} (e.g. "/api/v1/uploads/proofs/abc...").
+  /// Throws [ApiException] 400 on non-image or oversize files.
+  Future<Map<String, dynamic>> uploadProof(String filePath) async {
+    final req = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/v1/uploads/proof'),
+    );
+    final token = tokenProvider?.call();
+    if (token != null && token.isNotEmpty) {
+      req.headers['Authorization'] = 'Bearer $token';
+    }
+    req.files.add(await http.MultipartFile.fromPath('file', filePath));
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   /// Honest heuristic media-readiness report for an uploaded file + caption.
   Future<Map<String, dynamic>> analyzeUpload(String uploadId, String caption) =>
       _postJson('/api/v1/uploads/analyze', {
@@ -1251,8 +1341,22 @@ class AuthException implements Exception {
 }
 
 /// Thrown on HTTP 403 from /admin/* — the signed-in user is not an admin.
+/// Carries the server's detail message when available (e.g. the PIN unlock
+/// endpoint distinguishes a wrong PIN from a non-allowlisted email).
 class AdminForbiddenException implements Exception {
-  const AdminForbiddenException();
+  final String detail;
+  const AdminForbiddenException([this.detail = 'admin role required']);
   @override
-  String toString() => 'AdminForbiddenException: admin role required';
+  String toString() => 'AdminForbiddenException: $detail';
+}
+
+/// Extracts FastAPI's {"detail": "..."} message from a response body.
+String _detailOf(String body) {
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is Map && decoded['detail'] is String) {
+      return decoded['detail'] as String;
+    }
+  } catch (_) {}
+  return '';
 }

@@ -15,7 +15,7 @@ import json
 import logging
 import random
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -161,6 +161,79 @@ def _envelope(payload: dict, provider: str, dev: bool) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Create & Earn: Grow credits pay for generations. Costs come from settings
+# (admin-tunable); the user's level discount applies server-side.
+# 402 = not enough credits -> the app deep-links to Rewards to earn more.
+# ---------------------------------------------------------------------------
+REWARDS_DEEP_LINK = "virello://wallet"
+
+
+async def _generation_gate(db: AsyncSession, user: User,
+                           kind: str) -> dict:
+    """Pre-generation affordability check. 402 when the balance is low."""
+    from app.services import rewards as rewards_svc
+    info = await rewards_svc.generation_cost(db, user.id, kind)
+    if info["credits_balance"] < info["charged_credits"]:
+        raise HTTPException(402, {
+            "error": "insufficient_credits",
+            "needed_credits": info["charged_credits"],
+            "credits_balance": info["credits_balance"],
+            "level": info["level"],
+            "message": ("Not enough Grow credits for this. "
+                        "Earn more in Rewards — post, share, and convert "
+                        "points to credits."),
+            "rewards_deep_link": REWARDS_DEEP_LINK,
+        })
+    return info
+
+
+async def _settle_generation(db: AsyncSession, user: User, kind: str,
+                             payload: dict, provider: str,
+                             dev: bool) -> dict:
+    """Charge AFTER successful generation; attach the credit receipt."""
+    from app.services import rewards as rewards_svc
+    try:
+        info = await rewards_svc.charge_generation(db, user.id, kind)
+    except rewards_svc.GenerationError:
+        # Raced to empty between gate and charge: the content is already
+        # generated, so return it rather than failing the request.
+        logger.warning("create: post-generation charge failed user=%s kind=%s",
+                       user.id, kind)
+        payload["credits"] = {"charged_credits": 0,
+                              "credits_balance": 0}
+        return _envelope(payload, provider, dev)
+    payload["credits"] = {
+        "charged_credits": info["charged_credits"],
+        "discount_pct": info["discount_pct"],
+        "level": info["level"],
+        "credits_balance": info["credits_balance"],
+    }
+    return _envelope(payload, provider, dev)
+
+
+@router.get("/costs")
+async def costs(db: AsyncSession = Depends(get_db),
+                user: User = Depends(get_current_user)) -> dict:
+    """What each generation costs THIS user (level discount applied) —
+    the Create screens show this before generating."""
+    from app.services import rewards as rewards_svc
+    raw = await rewards_svc.get_create_costs(db)
+    out = {}
+    level = None
+    balance = 0
+    for kind in raw:
+        info = await rewards_svc.generation_cost(db, user.id, kind)
+        out[kind] = {"base_credits": info["base_credits"],
+                     "charged_credits": info["charged_credits"],
+                     "discount_pct": info["discount_pct"]}
+        level, balance = info["level"], info["credits_balance"]
+    return {"costs": out, "level": level,
+            "level_discounts": rewards_svc.LEVEL_DISCOUNTS,
+            "credits_balance": balance,
+            "rewards_deep_link": REWARDS_DEEP_LINK}
+
+
+# ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
@@ -172,7 +245,8 @@ class IdeasIn(BaseModel):
 
 @router.post("/ideas")
 async def ideas(body: IdeasIn, db: AsyncSession = Depends(get_db),
-                _user: User = Depends(get_current_user)) -> dict:
+                user: User = Depends(get_current_user)) -> dict:
+    await _generation_gate(db, user, "ideas")
     lang = _lang(body.language)
     data, provider, dev = await _ai_json(
         "creator",
@@ -188,7 +262,9 @@ async def ideas(body: IdeasIn, db: AsyncSession = Depends(get_db),
     if not items:
         items = _heuristic_ideas(body.topic, body.count)
         dev = True
-    return _envelope({"ideas": items, "count": len(items)}, provider, dev)
+    return await _settle_generation(
+        db, user, "ideas", {"ideas": items, "count": len(items)},
+        provider, dev)
 
 
 class ScriptIn(BaseModel):
@@ -199,7 +275,8 @@ class ScriptIn(BaseModel):
 
 @router.post("/scripts")
 async def scripts(body: ScriptIn, db: AsyncSession = Depends(get_db),
-                  _user: User = Depends(get_current_user)) -> dict:
+                  user: User = Depends(get_current_user)) -> dict:
+    await _generation_gate(db, user, "script")
     lang = _lang(body.language)
     data, provider, dev = await _ai_json(
         "creator",
@@ -217,7 +294,8 @@ async def scripts(body: ScriptIn, db: AsyncSession = Depends(get_db),
     if not script:
         script = _heuristic_script(body.topic, body.format)
         dev = True
-    return _envelope({"script": script}, provider, dev)
+    return await _settle_generation(
+        db, user, "script", {"script": script}, provider, dev)
 
 
 class CaptionsIn(BaseModel):
@@ -228,7 +306,8 @@ class CaptionsIn(BaseModel):
 
 @router.post("/captions")
 async def captions(body: CaptionsIn, db: AsyncSession = Depends(get_db),
-                   _user: User = Depends(get_current_user)) -> dict:
+                   user: User = Depends(get_current_user)) -> dict:
+    await _generation_gate(db, user, "captions")
     lang = _lang(body.language)
     data, provider, dev = await _ai_json(
         "creator",
@@ -244,7 +323,9 @@ async def captions(body: CaptionsIn, db: AsyncSession = Depends(get_db),
     if not items:
         items = _heuristic_captions(body.topic, body.platform)
         dev = True
-    return _envelope({"captions": items, "count": len(items)}, provider, dev)
+    return await _settle_generation(
+        db, user, "captions", {"captions": items, "count": len(items)},
+        provider, dev)
 
 
 class HooksIn(BaseModel):
@@ -255,7 +336,8 @@ class HooksIn(BaseModel):
 
 @router.post("/hooks")
 async def hooks(body: HooksIn, db: AsyncSession = Depends(get_db),
-                _user: User = Depends(get_current_user)) -> dict:
+                user: User = Depends(get_current_user)) -> dict:
+    await _generation_gate(db, user, "hooks")
     lang = _lang(body.language)
     data, provider, dev = await _ai_json(
         "creator",
@@ -269,4 +351,6 @@ async def hooks(body: HooksIn, db: AsyncSession = Depends(get_db),
     if not items:
         items = _heuristic_hooks(body.topic, body.count)
         dev = True
-    return _envelope({"hooks": items, "count": len(items)}, provider, dev)
+    return await _settle_generation(
+        db, user, "hooks", {"hooks": items, "count": len(items)},
+        provider, dev)

@@ -73,6 +73,8 @@ async def oauth_callback(provider: str, body: OAuthCallbackIn,
         raise HTTPException(401, str(e))
     user = await _upsert_user(db, claims.get("email"), claims.get("name"),
                               provider, claims["sub"])
+    # OAuth via Google/Apple: the provider already verified this email.
+    user.email_verified = True
     db.add(UserActivity(user_id=user.id, event="login"))
     await db.commit()
     return create_token_pair(str(user.id))
@@ -90,6 +92,8 @@ async def otp_verify(body: OtpVerifyIn, db: AsyncSession = Depends(get_db)) -> d
         raise HTTPException(401, "Invalid or expired code")
     is_new_signup = await _find_user_ci(db, body.email) is None
     user = await _upsert_user(db, body.email, None, "email", body.email)
+    # A correct OTP proves ownership of this email address.
+    user.email_verified = True
     if is_new_signup:
         # OTP verification == verified signup: record the referral and pay
         # out immediately. Invalid/self codes are ignored, never an error.

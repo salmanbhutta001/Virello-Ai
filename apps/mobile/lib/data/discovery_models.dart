@@ -35,6 +35,17 @@ class DiscoveryItem {
   /// social platform name ('youtube', 'tiktok', ...). The feed uses this to
   /// render link-type posts as native LinkCards.
   final String postType;
+  /// Shoppable-post placement id (for the tracked shop/go redirect).
+  final String placementId;
+  /// Creator-tagged products on this post (from POST /discovery/placements
+  /// asins): [{asin, title, image_url, price_cents, currency, price_display}].
+  /// Empty for non-shoppable posts.
+  final List<Map<String, dynamic>> taggedProducts;
+  /// Cash reward for a proof-based share claim (per-post amounts; 0 when the
+  /// feed does not carry a reward). Never invented — parsed from
+  /// `reward_cents` / `reward_display` on the feed item.
+  final int rewardCents;
+  final String rewardDisplay;
   const DiscoveryItem({
     required this.campaignId,
     required this.title,
@@ -50,7 +61,15 @@ class DiscoveryItem {
     this.contentLanguages = const [],
     this.languageUncertain = false,
     this.postType = '',
+    this.placementId = '',
+    this.taggedProducts = const [],
+    this.rewardCents = 0,
+    this.rewardDisplay = '',
   });
+
+  /// True when this post carries a claimable share reward: a non-empty
+  /// display amount AND a placement id (claims need `post_id`).
+  bool get hasShareReward => rewardDisplay.isNotEmpty && placementId.isNotEmpty;
 
   factory DiscoveryItem.fromJson(Map<String, dynamic> j) {
     final gv = j['growth_variant'] as Map<String, dynamic>?;
@@ -71,6 +90,12 @@ class DiscoveryItem {
           ((j['content_languages'] as List?) ?? []).map((e) => '$e').toList(),
       languageUncertain: j['language_uncertain'] == true,
       postType: j['post_type'] as String? ?? '',
+      placementId: '${j['placement_id'] ?? ''}',
+      taggedProducts: ((j['tagged_products'] as List?) ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      rewardCents: (j['reward_cents'] as num? ?? 0).toInt(),
+      rewardDisplay: '${j['reward_display'] ?? ''}',
     );
   }
 }

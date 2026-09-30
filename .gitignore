@@ -1,2 +1,4 @@
 .curator-token
 __pycache__/
+# user-uploaded share-proof screenshots (created at runtime)
+/backend/app/static/proofs/

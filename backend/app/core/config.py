@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # --- Admin panel: hidden PIN entry (profile version tapped 5x -> PIN
     # screen). A correct PIN elevates the signed-in user to admin server-side.
     admin_pin: str = "0000"  # VIRELLO_ADMIN_PIN
+    # --- Admin panel access: ONLY these emails (comma-separated, lowercase
+    # compared) may unlock/be admin — everyone else gets 403 even with the
+    # right PIN. Hafiz 2026-09-30: admin is his alone.
+    admin_emails: str = "salman09bhutta@gmail.com,alif01fiverr@gmail.com"  # VIRELLO_ADMIN_EMAILS
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
     celery_eager: bool = True  # dev: run Celery tasks inline, no Redis needed
     dev_noauth: bool = False  # dev only: bypass JWT, use demo user
