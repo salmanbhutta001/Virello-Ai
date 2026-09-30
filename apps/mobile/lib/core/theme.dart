@@ -354,19 +354,19 @@ class VTheme {
 
   /// Card surface: board dark surface in dark mode, white in light.
   static Color card(BuildContext context) =>
-      isDark(context) ? VTheme.card(context) : Colors.white;
+      isDark(context) ? VirelloColors.boardSurface : Colors.white;
 
   /// Chip / fill surface: board field in dark, light chip in light.
   static Color chip(BuildContext context) =>
-      isDark(context) ? VTheme.chip(context) : VirelloColors.chipBg;
+      isDark(context) ? VirelloColors.boardField : VirelloColors.chipBg;
 
   /// Hairline borders: board border in dark, light divider in light.
   static Color divider(BuildContext context) =>
-      isDark(context) ? VTheme.divider(context) : VirelloColors.divider;
+      isDark(context) ? VirelloColors.boardBorder : VirelloColors.divider;
 
   /// Secondary text: board gray in dark, muted-dark in light.
   static Color textSec(BuildContext context) =>
-      isDark(context) ? VTheme.textSec(context) : VirelloColors.mutedDark;
+      isDark(context) ? VirelloColors.boardTextSec : VirelloColors.mutedDark;
 
   /// Primary text: white in dark, ink in light.
   static Color text(BuildContext context) =>
@@ -375,7 +375,7 @@ class VTheme {
   /// Page/window background: near-black in dark, white in light.
   /// Use for full-bleed containers instead of hardcoded boardBg.
   static Color scaffold(BuildContext context) =>
-      isDark(context) ? VTheme.scaffold(context) : Colors.white;
+      isDark(context) ? VirelloColors.boardBg : Colors.white;
 
   /// Text/icons drawn ON brand surfaces (pink buttons, pink gradients,
   /// pink chips): always white in both themes — never mixes with the
