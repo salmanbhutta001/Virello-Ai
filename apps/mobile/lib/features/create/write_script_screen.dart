@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import 'teleprompter_screen.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/local_creator.dart';
 
 /// Board screen 24: "Write Script" — fully functional AI script writer.
@@ -65,15 +66,7 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
   }
 
   Future<String?> _askAi(String prompt) async {
-    final url =
-        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-    final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 20),
-        );
-    if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-      return res.body.trim();
-    }
-    return null;
+    return AiTextService.instance.generate(prompt: prompt);
   }
 
   /// Attempt 1: real AI provider. Returns null on any failure.

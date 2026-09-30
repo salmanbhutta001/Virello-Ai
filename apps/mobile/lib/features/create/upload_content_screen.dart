@@ -8,6 +8,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 
 /// Board screen 26: "Upload Content".
@@ -139,13 +140,11 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
       final prompt =
           'Suggest 3 short punchy social media captions for a post about: $topic. '
           '$langNote Each caption on its own line. No numbering, no hashtags, no quotes.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
-      if (res.statusCode == 200) {
-        final lines = res.body
+      if (body != null && body.trim().isNotEmpty) {
+        final lines = body
             .split('\n')
             .map((l) => l.trim().replaceAll(RegExp(r'^[\d]+[.)]\s*'), ''))
             .where((l) => l.isNotEmpty)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
@@ -376,13 +377,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       final prompt =
           'You are Virello AI, a friendly teacher. Answer the student\'s question using ONLY the lesson below. Keep it short (under 80 words). $langNote\n\n'
           'Lesson: ${_lesson['title']}\n$contextText\n\nQuestion: $q';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
-      final answer = res.statusCode == 200 && res.body.trim().isNotEmpty
-          ? res.body.trim()
+      final answer = body != null && body.trim().isNotEmpty
+          ? body.trim()
           : s.askFailed;
       setState(() {
         _qa.last['a'] = answer;

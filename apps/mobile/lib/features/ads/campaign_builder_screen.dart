@@ -5,6 +5,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
@@ -1218,13 +1219,11 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
           'For each variant output exactly:\n'
           'HEADLINE: <under 8 words>\nTEXT: <one punchy sentence>\nCTA: <2-4 words>\n'
           'Separate variants with a blank line. No numbering, no extra commentary.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
-      if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-        final blocks = res.body.split(RegExp(r'\n\s*\n'));
+      if (body != null && body.trim().isNotEmpty) {
+        final blocks = body.split(RegExp(r'\n\s*\n'));
         final out = <Map<String, String>>[];
         for (final b in blocks) {
           String h = '', t = '', cta = '';

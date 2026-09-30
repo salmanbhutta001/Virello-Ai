@@ -6,6 +6,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/growth_engine_models.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
@@ -302,14 +303,12 @@ class _GrowthEngineScreenState extends State<GrowthEngineScreen> {
           'Audience segments (${d.segments.length}): $segNames\n'
           'Content variants (${d.variants.length}, kinds: $varKinds)\n'
           'No numbering, no extra commentary.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
       setState(() {
-        _narrative = res.statusCode == 200 && res.body.trim().isNotEmpty
-            ? res.body.trim()
+        _narrative = body != null && body.trim().isNotEmpty
+            ? body.trim()
             : null;
         _narrativeWorking = false;
       });

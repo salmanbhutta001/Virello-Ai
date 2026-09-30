@@ -4,6 +4,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/models.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 import '../../services/posts_api.dart';
 import '../../main.dart';
@@ -480,13 +481,11 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           'You are Virello AI. Based on this real campaign data, give exactly 3 short actionable insights, each under 20 words. $langNote '
           'Data: $data '
           'Format: one insight per line, no numbering, no extra commentary.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
-      final lines = res.statusCode == 200
-          ? res.body
+      final lines = body != null
+          ? body
               .split('\n')
               .map((l) => l
                   .trim()

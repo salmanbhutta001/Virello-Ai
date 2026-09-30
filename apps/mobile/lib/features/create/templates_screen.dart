@@ -6,6 +6,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/local_tools/caption_tools.dart';
 import '../../services/local_tools/templates_engine.dart';
 import 'template_render_screen.dart';
@@ -231,14 +232,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           'Available templates (id: name):\n$names\n'
           'Reply with ONLY the ids of the 3 best templates, comma-separated, then a new line, then one short sentence why (in English). '
           'Example:\nhook-story-offer, before-after, faq-rapid\nBecause short-form proof content converts best for product topics.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
-      if (res.statusCode == 200) {
+      if (body != null && body.trim().isNotEmpty) {
         final lines =
-            res.body.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+            body.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
         if (lines.isNotEmpty) {
           final ids = lines.first
               .split(',')
@@ -847,15 +846,13 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           'Fill this video content template for the topic: $idea\n'
           'Template "${t.name}":\n${t.structure}\n'
           '$langNote Keep every line short and speakable. Output only the filled script, no explanations.';
-      final url =
-          'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 45));
+      final body =
+          await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
       setState(() => _customizing = false);
-      if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+      if (body != null && body.trim().isNotEmpty) {
         Navigator.pop(sheetCtx);
-        _showCustomized(t, res.body.trim());
+        _showCustomized(t, body.trim());
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(s.askFailed)),

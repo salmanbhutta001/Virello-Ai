@@ -8,6 +8,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/local_creator.dart';
 import '../../services/local_tools/caption_tools.dart';
 import '../../services/local_tools/ffmpeg_service.dart';
@@ -69,13 +70,9 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
   }
 
   Future<List<_Caption>?> _askAi(String prompt) async {
-    final url =
-        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-    final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 20),
-        );
-    if (res.statusCode != 200 || res.body.trim().isEmpty) return null;
-    final blocks = res.body.split(RegExp(r'\n\s*\n'));
+    final body = await AiTextService.instance.generate(prompt: prompt);
+    if (body == null || body.trim().isEmpty) return null;
+    final blocks = body.split(RegExp(r'\n\s*\n'));
     final out = <_Caption>[];
     for (final b in blocks) {
       final lines =

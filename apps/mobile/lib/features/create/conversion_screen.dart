@@ -10,6 +10,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/ai_text_service.dart';
 import '../../services/local_creator.dart';
 
 /// Board screen 30: "Conversion" — fully functional AI format converter.
@@ -74,15 +75,7 @@ class _ConversionScreenState extends State<ConversionScreen> {
   }
 
   Future<String?> _askAi(String prompt) async {
-    final url =
-        'https://text.pollinations.ai/${Uri.encodeComponent(prompt)}?model=openai&private=true';
-    final res = await http.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 60),
-        );
-    if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-      return res.body.trim();
-    }
-    return null;
+    return AiTextService.instance.generate(prompt: prompt);
   }
 
   /// Backend fallback: renders the selected format from transform response.
