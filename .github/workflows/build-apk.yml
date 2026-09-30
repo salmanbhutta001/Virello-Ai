@@ -1,4 +1,4 @@
-name: Build Virello APK
+name: Build Virello APK + AAB
 
 on:
   push:
@@ -45,6 +45,24 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+      - name: Setup release keystore
+        working-directory: apps/mobile/android
+        run: |
+          if [ -z "${{ secrets.VIRELLO_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Release keystore secrets are not configured."
+            echo "::error::Add these 4 secrets in GitHub repo Settings > Secrets and variables > Actions, then re-run:"
+            echo "::error::VIRELLO_KEYSTORE_BASE64, VIRELLO_KEYSTORE_PASSWORD, VIRELLO_KEY_ALIAS, VIRELLO_KEY_PASSWORD"
+            exit 1
+          fi
+          echo "${{ secrets.VIRELLO_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+          cat > key.properties <<EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.VIRELLO_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.VIRELLO_KEY_ALIAS }}
+          keyPassword=${{ secrets.VIRELLO_KEY_PASSWORD }}
+          EOF
+          echo "Release keystore configured."
+
       - name: Build APK (release)
         working-directory: apps/mobile
         # Production build: connect to Railway backend
@@ -55,3 +73,14 @@ jobs:
         with:
           name: virello-release-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Build AAB (release, Play Store)
+        working-directory: apps/mobile
+        # Signed with the release keystore (upload key for Play App Signing)
+        run: flutter build appbundle --release --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: virello-release-aab
+          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
