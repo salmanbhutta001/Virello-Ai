@@ -617,7 +617,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   child:  Center(
                     child: Text('V',
                         style: TextStyle(
-                            color: VTheme.text(context),
+                            color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 18)),
                   ),
@@ -654,7 +654,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         ? Container(
                           height: 180,
                           width: double.infinity,
-                          color: VTheme.text(context),
+                          color: Colors.white,
                           child: Image.network(images.first,
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
@@ -668,7 +668,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: VTheme.text(context),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text('${p['price_display'] ?? ''}',
@@ -803,7 +803,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       ? Container(
                         height: 132,
                         width: 190,
-                        color: VTheme.text(context),
+                        color: Colors.white,
                         child: Image.network(images.first,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) =>
@@ -817,7 +817,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: VTheme.text(context),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text('${p['price_display'] ?? ''}',
@@ -1059,24 +1059,19 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
       _error = null;
     });
     try {
-      // AI-smart tabs (tech/fashion/home/fitness/beauty): the AI reads
-      // every product's title + description and places it in the right
-      // category client-side — independent of the backend's stored value.
-      final aiCat = _tabs.contains(_category);
+      // Filter server-side by the stored category — the backend curates
+      // every product into its department slug, so this is authoritative.
       final data = await apiClient.listProducts(
         search: _searchCtrl.text.trim().isEmpty
             ? null
             : _searchCtrl.text.trim(),
-        category: aiCat ? null : (_category == 'all' ? null : _category),
+        category: _category == 'all' ? null : _category,
         sort: _sort,
       );
       if (!mounted) return;
-      var list = ((data['products'] as List?) ?? [])
+      final list = ((data['products'] as List?) ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      if (aiCat) {
-        list = list.where((pr) => aiDetectCategory(pr) == _category).toList();
-      }
       setState(() {
         _products = list;
         final note = '${data['sort_note'] ?? ''}';
@@ -1490,7 +1485,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                   children: [
                     images.isNotEmpty
                         ? Container(
-                          color: VTheme.text(context),
+                          color: Colors.white,
                           child: Image.network(images.first,
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
@@ -1507,7 +1502,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                           width: 36,
                           height: 36,
                           decoration:  BoxDecoration(
-                            color: VTheme.text(context),
+                            color: Colors.white,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
