@@ -44,6 +44,14 @@ async def user():
     # cleanup is best-effort; the test DB is thrown away per session
 
 
+def _auth(uid) -> dict:
+    from datetime import timedelta
+
+    from app.core.security import create_token
+    token = create_token(str(uid), timedelta(minutes=30))
+    return {"Authorization": f"Bearer {token}"}
+
+
 # ---------------------------------------------------------------------------
 # Intent classification
 # ---------------------------------------------------------------------------
@@ -248,9 +256,11 @@ async def test_handle_ask_analyze_no_url_asks_for_link(user):
 # HTTP endpoints (dev_noauth → dev@virello.app)
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_ask_endpoint_flow(client: httpx.AsyncClient):
+async def test_ask_endpoint_flow(client: httpx.AsyncClient, user):
+    h = _auth(user)
     r = await client.post("/api/v1/ai-core/ask", json={
-        "text": "create 3 video ideas for my bakery", "language": "en"})
+        "text": "create 3 video ideas for my bakery", "language": "en"},
+        headers=h)
     assert r.status_code == 200, r.text
     j = r.json()
     assert j["intent"] == "create_content"
@@ -258,32 +268,34 @@ async def test_ask_endpoint_flow(client: httpx.AsyncClient):
     assert j["dev"] is True
     cid = j["conversation_id"]
 
-    r = await client.get("/api/v1/ai-core/conversations")
+    r = await client.get("/api/v1/ai-core/conversations", headers=h)
     assert r.status_code == 200
     assert any(c["id"] == cid for c in r.json())
 
-    r = await client.get(f"/api/v1/ai-core/conversations/{cid}")
+    r = await client.get(f"/api/v1/ai-core/conversations/{cid}", headers=h)
     assert r.status_code == 200
     roles = [m["role"] for m in r.json()]
     # get_recent_messages returns newest-first by design
     assert roles == ["assistant", "user"]
 
-    r = await client.get("/api/v1/ai-core/context")
+    r = await client.get("/api/v1/ai-core/context", headers=h)
     assert r.status_code == 200
     assert "[create_content]" in r.json()["summary"]
 
-    r = await client.delete("/api/v1/ai-core/context")
+    r = await client.delete("/api/v1/ai-core/context", headers=h)
     assert r.status_code == 200
     assert r.json()["reset"] is True
-    r = await client.get("/api/v1/ai-core/context")
+    r = await client.get("/api/v1/ai-core/context", headers=h)
     assert r.json()["summary"] == ""
 
 
 @pytest.mark.asyncio
-async def test_conversation_ownership_404(client: httpx.AsyncClient):
-    r = await client.get(f"/api/v1/ai-core/conversations/{uuid.uuid4()}")
+async def test_conversation_ownership_404(client: httpx.AsyncClient, user):
+    h = _auth(user)
+    r = await client.get(f"/api/v1/ai-core/conversations/{uuid.uuid4()}",
+                         headers=h)
     assert r.status_code == 404
-    r = await client.get("/api/v1/ai-core/conversations/not-a-uuid")
+    r = await client.get("/api/v1/ai-core/conversations/not-a-uuid", headers=h)
     assert r.status_code == 404
 
 
@@ -299,6 +311,7 @@ async def test_intents_endpoint_public(client: httpx.AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_ask_requires_text(client: httpx.AsyncClient):
-    r = await client.post("/api/v1/ai-core/ask", json={"text": ""})
+async def test_ask_requires_text(client: httpx.AsyncClient, user):
+    r = await client.post("/api/v1/ai-core/ask", json={"text": ""},
+                          headers=_auth(user))
     assert r.status_code == 422

@@ -198,8 +198,19 @@ async def award_streak(db: AsyncSession, user_id: uuid.UUID) -> int:
                PointsLedger.reason.in_(POST_REASONS),
                PointsLedger.delta > 0)
         .distinct())).scalars().all()
-    days = {r if isinstance(r, date) else r.date() if hasattr(r, "date") else r
-            for r in rows}
+    # func.date() returns a date on Postgres but a "YYYY-MM-DD" string on
+    # SQLite — normalize to date either way.
+    days = set()
+    for r in rows:
+        if isinstance(r, datetime):
+            days.add(r.date())
+        elif isinstance(r, date):
+            days.add(r)
+        elif isinstance(r, str):
+            try:
+                days.add(date.fromisoformat(r[:10]))
+            except ValueError:
+                continue
     streak, d = 0, _today()
     while d in days:
         streak += 1

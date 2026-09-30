@@ -15,7 +15,9 @@ from app.core.security import create_token
 from app.main import app
 from app.models.core import AuditLog, Campaign, CampaignGoal, GrowthMode, User
 from app.models.rewards import PointsLedger
+from app.models.wallet import CashLedger
 from app.services import rewards as rewards_svc
+from app.services import wallet as wallet_svc
 
 
 @pytest_asyncio.fixture
@@ -345,41 +347,51 @@ async def test_admin_adjust_zero_delta_400(client, admin_user, user):
 
 
 # ------------------------------------------------------------------ clicks
+# (claim-based refactor: product clicks now pay CASH cents via the wallet
+# service, not points — share-link clicks still pay.)
+async def _cash(uid) -> int:
+    async with SessionLocal() as db:
+        return (await db.execute(
+            select(func.coalesce(func.sum(CashLedger.delta_cents), 0))
+            .where(CashLedger.user_id == uid))).scalar() or 0
+
+
 async def test_product_click_awards_owner(user):
     owner = user
     clicker = await _other_user()
     async with SessionLocal() as db:
-        g = await rewards_svc.award_product_click(
-            db, owner, f"user:{clicker}", "B000000001", "click-1")
-    assert g == 2
-    assert await _balance(owner) == 2
+        g = await wallet_svc.award_product_click_cash(
+            db, uuid.UUID(str(owner)), uuid.UUID(str(clicker)), "B000000001")
+    assert g == 3   # product_click_cents = 3
+    assert await _cash(owner) == 3
 
 
 async def test_product_self_click_pays_0(user):
     async with SessionLocal() as db:
-        g = await rewards_svc.award_product_click(
-            db, user, f"user:{user}", "B000000001", "click-2")
+        g = await wallet_svc.award_product_click_cash(
+            db, uuid.UUID(str(user)), uuid.UUID(str(user)), "B000000001")
     assert g == 0
-    assert await _balance(user) == 0
+    assert await _cash(user) == 0
 
 
 async def test_product_click_dedupe_same_clicker_asin_day(user):
     clicker = await _other_user()
     async with SessionLocal() as db:
-        a = await rewards_svc.award_product_click(
-            db, user, f"user:{clicker}", "B000000001", "click-3")
-        b = await rewards_svc.award_product_click(
-            db, user, f"user:{clicker}", "B000000001", "click-4")
-    assert (a, b) == (2, 0)
-    assert await _balance(user) == 2
+        a = await wallet_svc.award_product_click_cash(
+            db, uuid.UUID(str(user)), uuid.UUID(str(clicker)), "B000000001")
+        b = await wallet_svc.award_product_click_cash(
+            db, uuid.UUID(str(user)), uuid.UUID(str(clicker)), "B000000001")
+    assert (a, b) == (3, 0)
+    assert await _cash(user) == 3
 
 
-async def test_product_click_cap_20_per_day(user):
+async def test_product_click_cap_50_per_day(user):
     async with SessionLocal() as db:
         total = 0
-        for i in range(21):
+        for i in range(51):
             clicker = await _other_user()
-            total += await rewards_svc.award_product_click(
-                db, user, f"user:{clicker}", "B000000001", f"cap-{i}")
-    assert total == 40
-    assert await _balance(user) == 40
+            total += await wallet_svc.award_product_click_cash(
+                db, uuid.UUID(str(user)), uuid.UUID(str(clicker)),
+                "B000000001")
+    assert total == 150   # 50 x 3 cents
+    assert await _cash(user) == 150

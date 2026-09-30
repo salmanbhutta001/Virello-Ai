@@ -119,6 +119,14 @@ async def test_winner_payouts_idempotent():
     assert paid["weekly"] == [] and paid["monthly"] == []
 
 
+async def _prize_points(uid, reason: str) -> int:
+    async with SessionLocal() as db:
+        return (await db.execute(
+            select(func.coalesce(func.sum(PointsLedger.delta), 0))
+            .where(PointsLedger.user_id == uid,
+                   PointsLedger.reason == reason))).scalar() or 0
+
+
 async def test_monthly_winners_paid_2000_1000_500():
     await _reset_contest_watermarks()
     first_this_month = datetime.now(timezone.utc).replace(
@@ -137,9 +145,12 @@ async def test_monthly_winners_paid_2000_1000_500():
         await db.commit()
     async with SessionLocal() as db:
         await rewards_svc.settle_periods(db)
-    assert await _points(a) == 90000 + 2000
-    assert await _points(b) == 50000 + 1000
-    assert await _points(c) == 20000 + 500
+    # Monthly prizes are asserted by reason, not exact totals: the same
+    # settle run legitimately also settles weekly backfill windows, which
+    # may add weekly prizes for these users' August points.
+    assert await _prize_points(a, "monthly_winner") == 2000
+    assert await _prize_points(b, "monthly_winner") == 1000
+    assert await _prize_points(c, "monthly_winner") == 500
 
 
 async def test_winners_endpoint_lists_past_winners(client):
@@ -149,7 +160,7 @@ async def test_winners_endpoint_lists_past_winners(client):
     winners = r.json()["winners"]
     assert isinstance(winners, list)
     assert winners, "expected winners from the settlement tests above"
-    assert winners[0]["points"] in (500, 300, 150, 2000, 1000, 500)
+    assert winners[0]["prize"] in (500, 300, 150, 2000, 1000, 500)
 
 
 async def test_leaderboard_period_param(client):

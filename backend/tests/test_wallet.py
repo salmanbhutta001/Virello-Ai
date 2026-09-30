@@ -139,7 +139,7 @@ async def test_withdraw_below_minimum_422(client, eligible_user):
                           json=_withdraw_body(999),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "below_minimum"
+    assert r.json()["detail"]["error"] == "below_minimum"
 
 
 async def test_withdraw_age_not_confirmed_422(client, eligible_user):
@@ -148,7 +148,7 @@ async def test_withdraw_age_not_confirmed_422(client, eligible_user):
                           json=_withdraw_body(1000, age=False),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "age_not_confirmed"
+    assert r.json()["detail"]["error"] == "age_not_confirmed"
 
 
 async def test_withdraw_unverified_email_422(client):
@@ -157,8 +157,8 @@ async def test_withdraw_unverified_email_422(client):
     r = await client.post("/api/v1/wallet/withdraw",
                           json=_withdraw_body(1000), headers=_auth(uid))
     assert r.status_code == 422
-    assert r.json()["error"] == "ineligible"
-    assert "email_not_verified" in r.json()["reasons"]
+    assert r.json()["detail"]["error"] == "ineligible"
+    assert "email_not_verified" in r.json()["detail"]["reasons"]
 
 
 async def test_withdraw_account_too_new_422(client):
@@ -167,7 +167,7 @@ async def test_withdraw_account_too_new_422(client):
     r = await client.post("/api/v1/wallet/withdraw",
                           json=_withdraw_body(1000), headers=_auth(uid))
     assert r.status_code == 422
-    assert "account_too_new" in r.json()["reasons"]
+    assert "account_too_new" in r.json()["detail"]["reasons"]
 
 
 async def test_withdraw_profile_incomplete_422(client):
@@ -176,7 +176,7 @@ async def test_withdraw_profile_incomplete_422(client):
     r = await client.post("/api/v1/wallet/withdraw",
                           json=_withdraw_body(1000), headers=_auth(uid))
     assert r.status_code == 422
-    assert "profile_incomplete" in r.json()["reasons"]
+    assert "profile_incomplete" in r.json()["detail"]["reasons"]
 
 
 async def test_withdraw_insufficient_balance_422(client, eligible_user):
@@ -185,7 +185,7 @@ async def test_withdraw_insufficient_balance_422(client, eligible_user):
                           json=_withdraw_body(1500),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "insufficient_balance"
+    assert r.json()["detail"]["error"] == "insufficient_balance"
 
 
 async def test_withdraw_invalid_method_422(client, eligible_user):
@@ -196,8 +196,8 @@ async def test_withdraw_invalid_method_422(client, eligible_user):
                           json=_withdraw_body(1000, details=bad),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "invalid_method"
-    assert "iban" in r.json()["detail"]
+    assert r.json()["detail"]["error"] == "invalid_method"
+    assert "iban" in r.json()["detail"]["detail"]
 
     # unknown method id
     r = await client.post("/api/v1/wallet/withdraw",
@@ -205,7 +205,7 @@ async def test_withdraw_invalid_method_422(client, eligible_user):
                                               details={}),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "unknown_method"
+    assert r.json()["detail"]["error"] == "unknown_method"
 
     # easypaisa with a bad email-free payload is fine; paypal needs email
     r = await client.post("/api/v1/wallet/withdraw",
@@ -244,7 +244,7 @@ async def test_withdraw_double_pending_blocked(client, eligible_user):
                           json=_withdraw_body(1000),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "pending_exists"
+    assert r.json()["detail"]["error"] == "pending_exists"
 
 
 # ------------------------------------------------------------ admin flow
@@ -392,15 +392,15 @@ async def test_convert_math_exact(client, user):
     async with SessionLocal() as db:
         await rewards_svc.award(db, user, 2000, "post_created",
                                 f"conv:{uuid.uuid4().hex}")
-    r = await client.post("/api/v1/wallet/convert", json={"points": 500},
+    r = await client.post("/api/v1/wallet/convert", json={"points": 1000},
                           headers=_auth(user))
     assert r.status_code == 200, r.text
     data = r.json()
-    assert data["points_debited"] == 500
-    assert data["cash_credited_cents"] == 100   # 500 pts = $1.00
-    assert data["cash_display"] == "$1.00"
-    assert await _points(user) == 1500
-    assert await _cash(user) == 100
+    assert data["points_debited"] == 1000
+    assert data["cash_credited_cents"] == 200   # 500 pts = $1.00 -> 1000 = $2.00
+    assert data["cash_display"] == "$2.00"
+    assert await _points(user) == 1000
+    assert await _cash(user) == 200
 
 
 async def test_convert_below_minimum_422(client, user):
@@ -410,14 +410,14 @@ async def test_convert_below_minimum_422(client, user):
     r = await client.post("/api/v1/wallet/convert", json={"points": 999},
                           headers=_auth(user))
     assert r.status_code == 422
-    assert r.json()["error"] == "below_minimum"
+    assert r.json()["detail"]["error"] == "below_minimum"
 
 
 async def test_convert_insufficient_points_422(client, user):
     r = await client.post("/api/v1/wallet/convert", json={"points": 1000},
                           headers=_auth(user))
     assert r.status_code == 422
-    assert r.json()["error"] == "insufficient_points"
+    assert r.json()["detail"]["error"] == "insufficient_points"
 
 
 async def test_convert_atomic_no_partial(client, user):
@@ -575,7 +575,7 @@ async def test_admin_method_toggle_and_disabled_rejected(client, user,
                               details={"email": "h@example.com"}),
                           headers=_auth(user))
     assert r.status_code == 422
-    assert r.json()["error"] == "method_disabled"
+    assert r.json()["detail"]["error"] == "method_disabled"
 
     # admin enables it
     r = await client.put("/api/v1/admin/earnings/methods",
@@ -617,7 +617,7 @@ async def test_crypto_network_option_validated(client, eligible_user,
                                        "network": "DOGE"}),
                           headers=_auth(eligible_user))
     assert r.status_code == 422
-    assert r.json()["error"] == "invalid_method"
+    assert r.json()["detail"]["error"] == "invalid_method"
     # valid network works
     r = await client.post("/api/v1/wallet/withdraw",
                           json=_withdraw_body(

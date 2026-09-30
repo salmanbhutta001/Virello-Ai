@@ -437,14 +437,16 @@ async def get_seller_leaderboard(db: AsyncSession,
     }
 
 
-async def _get_setting(db: AsyncSession, key: str) -> str | None:
+async def _get_setting(db: AsyncSession, key: str):
     row = (await db.execute(
         select(SystemSetting).where(SystemSetting.key == key)
     )).scalar_one_or_none()
-    return row.value if row and isinstance(row.value, str) else None
+    # SystemSetting.value is a JSON column — return the stored value as-is
+    # (str labels for settle keys, lists for method flags).
+    return row.value if row is not None else None
 
 
-async def _set_setting(db: AsyncSession, key: str, value: str) -> None:
+async def _set_setting(db: AsyncSession, key: str, value) -> None:
     row = (await db.execute(
         select(SystemSetting).where(SystemSetting.key == key)
     )).scalar_one_or_none()

@@ -11,7 +11,9 @@ import httpx
 import pytest
 import pytest_asyncio
 
+from app.core.database import SessionLocal
 from app.main import app
+from app.models.core import User
 
 
 @pytest_asyncio.fixture
@@ -22,7 +24,27 @@ async def client():
         yield c
 
 
-async def _make_campaign(client: httpx.AsyncClient) -> str:
+@pytest_asyncio.fixture
+async def user():
+    async with SessionLocal() as db:
+        u = User(email=f"interact_{uuid.uuid4().hex[:8]}@test.com",
+                 name="Interaction Tester", preferred_language="en")
+        db.add(u)
+        await db.commit()
+        await db.refresh(u)
+        uid = str(u.id)
+    yield uid
+
+
+def _auth(uid: str) -> dict:
+    from datetime import timedelta
+
+    from app.core.security import create_token
+    token = create_token(str(uid), timedelta(minutes=30))
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def _make_campaign(client: httpx.AsyncClient, h: dict) -> str:
     r = await client.post(
         "/api/v1/campaigns",
         json={
@@ -31,24 +53,26 @@ async def _make_campaign(client: httpx.AsyncClient) -> str:
             "goal": "reach",
             "mode": "organic",
         },
+        headers=h,
     )
     assert r.status_code == 201, r.text
     return r.json()["id"]
 
 
 @pytest.mark.asyncio
-async def test_my_interactions_like_listed(client: httpx.AsyncClient):
-    cid = await _make_campaign(client)
+async def test_my_interactions_like_listed(client: httpx.AsyncClient, user):
+    h = _auth(user)
+    cid = await _make_campaign(client, h)
     r = await client.post(
         "/api/v1/discovery/interactions",
         json={"campaign_id": cid, "kind": "like"},
-    )
+        headers=h)
     assert r.status_code == 200, r.text
     assert r.json()["recorded"] is True
 
     r = await client.get(
         "/api/v1/discovery/interactions/mine", params={"kind": "like"}
-    )
+    , headers=h)
     assert r.status_code == 200, r.text
     items = r.json()["interactions"]
     assert len(items) >= 1
@@ -60,20 +84,21 @@ async def test_my_interactions_like_listed(client: httpx.AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_my_interactions_kind_filter(client: httpx.AsyncClient):
-    cid = await _make_campaign(client)
+async def test_my_interactions_kind_filter(client: httpx.AsyncClient, user):
+    h = _auth(user)
+    cid = await _make_campaign(client, h)
     await client.post(
         "/api/v1/discovery/interactions",
         json={"campaign_id": cid, "kind": "save"},
-    )
+        headers=h)
     r = await client.get(
         "/api/v1/discovery/interactions/mine", params={"kind": "like"}
-    )
+    , headers=h)
     assert r.status_code == 200
     for i in r.json()["interactions"]:
         assert i["kind"] == "like"
 
-    r = await client.get("/api/v1/discovery/interactions/mine")
+    r = await client.get("/api/v1/discovery/interactions/mine", headers=h)
     assert r.status_code == 200
     kinds = {i["kind"] for i in r.json()["interactions"]}
     assert "save" in kinds
@@ -82,10 +107,11 @@ async def test_my_interactions_kind_filter(client: httpx.AsyncClient):
 @pytest.mark.asyncio
 async def test_my_interactions_invalid_kind_rejected(
     client: httpx.AsyncClient,
-):
-    cid = await _make_campaign(client)
+    user,):
+    h = _auth(user)
+    cid = await _make_campaign(client, h)
     r = await client.post(
         "/api/v1/discovery/interactions",
         json={"campaign_id": cid, "kind": "bogus"},
-    )
+        headers=h)
     assert r.status_code == 400
