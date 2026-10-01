@@ -209,11 +209,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
         // Creator pill (above image, not overlaying): honest publisher + real listing age.
+        // Always dark lavish pill with white text — readable in both themes.
         Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: VTheme.text(context).withValues(alpha: 0.92),
+                  color: _LavishDetail.cardDark,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
@@ -246,13 +247,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               style: const TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black)),
+                                  color: Colors.white)),
                           Text(
                               _timeAgo(
                                   '${p['created_at'] ?? ''}'),
                               style: const TextStyle(
                                   fontSize: 11.5,
-                                  color: Colors.black54)),
+                                  color: Colors.white70)),
                         ],
                       ),
                     ),
