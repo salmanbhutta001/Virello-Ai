@@ -19,6 +19,8 @@ COPY backend/alembic.ini .
 COPY backend/alembic ./alembic
 COPY backend/app ./app
 
-# Run migrations (must succeed: starting with a stale schema serves 500s),
+# Run migrations (tolerant: prod alembic chain has multiple roots and has
+# never cleanly applied — init_db's create_all + ensure-columns own the
+# prod schema; a hard alembic failure must not crash the service),
 # seed community directory (idempotent), then start the API
-CMD ["sh", "-c", "python -m alembic upgrade head && (python -m app.data.seed_communities_run || true) && (python -m app.data.seed_academy_run || true) && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8125} --workers 2"]
+CMD ["sh", "-c", "(python -m alembic upgrade head || echo 'alembic skipped/failed') && (python -m app.data.seed_communities_run || true) && (python -m app.data.seed_academy_run || true) && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8125} --workers 2"]

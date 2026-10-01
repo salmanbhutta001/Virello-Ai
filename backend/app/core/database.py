@@ -46,6 +46,9 @@ async def init_db() -> None:
     # if Alembic is wedged (2026-09-30 login 500: password_hash etc. were
     # missing on prod because no migration ever added them). Idempotent.
     await _ensure_users_columns()
+    # Same for products trend columns (2026-10-01: trending_001 never
+    # applied on prod; without these every product query 500s).
+    await _ensure_products_trend_columns()
 
 
 async def _ensure_users_columns() -> None:
@@ -79,3 +82,44 @@ async def _ensure_users_columns() -> None:
                     print(f"init_db: could not add users.{name}: {e}")
     except Exception as e:
         print(f"init_db: column check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_products_trend_columns() -> None:
+    """Add missing trend columns to the products table. Idempotent.
+
+    Production Alembic has multiple roots and never cleanly applies, so
+    the trending_001 migration's columns are ensured here like the users
+    table columns above. Runs on every startup; never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    cols = [
+        ("trend_score", "INTEGER", "0"),
+        ("trend_signals", "TEXT", "''"),
+        ("trending_as_of", "TIMESTAMP WITH TIME ZONE", None),
+    ]
+    try:
+        async with engine.begin() as conn:
+            existing = await conn.run_sync(
+                lambda c: {col["name"] for col in sa.inspect(c).get_columns("products")}
+            )
+            for name, ctype, default in cols:
+                if name in existing:
+                    continue
+                ddl = f'ALTER TABLE products ADD COLUMN "{name}" {ctype}'
+                if default is not None:
+                    ddl += f" DEFAULT {default}"
+                try:
+                    await conn.execute(sa.text(ddl))
+                    print(f"init_db: added missing products.{name}")
+                except Exception as e:
+                    print(f"init_db: could not add products.{name}: {e}")
+            if "trend_score" not in existing:
+                try:
+                    await conn.execute(
+                        sa.text('CREATE INDEX IF NOT EXISTS ix_products_trend_score ON products (trend_score)')
+                    )
+                except Exception as e:
+                    print(f"init_db: could not create trend index: {e}")
+    except Exception as e:
+        print(f"init_db: products trend column check non-fatal ({type(e).__name__}): {e}")
