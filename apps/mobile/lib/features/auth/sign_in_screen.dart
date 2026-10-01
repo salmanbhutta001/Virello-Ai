@@ -1,6 +1,8 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/gestures.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -138,6 +140,7 @@ class _SignInScreenState extends State<SignInScreen> {
     if (e is AuthException) return s.sessionExpired;
     if (e is ApiException && e.status == 401) return s.invalidEmailOrPassword;
     if (e is ApiException && e.status == 429) return s.tooManyAttempts;
+    if (e is TimeoutException) return s.tryAgain;
     return s.signInFailed;
   }
 

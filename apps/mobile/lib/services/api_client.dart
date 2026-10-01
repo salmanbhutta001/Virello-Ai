@@ -88,11 +88,13 @@ class ApiClient {
     String email,
     String password,
   ) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/api/v1/auth/password/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/api/v1/auth/password/login'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'password': password}),
+        )
+        .timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
