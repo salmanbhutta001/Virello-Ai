@@ -1,6 +1,5 @@
 package com.virello.virello
 
-import android.app.Activity
 import android.content.Context
 import com.amazon.device.iap.PurchasingListener
 import com.amazon.device.iap.PurchasingService
@@ -34,13 +33,13 @@ import io.flutter.plugin.common.MethodChannel
  * notifyFulfillment — the Dart layer enforces this ordering.
  */
 class AmazonBillingBridge(
-    private val context: Context,
+    context: Context,
     flutterEngine: FlutterEngine,
 ) : PurchasingListener {
 
     private val methodChannel =
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "virello/billing_amazon")
-    private var eventSink: EventChannel.EventStreamHandler? = null
+    private var eventSink: EventChannel.EventSink? = null
 
     private val pendingProductRequests = mutableMapOf<RequestId, MethodChannel.Result>()
     private val pendingUserData = mutableMapOf<RequestId, MethodChannel.Result>()
@@ -52,20 +51,17 @@ class AmazonBillingBridge(
         EventChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "virello/billing_amazon/events",
-        ).setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(args: Any?, events: EventChannel.EventSink?) {
-                eventSink = object : EventChannel.EventStreamHandler {
-                    override fun onListen(a: Any?, e: EventChannel.EventSink?) {}
-                    override fun onCancel(a: Any?) {}
+        ).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(args: Any?, events: EventChannel.EventSink?) {
+                    eventSink = events
                 }
-                // Hold the sink via a simple wrapper
-                sinkHolder = events
-            }
 
-            override fun onCancel(args: Any?) {
-                sinkHolder = null
-            }
-        })
+                override fun onCancel(args: Any?) {
+                    eventSink = null
+                }
+            },
+        )
 
         methodChannel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -112,24 +108,22 @@ class AmazonBillingBridge(
         }
     }
 
-    private var sinkHolder: EventChannel.EventSink? = null
-
     private fun emit(map: Map<String, Any?>) {
-        sinkHolder?.success(map)
+        eventSink?.success(map)
     }
 
     // ---- PurchasingListener ----
 
     override fun onUserDataResponse(response: UserDataResponse) {
-        val req = response.requestId
-        lastUserId = response.userData.userId
-        lastMarketplace = response.userData.marketplace
+        val userData = response.userData
+        lastUserId = userData?.userId
+        lastMarketplace = userData?.marketplace
         val payload = mapOf(
-            "userId" to response.userData.userId,
-            "marketplace" to response.userData.marketplace,
+            "userId" to userData?.userId,
+            "marketplace" to userData?.marketplace,
             "status" to response.requestStatus.toString(),
         )
-        pendingUserData.remove(req)?.success(payload)
+        pendingUserData.remove(response.requestId)?.success(payload)
         emit(mapOf("type" to "userData") + payload)
     }
 

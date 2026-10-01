@@ -75,29 +75,42 @@ jobs:
             echo "Release keystore configured."
           fi
 
-      - name: Build APK (release)
+      - name: Build APK (release, play flavor — OPPO test build)
         working-directory: apps/mobile
-        # Production build: connect to Railway backend
-        run: flutter build apk --release --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
+        # Production build: connect to Railway backend.
+        # --flavor play selects Google Play Billing on the Dart side.
+        run: flutter build apk --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
-      - name: Upload APK
+      - name: Upload APK (play)
         uses: actions/upload-artifact@v4
         with:
           name: virello-release-apk
-          path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-play-release.apk
+
+      - name: Build APK (release, amazon flavor — Appstore submission)
+        working-directory: apps/mobile
+        # --flavor amazon selects Amazon IAP on the Dart side.
+        run: flutter build apk --release --flavor amazon --dart-define=VIRELLO_STORE=amazon --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
+
+      - name: Upload APK (amazon)
+        uses: actions/upload-artifact@v4
+        with:
+          name: virello-amazon-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-amazon-release.apk
 
       - name: Build AAB (release, Play Store)
         if: env.KEYSTORE_OK == 'true'
         working-directory: apps/mobile
-        # Signed with the release keystore (upload key for Play App Signing)
-        run: flutter build appbundle --release --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
+        # Signed with the release keystore (upload key for Play App Signing).
+        # --flavor play selects Google Play Billing on the Dart side.
+        run: flutter build appbundle --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
       - name: Upload AAB
         if: env.KEYSTORE_OK == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: virello-release-aab
-          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          path: apps/mobile/build/app/outputs/bundle/playRelease/app-play-release.aab
 
       - name: AAB skipped (no keystore secrets)
         if: env.KEYSTORE_OK != 'true'

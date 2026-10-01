@@ -27,6 +27,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        // Generates per-flavor BuildConfig (MainActivity reads BuildConfig.FLAVOR).
+        buildConfig = true
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.virello.virello"
@@ -56,12 +61,6 @@ android {
         create("amazon") {
             dimension = "store"
         }
-    }
-
-    // Amazon Appstore SDK (IAP v2) — amazon flavor only, so the Play
-    // build never ships Amazon billing code and vice versa.
-    dependencies {
-        add("amazonImplementation", "com.amazon.device:amazon-appstore-sdk:3.0.5")
     }
 
     signingConfigs {
@@ -95,6 +94,12 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+// Amazon Appstore SDK (IAP v2) — amazon flavor only, so the Play
+// build never ships Amazon billing code and vice versa.
+dependencies {
+    add("amazonImplementation", "com.amazon.device:amazon-appstore-sdk:3.0.9")
 }
 
 flutter {
