@@ -565,6 +565,37 @@ class ApiClient {
         if (creditPack != null) 'credit_pack': creditPack,
       });
 
+  /// Store-aware purchase verification. Routes to the Play or Amazon
+  /// verify endpoint based on the compile-time store flavor.
+  /// [receipt]: Play purchase token, or Amazon receipt ID.
+  Future<Map<String, dynamic>> verifyStorePurchase({
+    required String productId,
+    required String receipt,
+    required String kind,
+    String? planSlug,
+    String? creditPack,
+    String? amazonUserId,
+  }) {
+    const store = String.fromEnvironment('VIRELLO_STORE', defaultValue: 'play');
+    if (store == 'amazon') {
+      return _postJson('/api/v1/billing/amazon/verify', {
+        'sku': productId,
+        'receipt_id': receipt,
+        'kind': kind,
+        if (planSlug != null) 'plan_slug': planSlug,
+        if (creditPack != null) 'credit_pack': creditPack,
+        if (amazonUserId != null) 'amazon_user_id': amazonUserId,
+      });
+    }
+    return verifyPlayPurchase(
+      productId: productId,
+      purchaseToken: receipt,
+      kind: kind,
+      planSlug: planSlug,
+      creditPack: creditPack,
+    );
+  }
+
   /// GET /api/v1/billing/transactions — payment history.
   Future<Map<String, dynamic>> billingTransactions({int limit = 20}) =>
       _getJson('/api/v1/billing/transactions?limit=$limit');

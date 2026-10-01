@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     google_pay_gateway_merchant_id: str = ""
     play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON (service-account JSON text)
     play_package_name: str = "com.virello.virello"  # VIRELLO_PLAY_PACKAGE_NAME
+    # --- Amazon Appstore IAP (Receipt Verification Service) ---
+    amazon_developer_secret: str = ""  # VIRELLO_AMAZON_DEVELOPER_SECRET (from Amazon Developer Console)
+    amazon_sandbox: bool = False  # VIRELLO_AMAZON_SANDBOX=true for App Tester / sandbox receipts
     # --- AI video generation proxy (Create Hub online mode) ---
     # Key = VIRELLO_AGNES_API_KEY. Never shipped in the APK.
     agnes_api_key: str = ""

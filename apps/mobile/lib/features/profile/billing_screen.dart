@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import '../../services/billing/billing.dart';
+import '../../services/billing/billing_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
-import '../../services/play_billing_service.dart';
 
 /// Billing & subscriptions — current plan, plans, credit packs, and a real
-/// purchase flow, all through Google Play Billing ([PlayBillingService]).
+/// Store-agnostic purchase flow (Google Play Billing or Amazon IAP).
 ///
 /// Purchase flow (all server-verified, no fake success):
 /// 1. User taps Subscribe / Buy Now on a plan or credit pack.
@@ -38,8 +38,8 @@ class _BillingScreenState extends State<BillingScreen> {
 
   /// Google Play Billing state. null = not checked yet.
   bool? _playAvailable;
-  List<ProductDetails>? _playProducts;
-  StreamSubscription<List<PurchaseDetails>>? _playSub;
+  List<BillingProduct>? _playProducts;
+  StreamSubscription<List<BillingPurchase>>? _playSub;
   /// Purchase tokens currently being server-verified (avoid double handling).
   final Set<String> _verifyingTokens = {};
 
@@ -59,11 +59,11 @@ class _BillingScreenState extends State<BillingScreen> {
   /// Check Play availability once and listen for purchase updates.
   Future<void> _initPlayBilling() async {
     bool available = false;
-    List<ProductDetails>? products;
+    List<BillingProduct>? products;
     try {
-      available = await PlayBillingService.instance.isAvailable();
+      available = await Billing.instance.isAvailable();
       if (available) {
-        products = await PlayBillingService.instance.queryProducts();
+        products = await Billing.instance.queryProducts();
       }
     } catch (_) {
       available = false;
@@ -73,7 +73,7 @@ class _BillingScreenState extends State<BillingScreen> {
       _playAvailable = available;
       _playProducts = products;
     });
-    _playSub = PlayBillingService.instance.purchaseStream.listen(
+    _playSub = Billing.instance.purchaseStream.listen(
       _handlePlayPurchases,
       onError: (_) {},
     );
@@ -191,7 +191,7 @@ class _BillingScreenState extends State<BillingScreen> {
                             color: VirelloColors.violet, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(s.playBillingSecureNote,
+                          child: Text(s.storeBillingSecureNote,
                               style: const TextStyle(
                                   fontSize: 12,
                                   color: VirelloColors.muted,
@@ -248,13 +248,13 @@ class _BillingScreenState extends State<BillingScreen> {
     required String itemTitle,
     required String priceLabel,
   }) {
-    final productId = PlayBillingService.productIdForPurchase(
+    final productId = Billing.instance.productIdForPurchase(
       kind: kind,
       planSlug: planSlug,
       creditPack: creditPack,
     );
-    final products = _playProducts ?? const <ProductDetails>[];
-    final match = products.where((p) => p.id == productId).toList();
+    final products = _playProducts ?? const <BillingProduct>[];
+    final match = products.where((p) => p.productId == productId).toList();
     if (productId == null || match.isEmpty) {
       // No Play counterpart (e.g. Free plan, or product missing in Console):
       // say so honestly instead of a dead sheet.
@@ -277,8 +277,8 @@ class _BillingScreenState extends State<BillingScreen> {
           isCredits: kind == 'credits',
           onBuy: (product) async {
             final ok = kind == 'credits'
-                ? await PlayBillingService.instance.buyCredits(product)
-                : await PlayBillingService.instance.buySubscription(product);
+                ? await Billing.instance.buyCredits(product)
+                : await Billing.instance.buySubscription(product);
             if (!ok && ctx.mounted) {
               ScaffoldMessenger.of(ctx).showSnackBar(
                 SnackBar(
@@ -303,9 +303,9 @@ class _BillingScreenState extends State<BillingScreen> {
       builder: (ctx) => AlertDialog(
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(s.playBillingNotAvailable,
+        title: Text(s.storeBillingNotAvailable,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        content: Text(s.playBillingStoreOnly,
+        content: Text(s.storeBillingOnly,
             style: const TextStyle(
                 fontSize: 14, color: VirelloColors.muted, height: 1.5)),
         actions: [
@@ -322,7 +322,7 @@ class _BillingScreenState extends State<BillingScreen> {
               backgroundColor: VirelloColors.violet,
               foregroundColor: Colors.white,
             ),
-            child: Text(s.playBillingOpenStore),
+            child: Text(s.storeBillingOpenStore),
           ),
         ],
       ),
@@ -331,8 +331,10 @@ class _BillingScreenState extends State<BillingScreen> {
 
   /// Opens the Google Play Store listing for the Play version of Virello.
   Future<void> _openPlayStore() async {
-    final uri = Uri.parse(
-        'https://play.google.com/store/apps/details?id=com.virello.virello');
+    // Store-aware: Amazon flavor opens the Amazon Appstore listing.
+    final uri = Uri.parse(Billing.isAmazon
+        ? 'https://www.amazon.com/gp/mas/dl/android?p=com.virello.virello'
+        : 'https://play.google.com/store/apps/details?id=com.virello.virello');
     final opened =
         await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && mounted) {
@@ -345,41 +347,42 @@ class _BillingScreenState extends State<BillingScreen> {
   /// therefore do not acknowledge/consume) unverified purchases, so Play
   /// can retry or the user can restore them later.
   Future<void> _handlePlayPurchases(
-      List<PurchaseDetails> purchases) async {
+      List<BillingPurchase> purchases) async {
     for (final p in purchases) {
       switch (p.status) {
-        case PurchaseStatus.pending:
-          _snack(s.playBillingPending);
+        case BillingPurchaseStatus.pending:
+          _snack(s.storeBillingPending);
           break;
-        case PurchaseStatus.error:
+        case BillingPurchaseStatus.error:
           // User-cancelled checkouts surface here too; stay quiet then.
-          if (p.error?.code != 'userCancelled') {
+          if (p.errorCode != 'userCancelled') {
             _snack(s.billingProviderError, error: true);
           }
           break;
-        case PurchaseStatus.canceled:
+        case BillingPurchaseStatus.canceled:
           break;
-        case PurchaseStatus.purchased:
-        case PurchaseStatus.restored:
+        case BillingPurchaseStatus.purchased:
+        case BillingPurchaseStatus.restored:
           await _verifyPlayPurchase(p);
           break;
       }
     }
   }
 
-  Future<void> _verifyPlayPurchase(PurchaseDetails p) async {
-    final mapping = PlayBillingService.backendKindFor(p.productID);
+  Future<void> _verifyPlayPurchase(BillingPurchase p) async {
+    final mapping = Billing.instance.backendKindFor(p.productId);
     if (mapping == null) return; // not one of our products — ignore
-    final token = p.verificationData.serverVerificationData;
+    final token = p.receipt;
     if (token.isEmpty) {
       _snack(s.billingPaymentFailed, error: true);
       return;
     }
     if (!_verifyingTokens.add(token)) return; // already in flight
     try {
-      final res = await apiClient.verifyPlayPurchase(
-        productId: p.productID,
-        purchaseToken: token,
+      final res = await apiClient.verifyStorePurchase(
+        productId: p.productId,
+        receipt: token,
+        amazonUserId: p.storeUserId,
         kind: mapping['kind']!,
         planSlug: mapping['planSlug'],
         creditPack: mapping['creditPack'],
@@ -388,12 +391,12 @@ class _BillingScreenState extends State<BillingScreen> {
       if (ok) {
         // Server confirmed: now acknowledge/consume with Play.
         try {
-          await PlayBillingService.instance.completePurchase(p);
+          await Billing.instance.completePurchase(p);
         } catch (_) {
           // Already acknowledged elsewhere — the grant already happened.
         }
-        if (p.status == PurchaseStatus.restored) {
-          _snack(s.playBillingRestored);
+        if (p.status == BillingPurchaseStatus.restored) {
+          _snack(s.storeBillingRestored);
         } else {
           _snack(s.billingPaymentSuccess);
         }
@@ -408,7 +411,7 @@ class _BillingScreenState extends State<BillingScreen> {
       // 503 = Play billing not configured server-side: honest message,
       // purchase stays uncompleted so it can be retried later.
       _snack(
-          e.status == 503 ? s.playBillingNotAvailable : s.billingPaymentFailed,
+          e.status == 503 ? s.storeBillingNotAvailable : s.billingPaymentFailed,
           error: true);
     } catch (_) {
       _snack(s.billingPaymentFailed, error: true);
@@ -459,14 +462,14 @@ class _BillingScreenState extends State<BillingScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(s.playBillingNotAvailable,
+                child: Text(s.storeBillingNotAvailable,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(s.playBillingStoreOnly,
+          Text(s.storeBillingOnly,
               style: const TextStyle(
                   fontSize: 13, color: VirelloColors.muted, height: 1.5)),
           const SizedBox(height: 14),
@@ -475,7 +478,7 @@ class _BillingScreenState extends State<BillingScreen> {
             child: ElevatedButton.icon(
               onPressed: _openPlayStore,
               icon: const Icon(Icons.open_in_new, size: 18),
-              label: Text(s.playBillingOpenStore,
+              label: Text(s.storeBillingOpenStore,
                   style: const TextStyle(fontWeight: FontWeight.w800)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: VirelloColors.violet,
@@ -804,9 +807,9 @@ class _PlaySheet extends StatefulWidget {
   final AppStrings s;
   final String itemTitle;
   final String fallbackPriceLabel;
-  final ProductDetails product;
+  final BillingProduct product;
   final bool isCredits;
-  final Future<void> Function(ProductDetails product) onBuy;
+  final Future<void> Function(BillingProduct product) onBuy;
   const _PlaySheet({
     required this.s,
     required this.itemTitle,
@@ -852,7 +855,7 @@ class _PlaySheetState extends State<_PlaySheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(s.playBillingTitle,
+            Text(s.storeBillingTitle,
                 style: const TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
@@ -895,7 +898,7 @@ class _PlaySheetState extends State<_PlaySheet> {
                     size: 14, color: VirelloColors.muted),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(s.playBillingSecureNote,
+                  child: Text(s.storeBillingSecureNote,
                       style: const TextStyle(
                           fontSize: 12, color: VirelloColors.muted)),
                 ),
@@ -927,7 +930,7 @@ class _PlaySheetState extends State<_PlaySheet> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: VTheme.text(context)),
                     )
-                  : Text(s.playBillingTitle,
+                  : Text(s.storeBillingTitle,
                       style:
                           const TextStyle(fontWeight: FontWeight.w800)),
             ),

@@ -373,3 +373,97 @@ async def verify_play_purchase(body: PlayVerifyIn,
         item_name = await _receipt_item_name(db, plan_slug, credit_pack)
         await send_payment_receipt(user, txn, item_name)
     return {"ok": True, **result}
+
+
+# ---------------- Amazon Appstore IAP (in-app purchases) ----------------
+from app.services.payments.amazon_iap import (
+    AMAZON_SKUS, verify_amazon_receipt,
+)
+
+
+class AmazonVerifyIn(BaseModel):
+    sku: str
+    receipt_id: str
+    amazon_user_id: str
+    kind: str  # subscription | credits
+
+
+@router.post("/amazon/verify")
+async def verify_amazon_purchase(body: AmazonVerifyIn,
+                                 db: AsyncSession = Depends(get_db),
+                                 user: User = Depends(get_current_user)) -> dict:
+    """Verify an Amazon Appstore receipt server-side (RVS), then activate.
+
+    The Flutter app (amazon flavor) calls this after the Amazon purchase
+    completes. Money movement and plan/credit activation flow through the
+    shared ledger (apply_verified_purchase) — credits/plans are NEVER
+    granted locally before this endpoint returns ok. The app only calls
+    notifyFulfillment (consumes the Amazon purchase) after this succeeds.
+    """
+    expected = AMAZON_SKUS.get(body.sku)
+    if not expected:
+        raise HTTPException(400, "Unknown Amazon SKU")
+    exp_kind, exp_slug = expected
+    if body.kind not in ("subscription", "credits") or body.kind != exp_kind:
+        raise HTTPException(400, "kind does not match Amazon SKU")
+    plan_slug = exp_slug if body.kind == "subscription" else ""
+    credit_pack = exp_slug if body.kind == "credits" else ""
+
+    # Money comes from OUR catalog, never from the client.
+    if body.kind == "credits":
+        pack = CREDIT_PACKS.get(credit_pack)
+        if not pack:
+            raise HTTPException(400, "Unknown credit pack")
+        money = Money(pack["price_usd"], settings.billing_currency)
+    else:
+        plan = next((p for p in await _plans(db)
+                     if p.slug == plan_slug and p.active), None)
+        if not plan:
+            raise HTTPException(400, "Unknown plan")
+        money = Money(Decimal(str(plan.price_usd)), plan.currency)
+
+    # Idempotency: one receipt = one grant, ever.
+    provider_ref = f"amazon:{body.receipt_id}"
+    existing = (await db.execute(select(Transaction).where(
+        Transaction.provider_ref == provider_ref))).scalar_one_or_none()
+    if existing is not None:
+        if existing.user_id != user.id:
+            raise HTTPException(409, "receipt already used")
+        if existing.status == "completed":
+            return {"ok": True, "already_applied": True,
+                    "transaction_id": str(existing.id)}
+        txn = existing
+    else:
+        txn = None
+
+    # Amazon RVS check: raises 402/404/502/503 on any problem.
+    receipt = verify_amazon_receipt(body.receipt_id, body.amazon_user_id)
+    if receipt.get("productId") and receipt["productId"] != body.sku:
+        raise HTTPException(400, "receipt SKU mismatch")
+
+    if txn is None:
+        txn = await record_transaction(
+            db, user_id=user.id, provider="amazon_iap",
+            provider_ref=provider_ref, kind=body.kind,
+            money=money, status="pending",
+            idempotency_key=f"amazon_iap:{body.receipt_id}",
+            raw={"sku": body.sku, "plan_slug": plan_slug,
+                 "credit_pack": credit_pack,
+                 "amazon_user_id": body.amazon_user_id})
+
+    verification = Verification(
+        provider="amazon_iap", provider_ref=provider_ref,
+        status="completed", money=money,
+        payer_id=body.amazon_user_id,
+        raw={"amazon_rvs": receipt, "sku": body.sku})
+    try:
+        result = await apply_verified_purchase(
+            db, txn, verification,
+            plan_slug=plan_slug, credit_pack=credit_pack)
+    except ValueError as exc:
+        raise HTTPException(402, str(exc))
+    await db.refresh(txn)
+    if not result.get("already_applied"):
+        item_name = await _receipt_item_name(db, plan_slug, credit_pack)
+        await send_payment_receipt(user, txn, item_name)
+    return {"ok": True, **result}

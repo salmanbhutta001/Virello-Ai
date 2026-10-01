@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/brand_icons.dart';
+import '../../core/device_info.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -37,6 +38,8 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _working = false;
   bool _obscurePassword = true;
   String? _error;
+  // Fire OS / de-Googled devices have no Play Services: hide Google Sign-In.
+  bool _showGoogle = true;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -45,6 +48,9 @@ class _SignInScreenState extends State<SignInScreen> {
     super.initState();
     _error = authStore.lastNotice;
     authStore.lastNotice = null;
+    DeviceInfo.hasPlayServices.then((ok) {
+      if (mounted && !ok) setState(() => _showGoogle = false);
+    });
   }
 
   @override
@@ -277,11 +283,14 @@ class _SignInScreenState extends State<SignInScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _socialCircle(
-          onTap: _signInWithGoogle,
-          child: const GoogleGIcon(size: 22),
-        ),
-        const SizedBox(width: 16),
+        // Hidden on Fire OS / devices without Play Services (Google
+        // Sign-In cannot work there). Email + OTP login still available.
+        if (_showGoogle)
+          _socialCircle(
+            onTap: _signInWithGoogle,
+            child: const GoogleGIcon(size: 22),
+          ),
+        if (_showGoogle) const SizedBox(width: 16),
         if (Platform.isIOS)
           Padding(
             padding: const EdgeInsets.only(right: 16),

@@ -5826,6 +5826,30 @@ class AppStrings {
         'Play Store-এ খুলুন',
       );
 
+  /// True for the Amazon Appstore build flavor (compile-time).
+  static bool get isAmazonBuild =>
+      const String.fromEnvironment('VIRELLO_STORE', defaultValue: 'play') ==
+      'amazon';
+
+  /// Store brand swap for billing UI: the Amazon build must never show
+  /// "Google Play" text (store reviewers reject cross-store branding).
+  String _storeBrand(String google) {
+    if (!isAmazonBuild) return google;
+    return google
+        .replaceAll('Google Play', 'Amazon Appstore')
+        .replaceAll('گوگل پلے', 'ایمیزون ایپ اسٹور')
+        .replaceAll('Play Store', 'Amazon Appstore')
+        .replaceAll('پلے اسٹور', 'ایمیزون ایپ اسٹور');
+  }
+
+  String get storeBillingTitle => _storeBrand(playBillingTitle);
+  String get storeBillingSecureNote => _storeBrand(playBillingSecureNote);
+  String get storeBillingNotAvailable => _storeBrand(playBillingNotAvailable);
+  String get storeBillingPending => _storeBrand(playBillingPending);
+  String get storeBillingRestored => _storeBrand(playBillingRestored);
+  String get storeBillingOnly => _storeBrand(playBillingStoreOnly);
+  String get storeBillingOpenStore => _storeBrand(playBillingOpenStore);
+
   String get aiSupport =>
       _get('AI Support', 'AI معاونت', 'دعم الذكاء الاصطناعي',
         'AI सपोर्ट',

@@ -45,6 +45,25 @@ android {
         versionName = flutter.versionName
     }
 
+    // Store flavors: Play Store uses Google Play Billing (AAB upload);
+    // Amazon Appstore uses Amazon IAP (APK upload). Same package name,
+    // separate listings. Select with --flavor=amazon / --flavor=play.
+    flavorDimensions += "store"
+    productFlavors {
+        create("play") {
+            dimension = "store"
+        }
+        create("amazon") {
+            dimension = "store"
+        }
+    }
+
+    // Amazon Appstore SDK (IAP v2) — amazon flavor only, so the Play
+    // build never ships Amazon billing code and vice versa.
+    dependencies {
+        add("amazonImplementation", "com.amazon.device:amazon-appstore-sdk:3.0.5")
+    }
+
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
