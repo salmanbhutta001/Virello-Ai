@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 
+import '../../services/ai_video_service.dart';
 import '../../services/local_tools/storyboard_video_renderer.dart';
 
 /// Board screen 23: "Create Video" — AI Video Storyboard + real MP4 render.
@@ -174,6 +175,25 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       _renderProgress = 0.0;
     });
     try {
+      // Online AI text-to-video when a provider API key is configured;
+      // otherwise the on-device FFmpeg slideshow.
+      if (AiVideoService.instance.isOnlineConfigured) {
+        final url = await AiVideoService.instance.generateOnline(
+          prompt: _ideaCtrl.text.trim(),
+          durationSec: 5,
+          onProgress: (p) {
+            if (mounted) setState(() => _renderProgress = p);
+          },
+        );
+        if (!mounted) return;
+        setState(() => _rendering = false);
+        if (url != null && url.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Video ready: $url')),
+          );
+        }
+        return;
+      }
       final renderer = StoryboardVideoRenderer();
       final mp4Path = await renderer.render(
         scenes: _scenes

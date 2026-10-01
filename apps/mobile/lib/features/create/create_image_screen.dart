@@ -9,6 +9,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/ai_image_service.dart';
 
 /// Board screen 22: "Create Image" — fully functional AI image generation.
 ///
@@ -42,13 +43,15 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     '3d render, pixar style, soft volumetric lighting, high detail',
   ];
 
-  /// Builds the AI image URL. Free provider (Pollinations.ai), no key needed.
-  /// Swap this for a keyed provider endpoint when configured.
+  /// Builds the AI image URL via [AiImageService].
+  /// Free provider (Pollinations.ai) by default, no key needed.
+  /// A keyed provider (OpenAI, Stability) can be configured in one place.
   String _buildImageUrl(String prompt, int style, int seed) {
-    final styled = '$prompt, ${_styleSuffix[style]}';
-    final q = Uri.encodeComponent(styled);
-    return 'https://image.pollinations.ai/prompt/$q'
-        '?width=1024&height=1024&seed=$seed&nologo=true&model=turbo&private=true';
+    return AiImageService.instance.buildImageUrl(
+      prompt,
+      _styleSuffix[style],
+      seed,
+    );
   }
 
   @override
