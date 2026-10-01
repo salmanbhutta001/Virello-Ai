@@ -61,8 +61,12 @@ def verify_amazon_receipt(receipt_id: str, user_id: str) -> dict:
         resp = httpx.get(url, timeout=15.0)
     except Exception as exc:
         raise HTTPException(502, f"amazon rvs unreachable: {exc}")
-    if resp.status_code == 404:
-        raise HTTPException(404, "amazon receipt not found")
+    if resp.status_code == 400:
+        raise HTTPException(404, "amazon receipt invalid")
+    if resp.status_code == 496:
+        raise HTTPException(503, "amazon developer secret invalid")
+    if resp.status_code == 497:
+        raise HTTPException(404, "amazon user id invalid")
     if resp.status_code != 200:
         raise HTTPException(502, f"amazon rvs error {resp.status_code}")
     data = resp.json()
