@@ -27,6 +27,7 @@ FREE_GROW = "free_grow"
 PAID_BOOST = "paid_boost"
 PACKAGES_PRICING = "packages_pricing"
 BILLING_GOOGLE_PLAY = "billing_google_play"
+PAYMENT_SAFETY = "payment_safety"
 CREDITS = "credits"
 REFUNDS = "refunds"
 LOGIN_OTP = "login_otp"
@@ -57,6 +58,7 @@ INTENTS = (
     PAID_BOOST,
     PACKAGES_PRICING,
     BILLING_GOOGLE_PLAY,
+    PAYMENT_SAFETY,
     CREDITS,
     REFUNDS,
     LOGIN_OTP,
@@ -123,7 +125,9 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
                "explain", "what is virello", "what's virello", "about virello",
                "guide", "tutorial", "start"),
         "ur": ("kaise kaam", "kam karta", "kaam karta", "samjhao", "samjhain",
-               "kya hai", "کیسے کام", "کام کرتا", "سمجھائیں", "کیا ہے"),
+               "kya hai", "کیسے کام", "کام کرتا", "سمجھائیں", "کیا ہے",
+               "shuru", "shuru karoon", "shuru karun", "start karoon",
+               "kaise shuru"),
         "ar": ("كيف يعمل", "اشرح", "ما هو", "شرح", "دليل"),
     },
     FREE_GROW: {
@@ -153,7 +157,19 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
                "receipt"),
         "ur": ("payment", "billing", "google play", "adaigi", "ادائیگی",
                "paisay katay", "پیسے کٹے", "subscribe", "سبسکرائب"),
-        "ar": ("دفع", "الدفع", "فاتورة", "اشتراك", "شراء", "إيصال", "خصم"),
+        "ar": ("دفع", "الدفع", "فاتورة", "اشتراك", "شراء", "إيصال", "خصم",
+               "أدفع", "ادفع"),
+    },
+    PAYMENT_SAFETY: {
+        # Safety words + payment+safety combos so "Is my payment safe?"
+        # beats BILLING_GOOGLE_PLAY outright instead of tying on "payment".
+        "en": ("safe", "safety", "secure", "security", "protected",
+               "protection", "payment safe", "payments safe",
+               "is my payment", "is it safe", "safe to pay",
+               "secure payment", "payment secure", "payment security"),
+        "ur": ("mehfooz", "محفوظ", "mehfooz hai", "payment mehfooz",
+               "ادائیگی محفوظ", "safe"),
+        "ar": ("آمن", "آمنة", "أمان", "حماية", "الدفع آمن", "دفع آمن"),
     },
     CREDITS: {
         "en": ("credit", "credits", "coins", "balance", "top up", "topup",
@@ -170,7 +186,9 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
     LOGIN_OTP: {
         "en": ("otp", "one time", "verification code", "email code",
                "didn't receive", "did not receive", "no code", "code not",
-               "resend"),
+               "resend", "didn't get", "did not get", "didn't get the code",
+               "did not get the code", "haven't received",
+               "never received"),
         "ur": ("otp", "code", "کوڈ", "nahi aaya", "نہیں آیا", "dobara bhejo",
                "دوبارہ بھیجو"),
         "ar": ("رمز", "تحقق", "كود", "لم يصلني", "إعادة إرسال"),
@@ -184,7 +202,8 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
     },
     LOGIN_GOOGLE_APPLE: {
         "en": ("google", "apple", "sign in with", "oauth", "social login",
-               "gmail"),
+               "gmail", "log in with google", "login with google",
+               "log in with apple", "login with apple"),
         "ur": ("google", "apple", "گوگل", "ایپل"),
         "ar": ("google", "apple", "جوجل", "أبل", "تسجيل الدخول عبر"),
     },
@@ -218,14 +237,15 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
         "en": ("grow", "campaign", "campaigns", "audience", "viral lab",
                "analyze", "my campaign"),
         "ur": ("grow", "campaign", "مہم", "audience", "آڈینس", "meri campaign"),
-        "ar": ("نمو", "حملة", "حملات", "جمهور", "حلل"),
+        "ar": ("نمو", "حملة", "حملات", "جمهور", "حلل", "حملاتي", "عرض"),
     },
     FEATURES_SHOP: {
         "en": ("shop", "product", "products", "amazon", "buy", "order",
-               "store", "shopping", "deal"),
+               "store", "shopping", "deal", "shop safe"),
         "ur": ("shop", "dukkan", "دکان", "kharido", "خریداری", "product",
-               "پروڈکٹ"),
-        "ar": ("تسوق", "متجر", "أمازون", "منتج", "منتجات", "شراء"),
+               "پروڈکٹ", "shop mehfooz"),
+        "ar": ("تسوق", "متجر", "أمازون", "منتج", "منتجات", "شراء",
+               "ما هو المتجر", "متجر آمن"),
     },
     FEATURES_ACADEMY: {
         "en": ("academy", "lesson", "lessons", "learn", "course", "courses",
@@ -237,15 +257,19 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
     TROUBLESHOOTING_CRASH: {
         "en": ("crash", "crashes", "crashed", "freeze", "freezes", "frozen",
                "not opening", "force close", "stuck", "bug", "error",
-               "hangs", "slow"),
+               "hangs", "slow", "won't open", "will not open",
+               "doesn't open", "does not open", "can't open",
+               "cannot open"),
         "ur": ("crash", "کریش", "khul nahi", "نہیں کھلتی", "band ho jata",
-               "بند ہو جاتی", "atak", "اٹک", "error", "ایرر"),
+               "بند ہو جاتی", "atak", "اٹک", "error", "ایرر", "nahi khul",
+               "nahin khul", "نہیں کھل"),
         "ar": ("تعطل", "يتعطل", "لا يفتح", "متجمد", "خطأ", "بطيء"),
     },
     TROUBLESHOOTING_LOGIN: {
         "en": ("can't login", "cannot login", "cant login", "login problem",
                "login issue", "signin issue", "stuck at login",
-               "unable to login", "won't let me in"),
+               "unable to login", "won't let me in", "can't log in",
+               "cannot log in", "cant log in", "couldn't log in", "log in"),
         "ur": ("login nahi", "لاگ ان", "login nahi ho raha",
                "لاگ ان نہیں ہو رہا", "andar nahi"),
         "ar": ("لا أستطيع الدخول", "مشكلة تسجيل الدخول", "تعذر الدخول"),
@@ -261,7 +285,8 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
         "en": ("affiliate", "commission", "sponsored", "disclosure",
                "do you earn", "mushtahar"),
         "ur": ("affiliate", "commission", "کمیشن", "sponsored", "مشتہر"),
-        "ar": ("عمولة", "إعلان مدعوم", "مشتہر", "رابط تابع"),
+        "ar": ("عمولة", "إعلان مدعوم", "مشتہر", "رابط تابع", "روابط",
+               "تابعة", "الروابط التابعة"),
     },
     ORDER_STATUS: {
         "en": ("order", "orders", "delivery", "delivered", "shipped",
@@ -298,7 +323,8 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
                "switch language", "translate"),
         "ur": ("language", "zuban", "زبان", "urdu", "اردو", "arabic",
                "عربی", "english", "انگریزی"),
-        "ar": ("لغة", "تغيير اللغة", "الأردية", "العربية", "الإنجليزية"),
+        "ar": ("لغة", "تغيير اللغة", "الأردية", "العربية", "الإنجليزية",
+               "بالأردية", "بالعربية"),
     },
 }
 
@@ -470,6 +496,30 @@ ANSWERS: dict[str, dict[str, str]] = {
                "تفعيل عملية شراء، تحقق أولًا من إيصال متجر Play ثم تواصل مع "
                "الدعم مرفقًا رقم الطلب."),
     },
+    PAYMENT_SAFETY: {
+        "en": ("Yes — paying in Virello is safe. All digital purchases go "
+               "through Google Play Billing: Google processes your payment, "
+               "so Virello never sees or stores your card details, and every "
+               "purchase is verified securely on our servers. Refunds follow "
+               "Google Play's refund policy. And remember: Virello will "
+               "never ask for your social-media passwords or your OTP codes "
+               "— keep those private."),
+        "ur": ("Jee haan — Virello mein payment bilkul mehfooz hai. Tamam "
+               "digital khareedari Google Play Billing se hoti hai: Google "
+               "aapki payment process karta hai, is liye Virello aapke card "
+               "ki details kabhi dekhta ya save nahi karta, aur har "
+               "khareedari hamare servers par mehfooz tareeqe se verify hoti "
+               "hai. Refunds Google Play ki refund policy ke mutabiq hote "
+               "hain. Aur yaad rakhein: Virello aapke social-media passwords "
+               "ya OTP codes kabhi nahi maangta — inhein private rakhein."),
+        "ar": ("نعم — الدفع في Virello آمن. تتم جميع المشتريات الرقمية عبر "
+               "Google Play Billing: تعالج Google دفعتك، لذلك لا ترى Virello "
+               "بيانات بطاقتك ولا تخزنها أبدًا، ويتم التحقق من كل عملية شراء "
+               "بأمان على خوادمنا. تخضع المبالغ المستردة لسياسة الاسترداد "
+               "الخاصة بـGoogle Play. وتذكر: لن تطلب Virello أبدًا كلمات "
+               "مرور حساباتك على وسائل التواصل أو رموز OTP — حافظ عليها "
+               "سرية."),
+    },
     CREDITS: {
         "en": ("Credits are Virello's currency for premium features and "
                "processing. New accounts start with 300 free starter "
@@ -632,17 +682,23 @@ ANSWERS: dict[str, dict[str, str]] = {
                "with a full photo gallery before it's listed. Partner "
                "listings are affiliate links, always labeled 'Sponsored' "
                "(مشتہر). When a live price isn't available, we say 'Check "
-               "price on Amazon' instead of guessing."),
+               "price on Amazon' instead of guessing. Browsing is safe: "
+               "Virello never touches your money — checkout happens securely "
+               "on Amazon."),
         "ur": ("Shop tab mein 26 departments ki asal products hain, har "
                "product poori photo gallery ke sath list hoti hai. Partner "
                "listings affiliate links hain, hamesha 'Sponsored' (مشتہر) "
                "ka label lagta hai. Jab live price available na ho to "
                "andaza lagane ke bajaye 'Check price on Amazon' likhte "
-               "hain."),
+               "hain. Browse karna mehfooz hai: Virello aapke paise ko "
+               "haath nahi lagata — checkout Amazon ki mehfooz site par "
+               "hoti hai."),
         "ar": ("تعرض علامة التبويب 'تسوق' منتجات حقيقية عبر 26 قسمًا، ولكل "
                "منتج معرض صور كامل قبل إدراجه. قوائم الشركاء هي روابط تابعة، "
                "وتحمل دائمًا وسم 'مُعلَن' (مشتہر). وعندما لا يتوفر سعر مباشر، "
-               "نكتب 'تحقق من السعر على أمازون' بدلًا من التخمين."),
+               "نكتب 'تحقق من السعر على أمازون' بدلًا من التخمين. التصفح "
+               "آمن: لا تلمس Virello أموالك أبدًا — تتم عملية الدفع على موقع "
+               "أمازون الآمن."),
     },
     FEATURES_ACADEMY: {
         "en": ("The Academy tab offers free step-by-step lessons on content "
@@ -845,6 +901,13 @@ SUGGESTIONS: dict[str, dict[str, list[str]]] = {
                "Mujhe refund chahiye"],
         "ar": ["ما هي الباقات؟", "هل الدفع آمن؟", "أحتاج إلى استرداد"],
     },
+    PAYMENT_SAFETY: {
+        "en": ["What are the packages?", "How do I pay?",
+               "I need a refund"],
+        "ur": ["Packages kaun se hain?", "Payment kaise karoon?",
+               "Mujhe refund chahiye"],
+        "ar": ["ما هي الباقات؟", "كيف أدفع؟", "أحتاج إلى استرداد"],
+    },
     CREDITS: {
         "en": ["What are the packages?", "How do I pay?",
                "What is Free Grow?"],
@@ -1045,6 +1108,11 @@ _OPEN_SCREEN: dict[str, dict[str, dict[str, str]]] = {
         "ur": {"label": "Plans dekhein", "route": "/billing"},
         "ar": {"label": "عرض الخطط", "route": "/billing"},
     },
+    PAYMENT_SAFETY: {
+        "en": {"label": "View plans", "route": "/billing"},
+        "ur": {"label": "Plans dekhein", "route": "/billing"},
+        "ar": {"label": "عرض الخطط", "route": "/billing"},
+    },
     CREDITS: {
         "en": {"label": "View plans", "route": "/billing"},
         "ur": {"label": "Plans dekhein", "route": "/billing"},
@@ -1077,6 +1145,19 @@ _TICKET_CREATED_LINE = {
     "en": "Ticket #{num} created — our team will follow up.",
     "ur": "Ticket #{num} bana di gayi hai — hamari team follow-up kare gi.",
     "ar": "تم إنشاء التذكرة #{num} — سيتابع فريقنا معك.",
+}
+# Standalone confirmation used when the ticket request itself was the whole
+# message ("Create a ticket" / "Ticket banayein") — the intent classifier
+# misfires on the word "create" (→ features_create), so appending the
+# ticket line to the Create-hub answer would confuse the user.
+_TICKET_CONFIRM = {
+    "en": ("Done — I've created support ticket #{num} for you. Our team "
+           "will follow up soon. Is there anything else I can help with?"),
+    "ur": ("Ho gaya — maine aapke liye support ticket #{num} bana di hai. "
+           "Hamari team jald follow-up kare gi. Kya main aapki aur koi "
+           "madad kar sakta hoon?"),
+    "ar": ("تم — أنشأت لك تذكرة الدعم #{num}. سيتابع فريقنا معك قريبًا. هل "
+           "يمكنني مساعدتك في شيء آخر؟"),
 }
 _CREATE_TICKET_LABEL = {
     "en": "Create a support ticket",
@@ -1196,8 +1277,14 @@ def resolve_language(requested: str, text: str) -> str:
 # ---------------------------------------------------------------------------
 # Intent classification (deterministic keyword scoring).
 # ---------------------------------------------------------------------------
-def classify_intent(text: str, language: str = "en") -> tuple[str, float]:
-    """Classify one input → (intent, confidence). No match → (unknown, 0.0)."""
+def classify_intent(text: str, language: str = "en",
+                    exclude: frozenset[str] = frozenset()) -> tuple[str, float]:
+    """Classify one input → (intent, confidence). No match → (unknown, 0.0).
+
+    `exclude` removes intents from contention (e.g. FEATURES_CREATE when
+    the user explicitly asked for a support ticket — the "create" keyword
+    would otherwise misfire on "Create a ticket").
+    """
     lang = (language or "en").lower()
     if lang not in LANGS:
         lang = "en"
@@ -1205,7 +1292,8 @@ def classify_intent(text: str, language: str = "en") -> tuple[str, float]:
     tokens = _tokens(text)
 
     scores = {intent: _score_intent(tokens, lowered, intent, lang)
-              for intent in INTENTS if intent != UNKNOWN}
+              for intent in INTENTS
+              if intent != UNKNOWN and intent not in exclude}
     best = max(scores, key=lambda k: scores[k])
     hits = scores[best]
     if hits <= 0:
@@ -1236,7 +1324,8 @@ def _last_assistant_intent(history: list[dict]) -> str | None:
 
 
 def classify_message(text: str, language: str = "auto",
-                     history: list[dict] | None = None) -> dict:
+                     history: list[dict] | None = None,
+                     exclude: frozenset[str] = frozenset()) -> dict:
     """Full classification: language resolution + pronoun resolution.
 
     If the message is mostly pronouns (uski/iska/its/this/price?) and there
@@ -1248,11 +1337,11 @@ def classify_message(text: str, language: str = "auto",
 
     if history and tokens and tokens <= _PRONOUNS:
         prev = _last_assistant_intent(history)
-        if prev:
+        if prev and prev not in exclude:
             return {"intent": prev, "confidence": 0.6, "language": lang,
                     "method": METHOD, "pronoun_resolved": True}
 
-    intent, conf = classify_intent(text, lang)
+    intent, conf = classify_intent(text, lang, exclude)
     return {"intent": intent, "confidence": conf, "language": lang,
             "method": METHOD, "pronoun_resolved": False}
 
@@ -1335,12 +1424,15 @@ async def handle_message(message: str, language: str = "auto",
     """
     try:
         history = [h for h in (history or [])[-6:] if isinstance(h, dict)]
-        cls = classify_message(message, language, history)
+        lowered = (message or "").lower()
+        # A pure ticket request ("Create a ticket") must never classify as
+        # FEATURES_CREATE — the "create" keyword would misfire.
+        exclude = frozenset({FEATURES_CREATE}) if _wants_ticket(lowered) else frozenset()
+        cls = classify_message(message, language, history, exclude)
         intent = cls["intent"]
         lang = cls["language"]
 
         # Explicit ticket request: create the ticket, confirm its number.
-        lowered = (message or "").lower()
         ticket_num = None
         if _wants_ticket(lowered) and user is not None and db is not None:
             try:
@@ -1356,9 +1448,16 @@ async def handle_message(message: str, language: str = "auto",
                               history=history,
                               confidence=cls["confidence"])
         if ticket_num:
-            result["answer"] = (
-                result["answer"] + " " +
-                _fill(_TICKET_CREATED_LINE[lang], num=ticket_num))
+            if intent in (UNKNOWN, FEATURES_CREATE):
+                # Pure ticket request misclassified (e.g. "Create a ticket"
+                # hit the "create" keyword): answer with the confirmation
+                # alone instead of an unrelated topic's copy.
+                result["answer"] = _fill(
+                    _TICKET_CONFIRM[lang], num=ticket_num)
+            else:
+                result["answer"] = (
+                    result["answer"] + " " +
+                    _fill(_TICKET_CREATED_LINE[lang], num=ticket_num))
             result["ticket_number"] = ticket_num
             result["escalated"] = True
 

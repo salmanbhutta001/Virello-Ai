@@ -65,6 +65,92 @@ async def test_intent_billing_en():
 
 
 @pytest.mark.asyncio
+async def test_intent_payment_safety_en():
+    # Reported bug: "Is my payment safe?" used to return the billing answer.
+    intent, conf = brain.classify_intent("Is my payment safe?", "en")
+    assert intent == brain.PAYMENT_SAFETY
+    assert conf >= 0.45
+
+
+@pytest.mark.asyncio
+async def test_intent_payment_safety_roman_urdu():
+    intent, conf = brain.classify_intent("Kya payment mehfooz hai?", "ur")
+    assert intent == brain.PAYMENT_SAFETY
+    assert conf >= 0.45
+
+
+@pytest.mark.asyncio
+async def test_intent_payment_safety_arabic():
+    intent, conf = brain.classify_intent("هل الدفع آمن؟", "ar")
+    assert intent == brain.PAYMENT_SAFETY
+    assert conf >= 0.45
+
+
+@pytest.mark.asyncio
+async def test_payment_safety_answer_addresses_safety():
+    result = await brain.handle_message("Is my payment safe?", "en", [])
+    assert result["intent"] == brain.PAYMENT_SAFETY
+    assert "Google Play Billing" in result["answer"]
+    assert "never" in result["answer"] and "card" in result["answer"]
+    assert any(a.get("route") == "/billing" for a in result["actions"])
+    assert len(result["suggestions"]) == 3
+
+
+@pytest.mark.asyncio
+async def test_shop_safety_stays_with_shop():
+    # "Is the Shop safe?" must not be stolen by the payment-safety intent.
+    for q, lang in [("Is the Shop safe?", "en"),
+                    ("Kya Shop mehfooz hai?", "ur"),
+                    ("هل المتجر آمن؟", "ar")]:
+        intent, conf = brain.classify_intent(q, lang)
+        assert intent == brain.FEATURES_SHOP, q
+        assert conf >= 0.45
+
+
+@pytest.mark.asyncio
+async def test_previously_unknown_suggestion_chips():
+    cases = [
+        ("The app won't open", "en", brain.TROUBLESHOOTING_CRASH),
+        ("App nahi khul rahi", "ur", brain.TROUBLESHOOTING_CRASH),
+        ("I can't log in", "en", brain.TROUBLESHOOTING_LOGIN),
+        ("I didn't get the code", "en", brain.LOGIN_OTP),
+        ("Shuru kaise karoon?", "ur", brain.HOW_IT_WORKS),
+        ("كيف أدفع؟", "ar", brain.BILLING_GOOGLE_PLAY),
+        ("عرض حملاتي", "ar", brain.FEATURES_GROW),
+        ("ما هو المتجر؟", "ar", brain.FEATURES_SHOP),
+        ("كيف تعمل الروابط التابعة؟", "ar", brain.AFFILIATE_DISCLOSURE),
+        ("التحدث بالأردية", "ar", brain.LANGUAGE_CHANGE),
+    ]
+    for q, lang, want in cases:
+        intent, conf = brain.classify_intent(q, lang)
+        assert intent == want, q
+        assert conf >= 0.45, q
+
+
+@pytest.mark.asyncio
+async def test_pure_ticket_request_gets_confirmation_not_create_hub(user):
+    # "Create a ticket" misfired on the "create" keyword → features_create.
+    async with SessionLocal() as db:
+        u = (await db.execute(select(User).where(User.id == user))).scalar_one()
+        result = await brain.handle_message("Create a ticket", "en", [], u, db)
+    assert "ticket_number" in result
+    assert f"#{result['ticket_number']}" in result["answer"]
+    assert "teleprompter" not in result["answer"].lower()
+    assert result["escalated"] is True
+
+
+@pytest.mark.asyncio
+async def test_crash_ticket_keeps_troubleshooting_answer(user):
+    async with SessionLocal() as db:
+        u = (await db.execute(select(User).where(User.id == user))).scalar_one()
+        result = await brain.handle_message(
+            "my app crashes, please create a ticket", "en", [], u, db)
+    assert "ticket_number" in result
+    assert f"#{result['ticket_number']}" in result["answer"]
+    assert "cache" in result["answer"].lower()
+
+
+@pytest.mark.asyncio
 async def test_intent_free_grow_roman_urdu():
     intent, conf = brain.classify_intent("Free Grow kya hai?", "ur")
     assert intent == brain.FREE_GROW
