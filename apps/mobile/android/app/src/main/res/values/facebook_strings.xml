@@ -6,7 +6,7 @@
          - facebook_app_id: the numeric App ID
          - fb_login_protocol_scheme: "fb" + App ID (e.g. fb123456789012345)
          - facebook_client_token: from Settings > Advanced > Client Token -->
-    <string name="facebook_app_id">000000000000000</string>
-    <string name="fb_login_protocol_scheme">fb000000000000000</string>
+    <string name="facebook_app_id">1592938285647995</string>
+    <string name="fb_login_protocol_scheme">fb1592938285647995</string>
     <string name="facebook_client_token">REPLACE_WITH_CLIENT_TOKEN</string>
 </resources>
