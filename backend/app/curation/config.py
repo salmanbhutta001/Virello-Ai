@@ -93,10 +93,13 @@ def curation_enabled() -> bool:
 
 
 def curation_interval_hours() -> float:
+    # Default 3h (Hafiz, 2026-10-01): curation pace reduced from hourly to
+    # every 3 hours to slow GitHub gallery growth. Overridable via
+    # VIRELLO_CURATION_INTERVAL_HOURS env var.
     try:
-        return max(0.25, float(os.environ.get("VIRELLO_CURATION_INTERVAL_HOURS", "1")))
+        return max(0.25, float(os.environ.get("VIRELLO_CURATION_INTERVAL_HOURS", "3")))
     except ValueError:
-        return 1.0
+        return 3.0
 
 
 def curator_creator_email() -> str:
