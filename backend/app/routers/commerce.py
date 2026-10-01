@@ -32,7 +32,7 @@ import re
 import secrets
 import uuid
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy import case, desc, func, or_, select
@@ -803,6 +803,41 @@ async def update_product_gallery(
     await db.commit()
     return {"asin": asin, "product_id": str(existing.id),
             "image_urls": image_urls, "count": len(image_urls)}
+
+
+@router.post("/products/gallery-upload", response_model=dict, status_code=201)
+async def upload_gallery_image(
+    file: UploadFile = File(...),
+    asin: str = Form(""),
+    slot: str = Form("main"),
+    x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
+):
+    """Upload one gallery image to Cloudinary (replaces the old git-push
+    flow — new images are never committed to the repo anymore).
+    Auth: X-Curator-Token header. Multipart: file (JPEG), asin, slot
+    (main|angle2|angle3). Returns {"url": "<live cloudinary url>"} —
+    the URL is usable immediately, no deploy needed."""
+    _check_curator_token(x_curator_token or "")
+    asin = (asin or "").strip().upper()
+    slot = (slot or "").strip().lower()
+    if not asin or not re.fullmatch(r"[A-Z0-9]{10}", asin):
+        raise HTTPException(status_code=400, detail="valid 10-char asin required")
+    if slot not in ("main", "angle2", "angle3"):
+        raise HTTPException(status_code=400, detail="slot must be main|angle2|angle3")
+    data = await file.read()
+    from app.curation.gallery import check_jpeg
+    ok, why = check_jpeg(data)
+    if not ok:
+        raise HTTPException(status_code=400, detail=f"invalid JPEG: {why}")
+    from app.curation.cloudinary_store import cloudinary_enabled, upload_image
+    if not cloudinary_enabled():
+        raise HTTPException(status_code=503,
+                            detail="cloudinary not configured on server")
+    try:
+        url = await upload_image(data, f"{asin}_{slot}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e)[:200])
+    return {"asin": asin, "slot": slot, "url": url}
 
 
 @router.get("/wishlist", response_model=list)

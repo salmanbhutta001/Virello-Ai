@@ -1,9 +1,14 @@
 """Gallery-first image pipeline.
 
-For each product: download the REAL main photo, save it as image #1, then
-generate 2 alternate angles conditioned on that real photo via the
-keyless Pollinations image API (img2img). Generation is NEVER title-only —
-the reference is always the real product photo.
+For each product: download the REAL main photo, then generate 2 alternate
+angles conditioned on that real photo via the keyless Pollinations image
+API (img2img). Generation is NEVER title-only — the reference is always
+the real product photo.
+
+NEW images are uploaded to Cloudinary (free tier) — never committed to the
+GitHub repo (repo-size rule, Hafiz 2026-10-01). Cloudinary URLs are live
+immediately, no deploy needed. Existing /gallery/* repo images keep
+serving as before.
 
 Automated checks verify file integrity (valid JPEG, sane dimensions and
 size) only. They cannot confirm the generated angle actually depicts the
@@ -21,6 +26,7 @@ import httpx
 from PIL import Image
 
 from app.curation import config
+from app.curation.cloudinary_store import cloudinary_enabled, upload_image
 
 log = logging.getLogger("virello.curation.gallery")
 
@@ -97,14 +103,26 @@ async def build_gallery(asin: str, main_image_url: str,
 
     ok=False when the gallery is incomplete — the orchestrator must SKIP
     the product then (gallery-first rule), never list it half-ready.
+
+    Images go to Cloudinary; the returned URLs are live immediately.
     """
     asin = asin.strip().upper()
-    base = (public_base or config.public_base_url()).rstrip("/")
-    gdir = config.gallery_dir()
     notes: list[str] = []
     image_urls: list[str] = []
 
-    # 1) Real main photo → image #1 (self-hosted copy of the real photo).
+    if not cloudinary_enabled():
+        return {"ok": False, "image_urls": [],
+                "notes": ["cloudinary not configured "
+                          "(VIRELLO_CLOUDINARY_URL) — gallery skipped"]}
+
+    async def _store(data: bytes, public_id: str) -> str | None:
+        try:
+            return await upload_image(data, public_id)
+        except Exception as e:
+            notes.append(f"cloudinary upload failed for {public_id}: {e}")
+            return None
+
+    # 1) Real main photo → image #1.
     try:
         raw = await download_bytes(main_image_url)
     except Exception as e:
@@ -114,10 +132,11 @@ async def build_gallery(asin: str, main_image_url: str,
     if not ok:
         return {"ok": False, "image_urls": [],
                 "notes": [f"main photo invalid: {why}"]}
-    main_name = f"{asin}_main.jpg"
-    (gdir / main_name).write_bytes(raw)
-    image_urls.append(f"{base}/gallery/{main_name}")
-    notes.append(f"main photo real ({why})")
+    url = await _store(raw, f"{asin}_main")
+    if not url:
+        return {"ok": False, "image_urls": [], "notes": notes}
+    image_urls.append(url)
+    notes.append(f"main photo real ({why}) → cloudinary")
 
     # 2) Two generated angles, always conditioned on the real photo.
     generated = 0
@@ -132,11 +151,12 @@ async def build_gallery(asin: str, main_image_url: str,
         if not ok:
             notes.append(f"angle{i} ({angle_name}) failed check: {why}")
             continue
-        fname = f"{asin}_angle{i}.jpg"
-        (gdir / fname).write_bytes(gen)
-        image_urls.append(f"{base}/gallery/{fname}")
+        url = await _store(gen, f"{asin}_angle{i}")
+        if not url:
+            continue
+        image_urls.append(url)
         generated += 1
-        notes.append(f"angle{i} ({angle_name}) generated ({why})")
+        notes.append(f"angle{i} ({angle_name}) generated ({why}) → cloudinary")
 
     if len(image_urls) < 3:
         return {"ok": False, "image_urls": image_urls, "notes": notes}

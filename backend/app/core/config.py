@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     # PAT with Contents: read+write on the repo. Empty -> push skipped.
     github_token: str = ""  # VIRELLO_GITHUB_TOKEN
     github_repo: str = "salmanbhutta001/Virello-Ai"  # VIRELLO_GITHUB_REPO
+    # --- Product gallery image store: Cloudinary (free tier). NEW gallery
+    # images are uploaded here instead of being committed to the GitHub repo
+    # (keeps the repo under GitHub's 1GB recommendation). Existing /gallery/*
+    # images already in the repo keep serving as before.
+    # Full URL: cloudinary://<api_key>:<api_secret>@<cloud_name>
+    # Empty -> Cloudinary uploads disabled (gallery builds are skipped).
+    cloudinary_url: str = ""  # VIRELLO_CLOUDINARY_URL
     # --- Admin panel: hidden PIN entry (profile version tapped 5x -> PIN
     # screen). A correct PIN elevates the signed-in user to admin server-side.
     admin_pin: str = "0000"  # VIRELLO_ADMIN_PIN
