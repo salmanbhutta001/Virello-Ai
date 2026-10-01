@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -168,6 +169,11 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   bool _rendering = false;
   double _renderProgress = 0.0;
 
+  /// Path of the last successfully rendered MP4 (online or local).
+  /// When non-null, the Download / Share buttons appear right below.
+  String? _renderedVideoPath;
+  bool _downloading = false;
+
   Future<String> _saveTempVideo(List<int> bytes) async {
     final dir = await getTemporaryDirectory();
     final path =
@@ -176,18 +182,21 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     return path;
   }
 
-  /// Renders the storyboard into a REAL MP4 (FFmpeg + AI voiceover) and
-  /// shares it. Fully on-device, no provider key needed.
+  /// Renders the storyboard into a REAL MP4 (online AI or on-device
+  /// FFmpeg + AI voiceover). The finished file stays on screen with
+  /// Download / Share buttons so the user can save it to their phone.
   Future<void> _renderVideo() async {
     if (_scenes.isEmpty || _rendering) return;
     setState(() {
       _rendering = true;
       _renderProgress = 0.0;
+      _renderedVideoPath = null;
     });
     try {
       // Online AI text-to-video (backend proxy keeps the key server-side);
       // falls back to the on-device FFmpeg slideshow when unavailable.
       await AiVideoService.instance.refreshBackendStatus();
+      String? mp4Path;
       if (AiVideoService.instance.isOnlineConfigured) {
         final url = await AiVideoService.instance.generateOnline(
           prompt: _ideaCtrl.text.trim(),
@@ -197,46 +206,40 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
           },
         );
         if (!mounted) return;
-        setState(() => _rendering = false);
         if (url != null && url.isNotEmpty) {
-          // Download the generated video, then share it like a local render.
+          // Download the generated video to a local file.
           final res = await http.get(Uri.parse(url)).timeout(
                 const Duration(minutes: 3),
               );
-          if (res.statusCode == 200 && mounted) {
-            final tmp = await _saveTempVideo(res.bodyBytes);
-            await Share.shareXFiles(
-              [XFile(tmp, mimeType: 'video/mp4')],
-              text: '${_ideaCtrl.text.trim()}\n\nvia Virello',
-            );
-            return;
-          }
-          if (mounted) {
+          if (res.statusCode == 200) {
+            mp4Path = await _saveTempVideo(res.bodyBytes);
+          } else if (mounted) {
+            setState(() => _rendering = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(s.videoDownloadFailed)),
             );
+            return;
           }
         }
-        return;
+      } else {
+        final renderer = StoryboardVideoRenderer();
+        mp4Path = await renderer.render(
+          scenes: _scenes
+              .map((s) =>
+                  StoryboardSceneInput(title: s.title, imageUrl: s.url))
+              .toList(),
+          idea: _ideaCtrl.text.trim(),
+          localeCode: appState.localeCode,
+          onProgress: (p) {
+            if (mounted) setState(() => _renderProgress = p);
+          },
+        );
       }
-      final renderer = StoryboardVideoRenderer();
-      final mp4Path = await renderer.render(
-        scenes: _scenes
-            .map((s) =>
-                StoryboardSceneInput(title: s.title, imageUrl: s.url))
-            .toList(),
-        idea: _ideaCtrl.text.trim(),
-        localeCode: appState.localeCode,
-        onProgress: (p) {
-          if (mounted) setState(() => _renderProgress = p);
-        },
-      );
       if (!mounted) return;
-      setState(() => _rendering = false);
-      await Share.shareXFiles(
-        [XFile(mp4Path, mimeType: 'video/mp4')],
-        text: '${_ideaCtrl.text.trim()}\n\nvia Virello',
-      );
+      setState(() {
+        _rendering = false;
+        _renderedVideoPath = mp4Path;
+      });
     } catch (e) {
       if (mounted) {
         setState(() => _rendering = false);
@@ -247,6 +250,39 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
         );
       }
     }
+  }
+
+  /// Saves the rendered MP4 to the phone's gallery.
+  Future<void> _downloadVideo() async {
+    final path = _renderedVideoPath;
+    if (path == null || _downloading) return;
+    setState(() => _downloading = true);
+    try {
+      await Gal.putVideo(path, album: 'Virello');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSavedToGallery)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  /// Shares the rendered MP4 via the system share sheet.
+  Future<void> _shareRenderedVideo() async {
+    final path = _renderedVideoPath;
+    if (path == null) return;
+    await Share.shareXFiles(
+      [XFile(path, mimeType: 'video/mp4')],
+      text: '${_ideaCtrl.text.trim()}\n\nvia Virello',
+    );
   }
 
   Future<void> _shareScene() async {
@@ -624,6 +660,77 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
         if (_rendering) ...[
           const SizedBox(height: 8),
           LinearProgressIndicator(value: _renderProgress),
+        ],
+        // After a successful render: Download + Share right here.
+        if (_renderedVideoPath != null && !_rendering) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: VTheme.card(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: VirelloColors.pink.withOpacity(0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        s.videoReady,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: VTheme.text(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _downloading ? null : _downloadVideo,
+                        icon: _downloading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.download, size: 18),
+                        label: Text(s.downloadVideo),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: VirelloColors.pink,
+                          foregroundColor: Colors.white,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _shareRenderedVideo,
+                        icon: const Icon(Icons.share, size: 18),
+                        label: Text(s.boardImageShare),
+                        style: OutlinedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
         const SizedBox(height: 8),
         Text(

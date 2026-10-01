@@ -13789,6 +13789,58 @@ class AppStrings {
         'Video yang dibuat tidak dapat diunduh.',
         'তৈরি করা ভিডিও ডাউনলোড করা যায়নি।',
       );
+  String get videoReady => _get(
+        'Your video is ready!',
+        'آپ کی ویڈیو تیار ہے!',
+        'الفيديو جاهز!',
+        'आपका वीडियो तैयार है!',
+        'Votre vidéo est prête !',
+        '¡Tu video está listo!',
+        'Seu vídeo está pronto!',
+        'Dein Video ist fertig!',
+        'Videon hazır!',
+        'Video Anda sudah siap!',
+        'আপনার ভিডিও প্রস্তুত!',
+      );
+  String get downloadVideo => _get(
+        'Download',
+        'ڈاؤن لوڈ',
+        'تنزيل',
+        'डाउनलोड',
+        'Télécharger',
+        'Descargar',
+        'Baixar',
+        'Herunterladen',
+        'İndir',
+        'Unduh',
+        'ডাউনলোড',
+      );
+  String get videoSavedToGallery => _get(
+        'Video saved to your gallery.',
+        'ویڈیو آپ کی گیلری میں محفوظ ہو گئی۔',
+        'تم حفظ الفيديو في معرض الصور.',
+        'वीडियो आपकी गैलरी में सहेजा गया।',
+        'Vidéo enregistrée dans votre galerie.',
+        'Video guardado en tu galería.',
+        'Vídeo salvo na sua galeria.',
+        'Video in deiner Galerie gespeichert.',
+        'Video galerine kaydedildi.',
+        'Video disimpan ke galeri Anda.',
+        'ভিডিও আপনার গ্যালারিতে সংরক্ষণ করা হয়েছে।',
+      );
+  String get videoSaveFailed => _get(
+        'Could not save the video.',
+        'ویڈیو محفوظ نہیں ہو سکی۔',
+        'تعذر حفظ الفيديو.',
+        'वीडियो सहेजा नहीं जा सका।',
+        'Impossible d’enregistrer la vidéo.',
+        'No se pudo guardar el video.',
+        'Não foi possível salvar o vídeo.',
+        'Video konnte nicht gespeichert werden.',
+        'Video kaydedilemedi.',
+        'Video tidak dapat disimpan.',
+        'ভিডিও সংরক্ষণ করা যায়নি।',
+      );
   String get pickVideo => _get(
         'Pick a video',
         'ویڈیو چنیں',
