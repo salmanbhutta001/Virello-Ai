@@ -10,6 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
+import '../../main.dart';
 
 /// Which legal document to show.
 enum LegalDoc { userAgreement, privacyPolicy }
@@ -88,7 +89,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppStrings.of(context);
+    final s = AppStrings(appState.localeCode);
     final title = widget.doc == LegalDoc.userAgreement
         ? s.userAgreement
         : s.privacyPolicy;
@@ -96,7 +97,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: VTheme.surface(context),
+        backgroundColor: VTheme.scaffold(context),
       ),
       body: Stack(
         children: [

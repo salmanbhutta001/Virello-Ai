@@ -12,9 +12,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/strings.dart';
-import '../core/theme.dart';
-import '../main.dart';
+import '../../core/strings.dart';
+import '../../core/theme.dart';
+import '../../main.dart';
 
 /// One step of the app tour.
 class TourStep {
@@ -158,7 +158,7 @@ class _AppTourOverlayState extends State<AppTourOverlay>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _steps = buildTourSteps(AppStrings.of(context));
+    _steps = buildTourSteps(AppStrings(appState.localeCode));
     final tab = _steps[_step].tabIndex;
     if (tab >= 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -190,7 +190,7 @@ class _AppTourOverlayState extends State<AppTourOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppStrings.of(context);
+    final s = AppStrings(appState.localeCode);
     final step = _steps[_step];
     final isFirst = _step == 0;
     final isLast = _step == _steps.length - 1;
@@ -323,7 +323,7 @@ class _TourCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppStrings.of(context);
+    final s = AppStrings(appState.localeCode);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
