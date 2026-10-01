@@ -24,10 +24,8 @@ dependencies:
   webview_flutter: ^4.7.0
   image: ^4.0.0
   flutter_tts: ^4.0.0
-  # Phase B: maintained FFmpegKit fork (ffmpeg_kit_flutter retired Jan 2025).
-  # `video` variant = LGPL (no GPL codecs), includes libass for subtitle
-  # burn-in; H.264 via Android hardware encoder (h264_mediacodec).
-  ffmpeg_kit_flutter_new_video: ^2.5.0
+  # Lightweight video thumbnails (replaces FFmpeg — saves 20-30MB APK).
+  video_thumbnail: ^0.5.3
   path_provider: ^2.1.0
   image_picker: ^1.0.7
 

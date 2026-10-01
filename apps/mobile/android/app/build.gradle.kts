@@ -58,6 +58,9 @@ android {
 
     buildTypes {
         release {
+            // Shrink APK: R8 minification + resource shrinking.
+            isMinifyEnabled = true
+            isShrinkResources = true
             // Signed with the release keystore when key.properties exists (CI);
             // debug keys locally so `flutter run --release` keeps working.
             signingConfig = if (keystorePropertiesFile.exists()) {
