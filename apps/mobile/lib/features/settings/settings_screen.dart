@@ -82,6 +82,23 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _clearCache(BuildContext context) async {
+    final s = _s();
+    try {
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.cacheCleared)),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.tryAgain)),
+      );
+    }
+  }
+
   Future<void> _confirmSignOut(BuildContext context) async {
     final s = _s();
     final yes = await showDialog<bool>(
