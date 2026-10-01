@@ -19,6 +19,7 @@ import 'features/campaigns/campaigns_screen.dart';
 import 'features/ask_virello/ask_virello_screen.dart';
 import 'features/shop/shop_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/tour/app_tour.dart';
 
 /// Shared app services.
 final authStore = AuthStore();
@@ -29,6 +30,9 @@ final savedStore = SavedStore();
 /// [pendingGrowUrl] to pre-fill the Grow flow with a post URL.
 /// Tab indices: 0 Home · 1 Discover · 2 Create · 3 Grow · 4 Shop · 5 Profile.
 final requestedTab = ValueNotifier<int?>(null);
+
+/// Tour replay trigger: set to true to show the app tour overlay.
+final requestedTour = ValueNotifier<bool>(false);
 final pendingGrowUrl = ValueNotifier<String?>(null);
 
 /// Drops a dead session and routes to sign-in with an explanatory notice.
@@ -216,22 +220,39 @@ class _RootShellState extends State<RootShell> {
 
   int _index = 0;
   bool _onboarded = false;
+  bool _showTour = false;
   static const _onboardedKey = 'virello_onboarded';
 
   @override
   void initState() {
     super.initState();
     requestedTab.addListener(_onRequestedTab);
+    requestedTour.addListener(_onRequestedTour);
     _loadOnboarded();
   }
 
   Future<void> _loadOnboarded() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final seen = await AppTourService.hasSeenTour();
       if (mounted) {
-        setState(() => _onboarded = prefs.getBool(_onboardedKey) ?? false);
+        setState(() {
+          _onboarded = prefs.getBool(_onboardedKey) ?? false;
+          // Auto-show tour on first login/signup (new account).
+          _showTour = !seen;
+        });
       }
     } catch (_) {}
+  }
+
+  /// Called by the tour overlay when a step wants to switch tabs.
+  void _onTourTabSwitch(int tabIndex) {
+    if (mounted) setState(() => _index = tabIndex);
+  }
+
+  /// Called by the tour overlay when the tour finishes or is skipped.
+  void _onTourComplete() {
+    if (mounted) setState(() => _showTour = false);
   }
 
   Future<void> _setOnboarded() async {
@@ -245,6 +266,7 @@ class _RootShellState extends State<RootShell> {
   @override
   void dispose() {
     requestedTab.removeListener(_onRequestedTab);
+    requestedTour.removeListener(_onRequestedTour);
     super.dispose();
   }
 
@@ -253,6 +275,13 @@ class _RootShellState extends State<RootShell> {
     if (i != null) {
       requestedTab.value = null;
       setState(() => _index = i);
+    }
+  }
+
+  void _onRequestedTour() {
+    if (requestedTour.value) {
+      requestedTour.value = false;
+      if (mounted) setState(() => _showTour = true);
     }
   }
 
@@ -301,6 +330,12 @@ class _RootShellState extends State<RootShell> {
               ],
             ),
             if (_showAskFab) _askFab(),
+            // First-run app tour: mockup/popup overlay covering all tabs.
+            if (_showTour)
+              AppTourOverlay(
+                onTabSwitch: _onTourTabSwitch,
+                onComplete: _onTourComplete,
+              ),
           ],
         ),
       ),

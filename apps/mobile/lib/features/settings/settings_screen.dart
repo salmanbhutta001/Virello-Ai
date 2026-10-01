@@ -257,6 +257,7 @@ class SettingsScreen extends StatelessWidget {
                   await AppTourService.resetTour();
                   if (!context.mounted) return;
                   Navigator.of(context).popUntil((r) => r.isFirst);
+                  requestedTour.value = true;
                 },
               ),
             ]),

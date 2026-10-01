@@ -505,8 +505,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () async {
                           await AppTourService.resetTour();
                           if (!context.mounted) return;
-                          // Close profile and show tour on home shell.
+                          // Close profile and trigger tour on home shell.
                           Navigator.of(context).popUntil((r) => r.isFirst);
+                          requestedTour.value = true;
                         },
                       ),
                       // "Invite Friends" — share the app.
