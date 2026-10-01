@@ -13789,19 +13789,6 @@ class AppStrings {
         'Video yang dibuat tidak dapat diunduh.',
         'তৈরি করা ভিডিও ডাউনলোড করা যায়নি।',
       );
-  String get videoReady => _get(
-        'Your video is ready!',
-        'آپ کی ویڈیو تیار ہے!',
-        'الفيديو جاهز!',
-        'आपका वीडियो तैयार है!',
-        'Votre vidéo est prête !',
-        '¡Tu video está listo!',
-        'Seu vídeo está pronto!',
-        'Dein Video ist fertig!',
-        'Videon hazır!',
-        'Video Anda sudah siap!',
-        'আপনার ভিডিও প্রস্তুত!',
-      );
   String get downloadVideo => _get(
         'Download',
         'ڈاؤن لوڈ',
