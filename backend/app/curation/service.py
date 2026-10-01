@@ -86,12 +86,19 @@ async def curate_product(
         # an existing score (absence of signal != not trending).
         ts = max(0, min(100, int(trend_score or 0)))
         sig = (trend_signals or "").strip()[:500]
-        if ts > 0 and (ts != (existing.trend_score or 0) or
-                       sig != (existing.trend_signals or "")):
-            existing.trend_score = ts
-            existing.trend_signals = sig
+        if ts > 0:
+            # Every re-validation refreshes trending_as_of — a product that
+            # is STILL trending stays up; only its score decides the rank.
+            # Old products are never removed, they just decay if not
+            # re-validated.
             existing.trending_as_of = datetime.now(timezone.utc)
-            updated.append("trend")
+            if ts != (existing.trend_score or 0) or \
+                    sig != (existing.trend_signals or ""):
+                existing.trend_score = ts
+                existing.trend_signals = sig
+                updated.append("trend")
+            else:
+                updated.append("trend_revalidated")
         await db.flush()
         return {"asin": asin, "product_id": str(existing.id),
                 "title": existing.title, "created": False,
