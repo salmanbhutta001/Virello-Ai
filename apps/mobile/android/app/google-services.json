@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "512178817345",
+    "project_id": "virello-ai-17aeb",
+    "storage_bucket": "virello-ai-17aeb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:512178817345:android:a6ee7ea4c50d7702eb39c0",
+        "android_client_info": {
+          "package_name": "com.virello.virello"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwNU6XSF-GtUzft-qpQsPSruQO9FPHrKs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
