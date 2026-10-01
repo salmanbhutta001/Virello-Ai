@@ -54,12 +54,16 @@ async def curate_product(
     currency: str = "USD",
     image_urls: list[str] | None = None,
     creator: User,
+    trend_score: int = 0,
+    trend_signals: str = "",
 ) -> dict:
     """List one affiliate product (idempotent by ASIN).
 
     Returns {"asin", "product_id", "title", "created": bool,
              "updated": [...], "skipped": bool}.
     Never deletes. Unknown price stays 0 ("Check price on Amazon").
+    trend_score (0-100) comes from real trend research only; on duplicates
+    the score/signals are refreshed so the trending rail keeps updating.
     """
     from app.services.affiliate.amazon import AmazonAffiliateProvider
 
@@ -72,10 +76,22 @@ async def curate_product(
         await db.execute(select(Product).where(Product.affiliate_url == affiliate_url))
     ).scalar_one_or_none()
     if existing is not None:
+        from datetime import datetime, timezone
         updated: list[str] = []
         if image_urls and not (existing.image_urls or []):
             existing.image_urls = image_urls
             updated.append("image_urls")
+        # Hourly re-validation: refresh the trend score/signals so the
+        # genuinely-trending rail keeps updating. A 0 score never wipes
+        # an existing score (absence of signal != not trending).
+        ts = max(0, min(100, int(trend_score or 0)))
+        sig = (trend_signals or "").strip()[:500]
+        if ts > 0 and (ts != (existing.trend_score or 0) or
+                       sig != (existing.trend_signals or "")):
+            existing.trend_score = ts
+            existing.trend_signals = sig
+            existing.trending_as_of = datetime.now(timezone.utc)
+            updated.append("trend")
         await db.flush()
         return {"asin": asin, "product_id": str(existing.id),
                 "title": existing.title, "created": False,
@@ -84,6 +100,8 @@ async def curate_product(
     category = (category or "all").lower()
     if category not in PRODUCT_CATEGORIES:
         category = "all"
+    from datetime import datetime, timezone
+    ts = max(0, min(100, int(trend_score or 0)))
     product = Product(
         creator_id=creator.id,
         title=title.strip()[:200],
@@ -92,6 +110,9 @@ async def curate_product(
         currency=(currency or "USD").upper(),
         category=category,
         image_urls=image_urls,
+        trend_score=ts,
+        trend_signals=(trend_signals or "").strip()[:500],
+        trending_as_of=datetime.now(timezone.utc) if ts > 0 else None,
         stock_qty=0,  # affiliate: stock tracked by Amazon, not us
         is_active=True,
         is_affiliate=True,

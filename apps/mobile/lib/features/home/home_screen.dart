@@ -63,7 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
       recs = feed.take(6).toList();
     } catch (_) {}
     try {
-      final data = await apiClient.listProducts(limit: 12, sort: 'popular');
+      // Genuinely-trending rail: backend ranks by real trend research
+      // (trend_score, time-decayed, refreshed hourly) — not page views.
+      final data = await apiClient.listProducts(limit: 12, sort: 'trending');
       trending = ((data['products'] as List?) ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();

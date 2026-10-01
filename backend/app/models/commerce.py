@@ -63,6 +63,13 @@ class Product(Base):
     image_urls: Mapped[list] = mapped_column(JSON, default=list)
     stock_qty: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    # --- Trending (genuinely-trending rail) ---
+    # trend_score 0-100 from the curator's real trend research
+    # (bestseller ranks, review velocity, trend data). 0 = not scored.
+    trend_score: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    trend_signals: Mapped[str] = mapped_column(Text, default="")
+    trending_as_of: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True)
     views: Mapped[int] = mapped_column(Integer, default=0)
     # --- Affiliate (e.g. Amazon Associates) ---
     # An affiliate product links OUT to the merchant; Virello never takes

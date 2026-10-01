@@ -132,6 +132,8 @@ class ProductOut(BaseModel):
     is_affiliate: bool
     affiliate_url: str | None = None
     affiliate_provider: str | None = None
+    trend_score: int = 0
+    trend_signals: str = ""
     created_at: str
 
 
@@ -178,6 +180,8 @@ def _to_out(p: Product) -> ProductOut:
         is_affiliate=bool(p.is_affiliate),
         affiliate_url=p.affiliate_url,
         affiliate_provider=p.affiliate_provider,
+        trend_score=int(p.trend_score or 0),
+        trend_signals=p.trend_signals or "",
         created_at=p.created_at.isoformat() if p.created_at else "",
     )
 
@@ -272,7 +276,7 @@ async def create_product(
 async def list_products(
     category: str | None = Query(default=None),
     q: str | None = Query(default=None, max_length=120),
-    sort: str = Query(default="newest", pattern="^(newest|price_asc|price_desc|popular)$"),
+    sort: str = Query(default="newest", pattern="^(newest|price_asc|price_desc|popular|trending)$"),
     limit: int = Query(default=24, ge=1, le=60),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -300,6 +304,24 @@ async def list_products(
         stmt = stmt.order_by(Product.price_cents.desc())
     elif sort == "popular":
         stmt = stmt.order_by(desc(Product.views))
+    elif sort == "trending":
+        # Genuinely-trending rail: curator-assigned trend_score from real
+        # research (bestseller ranks, review velocity, trend data), refreshed
+        # hourly. Time-decayed (~3-day half-life) so the rail keeps updating:
+        # a high score from 10 days ago sinks below a moderate score from
+        # today. Unscored products never appear here.
+        dialect = (db.bind.dialect.name if db.bind is not None else "")
+        if dialect == "sqlite":
+            age_sec = (func.julianday("now") -
+                       func.julianday(Product.trending_as_of)) * 86400.0
+        else:
+            age_sec = func.extract(
+                "epoch", func.now() - Product.trending_as_of)
+        decayed = Product.trend_score / (1.0 + age_sec / 259200.0)
+        stmt = stmt.where(Product.trend_score > 0,
+                          Product.trending_as_of.is_not(None))
+        stmt = stmt.order_by(desc(decayed), desc(Product.views))
+        sort_note = "Ranked by real trend research, refreshed hourly"
     else:
         stmt = stmt.order_by(desc(Product.created_at))
     total = (await db.execute(
@@ -699,6 +721,11 @@ class CurateProductIn(BaseModel):
     price_cents: int = Field(default=0, ge=0, le=100_000_000)
     currency: str = Field(default="USD", max_length=8)
     image_urls: list[str] = Field(default_factory=list, max_length=10)
+    # Trend research (honest, from real signals only — never invented):
+    # 0-100 score + short note like "amazon bestseller #3 in LED strips".
+    # 0 = not scored. On duplicates the score is refreshed (re-validation).
+    trend_score: int = Field(default=0, ge=0, le=100)
+    trend_signals: str = Field(default="", max_length=500)
 
 
 class CurateIn(BaseModel):
@@ -833,6 +860,8 @@ async def curate_products(
             currency=item.currency,
             image_urls=item.image_urls,
             creator=creator,
+            trend_score=item.trend_score,
+            trend_signals=item.trend_signals,
         )
         if out["skipped"]:
             skipped.append(out["asin"])
