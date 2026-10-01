@@ -35,7 +35,7 @@ import uuid
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
-from sqlalchemy import desc, func, or_, select
+from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
@@ -307,9 +307,11 @@ async def list_products(
     elif sort == "trending":
         # Genuinely-trending rail: curator-assigned trend_score from real
         # research (bestseller ranks, review velocity, trend data), refreshed
-        # hourly. Time-decayed (~3-day half-life) so the rail keeps updating:
-        # a high score from 10 days ago sinks below a moderate score from
-        # today. Unscored products never appear here.
+        # hourly. Time-decayed (~3-day half-life) so the rail keeps updating.
+        # The rail is NEVER empty and old products are NEVER removed: scored
+        # products rank first by decayed score (a newly-scored product jumps
+        # to the top immediately), everything else fills the rail below by
+        # real page views, exactly like before.
         dialect = (db.bind.dialect.name if db.bind is not None else "")
         if dialect == "sqlite":
             age_sec = (func.julianday("now") -
@@ -317,9 +319,11 @@ async def list_products(
         else:
             age_sec = func.extract(
                 "epoch", func.now() - Product.trending_as_of)
-        decayed = Product.trend_score / (1.0 + age_sec / 259200.0)
-        stmt = stmt.where(Product.trend_score > 0,
-                          Product.trending_as_of.is_not(None))
+        decayed = case(
+            (Product.trending_as_of.is_(None), 0.0),
+            else_=func.coalesce(Product.trend_score, 0) /
+            (1.0 + age_sec / 259200.0),
+        )
         stmt = stmt.order_by(desc(decayed), desc(Product.views))
         sort_note = "Ranked by real trend research, refreshed hourly"
     else:

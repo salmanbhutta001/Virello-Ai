@@ -64,19 +64,12 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
     try {
       // Genuinely-trending rail: backend ranks by real trend research
-      // (trend_score, time-decayed, refreshed hourly) — not page views.
+      // (trend_score, time-decayed, refreshed hourly). Scored products come
+      // first; the rest fill the rail by views — never empty, nothing removed.
       final data = await apiClient.listProducts(limit: 12, sort: 'trending');
       trending = ((data['products'] as List?) ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      if (trending.isEmpty) {
-        // Warm-up fallback: no scored products yet — show popular instead
-        // of an empty rail until hourly research populates trend scores.
-        final fb = await apiClient.listProducts(limit: 12, sort: 'popular');
-        trending = ((fb['products'] as List?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList();
-      }
     } catch (_) {}
     return _HomeData(
       name: name,
