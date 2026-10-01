@@ -84,8 +84,16 @@ async def upload_image(data: bytes, public_id: str,
         raise RuntimeError(
             f"cloudinary upload transport failed: {type(e).__name__}") from None
     if r.status_code >= 400:
+        try:
+            detail = r.json()
+        except Exception:
+            detail = (r.text or "")[:300]
+        # Cloudinary returns {"error": {"message": "..."}} — surface the
+        # message (never credentials) so 401 causes are diagnosable.
+        msg = (detail.get("error", {}).get("message")
+               if isinstance(detail, dict) else detail)
         raise RuntimeError(
-            f"cloudinary upload rejected (http {r.status_code})")
+            f"cloudinary upload rejected (http {r.status_code}): {msg}")
     try:
         secure_url = r.json().get("secure_url", "")
     except Exception:
