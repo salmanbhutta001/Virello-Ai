@@ -33,6 +33,7 @@ from app.routers import ctr as ctr_router
 from app.routers import academy as academy_router
 from app.routers import entertain as entertain_router
 from app.routers import shop as shop_router
+from app.routers import video as video_router
 
 
 @asynccontextmanager
@@ -122,6 +123,9 @@ app.include_router(shop_router.router, prefix="/api/v1", tags=["shop"])
 # User posts: edit/delete own feed posts (DiscoveryPlacement), owner-only.
 from app.routers import posts as posts_router
 app.include_router(posts_router.router, prefix="/api/v1/posts", tags=["posts"])
+app.include_router(
+    video_router.router, prefix="/api/v1/video", tags=["video"]
+)  # AI video proxy (Create Hub online mode)
 
 
 @app.get("/health")

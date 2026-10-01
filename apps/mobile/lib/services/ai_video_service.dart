@@ -3,16 +3,19 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/config.dart';
+import '../main.dart' show apiClient;
+
 /// Central AI video generation service for Virello Create Hub.
 ///
 /// Three modes:
 /// 1. **Local slideshow** (default, works now): assembles user images into
 ///    an H.264 MP4 via the on-device FFmpeg engine. No key, no network.
-/// 2. **Agnes AI** (free online): text-to-video via Agnes AI's free API
-///    (https://apihub.agnes-ai.com/v1). Needs a free API key from
-///    https://platform.agnes-ai.com — no credit card required.
-/// 3. **Keyed providers** (Runway, Pika, Replicate, Stability, Veo): for
-///    higher quality when a paid API key is configured.
+/// 2. **Backend proxy** (preferred online): the Virello backend holds the
+///    provider key server-side (VIRELLO_AGNES_API_KEY) — the APK never
+///    carries it. Backed by Agnes AI's free tier.
+/// 3. **Direct key** (fallback): a provider key configured on-device for
+///    direct calls (Agnes, Runway, Pika, Replicate, Stability, Veo).
 ///
 /// Call sites check [isOnlineConfigured] and route accordingly.
 class AiVideoService {
@@ -23,26 +26,55 @@ class AiVideoService {
   String? _apiKey;
   String? _endpoint;
 
-  /// Agnes AI free video API defaults.
+  /// Agnes AI free video API defaults (direct-key fallback only).
   static const _agnesBase = 'https://apihub.agnes-ai.com/v1';
   static const _agnesVideoModel = 'agnes-video-v2.0';
 
-  /// Configure an online text-to-video provider.
+  bool? _backendAvailable; // cached from /api/v1/video/status
+
+  /// Configure a direct on-device provider key (optional fallback).
   void configure({String? provider, String? apiKey, String? endpoint}) {
     _provider = provider;
     _apiKey = apiKey;
     _endpoint = endpoint;
   }
 
-  bool get isOnlineConfigured => _provider != null && _apiKey != null;
+  /// True when the backend proxy reports online video is available.
+  /// Cached after the first check; call [refreshBackendStatus] to re-check.
+  Future<bool> refreshBackendStatus() async {
+    try {
+      final res = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/v1/video/status'),
+        headers: apiClient.authHeaders,
+      ).timeout(const Duration(seconds: 15));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map;
+        _backendAvailable = data['available'] == true;
+      } else {
+        _backendAvailable = false;
+      }
+    } catch (_) {
+      _backendAvailable = false;
+    }
+    return _backendAvailable ?? false;
+  }
 
-  String get providerName => _provider ?? 'Local slideshow (FFmpeg)';
+  /// Synchronous best-known answer: true when a direct key is set or the
+  /// backend was confirmed available. Call sites should await
+  /// [refreshBackendStatus] first when accuracy matters.
+  bool get isOnlineConfigured =>
+      (_provider != null && _apiKey != null) || _backendAvailable == true;
 
-  /// Request a text-to-video generation from the configured online provider.
+  String get providerName {
+    if (_backendAvailable == true) return 'Online AI video (Virello)';
+    return _provider ?? 'Local slideshow (FFmpeg)';
+  }
+
+  /// Request a text-to-video generation from the online provider.
   ///
-  /// Returns the video URL when ready, or null if not configured/failed.
-  /// Polls the provider until the video is ready or [timeout] elapses.
-  /// Throws [AiVideoException] with an honest message on failure.
+  /// Prefers the backend proxy (key stays server-side); falls back to a
+  /// directly configured key; throws [AiVideoException] when neither works.
+  /// Returns the video URL when ready.
   Future<String?> generateOnline({
     required String prompt,
     int durationSec = 5,
@@ -50,14 +82,16 @@ class AiVideoService {
     Duration timeout = const Duration(minutes: 10),
     void Function(double)? onProgress,
   }) async {
-    if (!isOnlineConfigured) {
-      throw const AiVideoException(
-        'Online video generation needs an API key. '
-        'Local slideshow mode works without one.',
+    final backendOk = await refreshBackendStatus();
+    if (backendOk) {
+      return _backendGenerate(
+        prompt: prompt,
+        durationSec: durationSec,
+        timeout: timeout,
+        onProgress: onProgress,
       );
     }
-    // Agnes AI (free) has its own flow; others use the generic flow.
-    if (_provider == 'agnes') {
+    if (_provider == 'agnes' && _apiKey != null) {
       return _agnesGenerate(
         prompt: prompt,
         durationSec: durationSec,
@@ -65,25 +99,88 @@ class AiVideoService {
         onProgress: onProgress,
       );
     }
-    // Provider-specific implementations plug in here.
-    // Runway: POST {endpoint}/v1/image_to_video or text_to_video
-    // Pika: POST {endpoint}/v1/generate
-    // Replicate: POST https://api.replicate.com/v1/predictions
-    // Veo (Google): POST https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predict
-    // Each returns a task ID; poll until completed.
-    return _runwayLike(
-      prompt: prompt,
-      durationSec: durationSec,
-      timeout: timeout,
-      onProgress: onProgress,
+    if (isOnlineConfigured) {
+      return _runwayLike(
+        prompt: prompt,
+        durationSec: durationSec,
+        timeout: timeout,
+        onProgress: onProgress,
+      );
+    }
+    throw const AiVideoException(
+      'Online video generation is not available right now. '
+      'Local slideshow mode works without it.',
     );
   }
 
-  /// Agnes AI free text-to-video.
-  ///
-  /// POST https://apihub.agnes-ai.com/v1/videos with the prompt;
-  /// returns a video_id; poll GET https://apihub.agnes-ai.com/agnesapi?video_id=...
-  /// until the video URL is ready.
+  /// Backend proxy flow: submit, then poll the job endpoint.
+  Future<String?> _backendGenerate({
+    required String prompt,
+    required int durationSec,
+    required Duration timeout,
+    void Function(double)? onProgress,
+  }) async {
+    final base = AppConfig.baseUrl;
+    final headers = apiClient.authHeaders;
+
+    final submit = await http
+        .post(
+          Uri.parse('$base/api/v1/video/generate'),
+          headers: headers,
+          body: jsonEncode({'prompt': prompt, 'duration_sec': durationSec}),
+        )
+        .timeout(const Duration(seconds: 60));
+
+    if (submit.statusCode == 429) {
+      throw const AiVideoException(
+        'Free video quota is busy right now — try again in a minute.',
+      );
+    }
+    if (submit.statusCode == 503) {
+      throw const AiVideoException(
+        'Online video is not configured on the server yet.',
+      );
+    }
+    if (submit.statusCode < 200 || submit.statusCode >= 300) {
+      throw AiVideoException(
+        'Video service rejected the request (HTTP ${submit.statusCode}).',
+      );
+    }
+
+    final jobId = (jsonDecode(submit.body) as Map)['job_id'] as String?;
+    if (jobId == null || jobId.isEmpty) {
+      throw const AiVideoException('Video service returned no job ID.');
+    }
+
+    final deadline = DateTime.now().add(timeout);
+    var polls = 0;
+    while (DateTime.now().isBefore(deadline)) {
+      await Future.delayed(const Duration(seconds: 10));
+      polls++;
+      onProgress?.call((polls * 10 / timeout.inSeconds).clamp(0.0, 0.95));
+
+      final status = await http.get(
+        Uri.parse('$base/api/v1/video/jobs/$jobId'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      if (status.statusCode != 200) continue;
+      final data = jsonDecode(status.body) as Map;
+      final state = data['status'] as String?;
+      if (state == 'ready') {
+        onProgress?.call(1.0);
+        return data['video_url'] as String?;
+      }
+      if (state == 'failed') {
+        throw AiVideoException(
+          'Video generation failed: ${data['error'] ?? 'unknown error'}',
+        );
+      }
+    }
+    throw const AiVideoException('Video generation timed out.');
+  }
+
+  /// Agnes AI direct-key flow (fallback when no backend proxy).
   Future<String?> _agnesGenerate({
     required String prompt,
     required int durationSec,
@@ -98,7 +195,6 @@ class AiVideoService {
       );
     }
 
-    // 1) Submit.
     final submit = await http
         .post(
           Uri.parse('$_agnesBase/videos'),
@@ -128,13 +224,11 @@ class AiVideoService {
     final body = jsonDecode(submit.body) as Map;
     final videoId = body['video_id'] as String? ?? body['id'] as String?;
     if (videoId == null || videoId.isEmpty) {
-      // Some responses return the URL directly.
       final direct = body['video_url'] as String? ?? body['url'] as String?;
       if (direct != null && direct.isNotEmpty) return direct;
       throw const AiVideoException('Agnes AI returned no video ID.');
     }
 
-    // 2) Poll until ready.
     final deadline = DateTime.now().add(timeout);
     var polls = 0;
     while (DateTime.now().isBefore(deadline)) {
@@ -149,8 +243,7 @@ class AiVideoService {
 
       if (status.statusCode != 200) continue;
       final data = jsonDecode(status.body) as Map;
-      final state =
-          (data['status'] as String?)?.toLowerCase() ?? '';
+      final state = (data['status'] as String?)?.toLowerCase() ?? '';
       if (state == 'completed' ||
           state == 'succeeded' ||
           state == 'done' ||
@@ -165,7 +258,6 @@ class AiVideoService {
           'Agnes AI video generation failed: ${data['error'] ?? state}',
         );
       }
-      // Some responses embed the URL without a status field.
       final direct = data['video_url'] as String? ?? data['url'] as String?;
       if (direct != null && direct.isNotEmpty) {
         onProgress?.call(1.0);
@@ -185,7 +277,6 @@ class AiVideoService {
     final key = _apiKey;
     if (endpoint == null || key == null) return null;
 
-    // 1) Submit the generation request.
     final submit = await http
         .post(
           Uri.parse('$endpoint/generate'),
@@ -212,7 +303,6 @@ class AiVideoService {
       throw const AiVideoException('Video provider returned no task ID.');
     }
 
-    // 2) Poll until done.
     final deadline = DateTime.now().add(timeout);
     var polls = 0;
     while (DateTime.now().isBefore(deadline)) {

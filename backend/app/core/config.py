@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     google_pay_gateway_merchant_id: str = ""
     play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON (service-account JSON text)
     play_package_name: str = "com.virello.virello"  # VIRELLO_PLAY_PACKAGE_NAME
+    # --- AI video generation proxy (Create Hub online mode) ---
+    # Key = VIRELLO_AGNES_API_KEY. Never shipped in the APK.
+    agnes_api_key: str = ""
     # --- Autonomous gallery publishing: backend pushes new gallery images
     # to GitHub itself (no Termux/phone/Muse needed). Token = fine-grained
     # PAT with Contents: read+write on the repo. Empty -> push skipped.

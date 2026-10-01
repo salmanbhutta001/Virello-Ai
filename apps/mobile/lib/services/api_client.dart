@@ -28,6 +28,9 @@ class ApiClient {
     };
   }
 
+  /// Public auth headers for services that make their own http calls.
+  Map<String, String> get authHeaders => _headers;
+
   // ------------------------------ auth ------------------------------
   Future<void> requestOtp(String email) async {
     final res = await http.post(

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
@@ -166,6 +168,14 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   bool _rendering = false;
   double _renderProgress = 0.0;
 
+  Future<String> _saveTempVideo(List<int> bytes) async {
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/virello_ai_video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+    await File(path).writeAsBytes(bytes, flush: true);
+    return path;
+  }
+
   /// Renders the storyboard into a REAL MP4 (FFmpeg + AI voiceover) and
   /// shares it. Fully on-device, no provider key needed.
   Future<void> _renderVideo() async {
@@ -175,12 +185,13 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       _renderProgress = 0.0;
     });
     try {
-      // Online AI text-to-video when a provider API key is configured;
-      // otherwise the on-device FFmpeg slideshow.
+      // Online AI text-to-video (backend proxy keeps the key server-side);
+      // falls back to the on-device FFmpeg slideshow when unavailable.
+      await AiVideoService.instance.refreshBackendStatus();
       if (AiVideoService.instance.isOnlineConfigured) {
         final url = await AiVideoService.instance.generateOnline(
           prompt: _ideaCtrl.text.trim(),
-          durationSec: 5,
+          durationSec: 6,
           onProgress: (p) {
             if (mounted) setState(() => _renderProgress = p);
           },
@@ -188,9 +199,23 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
         if (!mounted) return;
         setState(() => _rendering = false);
         if (url != null && url.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Video ready: $url')),
-          );
+          // Download the generated video, then share it like a local render.
+          final res = await http.get(Uri.parse(url)).timeout(
+                const Duration(minutes: 3),
+              );
+          if (res.statusCode == 200 && mounted) {
+            final tmp = await _saveTempVideo(res.bodyBytes);
+            await Share.shareXFiles(
+              [XFile(tmp, mimeType: 'video/mp4')],
+              text: '${_ideaCtrl.text.trim()}\n\nvia Virello',
+            );
+            return;
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(s.videoDownloadFailed)),
+            );
+          }
         }
         return;
       }

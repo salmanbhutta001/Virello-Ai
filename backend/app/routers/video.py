@@ -1,0 +1,182 @@
+"""AI Video Generation proxy — Create Hub "Video" tab online mode.
+
+POST /video/generate  {prompt, duration_sec?} -> {job_id, status}
+GET  /video/jobs/{job_id}                            -> {status, video_url?, error?}
+GET  /video/status                                   -> {available: bool}
+
+The provider key lives server-side (VIRELLO_AGNES_API_KEY) — it is never
+shipped in the APK. Currently backed by Agnes AI's free tier
+(agnes-video-v2.0, https://apihub.agnes-ai.com/v1).
+
+Jobs are kept in a short-lived in-memory store (video jobs complete in a
+few minutes); no DB migration needed.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+import uuid
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from app.core.config import settings
+from app.core.deps import get_current_user
+from app.models.core import User
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+_AGNES_BASE = "https://apihub.agnes-ai.com/v1"
+_AGNES_MODEL = "agnes-video-v2.0"
+_SUBMIT_TIMEOUT = 60.0
+_POLL_TIMEOUT = 30.0
+_MAX_DURATION = 10  # Agnes free tier caps short clips
+
+# job_id -> {"agnes_id": str, "status": str, "video_url": str|None,
+#            "error": str|None, "created": float}
+_jobs: dict[str, dict] = {}
+
+
+class GenerateRequest(BaseModel):
+    prompt: str = Field(min_length=3, max_length=2000)
+    duration_sec: int = Field(default=6, ge=3, le=_MAX_DURATION)
+
+
+def _key_or_503() -> str:
+    key = (settings.agnes_api_key or "").strip()
+    if not key:
+        raise HTTPException(
+            status_code=503,
+            detail="Online video generation is not configured on the server yet.",
+        )
+    return key
+
+
+def _prune() -> None:
+    cutoff = time.time() - 3600
+    for jid in [k for k, v in _jobs.items() if v["created"] < cutoff]:
+        _jobs.pop(jid, None)
+
+
+@router.get("/status")
+async def video_status(_user: User = Depends(get_current_user)) -> dict:
+    """Whether online video generation is available right now."""
+    return {
+        "available": bool((settings.agnes_api_key or "").strip()),
+        "provider": "agnes" if (settings.agnes_api_key or "").strip() else None,
+        "max_duration_sec": _MAX_DURATION,
+    }
+
+
+@router.post("/generate")
+async def generate_video(
+    body: GenerateRequest, _user: User = Depends(get_current_user)
+) -> dict:
+    """Submit a text-to-video job. Poll GET /video/jobs/{job_id} for result."""
+    key = _key_or_503()
+    _prune()
+    try:
+        async with httpx.AsyncClient(timeout=_SUBMIT_TIMEOUT) as client:
+            resp = await client.post(
+                f"{_AGNES_BASE}/videos",
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": _AGNES_MODEL,
+                    "prompt": body.prompt,
+                    "duration": body.duration_sec,
+                },
+            )
+    except httpx.RequestError as exc:
+        logger.warning("agnes submit transport error: %s", exc)
+        raise HTTPException(status_code=502, detail="Video provider unreachable.") from exc
+
+    if resp.status_code == 429:
+        raise HTTPException(
+            status_code=429,
+            detail="Free video quota is busy right now — try again in a minute.",
+        )
+    if resp.status_code < 200 or resp.status_code >= 300:
+        logger.warning("agnes submit HTTP %s: %s", resp.status_code, resp.text[:200])
+        raise HTTPException(status_code=502, detail="Video provider rejected the request.")
+
+    data = resp.json()
+    agnes_id = data.get("video_id") or data.get("id")
+    direct = data.get("video_url") or data.get("url")
+    job_id = uuid.uuid4().hex[:12]
+    _jobs[job_id] = {
+        "agnes_id": agnes_id,
+        "status": "ready" if direct else "submitted",
+        "video_url": direct,
+        "error": None,
+        "created": time.time(),
+    }
+    if not agnes_id and not direct:
+        _jobs[job_id]["status"] = "failed"
+        _jobs[job_id]["error"] = "Provider returned no video ID."
+    return {"job_id": job_id, "status": _jobs[job_id]["status"]}
+
+
+@router.get("/jobs/{job_id}")
+async def job_status(
+    job_id: str, _user: User = Depends(get_current_user)
+) -> dict:
+    """Poll a video job. status: submitted|processing|ready|failed."""
+    job = _jobs.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Unknown video job.")
+    if job["status"] in ("ready", "failed"):
+        return {
+            "job_id": job_id,
+            "status": job["status"],
+            "video_url": job["video_url"],
+            "error": job["error"],
+        }
+
+    key = _key_or_503()
+    agnes_id = job.get("agnes_id")
+    if not agnes_id:
+        job["status"] = "failed"
+        job["error"] = "Provider returned no video ID."
+        return {"job_id": job_id, "status": "failed", "error": job["error"]}
+
+    try:
+        async with httpx.AsyncClient(timeout=_POLL_TIMEOUT) as client:
+            resp = await client.get(
+                f"{_AGNES_BASE}/agnesapi",
+                params={"video_id": agnes_id},
+                headers={"Authorization": f"Bearer {key}"},
+            )
+    except httpx.RequestError:
+        return {"job_id": job_id, "status": "processing", "video_url": None}
+
+    if resp.status_code != 200:
+        return {"job_id": job_id, "status": "processing", "video_url": None}
+
+    data = resp.json()
+    state = str(data.get("status", "")).lower()
+    if state in ("completed", "succeeded", "done", "ready"):
+        job["status"] = "ready"
+        job["video_url"] = data.get("video_url") or data.get("url") or data.get("video")
+    elif state in ("failed", "error"):
+        job["status"] = "failed"
+        job["error"] = str(data.get("error") or "Video generation failed.")
+    else:
+        # Some responses embed the URL without a status field.
+        direct = data.get("video_url") or data.get("url")
+        if direct:
+            job["status"] = "ready"
+            job["video_url"] = direct
+        else:
+            job["status"] = "processing"
+    return {
+        "job_id": job_id,
+        "status": job["status"],
+        "video_url": job["video_url"],
+        "error": job["error"],
+    }

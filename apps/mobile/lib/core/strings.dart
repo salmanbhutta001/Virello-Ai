@@ -13776,6 +13776,19 @@ class AppStrings {
         'Render video',
         'ভিডিও রেন্ডার করুন',
       );
+  String get videoDownloadFailed => _get(
+        'Could not download the generated video.',
+        'بنائی گئی ویڈیو ڈاؤن لوڈ نہیں ہو سکی۔',
+        'تعذر تنزيل الفيديو الذي تم إنشاؤه.',
+        'जेनरेट की गई वीडियो डाउनलोड नहीं हो सकी।',
+        'Impossible de télécharger la vidéo générée.',
+        'No se pudo descargar el video generado.',
+        'Não foi possível baixar o vídeo gerado.',
+        'Das generierte Video konnte nicht heruntergeladen werden.',
+        'Oluşturulan video indirilemedi.',
+        'Video yang dibuat tidak dapat diunduh.',
+        'তৈরি করা ভিডিও ডাউনলোড করা যায়নি।',
+      );
   String get pickVideo => _get(
         'Pick a video',
         'ویڈیو چنیں',
