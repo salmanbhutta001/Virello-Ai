@@ -13737,36 +13737,6 @@ class AppStrings {
         'Alat video',
         'ভিডিও টুলস',
       );
-  String get pickVideo => _get('Pick video', 'ویڈیو منتخب کریں', 'اختر فيديو',
-        'वीडियो चुनें', 'Choisir une vidéo', 'Elegir video',
-        'Escolher vídeo', 'Video wählen', 'Video seç', 'Pilih video',
-        'ভিডিও বেছে নিন');
-  String get duration => _get('Duration', 'دورانیہ', 'المدة',
-        'अवधि', 'Durée', 'Duración',
-        'Duração', 'Dauer', 'Süre', 'Durasi',
-        'সময়কাল');
-  String get makeThumbnail => _get('Video thumbnail', 'ویڈیو تھمب نیل', 'صورة مصغرة',
-        'वीडियो थंबनेल', 'Miniature vidéo', 'Miniatura de video',
-        'Miniatura de vídeo', 'Video-Miniaturansicht', 'Video küçük resmi', 'Thumbnail video',
-        'ভিডিও থাম্বনেইল');
-  String get makeThumbnailDesc => _get('Generate a thumbnail image from the middle of the video.',
-        'ویڈیو کے درمیان سے تھمب نیل بنائیں۔', 'أنشئ صورة مصغرة من منتصف الفيديو.',
-        'वीडियो के बीच से थंबनेल बनाएं।', 'Générez une miniature depuis le milieu de la vidéo.', 'Genera una miniatura desde la mitad del video.',
-        'Gere uma miniatura do meio do vídeo.', 'Erstelle ein Vorschaubild aus der Videomitte.', 'Videonun ortasından küçük resim oluşturun.', 'Buat thumbnail dari tengah video.',
-        'ভিডিওর মাঝখান থেকে থাম্বনেইল তৈরি করুন।');
-  String get generateThumb => _get('Generate thumbnail', 'تھمب نیل بنائیں', 'أنشئ صورة مصغرة',
-        'थंबनेल बनाएं', 'Générer la miniature', 'Generar miniatura',
-        'Gerar miniatura', 'Miniaturansicht erstellen', 'Küçük resim oluştur', 'Buat thumbnail',
-        'থাম্বনেইল তৈরি করুন');
-  String get liteVideoNote => _get('Lite mode: heavy video editing (trim, compress, effects) was removed to keep the app small. Thumbnails and info work fully on-device.',
-        'لائٹ موڈ: ایپ چھوٹی رکھنے کے لیے بھاری ویڈیو ایڈیٹنگ ہٹا دی گئی ہے۔ تھمب نیل اور معلومات ڈیوائس پر کام کرتے ہیں۔', 'الوضع الخفيف: تمت إزالة تحرير الفيديو الثقيل للحفاظ على حجم التطبيق صغيرًا.',
-        'लाइट मोड: ऐप छोटा रखने के लिए भारी वीडियो एडिटिंग हटा दी गई है।', 'Mode allégé : le montage vidéo lourd a été retiré pour garder l'application légère.', 'Modo ligero: la edición pesada de video se eliminó para mantener la app pequeña.',
-        'Modo leve: a edição pesada de vídeo foi removida para manter o app pequeno.', 'Lite-Modus: Schwere Videobearbeitung wurde entfernt, um die App klein zu halten.', 'Lite modu: uygulamayı küçük tutmak için ağır video düzenleme kaldırıldı.', 'Mode ringan: pengeditan video berat dihapus agar aplikasi tetap kecil.',
-        'লাইট মোড: অ্যাপ ছোট রাখতে ভারী ভিডিও এডিটিং সরানো হয়েছে।');
-  String get somethingWentWrong => _get('Something went wrong', 'کچھ غلط ہو گیا', 'حدث خطأ ما',
-        'कुछ गलत हो गया', 'Quelque chose s'est mal passé', 'Algo salió mal',
-        'Algo deu errado', 'Etwas ist schiefgelaufen', 'Bir şeyler yanlış gitti', 'Terjadi kesalahan',
-        'কিছু ভুল হয়েছে');
   String get storyVideo => _get(
         'Story Video',
         'اسٹوری ویڈیو',
