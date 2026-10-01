@@ -5,6 +5,7 @@ import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../data/models.dart';
 import '../../main.dart';
+import '../../core/config.dart';
 
 /// 52 · AI Content Report — board-faithful "Day Overview" screen.
 ///
@@ -106,7 +107,7 @@ class _AiContentReportScreenState extends State<AiContentReportScreen> {
           fit: StackFit.expand,
           children: [
             if (_heroUrl.isNotEmpty)
-              Image.network(_heroUrl,
+              Image.network(AppConfig.resolveImageUrl(_heroUrl),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => _heroGradient())
             else

@@ -5,6 +5,7 @@ import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
 import '../../main.dart';
 import 'review_campaign_screen.dart';
+import '../../core/config.dart';
 
 /// 68 · Campaign Setup — board-faithful wrapper over the REAL campaign
 /// builder flow.
@@ -266,7 +267,7 @@ class _CampaignSetupScreenState extends State<CampaignSetupScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: img.isNotEmpty
-                ? Image.network(img,
+                ? Image.network(AppConfig.resolveImageUrl(img),
                     width: 72,
                     height: 72,
                     fit: BoxFit.cover,

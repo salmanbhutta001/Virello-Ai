@@ -5,6 +5,7 @@ import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import 'product_detail_screen.dart';
+import '../../core/config.dart';
 
 /// 84 · Shipment Dashboard — board-faithful screen.
 ///
@@ -165,7 +166,7 @@ class _ShipmentDashboardScreenState extends State<ShipmentDashboardScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: img.isNotEmpty
-                ? Image.network(img,
+                ? Image.network(AppConfig.resolveImageUrl(img),
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,

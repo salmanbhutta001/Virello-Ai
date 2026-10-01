@@ -14,6 +14,7 @@ import '../shop/product_detail_screen.dart';
 import '../social/comments_screen.dart';
 import '../wallet/share_proof_flow.dart';
 import 'shoppable_products.dart';
+import '../../core/config.dart';
 
 /// In-app post reader: every post card in Home (For You / Trending /
 /// AI Picks) and Discovery opens here — never kicks the user out to a
@@ -131,8 +132,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
               child: Stack(
                 children: [
                   images.isNotEmpty
-                      ? Image.network(
-                          images.first,
+                      ? Image.network(AppConfig.resolveImageUrl(images.first),
                           height: 104,
                           width: 150,
                           fit: BoxFit.cover,
@@ -518,8 +518,7 @@ class _PostReaderScreenState extends State<PostReaderScreen> {
         if (thumb.isNotEmpty)
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              thumb,
+            child: Image.network(AppConfig.resolveImageUrl(thumb),
               height: 210,
               width: double.infinity,
               fit: BoxFit.cover,

@@ -6,6 +6,7 @@ import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../main.dart';
 import 'post_reader_screen.dart';
+import '../../core/config.dart';
 
 /// Board screen 12: "Trending Now" — pixel-faithful rebuild.
 ///
@@ -177,8 +178,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
                   fit: StackFit.expand,
                   children: [
                     thumb.isNotEmpty
-                        ? Image.network(
-                            thumb,
+                        ? Image.network(AppConfig.resolveImageUrl(thumb),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => _thumbFallback(),
                           )

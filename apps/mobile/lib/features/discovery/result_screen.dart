@@ -6,6 +6,7 @@ import '../../data/discovery_models.dart';
 import '../../main.dart';
 import '../audience/audience_insights_screen.dart';
 import '../grow/grow_flow.dart';
+import '../../core/config.dart';
 
 /// Step 3–4 of the journey: the analysis result + Save / Grow actions.
 /// The score is always presented with its honesty disclaimer — an estimate,
@@ -146,7 +147,7 @@ class _ResultScreenState extends State<ResultScreen> {
           Stack(alignment: Alignment.center, children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Image.network(r.thumbnailUrl,
+              child: Image.network(AppConfig.resolveImageUrl(r.thumbnailUrl),
                   height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,

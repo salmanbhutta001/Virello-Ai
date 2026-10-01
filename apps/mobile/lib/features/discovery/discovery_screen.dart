@@ -13,6 +13,7 @@ import 'post_reader_screen.dart';
 import 'search_screen.dart';
 import 'shoppable_products.dart';
 import 'trending_screen.dart';
+import '../../core/config.dart';
 
 /// Board screen 08: "Discover Feed" — pixel-faithful rebuild.
 ///
@@ -329,8 +330,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 height: 150,
                 width: double.infinity,
                 child: item.thumbnailUrl.isNotEmpty
-                    ? Image.network(
-                        item.thumbnailUrl,
+                    ? Image.network(AppConfig.resolveImageUrl(item.thumbnailUrl),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _thumbFallback(title),
                       )
@@ -502,7 +502,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     height: 120,
                     color: Colors.white,
                     child: imgUrl.isNotEmpty
-                        ? Image.network(imgUrl,
+                        ? Image.network(AppConfig.resolveImageUrl(imgUrl),
                             width: 150, height: 120, fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => Icon(
                                 Icons.shopping_bag_outlined,
@@ -589,8 +589,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 height: 130,
                 width: double.infinity,
                 child: thumb.isNotEmpty
-                    ? Image.network(
-                        thumb,
+                    ? Image.network(AppConfig.resolveImageUrl(thumb),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _trendFallback(),
                       )

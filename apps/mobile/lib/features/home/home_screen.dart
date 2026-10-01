@@ -726,8 +726,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 60,
                 height: 60,
                 child: item.thumbnailUrl.isNotEmpty
-                    ? Image.network(
-                        item.thumbnailUrl,
+                    ? Image.network(AppConfig.resolveImageUrl(item.thumbnailUrl),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _recThumbFallback(),
                       )

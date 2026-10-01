@@ -5,6 +5,7 @@ import '../../core/theme.dart';
 import '../../data/discovery_models.dart';
 import '../../main.dart';
 import 'post_reader_screen.dart';
+import '../../core/config.dart';
 
 /// Board screen 09: "Search" — pixel-faithful rebuild.
 ///
@@ -449,8 +450,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: item.thumbnailUrl.isNotEmpty
-                  ? Image.network(
-                      item.thumbnailUrl,
+                  ? Image.network(AppConfig.resolveImageUrl(item.thumbnailUrl),
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>  Icon(
                         Icons.image_outlined,
@@ -528,8 +528,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             clipBehavior: Clip.antiAlias,
             child: img.isNotEmpty
-                ? Image.network(
-                    img,
+                ? Image.network(AppConfig.resolveImageUrl(img),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>  Icon(
                       Icons.shopping_bag_outlined,

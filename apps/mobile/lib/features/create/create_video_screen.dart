@@ -15,6 +15,7 @@ import '../../main.dart';
 
 import '../../services/ai_video_service.dart';
 import '../../services/local_tools/storyboard_video_renderer.dart';
+import '../../core/config.dart';
 
 /// Board screen 23: "Create Video" — AI Video Storyboard + real MP4 render.
 ///
@@ -513,8 +514,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                       ),
                     );
                   },
-                  child: Image.network(
-                    scene.url,
+                  child: Image.network(AppConfig.resolveImageUrl(scene.url),
                     fit: BoxFit.cover,
                     errorBuilder: (c, e, st) => Container(
                       color: VTheme.chip(context),

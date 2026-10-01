@@ -23,6 +23,7 @@ import '../social/activity_screen.dart';
 import '../social/creator_dashboard_screen.dart';
 import '../social/following_screen.dart';
 import '../social/messages_screen.dart';
+import '../../core/config.dart';
 
 /// Profile: board-styled cover, real stats (campaigns / credits / interests),
 /// saved collections, and the full menu — settings, Trust Center, support.
@@ -926,8 +927,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         size: 32,
                       ),
                     )
-                  : Image.network(
-                      r.thumbnailUrl,
+                  : Image.network(AppConfig.resolveImageUrl(r.thumbnailUrl),
                       width: 140,
                       height: 96,
                       fit: BoxFit.cover,
@@ -1004,8 +1004,7 @@ class _SavedAllScreen extends StatelessWidget {
                                 size: 22,
                               ),
                             )
-                          : Image.network(
-                              r.thumbnailUrl,
+                          : Image.network(AppConfig.resolveImageUrl(r.thumbnailUrl),
                               width: 48,
                               height: 48,
                               fit: BoxFit.cover,

@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/ai_image_service.dart';
+import '../../core/config.dart';
 
 /// Board screen 22: "Create Image" — fully functional AI image generation.
 ///
@@ -230,8 +231,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
         fit: StackFit.expand,
         children: [
           if (_imageUrl != null)
-            Image.network(
-              _imageUrl!,
+            Image.network(AppConfig.resolveImageUrl(_imageUrl!),
               fit: BoxFit.cover,
               loadingBuilder: (ctx, child, progress) {
                 if (progress == null) {
@@ -271,8 +271,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       return Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            _imageUrl!,
+          Image.network(AppConfig.resolveImageUrl(_imageUrl!),
             fit: BoxFit.cover,
             errorBuilder: (ctx, err, stack) {
               WidgetsBinding.instance.addPostFrameCallback((_) {

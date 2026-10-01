@@ -4,6 +4,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../../core/config.dart';
 
 /// Ask Virello: the unified AI agent chat (POST /api/v1/ai-core/ask).
 /// One conversational entry point that routes to every Virello module.
@@ -472,7 +473,7 @@ class _AskVirelloScreenState extends State<AskVirelloScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: img.isNotEmpty
-                ? Image.network(img,
+                ? Image.network(AppConfig.resolveImageUrl(img),
                     width: 52,
                     height: 52,
                     fit: BoxFit.cover,

@@ -5,6 +5,7 @@ import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import 'post_reader_screen.dart';
+import '../../core/config.dart';
 
 /// Shows trending Wikipedia articles for a specific language edition.
 /// Tapping a language badge in Discover opens this screen.
@@ -112,8 +113,7 @@ class _LanguageTrendsScreenState extends State<LanguageTrendsScreen> {
                     child: Row(
                       children: [
                         if (thumb.isNotEmpty)
-                          Image.network(
-                            thumb,
+                          Image.network(AppConfig.resolveImageUrl(thumb),
                             width: 80,
                             height: 80,
                             fit: BoxFit.cover,

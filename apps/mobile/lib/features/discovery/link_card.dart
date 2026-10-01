@@ -5,6 +5,7 @@ import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../main.dart';
 import 'post_reader_screen.dart';
+import '../../core/config.dart';
 
 /// Per-feature locale strings for the LinkCard feature (EN/UR/AR).
 ///
@@ -245,8 +246,7 @@ class _LinkCardState extends State<LinkCard> {
 
   Widget _thumbnail(String url) {
     if (url.isEmpty) return _thumbFallback();
-    return Image.network(
-      url,
+    return Image.network(AppConfig.resolveImageUrl(url),
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => _thumbFallback(broken: true),
     );

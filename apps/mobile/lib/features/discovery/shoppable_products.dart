@@ -5,6 +5,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../main.dart';
 import '../wallet/share_earn.dart';
+import '../../core/config.dart';
 
 /// Shoppable post UI: creator-tagged Amazon products rendered below a post.
 /// Every card carries the "Sponsored" disclosure label. Tapping a card
@@ -68,7 +69,7 @@ class ShoppableProducts extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: '${p['image_url'] ?? ''}'.isNotEmpty
                   ? Image.network(
-                      '${p['image_url']}',
+                      AppConfig.resolveImageUrl('${p['image_url']}'),
                       width: 48,
                       height: 48,
                       fit: BoxFit.contain,
@@ -180,7 +181,7 @@ class ShoppableProducts extends StatelessWidget {
                       children: [
                         '${p['image_url'] ?? ''}'.isNotEmpty
                             ? Image.network(
-                                '${p['image_url']}',
+                                AppConfig.resolveImageUrl('${p['image_url']}'),
                                 height: 104,
                                 width: 150,
                                 fit: BoxFit.contain,

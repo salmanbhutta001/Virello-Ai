@@ -6,6 +6,7 @@ import '../../core/strings.dart';
 import '../../services/admin_api.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../../core/config.dart';
 
 /// Admin Panel — the core control room. Every section talks to the real
 /// backend (/api/v1/admin/*, require_admin). Non-admins never see the entry
@@ -1056,7 +1057,7 @@ class _ProductsSectionState extends State<_ProductsSection>
                       leading: thumb != null && thumb.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(thumb,
+                              child: Image.network(AppConfig.resolveImageUrl(thumb),
                                   width: 48, height: 48, fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) =>
                                       const Icon(Icons.image_outlined)),
@@ -2718,7 +2719,7 @@ class _ClaimsSectionState extends State<_ClaimsSection>
                   width: 72, height: 72, fit: BoxFit.cover);
             },
           )
-        : Image.network(url, width: 72, height: 72, fit: BoxFit.cover);
+        : Image.network(AppConfig.resolveImageUrl(url), width: 72, height: 72, fit: BoxFit.cover);
     return GestureDetector(
       onTap: () => _viewProof(url),
       child: ClipRRect(
@@ -2741,7 +2742,7 @@ class _ClaimsSectionState extends State<_ClaimsSection>
               return InteractiveViewer(child: Image.memory(snap.data!));
             },
           )
-        : InteractiveViewer(child: Image.network(url));
+        : InteractiveViewer(child: Image.network(AppConfig.resolveImageUrl(url)));
     showDialog(
       context: context,
       builder: (_) => Dialog(
