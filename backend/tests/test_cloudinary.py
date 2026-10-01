@@ -59,9 +59,14 @@ class _FakeClient:
     async def post(self, url, data=None, files=None):
         assert "api.cloudinary.com/v1_1/mycloud/image/upload" in url
         assert data["api_key"] == "key123"
-        assert data["signature"] and len(data["signature"]) == 40
         assert data["public_id"] == "B0X_main"
         assert files["file"][2] == "image/jpeg"
+        # Signature must cover EXACTLY the sent params (minus api_key,
+        # file, signature) — this is what Cloudinary verifies.
+        sent = {k: v for k, v in data.items()
+                if k not in ("api_key", "signature")}
+        assert cs._sign(sent, "sec456") == data["signature"], \
+            "signature does not match sent params"
         return _FakeResp()
 
 

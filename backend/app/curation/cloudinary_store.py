@@ -68,19 +68,15 @@ async def upload_image(data: bytes, public_id: str,
     cloud_name, api_key, api_secret = creds
 
     ts = str(int(time.time()))
-    params = {"public_id": public_id, "timestamp": ts,
-              "folder": folder, "overwrite": "true",
-              "resource_type": "image"}
-    # signature covers everything except file/api_key/cloud_name
-    sig_params = {k: v for k, v in params.items()
-                  if k not in ("file", "api_key", "cloud_name")}
-    signature = _sign(sig_params, api_secret)
+    # Signature MUST cover exactly the parameters sent in the form
+    # (minus file/api_key/signature) — any extra/missing param -> 401.
+    form_params = {"public_id": public_id, "timestamp": ts,
+                   "folder": folder, "overwrite": "true"}
+    signature = _sign(form_params, api_secret)
 
     url = f"https://api.cloudinary.com/v1_1/{cloud_name}/image/upload"
     files = {"file": ("image.jpg", data, "image/jpeg")}
-    form = {"api_key": api_key, "timestamp": ts,
-            "public_id": public_id, "folder": folder,
-            "overwrite": "true", "signature": signature}
+    form = {"api_key": api_key, "signature": signature, **form_params}
     try:
         async with httpx.AsyncClient(timeout=UPLOAD_TIMEOUT) as client:
             r = await client.post(url, data=form, files=files)
