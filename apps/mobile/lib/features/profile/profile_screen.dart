@@ -426,6 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       _menuRow(
                         icon: Icons.query_stats_outlined,
+                        iconColor: VirelloColors.pink,
                         title: s.analyticsMenu,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -435,6 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.people_outline,
+                        iconColor: VirelloColors.pink,
                         title: s.boardFollowing,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -444,6 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.timeline_outlined,
+                        iconColor: VirelloColors.pink,
                         title: s.boardActivity,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -453,6 +456,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.chat_bubble_outline,
+                        iconColor: VirelloColors.pink,
                         title: s.p11Messages,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -462,6 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.dashboard_outlined,
+                        iconColor: VirelloColors.pink,
                         title: s.boardCreatorDashboard,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -471,6 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _menuRow(
                         icon: Icons.storefront_outlined,
+                        iconColor: VirelloColors.pink,
                         title: s.p11SellerDashboard,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -488,6 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: _openAdminPanel,
                         ),
                       _menuRow(
+                        key: TourTargets.profileRewards,
                         icon: Icons.stars_outlined,
                         iconColor: VirelloColors.pink,
                         title: s.rewards,
@@ -519,10 +526,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: Icons.person_add_alt_outlined,
                         title: s.inviteFriends,
                         subtitle: s.inviteFriendsSub,
-                        onTap: () => Share.share(
-                          s.inviteFriendsMessage,
+                        onTap: () => SharePlus.instance.share(ShareParams(
+                          text: s.inviteFriendsMessage,
                           subject: 'Virello',
-                        ),
+                        )),
                       ),
                     ],
                   ),
@@ -576,6 +583,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
+                SizedBox(
+                    height: 24 + MediaQuery.paddingOf(context).bottom),
               ],
             ),
           ),
@@ -614,6 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _menuRow({
+    Key? key,
     required IconData icon,
     Color? iconColor,
     required String title,
@@ -623,6 +633,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     VoidCallback? onTap,
   }) =>
       ListTile(
+        key: key,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: Icon(icon, color: iconColor),
         title: Text(

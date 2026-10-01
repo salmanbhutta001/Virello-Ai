@@ -4399,6 +4399,10 @@ class AppStrings {
         'Belum ada notifikasi.',
         'এখনো কোনো নোটিফিকেশন নেই।'
       );
+  String get noNotificationsHint => _get(
+        'When there\'s news about your growth, campaigns or rewards, you\'ll see it here.',
+        'جب آپ کی گروتھ، مہمات یا انعامات کے بارے میں کوئی خبر ہوگی، آپ اسے یہاں دیکھیں گے۔',
+        'عندما تكون هناك أخبار عن نموك أو حملاتك أو مكافآتك، ستظهر هنا.');
 
   // ---- Approved 10-screen board (2026-09-26) ----
   String get splashTagline => _get(
@@ -6993,6 +6997,11 @@ class AppStrings {
         'Your ticket has been created. Our team will follow up soon.',
         'آپ کی ٹکٹ بنا دی گئی ہے۔ ہماری ٹیم جلد رابطہ کرے گی۔',
         'تم إنشاء تذكرتك. سيتواصل معك فريقنا قريباً.',
+      );
+  String get createTicket => _get(
+        'Create a support ticket',
+        'Support ticket banayein',
+        'إنشاء تذكرة دعم',
       );
 
   // Following
@@ -10891,6 +10900,24 @@ class AppStrings {
         'klik',
         'ক্লিক'
       );
+  String get shareCampaignTitle => _get('Share Campaign', 'مہم شیئر کریں', 'مشاركة الحملة',
+        'अभियान शेयर करें', 'Partager la campagne', 'Compartir campaña',
+        'Compartilhar campanha', 'Kampagne teilen', 'Kampanyayı paylaş',
+        'Bagikan kampanye', 'ক্যাম্পেইন শেয়ার করুন');
+  String get shareCampaignHint => _get(
+        'Share this trackable link. Every real person who opens it is counted as a genuine click.',
+        'یہ ٹریک ایبل لنک شیئر کریں۔ ہر اصل شخص جو اسے کھولتا ہے، ایک حقیقی کلک کے طور پر گنا جاتا ہے۔',
+        'شارك هذا الرابط القابل للتتبع. كل شخص حقيقي يفتحه يُحتسب كنقرة حقيقية.');
+  String get linkCopiedMsg => _get('Link copied! Share it anywhere.',
+        'لنک کاپی ہو گیا! کہیں بھی شیئر کریں۔', 'تم نسخ الرابط! شاركه في أي مكان.');
+  String get viewRealStats => _get('View Real Stats', 'اصل اعداد دیکھیں', 'عرض الإحصاءات الحقيقية');
+  String get realCampaignStats => _get('Real Campaign Stats', 'مہم کے اصل اعداد', 'إحصاءات الحملة الحقيقية');
+  String get genuineVisitsNote => _get(
+        'Only genuine visits are counted. Zero means no one has opened your link yet — share it!',
+        'صرف حقیقی وزٹس گنے جاتے ہیں۔ صفر کا مطلب ہے ابھی کسی نے آپ کا لنک نہیں کھولا — اسے شیئر کریں!',
+        'تُحتسب الزيارات الحقيقية فقط. الصفر يعني أن أحداً لم يفتح رابطك بعد — شاركه!');
+  String get shareLinkFailed => _get('Could not load share link', 'شیئر لنک لوڈ نہیں ہو سکا', 'تعذر تحميل رابط المشاركة');
+  String get dialogClose => _get('Close', 'بند کریں', 'إغلاق');
   String get liveLabel => _get('Live', 'لائیو', 'مباشر',
         'लाइव',
         'En direct',
@@ -14565,5 +14592,41 @@ class AppStrings {
         'You know your way around Virello now. Create something amazing and let the AI grow it.',
         'اب آپ Virello سے واقف ہیں۔ کچھ شاندار بنائیں اور AI کو اسے بڑھانے دیں۔',
         'أنت تعرف طريقك في Virello الآن. أنشئ شيئًا مذهلاً ودع الذكاء الاصطناعي ينميه.',
+      );
+  String get tourHomeSearchTitle => _get('Search anything', 'کچھ بھی تلاش کریں', 'ابحث عن أي شيء');
+  String get tourHomeSearchDesc => _get(
+        'Search creators, topics and ideas. Virello matches you with audiences that genuinely care.',
+        'تخلیق کار، موضوعات اور آئیڈیاز تلاش کریں۔ Virello آپ کو ایسے سامعین سے ملاتا ہے جو واقعی دلچسپی رکھتے ہیں۔',
+        'ابحث عن المبدعين والمواضيع والأفكار. يطابقك Virello مع جماهير مهتمة حقًا.',
+      );
+  String get tourDiscoverTrendingTitle => _get('What\'s trending', 'کیا رجحان میں ہے', 'ما الرائج');
+  String get tourDiscoverTrendingDesc => _get(
+        'Real trend data — Google Trends and top products — refreshed around the clock. Ride the wave early.',
+        'اصل ٹرینڈ ڈیٹا — Google Trends اور نمایاں مصنوعات — چوبیس گھنٹے تازہ۔ لہر پر سوار ہوں جلدی۔',
+        'بيانات اتجاه حقيقية — Google Trends وأفضل المنتجات — تُحدَّث على مدار الساعة. اركب الموجة مبكرًا.',
+      );
+  String get tourCreateToolTitle => _get('Pick a tool, create', 'ٹول چنیں، تخلیق کریں', 'اختر أداة وأنشئ');
+  String get tourCreateToolDesc => _get(
+        'Images, videos, voiceovers, captions, teleprompter — everything renders right on your phone.',
+        'تصاویر، ویڈیوز، وائس اوور، کیپشنز، ٹیلی پرامپٹر — سب کچھ آپ کے فون پر تیار ہوتا ہے۔',
+        'الصور والفيديوهات والتعليقات الصوتية والترجمات والمُلقِّن — كل شيء يُنشأ على هاتفك.',
+      );
+  String get tourGrowNewTitle => _get('Start a campaign', 'مہم شروع کریں', 'ابدأ حملة');
+  String get tourGrowNewDesc => _get(
+        'Tap + to launch a campaign: paste your post, pick a goal, set a budget — AI manages the rest.',
+        'مہم شروع کرنے کے لیے + دبائیں: اپنی پوسٹ پیسٹ کریں، ہدف چنیں، بجٹ طے کریں — باقی AI سنبھالے گا۔',
+        'اضغط + لإطلاق حملة: الصق منشورك واختر هدفًا وحدد ميزانية — وسيتولى الذكاء الاصطناعي الباقي.',
+      );
+  String get tourShopSearchTitle => _get('Find your niche', 'اپنا شعبہ تلاش کریں', 'جد مجال تخصصك');
+  String get tourShopSearchDesc => _get(
+        'Search 26 departments or browse categories. Every product shows its share reward in points.',
+        '26 شعبوں میں تلاش کریں یا زمرے دیکھیں۔ ہر پروڈکٹ پر شیئر کرنے کا انعام پوائنٹس میں دکھایا جاتا ہے۔',
+        'ابحث في 26 قسمًا أو تصفح الفئات. كل منتج يعرض مكافأة المشاركة بالنقاط.',
+      );
+  String get tourProfileRewardsTitle => _get('Your points wallet', 'آپ کا پوائنٹس والیٹ', 'محفظة نقاطك');
+  String get tourProfileRewardsDesc => _get(
+        'Share products, finish tasks and grow — points pile up here and unlock credits and premium.',
+        'مصنوعات شیئر کریں، ٹاسک مکمل کریں اور بڑھیں — پوائنٹس یہاں جمع ہوتے ہیں اور کریڈٹس اور پریمیم کھولتے ہیں۔',
+        'شارك المنتجات وأكمل المهام ونمُ — تتراكم النقاط هنا وتفتح الأرصدة والمزايا.',
       );
 }

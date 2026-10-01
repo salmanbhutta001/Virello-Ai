@@ -345,11 +345,22 @@ class _RootShellState extends State<RootShell> {
   /// Ask Virello FAB: visible on Home, Discover and Grow tabs.
   bool get _showAskFab => _index == 0 || _index == 1 || _index == 3;
 
+  /// Tour spotlight key for a bottom-nav tab index.
+  static Key? _tourKeyForTab(int index) => switch (index) {
+        0 => TourTargets.homeTab,
+        1 => TourTargets.discoverTab,
+        3 => TourTargets.growTab,
+        4 => TourTargets.shopTab,
+        5 => TourTargets.profileTab,
+        _ => null,
+      };
+
   Widget _askFab() {
     return Positioned(
       right: 16,
       bottom: 96,
       child: GestureDetector(
+        key: TourTargets.askFab,
         onTap: () {
           Navigator.of(
             context,
@@ -410,6 +421,7 @@ class _RootShellState extends State<RootShell> {
             final active = _index == it.index;
             return Expanded(
               child: InkWell(
+                key: _tourKeyForTab(it.index),
                 onTap: () => setState(() => _index = it.index),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -462,6 +474,7 @@ class _RootShellState extends State<RootShell> {
       child: Transform.translate(
         offset: const Offset(0, -8),
         child: GestureDetector(
+          key: TourTargets.createTab,
           onTap: () => setState(() => _index = 2),
           child: Container(
             width: 52,

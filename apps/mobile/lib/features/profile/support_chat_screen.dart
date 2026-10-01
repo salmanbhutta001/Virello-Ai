@@ -50,6 +50,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   String _stamp(DateTime t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
+  String? _lastFailedQuery;
+
   Future<void> _send(String text) async {
     final q = text.trim();
     if (q.isEmpty || _sending) return;
@@ -61,8 +63,11 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     _inputCtrl.clear();
     _scrollToEnd();
     try {
-      final history = _messages
+      // Latest 6 messages (chronological) — not the oldest 6.
+      final history = _messages.reversed
           .take(6)
+          .toList()
+          .reversed
           .map((m) => {
                 'role': m.fromUser ? 'user' : 'assistant',
                 'text': m.text,
@@ -83,6 +88,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
             answer.isEmpty ? s.growFailed : answer, actions: acts));
         _suggestions = sugg;
         _sending = false;
+        _lastFailedQuery = null;
       });
     } on AuthException {
       if (!mounted) return;
@@ -90,8 +96,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       handleAuthFailure(s.sessionExpired);
     } catch (_) {
       if (!mounted) return;
+      _lastFailedQuery = q;
       setState(() {
-        _messages.add(_ChatMsg(false, s.growFailed));
+        // Retry affordance instead of a dead-end error line.
+        _messages.add(_ChatMsg(false, s.growFailed, actions: [
+          {'label': s.retry, 'type': 'retry'}
+        ]));
         _sending = false;
       });
     }
@@ -100,9 +110,16 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   void _onActionTap(Map<String, dynamic> action) {
     final label = '${action['label'] ?? ''}';
+    final type = '${action['type'] ?? ''}';
     final tab = action['tab'];
     final route = '${action['route'] ?? ''}';
-    if (tab is int) {
+    if (type == 'retry' && (_lastFailedQuery ?? '').isNotEmpty) {
+      _send(_lastFailedQuery!);
+    } else if (type == 'create_ticket') {
+      // Backend asks the user to confirm ticket creation — send the
+      // ticket phrase through the chat so a real ticket is created.
+      _send(s.createTicket);
+    } else if (tab is int) {
       requestedTab.value = tab;
       Navigator.of(context).pop();
     } else if (route.contains('billing') || route.contains('plan')) {
@@ -215,9 +232,21 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _sending ? null : () => _send(_inputCtrl.text),
-                    icon: const Icon(Icons.send_outlined),
+                  // Brand-pink send button (never the theme's dark filled
+                  // color) with a white paper-plane icon.
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: VirelloColors.pink,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed:
+                          _sending ? null : () => _send(_inputCtrl.text),
+                      icon: const Icon(Icons.send_rounded,
+                          color: Colors.white, size: 22),
+                    ),
                   ),
                 ],
               ),
@@ -232,6 +261,21 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
     final bg = m.fromUser ? VirelloColors.pink : VTheme.chip(context);
     final fg = m.fromUser ? Colors.white : VTheme.text(context);
+    // Asymmetric "chat tail" corners: a short message like "hi" must render
+    // as a rounded rectangle, never a circle.
+    final radius = m.fromUser
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(6),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(6),
+            topRight: Radius.circular(18),
+            bottomRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+          );
     return Align(
       alignment: align,
       child: Container(
@@ -248,7 +292,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: bg,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: radius,
               ),
               child: Text(m.text,
                   style:

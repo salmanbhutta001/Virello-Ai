@@ -7,6 +7,7 @@ import '../../core/config.dart';
 import '../../data/discovery_models.dart';
 import '../../data/models.dart';
 import '../../main.dart';
+import '../../features/tour/app_tour.dart';
 import '../academy/academy_screen.dart';
 import '../discovery/post_reader_screen.dart';
 import '../discovery/search_screen.dart';
@@ -255,6 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Search field → opens the Search screen.
   Widget _searchBar() {
     return InkWell(
+      key: TourTargets.homeSearch,
       onTap: _openSearch,
       borderRadius: BorderRadius.circular(14),
       child: Container(

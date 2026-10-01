@@ -8,6 +8,7 @@ import '../../core/virello_ui.dart';
 import '../../core/config.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
+import '../../features/tour/app_tour.dart';
 import 'product_detail_screen.dart';
 import 'sell_screen.dart';
 import '../wallet/share_earn.dart';
@@ -1227,6 +1228,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
         children: [
           Expanded(
             child: Container(
+              key: TourTargets.shopSearch,
               decoration: BoxDecoration(
                 color: _field,
                 borderRadius: BorderRadius.circular(16),

@@ -5,6 +5,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
 import '../../main.dart';
+import '../../features/tour/app_tour.dart';
 import '../settings/notifications_screen.dart';
 import '../shop/product_detail_screen.dart';
 import '../wallet/share_proof_flow.dart';
@@ -201,6 +202,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           for (var i = 0; i < tabs.length; i++) ...[
             if (i > 0) const SizedBox(width: 8),
             GestureDetector(
+              key: i == 1 ? TourTargets.discoverTrending : null,
               onTap: () => setState(() => _tab = i),
               child: Container(
                 padding: const EdgeInsets.symmetric(

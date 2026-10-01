@@ -4,6 +4,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../features/tour/app_tour.dart';
 import 'ai_story_screen.dart';
 import 'conversion_screen.dart';
 import 'create_image_screen.dart';
@@ -28,6 +29,7 @@ class CreateHubScreen extends StatelessWidget {
 
   Widget _row({
     required BuildContext context,
+    Key? key,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -35,6 +37,7 @@ class CreateHubScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(bottom: 12),
       child: VBoardCard(
         onTap: onTap,
@@ -101,6 +104,7 @@ class CreateHubScreen extends StatelessWidget {
           ),
           _row(
             context: context,
+            key: TourTargets.createFirstTool,
             icon: Icons.image_outlined,
             iconColor: VirelloColors.pink,
             title: s.boardAiImage,

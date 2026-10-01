@@ -130,35 +130,88 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(height: 12),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                          color: VirelloColors.pink))
                   : _error != null
                       ? Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(_error!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    color: VirelloColors.muted)),
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    color: VirelloColors.pink
+                                        .withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                      Icons
+                                          .notifications_off_outlined,
+                                      size: 32,
+                                      color: VirelloColors.pink),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(s.growFailed,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: VTheme.text(context))),
+                                const SizedBox(height: 16),
+                                VPinkButton(
+                                    label: s.retry,
+                                    onPressed: () => _load()),
+                              ],
+                            ),
                           ),
                         )
                       : rows.isEmpty
-                          ? ListView(
-                              padding: const EdgeInsets.all(32),
-                              children: [
-                                const SizedBox(height: 48),
-                                const Icon(Icons.notifications_outlined,
-                                    size: 56, color: VirelloColors.muted),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _filter == 1
-                                      ? s.p11NoUnread
-                                      : s.noNotifications,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700),
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 88,
+                                      height: 88,
+                                      decoration: BoxDecoration(
+                                        color: VirelloColors.pink
+                                            .withValues(alpha: 0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                          Icons.notifications_outlined,
+                                          size: 40,
+                                          color: VirelloColors.pink),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      _filter == 1
+                                          ? s.p11NoUnread
+                                          : s.noNotifications,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w800,
+                                          color: VTheme.text(context)),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      s.noNotificationsHint,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          height: 1.5,
+                                          color: VirelloColors.muted),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             )
                           : RefreshIndicator(
                               onRefresh: _load,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
@@ -8,6 +9,7 @@ import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
 import '../../services/posts_api.dart';
 import '../../main.dart';
+import '../../features/tour/app_tour.dart';
 import '../posts/post_strings.dart';
 import '../posts/my_posts_screen.dart';
 import '../../features/ads/campaign_builder_screen.dart';
@@ -174,6 +176,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
+            key: TourTargets.growNewCampaign,
             tooltip: s.adBuilder,
             icon: const Icon(Icons.addchart_outlined),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -609,17 +612,22 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         cp.status == CampaignStatus.optimizing;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: VTheme.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(cp.title.isEmpty ? cp.postUrl : cp.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -681,7 +689,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                 leading:
                     const Icon(Icons.share_outlined, color: VirelloColors.pink),
                 title:
-                     Text('Share', style: TextStyle(color: VTheme.text(context))),
+                     Text(s.boardShare, style: TextStyle(color: VTheme.text(context))),
                 onTap: () {
                   Navigator.of(context).pop();
                   _shareCampaign(cp);
@@ -710,7 +718,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                   _confirmDelete(cp);
                 },
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -733,7 +742,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
+        builder: (ctx, setSheet) => SingleChildScrollView(
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
@@ -806,8 +815,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
               ),
               const SizedBox(height: 18),
               ElevatedButton(
-                onPressed: () async {
-                  final title = titleCtrl.text.trim();
+                onPressed: () async {                  final title = titleCtrl.text.trim();
                   if (title.isEmpty) {
                     ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                         content: Text(ps.saveFailed)));
@@ -866,14 +874,14 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-               Text('Share Campaign',
+               Text(s.shareCampaignTitle,
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: VTheme.text(context))),
               const SizedBox(height: 8),
                Text(
-                'Share this trackable link. Every real person who opens it is counted as a genuine click.',
+                s.shareCampaignHint,
                 style:
                     TextStyle(fontSize: 13, color: VTheme.textSec(context)),
               ),
@@ -896,12 +904,26 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                     IconButton(
                       icon: const Icon(Icons.copy,
                           size: 20, color: VirelloColors.pink),
-                      onPressed: () {
+                      tooltip: s.copyText,
+                      onPressed: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: shareUrl));
+                        if (!ctx.mounted) return;
                         Navigator.of(ctx).pop();
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Link copied! Share it anywhere.')),
+                          SnackBar(content: Text(s.linkCopiedMsg)),
                         );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined,
+                          size: 20, color: VirelloColors.pink),
+                      tooltip: s.boardShare,
+                      onPressed: () async {
+                        await SharePlus.instance.share(ShareParams(
+                            text: shareUrl,
+                            subject: s.shareCampaignTitle));
                       },
                     ),
                   ],
@@ -916,7 +938,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
                       foregroundColor: Colors.white),
                   onPressed: () => _loadShareStats(cp.id, ctx),
                   icon: const Icon(Icons.analytics_outlined, size: 18),
-                  label: const Text('View Real Stats'),
+                  label: Text(s.viewRealStats),
                 ),
               ),
             ],
@@ -926,7 +948,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not load share link')),
+        SnackBar(content: Text(s.shareLinkFailed)),
       );
     }
   }
@@ -942,18 +964,18 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         context: context,
         builder: (dctx) => AlertDialog(
           backgroundColor: VTheme.card(context),
-          title:  Text('Real Campaign Stats',
+          title:  Text(s.realCampaignStats,
               style: TextStyle(color: VTheme.text(context))),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _statRow('Reach', '${stats['reach'] ?? 0}'),
-              _statRow('Clicks', '${stats['clicks'] ?? 0}'),
-              _statRow('Impressions', '${stats['impressions'] ?? 0}'),
+              _statRow(s.reachLabel, '${stats['reach'] ?? 0}'),
+              _statRow(s.clicksLabel, '${stats['clicks'] ?? 0}'),
+              _statRow(s.p10Impressions, '${stats['impressions'] ?? 0}'),
               const SizedBox(height: 8),
                Text(
-                'Only genuine visits are counted. Zero means no one has opened your link yet — share it!',
+                s.genuineVisitsNote,
                 style:
                     TextStyle(fontSize: 12, color: VTheme.textSec(context)),
               ),
@@ -962,8 +984,8 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dctx).pop(),
-              child: const Text('Close',
-                  style: TextStyle(color: VirelloColors.pink)),
+              child: Text(s.dialogClose,
+                  style: const TextStyle(color: VirelloColors.pink)),
             ),
           ],
         ),
