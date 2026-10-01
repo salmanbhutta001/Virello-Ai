@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
@@ -642,6 +645,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final s = AppStrings(appState.localeCode);
     final nameCtrl = TextEditingController(text: '${_me?['name'] ?? ''}');
     var saving = false;
+    File? avatarFile;
+    File? coverFile;
+    final picker = ImagePicker();
+
+    Future<void> pickImage(bool isAvatar, ImageSource source, StateSetter setSheet) async {
+      try {
+        final img = await picker.pickImage(source: source, maxWidth: 1024, imageQuality: 85);
+        if (img != null && mounted) {
+          setSheet(() {
+            if (isAvatar) {
+              avatarFile = File(img.path);
+            } else {
+              coverFile = File(img.path);
+            }
+          });
+        }
+      } catch (_) {}
+    }
+
+    void showImageOptions(bool isAvatar, StateSetter setSheet) {
+      showModalBottomSheet(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(s.takePhoto),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  pickImage(isAvatar, ImageSource.camera, setSheet);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(s.chooseFromGallery),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  pickImage(isAvatar, ImageSource.gallery, setSheet);
+                },
+              ),
+              if ((isAvatar && avatarFile != null) || (!isAvatar && coverFile != null))
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(s.removePhoto, style: const TextStyle(color: Colors.red)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setSheet(() {
+                      if (isAvatar) {
+                        avatarFile = null;
+                      } else {
+                        coverFile = null;
+                      }
+                    });
+                  },
+                ),
+            ],
+          ),
+        ),
+      );
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -669,6 +734,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Cover photo picker
+                GestureDetector(
+                  onTap: () => showImageOptions(false, setSheet),
+                  child: Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: VTheme.card(context),
+                    ),
+                    child: coverFile != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Image.file(coverFile!, fit: BoxFit.cover),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_photo_alternate_outlined,
+                                  color: VTheme.textSec(context)),
+                              const SizedBox(height: 4),
+                              Text(s.changeCoverPhoto,
+                                  style: TextStyle(
+                                      color: VTheme.textSec(context),
+                                      fontSize: 12)),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Avatar picker
+                Center(
+                  child: GestureDetector(
+                    onTap: () => showImageOptions(true, setSheet),
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 44,
+                          backgroundImage: avatarFile != null
+                              ? FileImage(avatarFile!)
+                              : null,
+                          child: avatarFile == null
+                              ? Text(
+                                  (_me?['name'] ?? _email).isNotEmpty
+                                      ? (_me?['name'] ?? _email)[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(fontSize: 32),
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: VirelloColors.pink,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(Icons.camera_alt,
+                                size: 16, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: TextButton(
+                    onPressed: () => showImageOptions(true, setSheet),
+                    child: Text(s.changeProfilePicture),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(
@@ -699,6 +840,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             setSheet(() => saving = true);
                             try {
                               await apiClient.updateName(name);
+                              // Upload avatar if changed
+                              if (avatarFile != null) {
+                                try {
+                                  final up = await apiClient.uploadFile(avatarFile!.path);
+                                  final url = up['url'] as String?;
+                                  if (url != null && url.isNotEmpty) {
+                                    await apiClient.updateAvatar(url);
+                                  }
+                                } catch (_) {}
+                              }
+                              // Upload cover if changed
+                              if (coverFile != null) {
+                                try {
+                                  final up = await apiClient.uploadFile(coverFile!.path);
+                                  final url = up['url'] as String?;
+                                  if (url != null && url.isNotEmpty) {
+                                    await apiClient.updateCover(url);
+                                  }
+                                } catch (_) {}
+                              }
                               final me = await apiClient.me();
                               if (!mounted) return;
                               setState(() => _me = me);

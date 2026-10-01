@@ -29,6 +29,7 @@ dependencies:
   # burn-in; H.264 via Android hardware encoder (h264_mediacodec).
   ffmpeg_kit_flutter_new_video: ^2.5.0
   path_provider: ^2.1.0
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

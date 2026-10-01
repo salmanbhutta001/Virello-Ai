@@ -1481,6 +1481,26 @@ class AppStrings {
   // Hidden PIN entry -> admin panel (profile version tapped 5x).
   String get adminPinTitle => _get('Admin Access', 'ایڈمن رسائی', 'دخول المسؤول');
   String get adminPanel => _get('Admin Panel', 'ایڈمن پینل', 'لوحة المسؤول');
+  String get accessDenied => _get('Access Denied', 'رسائی مسترد', 'تم الرفض',
+        'पहुंच अस्वीकृत',
+        'Accès refusé',
+        'Acceso denegado',
+        'Acesso negado',
+        'Zugriff verweigert',
+        'Erişim reddedildi',
+        'Akses ditolak',
+        'অ্যাক্সেস অস্বীকৃত'
+      );
+  String get goBack => _get('Go back', 'واپس جائیں', 'ارجع',
+        'वापस जाएं',
+        'Retour',
+        'Volver',
+        'Voltar',
+        'Zurück',
+        'Geri dön',
+        'Kembali',
+        'ফিরে যান'
+      );
   String get settingsSubtitle => _get(
         'App settings, legal & support',
         'ایپ سیٹنگز، قانونی و سپورٹ',
@@ -2363,6 +2383,56 @@ class AppStrings {
         'Kaydet',
         'Simpan',
         'সেভ করুন'
+      );
+  String get takePhoto => _get('Take photo', 'تصویر لیں', 'التقط صورة',
+        'फोटो लें',
+        'Prendre une photo',
+        'Tomar foto',
+        'Tirar foto',
+        'Foto aufnehmen',
+        'Fotoğraf çek',
+        'Ambil foto',
+        'ছবি তুলুন'
+      );
+  String get chooseFromGallery => _get('Choose from gallery', 'گیلری سے منتخب کریں', 'اختر من المعرض',
+        'गैलरी से चुनें',
+        'Choisir depuis la galerie',
+        'Elegir de la galería',
+        'Escolher da galeria',
+        'Aus Galerie wählen',
+        'Galeriden seç',
+        'Pilih dari galeri',
+        'গ্যালারি থেকে বেছে নিন'
+      );
+  String get removePhoto => _get('Remove photo', 'تصویر ہٹائیں', 'إزالة الصورة',
+        'फोटो हटाएं',
+        'Supprimer la photo',
+        'Eliminar foto',
+        'Remover foto',
+        'Foto entfernen',
+        'Fotoğrafı kaldır',
+        'Hapus foto',
+        'ছবি সরান'
+      );
+  String get changeCoverPhoto => _get('Change cover photo', 'کور فوٹو تبدیل کریں', 'تغيير صورة الغلاف',
+        'कवर फोटो बदलें',
+        'Changer la photo de couverture',
+        'Cambiar foto de portada',
+        'Alterar foto de capa',
+        'Titelbild ändern',
+        'Kapak fotoğrafını değiştir',
+        'Ubah foto sampul',
+        'কভার ফটো পরিবর্তন করুন'
+      );
+  String get changeProfilePicture => _get('Change profile picture', 'پروفائل تصویر تبدیل کریں', 'تغيير الصورة الشخصية',
+        'प्रोफाइल चित्र बदलें',
+        'Changer la photo de profil',
+        'Cambiar foto de perfil',
+        'Alterar foto de perfil',
+        'Profilbild ändern',
+        'Profil resmini değiştir',
+        'Ubah foto profil',
+        'প্রোফাইল ছবি পরিবর্তন করুন'
       );
   String get cancel => _get('Cancel', 'منسوخ کریں', 'إلغاء',
         'रद्द करें',

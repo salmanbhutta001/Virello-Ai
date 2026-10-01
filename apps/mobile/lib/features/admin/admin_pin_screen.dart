@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/strings.dart';
+import 'admin_denied_screen.dart';
 import '../../core/theme.dart';
 import '../../main.dart';
 import '../../services/admin_api.dart';
@@ -67,9 +68,16 @@ class _AdminPinScreenState extends State<AdminPinScreen>
       Navigator.of(context).pop(true);
     } on AdminForbiddenException catch (e) {
       if (!mounted) return;
-      _fail(e.detail.contains('not authorized')
-          ? s.adminPinNotAllowed
-          : s.adminPinWrong);
+      if (e.detail.contains('not authorized')) {
+        // Navigate to dedicated access denied page.
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => AdminDeniedScreen(reason: s.adminPinNotAllowed),
+          ),
+        );
+        return;
+      }
+      _fail(s.adminPinWrong);
     } on ApiException catch (e) {
       if (!mounted) return;
       _fail(e.status == 429 ? s.adminPinLocked : s.tryAgain);

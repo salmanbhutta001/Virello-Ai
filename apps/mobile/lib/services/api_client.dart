@@ -572,6 +572,14 @@ class ApiClient {
   Future<Map<String, dynamic>> updateName(String name) =>
       _patchJson('/api/v1/users/me', {'name': name});
 
+  /// PATCH /api/v1/users/me — update the avatar URL.
+  Future<Map<String, dynamic>> updateAvatar(String url) =>
+      _patchJson('/api/v1/users/me', {'avatar_url': url});
+
+  /// PATCH /api/v1/users/me — update the cover photo URL.
+  Future<Map<String, dynamic>> updateCover(String url) =>
+      _patchJson('/api/v1/users/me', {'cover_url': url});
+
   // ------------------------------ admin ------------------------------
   // Admin Panel (require_admin on the backend; 403 for non-admins).
   Future<Map<String, dynamic>> adminGet(String path) async {
