@@ -8,5 +8,5 @@
          - facebook_client_token: from Settings > Advanced > Client Token -->
     <string name="facebook_app_id">1592938285647995</string>
     <string name="fb_login_protocol_scheme">fb1592938285647995</string>
-    <string name="facebook_client_token">REPLACE_WITH_CLIENT_TOKEN</string>
+    <string name="facebook_client_token">6a3f9631bd8b1e0429bc2cfae90e6e15</string>
 </resources>
