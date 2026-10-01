@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
+import '../../core/config.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import '../ask_virello/ask_virello_screen.dart';
@@ -276,7 +277,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onPageChanged: (i) =>
                             setState(() => _galleryIndex = i),
                         itemBuilder: (_, i) => Image.network(
-                          images[i],
+                          AppConfig.resolveImageUrl(images[i]),
                           height: 360,
                           width: double.infinity,
                           fit: BoxFit.contain,

@@ -5,6 +5,7 @@ import '../../core/notifications_sheet.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
+import '../../core/config.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import 'product_detail_screen.dart';
@@ -656,7 +657,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           height: 180,
                           width: double.infinity,
                           color: Colors.white,
-                          child: Image.network(images.first,
+                          child: Image.network(AppConfig.resolveImageUrl(images.first),
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
                             _imgPlaceholder(180)))
@@ -810,7 +811,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         height: 132,
                         width: 190,
                         color: Colors.white,
-                        child: Image.network(images.first,
+                        child: Image.network(AppConfig.resolveImageUrl(images.first),
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) =>
                           _imgPlaceholder(132, w: 190)))
@@ -1497,7 +1498,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                     images.isNotEmpty
                         ? Container(
                           color: Colors.white,
-                          child: Image.network(images.first,
+                          child: Image.network(AppConfig.resolveImageUrl(images.first),
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) =>
                             _gridPlaceholder()))

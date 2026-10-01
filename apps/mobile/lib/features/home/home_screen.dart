@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
+import '../../core/config.dart';
 import '../../data/discovery_models.dart';
 import '../../data/models.dart';
 import '../../main.dart';
@@ -512,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: double.infinity,
                     child: images.isNotEmpty
                         ? Image.network(
-                            images.first,
+                            AppConfig.resolveImageUrl(images.first),
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => _imgFallback(),
                           )
