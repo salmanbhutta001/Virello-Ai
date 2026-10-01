@@ -69,6 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
       trending = ((data['products'] as List?) ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
+      if (trending.isEmpty) {
+        // Warm-up fallback: no scored products yet — show popular instead
+        // of an empty rail until hourly research populates trend scores.
+        final fb = await apiClient.listProducts(limit: 12, sort: 'popular');
+        trending = ((fb['products'] as List?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+      }
     } catch (_) {}
     return _HomeData(
       name: name,
