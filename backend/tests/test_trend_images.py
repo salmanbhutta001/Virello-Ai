@@ -275,3 +275,125 @@ async def test_resolve_leaves_existing_thumbnails_alone(db, monkeypatch):
 @pytest.mark.asyncio
 async def test_resolve_empty_list_noop(db):
     await ti.resolve_trend_thumbnails([], db)  # must not raise
+
+
+# ---------------------------------------------------------------------------
+# og:image from the real article (news trends)
+# ---------------------------------------------------------------------------
+
+class _FakeHtmlResp:
+    def __init__(self, status=200, html=""):
+        self.status_code = status
+        self.text = html
+
+
+class _FakeHtmlClient:
+    def __init__(self, resp):
+        self._resp = resp
+        self.seen_urls = []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *a):
+        return False
+
+    async def get(self, url, **kw):
+        self.seen_urls.append(url)
+        return self._resp
+
+
+def _patch_html_client(monkeypatch, resp):
+    fake = _FakeHtmlClient(resp)
+    monkeypatch.setattr(ti.httpx, "AsyncClient", lambda *a, **k: fake)
+    return fake
+
+
+@pytest.mark.asyncio
+async def test_fetch_og_image_hit(monkeypatch):
+    html = ('<html><head><meta property="og:image" '
+            'content="https://example.com/news-photo.jpg" /></head></html>')
+    fake = _patch_html_client(monkeypatch, _FakeHtmlResp(200, html))
+    url = await ti.fetch_og_image("https://news.google.com/rss/articles/xyz")
+    assert url == "https://example.com/news-photo.jpg"
+    assert fake.seen_urls[0].startswith("https://news.google.com/")
+
+
+@pytest.mark.asyncio
+async def test_fetch_og_image_reversed_attrs(monkeypatch):
+    html = ('<html><head><meta content="https://example.com/rev.jpg" '
+            'property="og:image" /></head></html>')
+    _patch_html_client(monkeypatch, _FakeHtmlResp(200, html))
+    assert await ti.fetch_og_image("https://publisher.com/a") == \
+        "https://example.com/rev.jpg"
+
+
+@pytest.mark.asyncio
+async def test_fetch_og_image_missing_tag(monkeypatch):
+    _patch_html_client(monkeypatch, _FakeHtmlResp(200, "<html><head></head></html>"))
+    assert await ti.fetch_og_image("https://publisher.com/a") == ""
+
+
+@pytest.mark.asyncio
+async def test_fetch_og_image_http_error(monkeypatch):
+    _patch_html_client(monkeypatch, _FakeHtmlResp(403, ""))
+    assert await ti.fetch_og_image("https://publisher.com/a") == ""
+
+
+@pytest.mark.asyncio
+async def test_fetch_og_image_rejects_non_http(monkeypatch):
+    called = []
+    monkeypatch.setattr(ti.httpx, "AsyncClient",
+                        lambda *a, **k: (_ for _ in ()).throw(
+                            AssertionError("must not fetch non-http")))
+    assert await ti.fetch_og_image("ftp://example.com/a") == ""
+    assert await ti.fetch_og_image("") == ""
+
+
+@pytest.mark.asyncio
+async def test_resolve_uses_article_og_image(db, monkeypatch):
+    """News trend with a URL gets the real article's og:image, cached."""
+
+    async def _fake_og(url, timeout=10.0):
+        assert url == "https://news.google.com/rss/articles/abc"
+        return "https://publisher.com/real-photo.jpg"
+
+    monkeypatch.setattr(ti, "fetch_og_image", _fake_og)
+
+    def _boom(*a, **k):
+        raise AssertionError("wikipedia must not be consulted when og:image hits")
+
+    monkeypatch.setattr(ti, "wikipedia_topic_info", _boom)
+    trends = [{
+        "query": "Some Long News Headline Here",
+        "thumbnail_url": "",
+        "type": "news",
+        "url": "https://news.google.com/rss/articles/abc",
+    }]
+    await ti.resolve_trend_thumbnails(trends, db)
+    assert trends[0]["thumbnail_url"] == "https://publisher.com/real-photo.jpg"
+    row = await ti.get_cached_image(db, ti.topic_key("Some Long News Headline Here"))
+    assert row is not None and row.kind == "og_image"
+
+
+@pytest.mark.asyncio
+async def test_resolve_falls_back_when_no_og_image(db, monkeypatch):
+    """og:image miss => Wikipedia is still consulted for the topic."""
+
+    async def _no_og(url, timeout=10.0):
+        return ""
+
+    async def _fake_info(query, lang="en", timeout=8.0):
+        return {"image_url": "https://upload.wikimedia.org/fallback.jpg",
+                "is_person": False}
+
+    monkeypatch.setattr(ti, "fetch_og_image", _no_og)
+    monkeypatch.setattr(ti, "wikipedia_topic_info", _fake_info)
+    trends = [{
+        "query": "Fallback Topic",
+        "thumbnail_url": "",
+        "type": "news",
+        "url": "https://news.google.com/rss/articles/abc",
+    }]
+    await ti.resolve_trend_thumbnails(trends, db)
+    assert trends[0]["thumbnail_url"] == "https://upload.wikimedia.org/fallback.jpg"

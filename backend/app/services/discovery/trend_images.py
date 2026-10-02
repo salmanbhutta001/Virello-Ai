@@ -136,6 +136,52 @@ async def fetch_wikipedia_pageimage(query: str, lang: str = "en",
     return (await wikipedia_topic_info(query, lang=lang, timeout=timeout))["image_url"]
 
 
+_OG_IMAGE_RES = (
+    # property="og:image" content="..."
+    re.compile(
+        r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',
+        re.IGNORECASE,
+    ),
+    # content="..." property="og:image" (reversed attribute order)
+    re.compile(
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+        re.IGNORECASE,
+    ),
+)
+
+
+async def fetch_og_image(url: str, timeout: float = 10.0) -> str:
+    """Extract the ``og:image`` of a news article page.
+
+    Follows redirects (Google News ``rss/articles/…`` links 302 to the
+    publisher), so this returns the real article's own image — the most
+    honest thumbnail for a news trend. Returns the image URL or "".
+    """
+    target = (url or "").strip()
+    if not target.startswith(("http://", "https://")):
+        return ""
+    try:
+        async with httpx.AsyncClient(
+            timeout=timeout, follow_redirects=True, max_redirects=5
+        ) as client:
+            resp = await client.get(target, headers={"User-Agent": _WIKI_UA})
+            if resp.status_code != 200:
+                return ""
+            # Bound the parse: og:image lives in <head>.
+            html = resp.text[:300_000]
+            for pattern in _OG_IMAGE_RES:
+                m = pattern.search(html)
+                if m:
+                    src = m.group(1).strip()
+                    if src.startswith(("http://", "https://")):
+                        return src
+                    if src.startswith("//"):
+                        return "https:" + src
+    except Exception as e:
+        log.debug("og:image miss for %r: %s", target, e)
+    return ""
+
+
 def thematic_prompt(query: str) -> str:
     """Abstract, honest illustration prompt — never a depiction of anyone.
 
@@ -195,14 +241,26 @@ async def _generate_and_cache(key: str, query: str) -> None:
         _in_flight.discard(key)
 
 
-async def _resolve_one(query: str, lang: str, db: AsyncSession) -> str:
-    """Return a thumbnail URL for one topic ("" when none available yet)."""
+async def _resolve_one(query: str, lang: str, db: AsyncSession,
+                     article_url: str = "") -> str:
+    """Return a thumbnail URL for one topic ("" when none available yet).
+
+    Resolution order: cache → article og:image (news, real article photo) →
+    Wikipedia pageimage → skip persons → background abstract illustration.
+    """
     key = topic_key(query)
     if not key:
         return ""
     cached = await get_cached_image(db, key)
     if cached and cached.image_url:
         return cached.image_url
+    # News trends carry the real article URL: its og:image is the most
+    # honest thumbnail — a real photo from the real article.
+    if article_url:
+        og = await fetch_og_image(article_url)
+        if og:
+            await put_cached_image(db, key, og, "og_image")
+            return og
     info = await wikipedia_topic_info(query, lang=lang)
     if info["image_url"]:
         await put_cached_image(db, key, info["image_url"], "wikipedia")
@@ -230,7 +288,13 @@ async def resolve_trend_thumbnails(trends: list[dict], db: AsyncSession,
     if not pending:
         return
     results = await asyncio.gather(
-        *(_resolve_one(t.get("query", ""), lang, db) for t in pending)
+        *(
+            _resolve_one(
+                t.get("query", ""), lang, db,
+                article_url=(t.get("url") or "").strip(),
+            )
+            for t in pending
+        )
     )
     for trend, url in zip(pending, results):
         if url:

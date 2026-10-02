@@ -510,6 +510,7 @@ async def trending_now(
                             break
                         title_elem = item.find("title")
                         source_elem = item.find("source")
+                        link_elem = item.find("link")
                         if title_elem is not None and title_elem.text:
                             # Google News titles are "Headline - Source"
                             full = title_elem.text.strip()
@@ -519,6 +520,16 @@ async def trending_now(
                                 if source_elem is not None and source_elem.text
                                 else "Google News"
                             )
+                            # The RSS <link> is a news.google.com/rss/articles/…
+                            # URL that 302-redirects to the publisher's real
+                            # article. The mobile reader follows it, so tapping
+                            # a card opens the real article (with a working
+                            # preview) instead of an unpreviewable search page.
+                            article_url = (
+                                link_elem.text.strip()
+                                if link_elem is not None and link_elem.text
+                                else ""
+                            )
                             if headline and not any(
                                 t["query"] == headline for t in trends
                             ):
@@ -527,6 +538,7 @@ async def trending_now(
                                     "source": src_name,
                                     "geo": geo.upper(),
                                     "type": "news",
+                                    "url": article_url,
                                 })
                     if any(t["type"] == "news" for t in trends):
                         sources_used.append("Google News")

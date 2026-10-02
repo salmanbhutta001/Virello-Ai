@@ -49,9 +49,17 @@ class _TrendingScreenState extends State<TrendingScreen> {
   void _openTrend(Map<String, dynamic> trend) {
     final query = ('${trend['query'] ?? ''}').trim();
     final source = ('${trend['source'] ?? ''}').trim();
+    // Real article URL from the RSS feed (follows to the publisher).
+    // The reader fetches it with a real preview; the Google News search
+    // URL is only a last-resort fallback (its pages block preview bots).
+    final articleUrl = ('${trend['url'] ?? ''}').trim();
     if (query.isEmpty) return;
     String url;
-    if (source.toLowerCase() == 'wikipedia') {
+    if (articleUrl.isNotEmpty &&
+        (articleUrl.startsWith('http://') ||
+            articleUrl.startsWith('https://'))) {
+      url = articleUrl;
+    } else if (source.toLowerCase() == 'wikipedia') {
       final slug = query.replaceAll(' ', '_');
       url = 'https://en.wikipedia.org/wiki/$slug';
     } else {
