@@ -2,7 +2,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/brand_icons.dart';
@@ -13,11 +12,12 @@ import '../../services/api_client.dart';
 import '../../main.dart';
 
 /// Board screen 03 — Create Account: dark fields (Full name / Email /
-/// Password), pink Sign Up, "or continue with" + Google/Apple/Facebook
-/// circles, "Already have an account? Log In".
+/// Password), pink Sign Up, Apple sign-in on iOS only,
+/// "Already have an account? Log In".
 ///
-/// Logic preserved: email+password signup (backend bcrypt), Google/Apple
-/// OAuth (backend-verified). We never ask for social-media passwords.
+/// Logic preserved: email+password signup (backend bcrypt), Apple OAuth
+/// on iOS (backend-verified). Google/Facebook removed per Hafiz 2026-10-03.
+/// We never ask for social-media passwords.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
   @override
@@ -79,33 +79,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return s.signInFailed;
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _working = true;
-      _error = null;
-    });
-    try {
-      final account = await GoogleSignIn(scopes: const ['email', 'profile'])
-          .signIn();
-      if (account == null) {
-        if (mounted) setState(() => _working = false);
-        return;
-      }
-      final auth = await account.authentication;
-      final idToken = auth.idToken;
-      if (idToken == null || idToken.isEmpty) {
-        throw Exception('missing id_token');
-      }
-      await authStore.signInWithProvider('google', idToken, account.email);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _working = false;
-        _error = s.socialSignInFailed;
-      });
-    }
-  }
-
   Future<void> _signInWithApple() async {
     setState(() {
       _working = true;
@@ -130,11 +103,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _error = s.socialSignInFailed;
       });
     }
-  }
-
-  void _facebookSoon() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s.policySoon)));
   }
 
   Widget _socialCircle({required Widget child, required VoidCallback? onTap}) {
@@ -237,53 +205,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   onPressed: canSubmit ? _signUp : null,
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  children: [
-                     Expanded(
-                      child: Divider(color: VTheme.divider(context)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      child: Text(
-                        s.orContinueWith,
-                        style:  TextStyle(
-                          fontSize: 12,
-                          color: VTheme.textSec(context),
-                        ),
+                // Social sign-in: Apple on iOS only (Google/Facebook removed).
+                if (Platform.isIOS) ...[
+                  Row(
+                    children: [
+                       Expanded(
+                        child: Divider(color: VTheme.divider(context)),
                       ),
-                    ),
-                     Expanded(
-                      child: Divider(color: VTheme.divider(context)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _socialCircle(
-                      onTap: _signInWithGoogle,
-                      child: const GoogleGIcon(size: 22),
-                    ),
-                    const SizedBox(width: 16),
-                    if (Platform.isIOS)
                       Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: _socialCircle(
-                          onTap: _signInWithApple,
-                          child:  IconTheme(
-                            data: IconThemeData(color: VTheme.text(context)),
-                            child: AppleIcon(size: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          s.orContinueWith,
+                          style:  TextStyle(
+                            fontSize: 12,
+                            color: VTheme.textSec(context),
                           ),
                         ),
                       ),
-                    _socialCircle(
-                      onTap: _facebookSoon,
-                      child: const FacebookIcon(size: 22),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 22),
+                       Expanded(
+                        child: Divider(color: VTheme.divider(context)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _socialCircle(
+                        onTap: _signInWithApple,
+                        child:  IconTheme(
+                          data: IconThemeData(color: VTheme.text(context)),
+                          child: AppleIcon(size: 24),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                ],
                 Text.rich(
                   TextSpan(
                     style:  TextStyle(
