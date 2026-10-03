@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.core.config import settings
 from app.core.database import init_db
@@ -71,6 +72,69 @@ app = FastAPI(
 # git-committed backend/app/static/gallery. No auth needed for display.
 # GET /api/v1/curation/status is the admin-only curation monitor.
 app.include_router(curation_routes.router)
+
+
+# Permanent public legal pages (Hafiz 2026-10-03: APKPure/Uptodown/Aptoide
+# listings require a non-expiring Privacy Policy URL).
+_PRIVACY_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Virello AI</title>
+<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:800px;
+margin:0 auto;padding:24px;line-height:1.6;color:#222}h1{color:#d6336c}
+h2{color:#333;margin-top:32px}p,li{color:#444}.updated{color:#888;font-size:14px}</style>
+</head><body><h1>Privacy Policy — Virello AI</h1>
+<p class="updated">Last updated: October 3, 2026</p>
+<p>Virello AI ("we", "our", "us") is an AI-powered social media growth platform.
+This Privacy Policy explains what data we collect, how we use it, and your rights.</p>
+<h2>1. Data We Collect</h2><ul>
+<li><strong>Account data:</strong> email address and name when you sign up or log in
+(including via Google or Apple sign-in).</li>
+<li><strong>Content you create:</strong> text prompts, images, and videos you generate
+with our AI tools.</li>
+<li><strong>Usage data:</strong> app interactions, feature usage, and campaign
+performance analytics to improve the service.</li>
+<li><strong>Device data:</strong> device model, OS version, and app version for
+compatibility and crash diagnostics.</li>
+<li><strong>Purchase data:</strong> subscription and in-app purchase records processed
+securely by Google Play Billing or Amazon Appstore (we never see your full payment
+card details).</li></ul>
+<h2>2. How We Use Data</h2><ul>
+<li>To provide and improve the app's features (AI generation, campaigns, shop, academy).</li>
+<li>To process subscriptions and reward points.</li>
+<li>To send important service notifications.</li>
+<li>To detect fraud and keep the platform safe.</li></ul>
+<p>We do <strong>not</strong> sell your personal data. We do not use fake engagement,
+bots, or resold traffic.</p>
+<h2>3. Third-Party Services</h2><ul>
+<li><strong>Google Play Billing / Amazon Appstore:</strong> process payments under
+their own privacy policies.</li>
+<li><strong>Amazon Associates:</strong> product links in the Shop carry our affiliate
+tag; Amazon handles any purchase under its own policy.</li>
+<li><strong>AI providers:</strong> prompts you submit may be processed by our AI
+service providers to generate content.</li>
+<li><strong>Cloudinary:</strong> hosts product and user-uploaded images.</li></ul>
+<h2>4. Data Storage &amp; Security</h2>
+<p>Data is stored on secure servers with encryption in transit (HTTPS). Access is
+limited to authorized personnel only.</p>
+<h2>5. Your Rights</h2>
+<p>You may request access, correction, or deletion of your personal data at any time
+by contacting us at the email below. Deleting your account removes your personal
+data from our active systems.</p>
+<h2>6. Children's Privacy</h2>
+<p>Virello AI is not directed at children under 13. We do not knowingly collect data
+from children under 13.</p>
+<h2>7. Changes</h2>
+<p>We may update this policy; the "Last updated" date will reflect changes. Continued
+use of the app after changes means you accept the updated policy.</p>
+<h2>8. Contact</h2>
+<p>For privacy questions or data requests: <strong>alif01fiverr@gmail.com</strong></p>
+</body></html>"""
+
+
+@app.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
+async def privacy_policy():
+    """Public permanent Privacy Policy page for store listings."""
+    return HTMLResponse(content=_PRIVACY_HTML)
 
 app.add_middleware(
     CORSMiddleware,
