@@ -15,6 +15,8 @@ import json
 import logging
 import random
 
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -362,8 +364,6 @@ async def hooks(body: HooksIn, db: AsyncSession = Depends(get_db),
 # Create Image now uses Agnes AI's image model through the backend proxy
 # (key stays server-side, same pattern as /api/v1/video).
 # ---------------------------------------------------------------------------
-import httpx as _httpx
-from fastapi.responses import JSONResponse as _JSONResponse
 
 _AGNES_IMAGE_BASE = "https://apihub.agnes-ai.com/v1"
 _AGNES_IMAGE_MODEL = "agnes-image-2.5-flash"
@@ -406,7 +406,7 @@ async def generate_image_agnes(
     suffix = _AGNES_STYLE_SUFFIX.get(body.style, _AGNES_STYLE_SUFFIX["realistic"])
     full_prompt = f"{body.prompt}, {suffix}"
     try:
-        async with _httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 f"{_AGNES_IMAGE_BASE}/images/generations",
                 headers={
@@ -418,9 +418,11 @@ async def generate_image_agnes(
                     "prompt": full_prompt,
                     "n": 1,
                     "size": "1024x1024",
+                    # Pass the seed through when the app sends one (Regenerate).
+                    **({"seed": body.seed} if body.seed is not None else {}),
                 },
             )
-    except _httpx.RequestError as exc:
+    except httpx.RequestError as exc:
         logger.warning("agnes image transport error: %s", exc)
         raise HTTPException(
             status_code=502, detail="Image service unreachable.") from exc
