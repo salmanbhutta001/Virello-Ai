@@ -10439,6 +10439,22 @@ class AppStrings {
         'امیج سرور تک رسائی نہیں ہو سکی۔ اپنا انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔',
         'تعذر الوصول إلى خادم الصور. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
       );
+  // Hafiz 2026-10-03: image download to gallery.
+  String get boardImageDownload => _get(
+        'Download',
+        'ڈاؤن لوڈ',
+        'تنزيل',
+      );
+  String get boardImageSavedToGallery => _get(
+        'Image saved to gallery.',
+        'تصویر گیلری میں محفوظ ہو گئی۔',
+        'تم حفظ الصورة في المعرض.',
+      );
+  String get boardImageSaveFailed => _get(
+        'Could not save image. Please try again.',
+        'تصویر محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔',
+        'تعذر حفظ الصورة. حاول مرة أخرى.',
+      );
   String get boardScriptDraftLabel => _get(
         'Basic draft',
         'بنیادی مسودہ',

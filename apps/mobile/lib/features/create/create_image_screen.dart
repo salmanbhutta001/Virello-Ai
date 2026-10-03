@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 
@@ -37,6 +38,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   // Hafiz 2026-10-03: track network errors separately for a clear message.
   bool _networkError = false;
   bool _sharing = false;
+  // Hafiz 2026-10-03: image download to gallery.
+  bool _downloading = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -190,6 +193,37 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     }
   }
 
+  /// Hafiz 2026-10-03: download the generated image to the phone gallery.
+  Future<void> _downloadImage() async {
+    if (_imageUrl == null || _downloading) return;
+    setState(() => _downloading = true);
+    try {
+      final res = await http
+          .get(Uri.parse(_imageUrl!))
+          .timeout(const Duration(seconds: 60));
+      if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
+        await Gal.putImageBytes(res.bodyBytes, album: 'Virello');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(s.boardImageSavedToGallery)),
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.boardImageSaveFailed)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.boardImageSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final styles = [s.boardStyleRealistic, s.boardStyleCartoon, s.boardStyle3d];
@@ -245,6 +279,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
             ),
           ),
           // Action row after generation.
+          // Hafiz 2026-10-03: added Download button.
           if (_imageUrl != null && !_loading && !_loadFailed) ...[
             const SizedBox(height: 16),
             Row(
@@ -256,7 +291,21 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                     label: Text(s.boardImageRegenerate),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _downloading ? null : _downloadImage,
+                    icon: _downloading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download, size: 18),
+                    label: Text(s.boardImageDownload),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _sharing ? null : _share,
