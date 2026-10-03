@@ -280,6 +280,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
           ),
           // Action row after generation.
           // Hafiz 2026-10-03: added Download button.
+          // Hafiz 2026-10-03: compact buttons — single-line labels, no wrap.
           if (_imageUrl != null && !_loading && !_loadFailed) ...[
             const SizedBox(height: 16),
             Row(
@@ -287,8 +288,16 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _regenerate,
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: Text(s.boardImageRegenerate),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(s.boardImageRegenerate,
+                          maxLines: 1, style: const TextStyle(fontSize: 13)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -297,12 +306,20 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                     onPressed: _downloading ? null : _downloadImage,
                     icon: _downloading
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
+                            width: 16,
+                            height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.download, size: 18),
-                    label: Text(s.boardImageDownload),
+                        : const Icon(Icons.download, size: 16),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(s.boardImageDownload,
+                          maxLines: 1, style: const TextStyle(fontSize: 13)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -311,12 +328,20 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                     onPressed: _sharing ? null : _share,
                     icon: _sharing
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
+                            width: 16,
+                            height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.share, size: 18),
-                    label: Text(s.boardImageShare),
+                        : const Icon(Icons.share, size: 16),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(s.boardImageShare,
+                          maxLines: 1, style: const TextStyle(fontSize: 13)),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                    ),
                   ),
                 ),
               ],
