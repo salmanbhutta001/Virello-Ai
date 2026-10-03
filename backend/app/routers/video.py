@@ -119,7 +119,8 @@ async def generate_video(
 
     data: dict = {}
     try:
-        data = resp.json()
+        parsed = resp.json()
+        data = parsed if isinstance(parsed, dict) else {}
     except ValueError:
         logger.warning("agnes submit returned non-JSON HTTP %s", resp.status_code)
         raise HTTPException(
@@ -137,8 +138,16 @@ async def generate_video(
     if not agnes_id and not direct:
         job.status = "failed"
         job.error = "Provider returned no video ID."
-    db.add(job)
-    await db.commit()
+    try:
+        db.add(job)
+        await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        logger.exception("video_jobs insert failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not save video job: {type(exc).__name__}: {str(exc)[:200]}",
+        ) from None
     return {"job_id": job.job_id, "status": job.status}
 
 
