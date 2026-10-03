@@ -369,25 +369,48 @@ class _RootShellState extends State<RootShell> {
             context,
           ).push(MaterialPageRoute(builder: (_) => const AskVirelloScreen()));
         },
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [VirelloColors.pink, Color(0xFFC2274E)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: VirelloColors.pink.withValues(alpha: 0.45),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [VirelloColors.pink, Color(0xFFC2274E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: VirelloColors.pink.withValues(alpha: 0.45),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 26),
+              child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 26),
+            ),
+            const SizedBox(height: 4),
+            // Hafiz 2026-10-03: small "Live Chat Support" label under the FAB.
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: VirelloColors.pink,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Live Chat Support',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
