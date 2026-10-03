@@ -402,7 +402,7 @@ class _RootShellState extends State<RootShell> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'Live Chat Support',
+                'Live Chat',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 8.5,
