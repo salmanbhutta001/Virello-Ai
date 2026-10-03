@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launch splash: black backdrop + centered Virello V logo (Hafiz 2026-10-03). -->
+<!-- Launch splash: white backdrop + centered Virello AI logo (Hafiz 2026-10-03). -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/black" />
+    <item android:drawable="@android:color/white" />
 
     <item>
         <bitmap
