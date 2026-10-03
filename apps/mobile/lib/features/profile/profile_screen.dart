@@ -11,7 +11,6 @@ import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 import '../admin/admin_pin_screen.dart';
-import '../admin/admin_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../discovery/result_screen.dart';
 import '../settings/settings_screen.dart';
@@ -102,21 +101,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         email == 'alif01fiverr@gmail.com';
   }
 
-  /// Opens the Admin Panel via PIN screen (same as hidden gesture).
-  Future<void> _openAdminPanel() async {
-    final unlocked = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AdminPinScreen()),
-    );
-    if (unlocked == true && mounted) {
-      apiClient.me().then((m) {
-        if (!mounted) return;
-        setState(() => _me = m);
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AdminScreen()),
-        );
-      }).catchError((_) {});
-    }
-  }
+  /// Opens the Admin Panel via the self-contained admin entry flow
+  /// (PIN -> unlock -> dashboard). The dashboard opens immediately on
+  /// unlock; the profile refresh below is best-effort only.
+  Future<void> _openAdminPanel() => openAdminPanel(
+        context,
+        onUnlocked: () {
+          apiClient.me().then((m) {
+            if (!mounted) return;
+            setState(() => _me = m);
+          }).catchError((_) {});
+        },
+      );
 
   /// Wallet chip: points balance + cash balance, opens WalletScreen on tap.
   /// Cash comes from GET /api/v1/wallet/balance (hidden when unavailable).
@@ -608,18 +604,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_verTaps < 5) return;
     _verTaps = 0;
     _firstVerTap = null;
-    final unlocked = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AdminPinScreen()),
+    openAdminPanel(
+      context,
+      onUnlocked: () {
+        apiClient.me().then((m) {
+          if (!mounted) return;
+          setState(() => _me = m);
+        }).catchError((_) {});
+      },
     );
-    if (unlocked == true && mounted) {
-      apiClient.me().then((m) {
-        if (!mounted) return;
-        setState(() => _me = m);
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AdminScreen()),
-        );
-      }).catchError((_) {});
-    }
   }
 
   Widget _menuRow({

@@ -5,10 +5,36 @@ import 'package:flutter/services.dart';
 
 import '../../core/strings.dart';
 import 'admin_denied_screen.dart';
+import 'admin_screen.dart';
 import '../../core/theme.dart';
 import '../../main.dart';
 import '../../services/admin_api.dart';
 import '../../services/api_client.dart';
+
+/// Self-contained admin entry flow: PIN pad -> unlock -> admin dashboard.
+///
+/// Push this from anywhere; the whole flow is handled internally and never
+/// depends on the caller's state. On a successful unlock the dashboard opens
+/// IMMEDIATELY — it is never gated on a profile refresh (a failed
+/// /users/me used to silently swallow the navigation, leaving the user
+/// stuck on the previous page). [onUnlocked] runs best-effort (e.g. to
+/// refresh the caller's profile data) without affecting navigation.
+Future<void> openAdminPanel(
+  BuildContext context, {
+  VoidCallback? onUnlocked,
+}) async {
+  final unlocked = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(builder: (_) => const AdminPinScreen()),
+  );
+  if (unlocked == true && context.mounted) {
+    try {
+      onUnlocked?.call();
+    } catch (_) {}
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AdminScreen()),
+    );
+  }
+}
 
 /// Hidden admin entry: numeric PIN pad. A correct PIN elevates the signed-in
 /// user to admin server-side (POST /api/v1/admin/unlock); on success this
