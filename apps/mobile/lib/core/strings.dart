@@ -14279,6 +14279,11 @@ class AppStrings {
         '100 پوائنٹس = 10 گرو کریڈٹس۔ کم از کم 100 پوائنٹس۔',
         '100 نقطة = 10 رصيد نمو. الحد الأدنى 100 نقطة.',
       );
+  String get dailyLoginInfo => _get(
+        'Daily bonus is automatic — just open the app every day.',
+        'روزانہ بونس خودکار ہے — بس ہر دن ایپ کھولیں۔',
+        'المكافأة اليومية تلقائية — فقط افتح التطبيق كل يوم.',
+      );
   String get convertConfirm =>
       _get('How many points to convert?', 'کتنے پوائنٹس تبدیل کریں؟',
           'كم عدد النقاط التي تريد تحويلها؟');

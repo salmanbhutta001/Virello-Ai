@@ -11,7 +11,9 @@ import '../../services/rewards_api.dart';
 /// shown as returned; an empty server list renders an empty state, never
 /// placeholders.
 class LeaderboardScreen extends StatefulWidget {
-  const LeaderboardScreen({super.key});
+  /// Which tab to open on: 'week' | 'month' | 'rolling'.
+  final String initialPeriod;
+  const LeaderboardScreen({super.key, this.initialPeriod = 'week'});
   @override
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
 }
@@ -27,6 +29,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
+    _period = widget.initialPeriod;
     _load();
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/strings.dart';
@@ -10,6 +11,7 @@ import '../../core/virello_ui.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
 import '../../services/rewards_api.dart';
+import '../posts/my_posts_screen.dart';
 import '../rewards/leaderboard_screen.dart';
 import 'rewards_terms_screen.dart';
 
@@ -54,6 +56,11 @@ class _WalletScreenState extends State<WalletScreen> {
   final _redeemCtrl = TextEditingController();
   bool _redeeming = false;
 
+  /// Scroll + key for jumping to the redeem UI (points card) from the
+  /// "How to earn" redeem row.
+  final _scrollCtrl = ScrollController();
+  final _redeemKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +72,7 @@ class _WalletScreenState extends State<WalletScreen> {
   void dispose() {
     _ticker?.cancel();
     _redeemCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -251,6 +259,7 @@ class _WalletScreenState extends State<WalletScreen> {
       body: RefreshIndicator(
         onRefresh: () async => _load(),
         child: ListView(
+          controller: _scrollCtrl,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
             _taglineCard(),
@@ -318,6 +327,7 @@ class _WalletScreenState extends State<WalletScreen> {
         final progress = (d['progress'] as num? ?? 0).toDouble().clamp(0, 1);
         final waiting = snap.connectionState == ConnectionState.waiting;
         return VCard(
+          key: _redeemKey, // "How to earn" redeem row scrolls here.
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1066,6 +1076,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   for (final r in rules)
                     ListTile(
                       dense: true,
+                      onTap: () => _onRuleTap(r),
                       leading: const Icon(
                         Icons.stars_outlined,
                         color: VirelloColors.pink,
@@ -1077,13 +1088,24 @@ class _WalletScreenState extends State<WalletScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      trailing: Text(
-                        '+${r['points'] ?? 0}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: VirelloColors.pink,
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '+${r['points'] ?? 0}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: VirelloColors.pink,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: VirelloColors.muted,
+                          ),
+                        ],
                       ),
                       subtitle: _ruleSub(r),
                     ),
@@ -1108,6 +1130,70 @@ class _WalletScreenState extends State<WalletScreen> {
       parts.join(' · '),
       style: const TextStyle(fontSize: 11.5, color: VirelloColors.muted),
     );
+  }
+
+  /// Every "How to earn" row opens the exact place where its reward is
+  /// earned, so the user immediately sees what to do.
+  void _onRuleTap(Map<String, dynamic> r) {
+    switch ('${r['id'] ?? ''}') {
+      case 'post_created':
+      case 'streak':
+        _goToTab(2); // Create — share a post to the community feed.
+      case 'like_received':
+      case 'comment_received':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MyPostsScreen()),
+        );
+      case 'profile_completed':
+        _goToTab(5); // Profile tab — edit & complete your profile.
+      case 'daily_login':
+        _toast(s.dailyLoginInfo);
+      case 'referral':
+        SharePlus.instance.share(ShareParams(
+          text: s.inviteFriendsMessage,
+          subject: 'Virello',
+        ));
+      case 'redeem':
+        _scrollToRedeem();
+      case 'weekly_contest':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const LeaderboardScreen(initialPeriod: 'week'),
+          ),
+        );
+      case 'monthly_contest':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const LeaderboardScreen(initialPeriod: 'month'),
+          ),
+        );
+    }
+  }
+
+  /// Jump to a bottom-nav tab from inside the Wallet route.
+  void _goToTab(int index) {
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    requestedTab.value = index;
+  }
+
+  /// Scroll up to the redeem UI (points card) on this same screen.
+  void _scrollToRedeem() {
+    final ctx = _redeemKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOut,
+      alignment: 0.05,
+    );
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // ------------------------------ history ------------------------------
