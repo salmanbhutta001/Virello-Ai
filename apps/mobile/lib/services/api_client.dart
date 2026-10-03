@@ -880,6 +880,31 @@ class ApiClient {
         .toList();
   }
 
+  /// GET /api/v1/discovery/search — full-text post search (backend).
+  /// Relevance-ranked, typo-tolerant. Empty query returns empty list.
+  Future<List<DiscoveryItem>> searchPosts(String query,
+      {int limit = 20}) async {
+    final q = query.trim();
+    if (q.isEmpty) return const [];
+    final j = await _getJson(
+      '/api/v1/discovery/search?q=${Uri.encodeComponent(q)}&limit=$limit',
+    );
+    return (j['items'] as List? ?? [])
+        .map((e) => DiscoveryItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// GET /api/v1/users/search — user search by name (backend).
+  Future<List<Map<String, dynamic>>> searchUsers(String query,
+      {int limit = 20}) async {
+    final q = query.trim();
+    if (q.isEmpty) return const [];
+    final j = await _getJson(
+      '/api/v1/users/search?q=${Uri.encodeComponent(q)}&limit=$limit',
+    );
+    return List<Map<String, dynamic>>.from(j['users'] as List? ?? []);
+  }
+
   /// Public authenticated GET helper (non-admin endpoints), mirroring the
   /// adminGet pattern. Returns the decoded JSON map.
   Future<Map<String, dynamic>> get(String path) => _getJson(path);

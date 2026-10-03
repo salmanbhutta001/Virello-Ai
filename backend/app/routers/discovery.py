@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,6 +53,30 @@ class InterestsIn(BaseModel):
 async def put_interests(body: InterestsIn, db: AsyncSession = Depends(get_db),
                         user: User = Depends(get_current_user)) -> dict:
     return {"topics": await set_my_interests(db, user.id, body.topics)}
+
+
+@router.get("/search")
+async def search_posts(
+    q: str = Query(default="", max_length=120),
+    limit: int = Query(default=20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Full-text search over approved discovery posts.
+
+    Matches title, post URL, platform, and topics — case-insensitive,
+    partial, typo-tolerant, relevance-ranked. Only real matches; empty
+    query returns empty (trending suggestions come from /trending).
+    """
+    from app.services.search import normalize_query, search_posts as _search
+    query = normalize_query(q)
+    if not query:
+        return {"items": [], "query": "", "total": 0}
+    items = await _search(db, query, limit=limit)
+    # Link-card support: same post_type derivation as /feed.
+    for it in items:
+        it["post_type"] = _post_type_for_url(it.get("post_url") or "")
+    return {"items": items, "query": query, "total": len(items)}
 
 
 @router.get("/feed")

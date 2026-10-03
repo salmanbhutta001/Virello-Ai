@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,24 @@ from app.services import rewards as rewards_svc
 from app.services import wallet as wallet_svc
 
 router = APIRouter()
+
+
+@router.get("/search")
+async def search_users(
+    q: str = Query(default="", max_length=120),
+    limit: int = Query(default=20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Search users by display name — case-insensitive, partial,
+    typo-tolerant, relevance-ranked. Suspended accounts excluded.
+    Only real matches; never invents users."""
+    from app.services.search import normalize_query, search_users as _search
+    query = normalize_query(q)
+    if not query:
+        return {"users": [], "query": "", "total": 0}
+    users = await _search(db, query, limit=limit)
+    return {"users": users, "query": query, "total": len(users)}
 
 
 @router.get("/me")

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
@@ -12,9 +14,10 @@ import '../../core/config.dart';
 /// - Search field with a pink circular clear (X) button.
 /// - Tabs: All / Posts / Products / Users — pink pill for the active tab.
 /// - Empty query: suggestion rows from real trending topics (clock icon).
-/// - Posts: real discovery feed filtered client-side by the query.
+/// - Posts: backend full-text search (GET /api/v1/discovery/search).
 /// - Products: real catalog via listProducts(search:).
-/// - Users: real following list filtered by the query.
+/// - Users: backend user search (GET /api/v1/users/search).
+/// - 300ms debounce on typing; stale results cleared on query change.
 /// Never shows fake results or suggestions.
 class SearchScreen extends StatefulWidget {
   final String? initialQuery;
@@ -29,9 +32,13 @@ class _SearchScreenState extends State<SearchScreen> {
   final _ctrl = TextEditingController();
   int _tab = 0; // 0 = All, 1 = Posts, 2 = Products, 3 = Users
   late Future<_SearchData> _future;
+
+  // Search state (backend-powered, debounced).
+  List<DiscoveryItem> _postResults = const [];
   List<Map<String, dynamic>> _productResults = const [];
-  bool _productsLoading = false;
-  String _lastProductQuery = '';
+  List<Map<String, dynamic>> _userResults = const [];
+  bool _searching = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -39,78 +46,84 @@ class _SearchScreenState extends State<SearchScreen> {
     if (widget.initialQuery != null) _ctrl.text = widget.initialQuery!;
     _ctrl.addListener(_onQueryChanged);
     _future = _load();
+    if (_q.isNotEmpty) _scheduleSearch();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _ctrl.removeListener(_onQueryChanged);
     _ctrl.dispose();
     super.dispose();
   }
 
-  void _onQueryChanged() => setState(() {});
+  void _onQueryChanged() {
+    _scheduleSearch();
+    setState(() {});
+  }
+
+  /// Debounced search: waits 300ms after the last keystroke, clears stale
+  /// results immediately so the All tab never shows old results for a new
+  /// query (the Products-tab "No results found" bug).
+  void _scheduleSearch() {
+    _debounce?.cancel();
+    final q = _q;
+    if (q.isEmpty) {
+      setState(() {
+        _postResults = const [];
+        _productResults = const [];
+        _userResults = const [];
+        _searching = false;
+      });
+      return;
+    }
+    // Clear stale results right away; the spinner shows while searching.
+    setState(() {
+      _postResults = const [];
+      _productResults = const [];
+      _userResults = const [];
+      _searching = true;
+    });
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _runSearch(q);
+    });
+  }
+
+  Future<void> _runSearch(String q) async {
+    if (q != _q || !mounted) return; // query changed meanwhile; skip
+    List<DiscoveryItem> posts = const [];
+    List<Map<String, dynamic>> products = const [];
+    List<Map<String, dynamic>> users = const [];
+    try {
+      posts = await apiClient.searchPosts(q, limit: 20);
+    } catch (_) {}
+    try {
+      final res = await apiClient.listProducts(search: q, limit: 20);
+      products =
+          List<Map<String, dynamic>>.from(res['products'] as List? ?? []);
+    } catch (_) {}
+    try {
+      users = await apiClient.searchUsers(q, limit: 20);
+    } catch (_) {}
+    if (!mounted || q != _q) return; // stale; a newer search is in flight
+    setState(() {
+      _postResults = posts;
+      _productResults = products;
+      _userResults = users;
+      _searching = false;
+    });
+  }
 
   Future<_SearchData> _load() async {
-    List<DiscoveryItem> feed = const [];
     List<Map<String, dynamic>> trends = const [];
-    List<Map<String, dynamic>> following = const [];
-    try {
-      feed = await apiClient.getDiscoveryFeed(limit: 30);
-    } catch (_) {}
     try {
       final res = await apiClient.getTrending(limit: 10);
       trends = List<Map<String, dynamic>>.from(res['trends'] as List? ?? []);
     } catch (_) {}
-    try {
-      following = await apiClient.getFollowing();
-    } catch (_) {}
-    return _SearchData(feed: feed, trends: trends, following: following);
+    return _SearchData(trends: trends);
   }
 
   String get _q => _ctrl.text.trim();
-
-  List<DiscoveryItem> _postResults(List<DiscoveryItem> feed) {
-    final q = _q.toLowerCase();
-    if (q.isEmpty) return const [];
-    return feed.where((i) {
-      final hay =
-          '${i.title} ${i.platform} ${i.postType} ${i.matchReasons.join(' ')}'
-              .toLowerCase();
-      return hay.contains(q);
-    }).toList();
-  }
-
-  List<Map<String, dynamic>> _userResults(
-      List<Map<String, dynamic>> following) {
-    final q = _q.toLowerCase();
-    if (q.isEmpty) return const [];
-    return following.where((f) {
-      final hay = '${f['creator_name'] ?? ''} ${f['creator_handle'] ?? ''}'
-          .toLowerCase();
-      return hay.contains(q);
-    }).toList();
-  }
-
-  Future<void> _searchProducts() async {
-    final q = _q;
-    if (q.isEmpty || q == _lastProductQuery) return;
-    setState(() {
-      _productsLoading = true;
-      _lastProductQuery = q;
-    });
-    try {
-      final res = await apiClient.listProducts(search: q, limit: 20);
-      if (!mounted) return;
-      setState(() {
-        _productResults =
-            List<Map<String, dynamic>>.from(res['products'] as List? ?? []);
-        _productsLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _productsLoading = false);
-    }
-  }
 
   void _openItem(DiscoveryItem item) {
     try {
@@ -178,8 +191,8 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               child: Row(
                 children: [
-                   Padding(
-                    padding: EdgeInsets.only(left: 14),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 14),
                     child: Icon(
                       Icons.search,
                       color: VTheme.textSec(context),
@@ -207,10 +220,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                       textInputAction: TextInputAction.search,
-                      onSubmitted: (_) {
-                        if (_tab == 2) _searchProducts();
-                        setState(() {});
-                      },
+                      onSubmitted: (_) => _scheduleSearch(),
                     ),
                   ),
                   if (_q.isNotEmpty)
@@ -219,10 +229,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: GestureDetector(
                         onTap: () {
                           _ctrl.clear();
-                          setState(() {
-                            _productResults = const [];
-                            _lastProductQuery = '';
-                          });
+                          // _onQueryChanged clears results via _scheduleSearch.
                         },
                         child: Container(
                           width: 32,
@@ -259,10 +266,7 @@ class _SearchScreenState extends State<SearchScreen> {
             for (var i = 0; i < tabs.length; i++) ...[
               if (i > 0) const SizedBox(width: 8),
               GestureDetector(
-                onTap: () {
-                  setState(() => _tab = i);
-                  if (i == 2) _searchProducts();
-                },
+                onTap: () => setState(() => _tab = i),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -310,8 +314,7 @@ class _SearchScreenState extends State<SearchScreen> {
         return InkWell(
           onTap: () {
             _ctrl.text = q;
-            setState(() {});
-            if (_tab == 2) _searchProducts();
+            // _onQueryChanged triggers the debounced search.
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 13),
@@ -349,74 +352,76 @@ class _SearchScreenState extends State<SearchScreen> {
 
   /// Results per the active tab.
   Widget _results(_SearchData data) {
+    if (_searching) {
+      return const Center(
+        child: CircularProgressIndicator(color: VirelloColors.pink),
+      );
+    }
     switch (_tab) {
       case 1:
-        return _postsList(_postResults(data.feed));
+        return _postsList(_postResults);
       case 2:
         return _productsList();
       case 3:
-        return _usersList(_userResults(data.following));
+        return _usersList(_userResults);
       case 0:
       default:
-        return _allResults(data);
+        return _allResults();
     }
   }
 
-  /// All tab: posts + products + users sections.
-  Widget _allResults(_SearchData data) {
-    final posts = _postResults(data.feed).take(4).toList();
-    final users = _userResults(data.following).take(3).toList();
-    if (_productResults.isEmpty &&
-        _lastProductQuery != _q &&
-        _productsLoading == false) {
-      // Trigger product search once for the All tab.
-      WidgetsBinding.instance.addPostFrameCallback((_) => _searchProducts());
-    }
+  /// All tab: top 4 posts + top 4 products + top 3 users.
+  /// Each section header is tappable to jump to its tab.
+  Widget _allResults() {
+    final posts = _postResults.take(4).toList();
     final products = _productResults.take(4).toList();
-    if (posts.isEmpty &&
-        users.isEmpty &&
-        products.isEmpty &&
-        !_productsLoading) {
+    final users = _userResults.take(3).toList();
+    if (posts.isEmpty && products.isEmpty && users.isEmpty) {
       return _empty(s.boardNoResults);
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
         if (posts.isNotEmpty) ...[
-          _resultSectionHeader(s.boardPosts),
+          _resultSectionHeader(s.boardPosts, 1),
           for (final p in posts) _postRow(p),
           const SizedBox(height: 8),
         ],
-        if (products.isNotEmpty || _productsLoading) ...[
-          _resultSectionHeader(s.boardProductsTab),
-          if (_productsLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: CircularProgressIndicator(color: VirelloColors.pink),
-              ),
-            )
-          else
-            for (final p in products) _productRow(p),
+        if (products.isNotEmpty) ...[
+          _resultSectionHeader(s.boardProductsTab, 2),
+          for (final p in products) _productRow(p),
           const SizedBox(height: 8),
         ],
         if (users.isNotEmpty) ...[
-          _resultSectionHeader(s.boardUsers),
+          _resultSectionHeader(s.boardUsers, 3),
           for (final u in users) _userRow(u),
         ],
       ],
     );
   }
 
-  Widget _resultSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6, top: 6),
-      child: Text(
-        title,
-        style:  TextStyle(
-          color: VTheme.text(context),
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
+  Widget _resultSectionHeader(String title, int tabIndex) {
+    return InkWell(
+      onTap: () => setState(() => _tab = tabIndex),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 6, top: 6),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: VTheme.text(context),
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 13,
+              color: VTheme.textSec(context),
+            ),
+          ],
         ),
       ),
     );
@@ -495,11 +500,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _productsList() {
-    if (_productsLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: VirelloColors.pink),
-      );
-    }
     if (_productResults.isEmpty) return _empty(s.boardNoResults);
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -586,9 +586,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _userRow(Map<String, dynamic> f) {
-    final handle = '${f['creator_handle'] ?? ''}';
-    final name = '${f['creator_name'] ?? handle}';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    // Backend /users/search returns {id, name, handle, initial}.
+    // Legacy following entries used creator_name/creator_handle.
+    final name = '${f['name'] ?? f['creator_name'] ?? ''}';
+    final handle = '${f['handle'] ?? f['creator_handle'] ?? ''}';
+    final initial =
+        '${f['initial'] ?? (name.isNotEmpty ? name[0].toUpperCase() : '?')}';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -670,12 +673,8 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 class _SearchData {
-  final List<DiscoveryItem> feed;
   final List<Map<String, dynamic>> trends;
-  final List<Map<String, dynamic>> following;
   const _SearchData({
-    this.feed = const [],
     this.trends = const [],
-    this.following = const [],
   });
 }
