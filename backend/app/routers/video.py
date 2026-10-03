@@ -8,23 +8,28 @@ The provider key lives server-side (VIRELLO_AGNES_API_KEY) — it is never
 shipped in the APK. Currently backed by Agnes AI's free tier
 (agnes-video-v2.0, https://apihub.agnes-ai.com/v1).
 
-Jobs are kept in a short-lived in-memory store (video jobs complete in a
-few minutes); no DB migration needed.
+Jobs are DB-backed (video_jobs) so polling works across uvicorn workers —
+an in-memory store returned 404 "Unknown video job" whenever a poll
+landed on a different worker.
 """
 
 from __future__ import annotations
 
 import logging
-import time
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.core import User
+from app.models.video import VideoJob
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,10 +39,6 @@ _AGNES_MODEL = "agnes-video-v2.0"
 _SUBMIT_TIMEOUT = 60.0
 _POLL_TIMEOUT = 30.0
 _MAX_DURATION = 10  # Agnes free tier caps short clips
-
-# job_id -> {"agnes_id": str, "status": str, "video_url": str|None,
-#            "error": str|None, "created": float}
-_jobs: dict[str, dict] = {}
 
 
 class GenerateRequest(BaseModel):
@@ -55,10 +56,19 @@ def _key_or_503() -> str:
     return key
 
 
-def _prune() -> None:
-    cutoff = time.time() - 3600
-    for jid in [k for k, v in _jobs.items() if v["created"] < cutoff]:
-        _jobs.pop(jid, None)
+async def _prune(db: AsyncSession) -> None:
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+    await db.execute(
+        delete(VideoJob).where(VideoJob.created_at < cutoff))
+
+
+def _job_out(job: VideoJob) -> dict:
+    return {
+        "job_id": job.job_id,
+        "status": job.status,
+        "video_url": job.video_url,
+        "error": job.error,
+    }
 
 
 @router.get("/status")
@@ -73,11 +83,13 @@ async def video_status(_user: User = Depends(get_current_user)) -> dict:
 
 @router.post("/generate")
 async def generate_video(
-    body: GenerateRequest, _user: User = Depends(get_current_user)
+    body: GenerateRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Submit a text-to-video job. Poll GET /video/jobs/{job_id} for result."""
     key = _key_or_503()
-    _prune()
+    await _prune(db)
     try:
         async with httpx.AsyncClient(timeout=_SUBMIT_TIMEOUT) as client:
             resp = await client.post(
@@ -108,75 +120,71 @@ async def generate_video(
     data = resp.json()
     agnes_id = data.get("video_id") or data.get("id")
     direct = data.get("video_url") or data.get("url")
-    job_id = uuid.uuid4().hex[:12]
-    _jobs[job_id] = {
-        "agnes_id": agnes_id,
-        "status": "ready" if direct else "submitted",
-        "video_url": direct,
-        "error": None,
-        "created": time.time(),
-    }
+    job = VideoJob(
+        job_id=uuid.uuid4().hex[:12],
+        user_id=user.id,
+        agnes_id=agnes_id,
+        status="ready" if direct else "submitted",
+        video_url=direct,
+    )
     if not agnes_id and not direct:
-        _jobs[job_id]["status"] = "failed"
-        _jobs[job_id]["error"] = "Provider returned no video ID."
-    return {"job_id": job_id, "status": _jobs[job_id]["status"]}
+        job.status = "failed"
+        job.error = "Provider returned no video ID."
+    db.add(job)
+    await db.commit()
+    return {"job_id": job.job_id, "status": job.status}
 
 
 @router.get("/jobs/{job_id}")
 async def job_status(
-    job_id: str, _user: User = Depends(get_current_user)
+    job_id: str,
+    _user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Poll a video job. status: submitted|processing|ready|failed."""
-    job = _jobs.get(job_id)
+    job = (await db.execute(
+        select(VideoJob).where(VideoJob.job_id == job_id)
+    )).scalar_one_or_none()
     if job is None:
         raise HTTPException(status_code=404, detail="Unknown video job.")
-    if job["status"] in ("ready", "failed"):
-        return {
-            "job_id": job_id,
-            "status": job["status"],
-            "video_url": job["video_url"],
-            "error": job["error"],
-        }
+    if job.status in ("ready", "failed"):
+        return _job_out(job)
 
     key = _key_or_503()
-    agnes_id = job.get("agnes_id")
-    if not agnes_id:
-        job["status"] = "failed"
-        job["error"] = "Provider returned no video ID."
-        return {"job_id": job_id, "status": "failed", "error": job["error"]}
+    if not job.agnes_id:
+        job.status = "failed"
+        job.error = "Provider returned no video ID."
+        await db.commit()
+        return _job_out(job)
 
     try:
         async with httpx.AsyncClient(timeout=_POLL_TIMEOUT) as client:
             resp = await client.get(
                 f"{_AGNES_BASE}/agnesapi",
-                params={"video_id": agnes_id},
+                params={"video_id": job.agnes_id},
                 headers={"Authorization": f"Bearer {key}"},
             )
     except httpx.RequestError:
-        return {"job_id": job_id, "status": "processing", "video_url": None}
+        return {"job_id": job.job_id, "status": "processing", "video_url": None}
 
     if resp.status_code != 200:
-        return {"job_id": job_id, "status": "processing", "video_url": None}
+        return {"job_id": job.job_id, "status": "processing", "video_url": None}
 
     data = resp.json()
     state = str(data.get("status", "")).lower()
     if state in ("completed", "succeeded", "done", "ready"):
-        job["status"] = "ready"
-        job["video_url"] = data.get("video_url") or data.get("url") or data.get("video")
+        job.status = "ready"
+        job.video_url = data.get("video_url") or data.get("url") or data.get("video")
     elif state in ("failed", "error"):
-        job["status"] = "failed"
-        job["error"] = str(data.get("error") or "Video generation failed.")
+        job.status = "failed"
+        job.error = str(data.get("error") or "Video generation failed.")
     else:
         # Some responses embed the URL without a status field.
         direct = data.get("video_url") or data.get("url")
         if direct:
-            job["status"] = "ready"
-            job["video_url"] = direct
+            job.status = "ready"
+            job.video_url = direct
         else:
-            job["status"] = "processing"
-    return {
-        "job_id": job_id,
-        "status": job["status"],
-        "video_url": job["video_url"],
-        "error": job["error"],
-    }
+            job.status = "processing"
+    await db.commit()
+    return _job_out(job)
