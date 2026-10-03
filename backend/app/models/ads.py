@@ -155,6 +155,12 @@ class AdCampaign(Base):
     # copied into budget/duration_days at build time; this keeps the label.
     package_id: Mapped[str | None] = mapped_column(String(32), nullable=True,
                                                    default=None)
+    # Package payment state for Paid Boost: "unpaid" | "paid".
+    # Set to "paid" only by POST /api/v1/billing/play/verify (or the Amazon
+    # equivalent) after the store confirms the matching ad-package product.
+    # The app NEVER marks this locally — server verification is mandatory.
+    # Free Grow campaigns stay "unpaid" by design (nothing to pay).
+    payment_status: Mapped[str] = mapped_column(String(16), default="unpaid")
     estimate: Mapped[dict] = mapped_column(JSON, default=dict)
     # {estimated_reach_low, estimated_reach_high, disclaimer: "estimate — not a guarantee"}
     ai_provider: Mapped[str] = mapped_column(String(64), default="")

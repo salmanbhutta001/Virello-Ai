@@ -83,6 +83,11 @@ abstract class BillingProvider {
   /// Start a recurring subscription purchase. Result arrives on [purchaseStream].
   Future<bool> buySubscription(BillingProduct product);
 
+  /// Start a one-time (consumable, non-subscription) purchase that is NOT
+  /// a credit pack — e.g. an AI Ad Builder ad package. Result arrives on
+  /// [purchaseStream]; verify server-side before completing, like the rest.
+  Future<bool> buyOneTime(BillingProduct product);
+
   /// Purchase updates; verify server-side before completing.
   Stream<List<BillingPurchase>> get purchaseStream;
 
@@ -90,15 +95,20 @@ abstract class BillingProvider {
   Future<void> completePurchase(BillingPurchase purchase);
 
   /// Map a store product ID to the backend purchase kind.
-  /// Returns {'kind': 'credits', 'creditPack': ...} or
-  /// {'kind': 'subscription', 'planSlug': ...}, or null.
+  /// Returns {'kind': 'credits', 'creditPack': ...},
+  /// {'kind': 'subscription', 'planSlug': ...}, or
+  /// {'kind': 'ad_package', 'adPackage': ...}, or null.
   Map<String, String>? backendKindFor(String productId);
 
   /// Map a billing-screen item to its store product ID, or null.
+  /// [kind]: 'credits' | 'subscription' | 'ad_package'.
+  /// 'ad_package' uses [adPackage] (starter|growth|pro|scale) and maps to
+  /// the one-time store product for that Paid Boost package.
   String? productIdForPurchase({
     required String kind,
     String? planSlug,
     String? creditPack,
+    String? adPackage,
   });
 
   bool isCreditsProduct(String productId);

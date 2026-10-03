@@ -1939,11 +1939,20 @@ class AppStrings {
   String get rrInvalidNumber => _get(
       'Please enter valid numbers.', 'براہ کرم درست اعداد لکھیں۔', 'يرجى إدخال أرقام صحيحة.');
   String get searchComments => _get('Search comments…', 'تبصرے تلاش کریں…', 'ابحث في التعليقات…');
+  String get searchPosts => _get('Search posts…', 'پوسٹس تلاش کریں…', 'ابحث في المنشورات…');
   String get editComment => _get('Edit comment', 'تبصرہ ایڈٹ کریں', 'تعديل التعليق');
   String get deleteComment => _get('Delete comment', 'تبصرہ حذف کریں', 'حذف التعليق');
   String get deleteCommentConfirm => _get(
       'Delete this comment?', 'کیا یہ تبصرہ حذف کر دیں؟', 'حذف هذا التعليق؟');
   String get commentLabel => _get('Comment', 'تبصرہ', 'التعليق');
+  String get editPost => _get('Edit post', 'پوسٹ ایڈٹ کریں', 'تعديل المنشور');
+  String get deletePost => _get('Delete post', 'پوسٹ حذف کریں', 'حذف المنشور');
+  String get deletePostConfirm => _get(
+      'Delete this post permanently? This cannot be undone.',
+      'یہ پوسٹ مستقل طور پر حذف کریں؟ یہ عمل واپس نہیں ہو سکتا۔',
+      'حذف هذا المنشور نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.');
+  String get topicsLabel => _get(
+      'Topics (comma separated)', 'موضوعات (کاما سے الگ کریں)', 'المواضيع (مفصولة بفواصل)');
   String get editProduct => _get('Edit product', 'پراڈکٹ ایڈٹ کریں', 'تعديل المنتج');
   String get deleteProduct => _get('Delete product', 'پراڈکٹ حذف کریں', 'حذف المنتج');
   String get deleteProductConfirm => _get(
@@ -6301,6 +6310,31 @@ class AppStrings {
         '$n hari',
         '$n দিন'
       );
+  // --- AI Ad Builder package purchase (Buy flow) ---
+  String get buyPackage =>
+      _get('Buy package', 'پیکیج خریدیں', 'اشترِ الباقة');
+  String get packagePurchased =>
+      _get('Package purchased', 'پیکیج خرید لیا گیا', 'تم شراء الباقة');
+  String get packageNotConfigured => _get(
+        'This package is not available for purchase yet.',
+        'یہ پیکیج ابھی خریداری کے لیے دستیاب نہیں ہے۔',
+        'هذه الباقة غير متاحة للشراء بعد.',
+      );
+  String get packagePurchaseSuccess => _get(
+        'Payment confirmed — your package is now active.',
+        'ادائیگی کی تصدیق ہو گئی — آپ کا پیکیج اب فعال ہے۔',
+        'تم تأكيد الدفع — باقتك نشطة الآن.',
+      );
+  String get packagePurchaseFailed => _get(
+        'Payment could not be confirmed. Please try again.',
+        'ادائیگی کی تصدیق نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔',
+        'تعذّر تأكيد الدفع. حاول مجددًا.',
+      );
+  String get packagePurchasePending => _get(
+        'Payment is pending — we will confirm it automatically.',
+        'ادائیگی زیر التواء ہے — ہم اس کی خودکار تصدیق کریں گے۔',
+        'الدفع قيد الانتظار — سنؤكده تلقائيًا.',
+      );
   String get managedByFreeAi => _get(
         'Managed by Free Grow AI',
         'فری گرو AI کے زیر انتظام',
@@ -9898,6 +9932,21 @@ class AppStrings {
         'Nelerle ilgileniyorsun?',
         'Kamu tertarik pada apa?',
         'আপনি কীসে আগ্রহী?'
+      );
+
+  /// Selected-count subtitle on the interests grid, e.g. "3 selected".
+  String interestsSelected(int n) => _get(
+        '$n selected',
+        '$n منتخب کیے گئے',
+        '$n محدد',
+        '$n चयनित',
+        '$n sélectionné',
+        '$n seleccionados',
+        '$n selecionados',
+        '$n ausgewählt',
+        '$n seçildi',
+        '$n dipilih',
+        '$nটি নির্বাচিত'
       );
   String get boardWelcomeBack =>
       _get('Welcome Back', 'واپس خوش آمدید', 'مرحباً بعودتك',

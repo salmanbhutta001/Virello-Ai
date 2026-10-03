@@ -10,6 +10,7 @@ must sit behind the real JWT auth (never dev_noauth).
 from __future__ import annotations
 
 import hmac
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -43,6 +44,8 @@ from app.services.campaign_delete import delete_campaign_cascade
 from app.services.payments.ledger import grant_credits
 
 router = APIRouter()
+
+log = logging.getLogger(__name__)
 
 
 async def require_admin(user: User = Depends(get_current_user)) -> User:
@@ -438,6 +441,105 @@ async def admin_pause_campaign(campaign_id: str, db: AsyncSession = Depends(get_
     return {"ok": True, "status": "paused"}
 
 
+class CampaignAdminEditIn(BaseModel):
+    title: str | None = None
+    status: str | None = None
+    budget_usd: float | None = None
+
+
+@router.patch("/campaigns/{campaign_id}")
+async def admin_edit_campaign(campaign_id: str, body: CampaignAdminEditIn,
+                              db: AsyncSession = Depends(get_db),
+                              admin: User = Depends(require_admin)) -> dict:
+    """Admin edits any campaign's title / status / budget. Audit-logged.
+
+    This endpoint was missing while the mobile Admin Panel already called
+    it — edits 404'd and the app showed a generic "could not launch" error.
+    """
+    try:
+        cid = uuid.UUID(str(campaign_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Campaign not found")
+    c = (await db.execute(select(Campaign).where(
+        Campaign.id == cid))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Campaign not found")
+    changed: list[str] = []
+    if body.title is not None:
+        title = body.title.strip()
+        if not title or len(title) > 255:
+            raise HTTPException(400, "Title must be 1-255 characters")
+        c.title = title
+        changed.append("title")
+    if body.status is not None:
+        try:
+            new_status = CampaignStatus(body.status)
+        except ValueError:
+            raise HTTPException(400, f"Invalid status: {body.status}")
+        c.status = new_status
+        changed.append(f"status={new_status.value}")
+    if body.budget_usd is not None:
+        if body.budget_usd < 0:
+            raise HTTPException(400, "budget_usd must be >= 0")
+        c.budget_usd = float(body.budget_usd)
+        changed.append(f"budget_usd={body.budget_usd}")
+    if not changed:
+        raise HTTPException(400, "Nothing to update")
+    _audit(db, admin.id, "admin.campaign.edit",
+           f"campaign={campaign_id} " + ",".join(changed))
+    await db.commit()
+    return {"ok": True, "id": str(c.id), "status": c.status.value,
+            "title": c.title, "budget_usd": c.budget_usd}
+
+
+@router.post("/campaigns/{campaign_id}/resume")
+async def admin_resume_campaign(campaign_id: str,
+                                db: AsyncSession = Depends(get_db),
+                                admin: User = Depends(require_admin)) -> dict:
+    """Admin resumes a paused campaign (back to live). Audit-logged."""
+    try:
+        cid = uuid.UUID(str(campaign_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Campaign not found")
+    c = (await db.execute(select(Campaign).where(
+        Campaign.id == cid))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Campaign not found")
+    if c.status != CampaignStatus.paused:
+        raise HTTPException(400, "Only paused campaigns can be resumed")
+    c.status = CampaignStatus.live
+    _audit(db, admin.id, "admin.campaign.resume",
+           f"campaign={campaign_id}")
+    await db.commit()
+    return {"ok": True, "status": "live"}
+
+
+@router.delete("/campaigns/{campaign_id}")
+async def admin_delete_campaign(campaign_id: str,
+                                db: AsyncSession = Depends(get_db),
+                                admin: User = Depends(require_admin)) -> dict:
+    """Admin deletes ANY campaign with the full child cleanup
+    (delete_campaign_cascade — metrics, runs, placements, interactions,
+    growth loops, snapshots). Audit-logged.
+
+    This endpoint was missing while the mobile Admin Panel already called
+    it — deletes 404'd and the app showed a generic "could not launch"
+    error.
+    """
+    try:
+        cid = uuid.UUID(str(campaign_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Campaign not found")
+    c = (await db.execute(select(Campaign).where(
+        Campaign.id == cid))).scalar_one_or_none()
+    if not c:
+        raise HTTPException(404, "Campaign not found")
+    await delete_campaign_cascade(
+        db, c, actor_id=admin.id, audit_action="admin.campaign.delete")
+    await db.commit()
+    return {"ok": True, "deleted": str(cid)}
+
+
 # ---------------------------------------------------------------- AI usage
 @router.get("/ai-usage")
 async def ai_usage(db: AsyncSession = Depends(get_db),
@@ -798,15 +900,55 @@ async def admin_claim_reject(claim_id: str, body: ClaimRejectIn,
 
 
 class PostRewardIn(BaseModel):
-    reward_cents: int
+    reward_cents: int | None = None
+    title: str | None = None
+    topics: list[str] | None = None
+    status: str | None = None  # pending | approved | rejected
+
+
+_POST_STATUSES = ("pending", "approved", "rejected")
+
+
+@router.get("/posts")
+async def admin_posts(q: str = "", status: str = "", limit: int = 50,
+                      db: AsyncSession = Depends(get_db),
+                      _admin: User = Depends(require_admin)) -> dict:
+    """Every user's feed post (placement + campaign + author), newest
+    first. Powers the Admin Panel Posts tab."""
+    stmt = (select(DiscoveryPlacement, Campaign, User.email)
+            .join(Campaign, Campaign.id == DiscoveryPlacement.campaign_id)
+            .join(User, User.id == Campaign.user_id)
+            .order_by(DiscoveryPlacement.created_at.desc())
+            .limit(min(limit, 200)))
+    if status:
+        if status not in _POST_STATUSES:
+            raise HTTPException(400, f"Invalid status: {status}")
+        stmt = stmt.where(DiscoveryPlacement.status == status)
+    if q:
+        like = f"%{q}%"
+        stmt = stmt.where(Campaign.title.ilike(like)
+                          | User.email.ilike(like))
+    rows = (await db.execute(stmt)).all()
+    return {"posts": [
+        {"placement_id": str(p.id), "campaign_id": str(c.id),
+         "title": c.title, "post_url": c.post_url, "platform": c.platform,
+         "goal": c.goal.value, "mode": c.mode.value,
+         "topics": p.topics or [], "status": p.status,
+         "review_note": p.review_note or "",
+         "reward_cents": p.reward_cents,
+         "author_email": email,
+         "created_at": _iso(p.created_at)}
+        for p, c, email in rows]}
 
 
 @router.patch("/posts/{post_id}")
-async def admin_post_reward(post_id: str, body: PostRewardIn,
-                            db: AsyncSession = Depends(get_db),
-                            admin: User = Depends(require_admin)) -> dict:
-    """Set a post's cash reward badge (cents). Different posts can carry
-    different amounts; NULL/omitted means the default badge applies."""
+async def admin_post_edit(post_id: str, body: PostRewardIn,
+                          db: AsyncSession = Depends(get_db),
+                          admin: User = Depends(require_admin)) -> dict:
+    """Admin edits a feed post: campaign title, topics, review status,
+    and/or the per-post cash reward badge (cents). Only the fields present
+    in the body change — so the existing reward-only callers keep working.
+    Audit-logged."""
     try:
         pid = uuid.UUID(str(post_id))
     except (ValueError, AttributeError):
@@ -815,15 +957,96 @@ async def admin_post_reward(post_id: str, body: PostRewardIn,
         DiscoveryPlacement.id == pid))).scalar_one_or_none()
     if p is None:
         raise HTTPException(404, "Post not found")
-    cents = int(body.reward_cents)
-    if cents < 0 or cents > 100_000:
-        raise HTTPException(422, "reward_cents must be 0..100000")
-    p.reward_cents = cents
-    db.add(AuditLog(user_id=admin.id, action="admin.post.reward",
-                    details=f"post={post_id} reward_cents={cents}"))
+    changed: list[str] = []
+    if body.reward_cents is not None:
+        cents = int(body.reward_cents)
+        if cents < 0 or cents > 100_000:
+            raise HTTPException(422, "reward_cents must be 0..100000")
+        p.reward_cents = cents
+        changed.append(f"reward_cents={cents}")
+    if body.title is not None:
+        title = body.title.strip()
+        if not title or len(title) > 255:
+            raise HTTPException(400, "Title must be 1-255 characters")
+        campaign = (await db.execute(select(Campaign).where(
+            Campaign.id == p.campaign_id))).scalar_one_or_none()
+        if campaign is None:
+            raise HTTPException(404, "Post's campaign not found")
+        campaign.title = title
+        changed.append("title")
+    if body.topics is not None:
+        topics = [t.strip() for t in body.topics if t and t.strip()][:5]
+        p.topics = topics
+        changed.append(f"topics={len(topics)}")
+    if body.status is not None:
+        if body.status not in _POST_STATUSES:
+            raise HTTPException(400, f"Invalid status: {body.status}")
+        p.status = body.status
+        changed.append(f"status={body.status}")
+    if not changed:
+        raise HTTPException(400, "Nothing to update")
+    db.add(AuditLog(user_id=admin.id, action="admin.post.edit",
+                    details=f"post={post_id} " + ",".join(changed)))
     await db.commit()
-    return {"ok": True, "post_id": str(pid), "reward_cents": cents,
-            "reward_display": claims_svc.fmt_reward(cents)}
+    return {"ok": True, "post_id": str(pid),
+            "reward_cents": p.reward_cents, "status": p.status}
+
+
+@router.delete("/posts/{post_id}")
+async def admin_post_delete(post_id: str,
+                            db: AsyncSession = Depends(get_db),
+                            admin: User = Depends(require_admin)) -> dict:
+    """Admin deletes ANY feed post: product tags + tracked clicks cascade,
+    points awarded for creating the post are reversed (same policy as the
+    owner flow). The campaign itself is kept. Audit-logged."""
+    try:
+        pid = uuid.UUID(str(post_id))
+    except (ValueError, AttributeError):
+        raise HTTPException(404, "Post not found")
+    p = (await db.execute(select(DiscoveryPlacement).where(
+        DiscoveryPlacement.id == pid))).scalar_one_or_none()
+    if p is None:
+        raise HTTPException(404, "Post not found")
+    from app.models.commerce import PostProduct, ShopClick
+    await db.execute(
+        sa_delete(PostProduct).where(PostProduct.post_id == pid))
+    await db.execute(
+        sa_delete(ShopClick).where(ShopClick.post_id == pid))
+    reversed_points = 0
+    campaign = (await db.execute(select(Campaign).where(
+        Campaign.id == p.campaign_id))).scalar_one_or_none()
+    if campaign is not None:
+        try:
+            from app.models.rewards import PointsLedger
+            paid = (await db.execute(
+                select(func.coalesce(func.sum(PointsLedger.delta), 0))
+                .where(PointsLedger.user_id == campaign.user_id,
+                       PointsLedger.reason.in_(
+                           ("post_created", "post_with_products")),
+                       PointsLedger.ref_id == str(campaign.id),
+                       PointsLedger.delta > 0)
+            )).scalar() or 0
+            if paid > 0:
+                already = (await db.execute(
+                    select(func.count()).select_from(PointsLedger)
+                    .where(PointsLedger.user_id == campaign.user_id,
+                           PointsLedger.reason == "post_deleted_reversal",
+                           PointsLedger.ref_id == f"reversal:{pid}")
+                )).scalar() or 0
+                if not already:
+                    db.add(PointsLedger(
+                        user_id=campaign.user_id, delta=-int(paid),
+                        reason="post_deleted_reversal",
+                        ref_id=f"reversal:{pid}"))
+                    reversed_points = int(paid)
+        except Exception:
+            log.exception("admin post delete: points reversal skipped")
+    _audit(db, admin.id, "admin.post.delete",
+           f"post={post_id} points_reversed={reversed_points}")
+    await db.delete(p)
+    await db.commit()
+    return {"ok": True, "deleted": str(pid),
+            "points_reversed": reversed_points}
 
 
 # ---------------------------------------------------------------- ads phase 1: segments

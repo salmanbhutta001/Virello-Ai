@@ -11,6 +11,7 @@ import uuid
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.commerce import PostProduct, ShopClick
 from app.models.core import (
     AgentRun,
     AuditLog,
@@ -43,6 +44,15 @@ async def delete_campaign_cascade(
     ON DELETE CASCADE here), mirroring the original user-delete endpoint.
     Does NOT commit — the caller commits.
     """
+    # Product tags + tracked clicks hang off the campaign's placements
+    # (FK to discovery_placements.id, no ON DELETE CASCADE) — they must go
+    # before the placements themselves or Postgres raises an FK violation.
+    placement_ids = select(DiscoveryPlacement.id).where(
+        DiscoveryPlacement.campaign_id == campaign.id)
+    await db.execute(
+        delete(PostProduct).where(PostProduct.post_id.in_(placement_ids)))
+    await db.execute(
+        delete(ShopClick).where(ShopClick.post_id.in_(placement_ids)))
     for model in (
         AgentRun,
         MetricDaily,

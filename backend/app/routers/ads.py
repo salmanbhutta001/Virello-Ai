@@ -50,6 +50,9 @@ def _campaign_json(c: AdCampaign) -> dict:
         "duration_days": c.duration_days,
         "plan": c.plan,  # free | paid — Free Grow vs Paid Boost
         "package_id": c.package_id,  # paid package label, null for free
+        # unpaid | paid — set to "paid" only after a store-verified
+        # ad-package purchase (billing verify endpoints). Free stays unpaid.
+        "payment_status": getattr(c, "payment_status", "unpaid") or "unpaid",
         "growth_agent": agents_svc.agent_for_plan(c.plan),
         # free_growth_agent | paid_growth_agent — the AI managing this campaign
         "geo_mode": c.geo_mode,
@@ -105,6 +108,41 @@ async def geo_countries(db: AsyncSession = Depends(get_db),
                         user: User = Depends(get_current_user)) -> dict:
     """Country picker data: full ISO country list + region presets."""
     return builder.geo_svc.countries_payload()
+
+
+class AdCopyIn(BaseModel):
+    content: str | None = None
+    topics: list[str] | None = None
+    language: str | None = None  # en | ur (Roman Urdu) | ar
+    campaign_id: str | None = None  # optional: inherit content from own draft
+
+
+@router.post("/ad-copy")
+async def ad_copy(body: AdCopyIn, db: AsyncSession = Depends(get_db),
+                  user: User = Depends(get_current_user)) -> dict:
+    """AI Ad Builder: 3 ad copy variants (headline + text + CTA).
+
+    Stateless heuristic generator — no DB writes, no external provider.
+    Distinct angles: benefit-driven, curiosity-driven, action/urgency.
+    Never invents stats or guarantees; language auto-detects from content
+    when not given (falls back to en).
+    """
+    from app.services import ad_copy as ad_copy_svc
+
+    content = (body.content or "").strip()
+    if not content and body.campaign_id:
+        c = await _owned(db, user, body.campaign_id)
+        content = (c.content_ref or "").strip()
+    lang = (body.language or "").strip().lower() or None
+    if not lang and content:
+        try:
+            lang = lang_svc.detect_primary_code(content)
+        except Exception:
+            lang = "en"
+    if lang not in ad_copy_svc.SUPPORTED:
+        lang = "en"
+    return ad_copy_svc.generate_ad_copy_variants(
+        content=content, topics=body.topics, language=lang)
 
 
 @router.post("/campaigns", status_code=201)

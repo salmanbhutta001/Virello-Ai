@@ -593,6 +593,8 @@ class ApiClient {
     required String kind,
     String? planSlug,
     String? creditPack,
+    String? adPackage,
+    String? campaignId,
   }) =>
       _postJson('/api/v1/billing/play/verify', {
         'product_id': productId,
@@ -600,6 +602,8 @@ class ApiClient {
         'kind': kind,
         if (planSlug != null) 'plan_slug': planSlug,
         if (creditPack != null) 'credit_pack': creditPack,
+        if (adPackage != null) 'ad_package': adPackage,
+        if (campaignId != null) 'campaign_id': campaignId,
       });
 
   /// Store-aware purchase verification. Routes to the Play or Amazon
@@ -611,6 +615,8 @@ class ApiClient {
     required String kind,
     String? planSlug,
     String? creditPack,
+    String? adPackage,
+    String? campaignId,
     String? amazonUserId,
   }) {
     const store = String.fromEnvironment('VIRELLO_STORE', defaultValue: 'play');
@@ -621,6 +627,8 @@ class ApiClient {
         'kind': kind,
         if (planSlug != null) 'plan_slug': planSlug,
         if (creditPack != null) 'credit_pack': creditPack,
+        if (adPackage != null) 'ad_package': adPackage,
+        if (campaignId != null) 'campaign_id': campaignId,
         if (amazonUserId != null) 'amazon_user_id': amazonUserId,
       });
     }
@@ -630,6 +638,8 @@ class ApiClient {
       kind: kind,
       planSlug: planSlug,
       creditPack: creditPack,
+      adPackage: adPackage,
+      campaignId: campaignId,
     );
   }
 
@@ -1087,6 +1097,36 @@ class ApiClient {
     if (plan != null && plan.isNotEmpty) body['plan'] = plan;
     final j = await _postJson('/api/v1/ads/campaigns', body);
     return AdBuildResult.fromJson(j);
+  }
+
+  /// AI Ad Builder: 3 ad copy variants (headline/text/cta) from the
+  /// backend's heuristic generator. Throws on any failure — the caller
+  /// falls back to the next tier.
+  Future<List<Map<String, String>>> generateAdCopy({
+    String? content,
+    List<String>? topics,
+    String? language,
+    String? campaignId,
+  }) async {
+    final body = <String, dynamic>{};
+    if (content != null && content.isNotEmpty) body['content'] = content;
+    if (topics != null && topics.isNotEmpty) body['topics'] = topics;
+    if (language != null && language.isNotEmpty) body['language'] = language;
+    if (campaignId != null && campaignId.isNotEmpty) {
+      body['campaign_id'] = campaignId;
+    }
+    final j = await _postJson('/api/v1/ads/ad-copy', body);
+    final out = <Map<String, String>>[];
+    for (final v in ((j['variants'] as List?) ?? [])) {
+      final m = Map<String, dynamic>.from(v as Map);
+      out.add({
+        'headline': '${m['headline'] ?? ''}',
+        'text': '${m['text'] ?? ''}',
+        'cta': '${m['cta'] ?? ''}',
+      });
+      if (out.length >= 3) break;
+    }
+    return out;
   }
 
   Map<String, dynamic>? _geoCache;

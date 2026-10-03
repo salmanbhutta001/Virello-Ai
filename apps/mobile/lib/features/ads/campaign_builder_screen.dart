@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/ads_models.dart';
 import '../../services/ai_text_service.dart';
 import '../../services/api_client.dart';
+import '../../services/billing/billing.dart';
+import '../../services/billing/billing_provider.dart';
 import '../../main.dart';
 
 /// AI Ad Builder (Phase 1): paste post/link → AI analysis + proposals →
@@ -74,6 +79,22 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
   List<GrowthAgent> _agents = const [];
   bool _plansLoading = false;
 
+  // --- Package purchase (Buy flow) ---
+  // Store billing state. null = not checked yet.
+  bool? _storeAvailable;
+  List<BillingProduct>? _storeProducts;
+  StreamSubscription<List<BillingPurchase>>? _purchaseSub;
+  // Purchase receipts currently being server-verified (avoid double handling).
+  final Set<String> _verifyingTokens = {};
+  // Buy in flight: disables the Buy button to prevent double taps.
+  bool _buying = false;
+  // True once the store checkout actually opened — the purchase stream
+  // (not the sheet dismissal) then owns resetting _buying.
+  bool _buyStarted = false;
+  // Immediate local "paid" flag so the UI flips without waiting for the
+  // campaign-detail refresh (server payment_status is the source of truth).
+  bool _localPackagePaid = false;
+
   /// Board objective cards → the exact API objective values.
   static const _objectiveValues = ['sales', 'leads', 'engagement', 'followers'];
   static const _durationValues = [1, 3, 7, 14];
@@ -92,6 +113,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
     } else {
       _loadPlans();
     }
+    _initStoreBilling();
   }
 
   /// Auto-fill the input from clipboard if it contains a URL.
@@ -147,6 +169,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
 
   @override
   void dispose() {
+    _purchaseSub?.cancel();
     _inputCtrl.dispose();
     _durationCtrl.dispose();
     super.dispose();
@@ -1106,10 +1129,366 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
                 child: _packageOption(p),
               )),
         ],
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
+        _buyRow(current),
+        const SizedBox(height: 8),
         Text(s.budgetNeverExceeded,
             style: const TextStyle(fontSize: 12, color: VirelloColors.muted)),
       ]),
+    );
+  }
+
+  /// Buy row under the package options: a prominent Buy button for the
+  /// selected package, or a "purchased" state once the store-verified
+  /// purchase lands. (This card only renders for Paid Boost campaigns.)
+  Widget _buyRow(AdPackage current) {
+    final paid = _localPackagePaid || (_campaign?.isPackagePaid ?? false);
+    if (paid) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: VirelloColors.success.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle,
+                color: VirelloColors.success, size: 20),
+            const SizedBox(width: 8),
+            Text(s.packagePurchased,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: VirelloColors.success)),
+          ],
+        ),
+      );
+    }
+    final price = current.name.isNotEmpty
+        ? '\$${current.priceUsd.toStringAsFixed(0)}'
+        : '';
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _buying ? null : _onBuyPackage,
+        icon: _buying
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.shopping_cart_outlined, size: 20),
+        label: Text(
+          price.isEmpty ? s.buyPackage : '${s.buyPackage} · $price',
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: VirelloColors.pink,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: VirelloColors.pink.withValues(alpha: 0.4),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  // ------------------------- package purchase flow -------------------------
+
+  /// Check store billing availability once and listen for purchase updates.
+  /// The purchase result arrives on the stream and is verified server-side
+  /// before it counts — the app never treats a purchase as successful
+  /// on its own.
+  Future<void> _initStoreBilling() async {
+    bool available = false;
+    List<BillingProduct>? products;
+    try {
+      available = await Billing.instance.isAvailable();
+      if (available) {
+        products = await Billing.instance.queryProducts();
+      }
+    } catch (_) {
+      available = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _storeAvailable = available;
+      _storeProducts = products;
+    });
+    _purchaseSub = Billing.instance.purchaseStream.listen(
+      _handleStorePurchases,
+      onError: (_) {},
+    );
+    // The stream also emits purchases that completed while we were away.
+  }
+
+  /// Buy tap: the store is the only payment method. Without it (sideloaded
+  /// APK) show the honest "get the store version" dialog.
+  Future<void> _onBuyPackage() async {
+    if (_storeAvailable != true) {
+      // Re-check live in case init hadn't finished or the state is stale.
+      bool available = false;
+      List<BillingProduct>? products;
+      try {
+        available = await Billing.instance.isAvailable();
+        if (available) {
+          products = await Billing.instance.queryProducts();
+        }
+      } catch (_) {
+        available = false;
+      }
+      if (!mounted) return;
+      setState(() {
+        _storeAvailable = available;
+        _storeProducts = products;
+      });
+      if (!available) {
+        _showStoreUnavailableDialog();
+        return;
+      }
+    }
+    final productId = Billing.instance.productIdForPurchase(
+      kind: 'ad_package',
+      adPackage: _packageId,
+    );
+    final products = _storeProducts ?? const <BillingProduct>[];
+    final match = products.where((p) => p.productId == productId).toList();
+    if (productId == null || match.isEmpty) {
+      // No store counterpart (product not created in the console yet):
+      // say so honestly instead of opening a dead checkout.
+      _snack(s.packageNotConfigured, error: true);
+      return;
+    }
+    setState(() => _buying = true);
+    _showAdPackageSheet(match.first);
+  }
+
+  /// Confirm sheet: order summary with the REAL store price, then the
+  /// store checkout. The result arrives on the purchase stream and only
+  /// counts after the backend verify endpoint confirms it.
+  void _showAdPackageSheet(BillingProduct product) {
+    final pkg = _packages.firstWhere((p) => p.id == _packageId,
+        orElse: () => const AdPackage(
+            id: '', name: '', priceUsd: 0, durationDays: 7));
+    final title = pkg.name.isNotEmpty ? pkg.name : product.title;
+    final subtitle =
+        pkg.name.isNotEmpty ? s.packageDays(pkg.durationDays) : '';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => _AdPackageBuySheet(
+        itemTitle: title,
+        itemSubtitle: subtitle,
+        product: product,
+        onBuy: () async {
+          final ok = await Billing.instance.buyOneTime(product);
+          if (!mounted) return ok;
+          setState(() {
+            if (ok) {
+              _buyStarted = true;
+            } else {
+              // Store checkout never opened — re-enable Buy immediately.
+              _buying = false;
+            }
+          });
+          if (!ok) {
+            _snack(s.billingProviderError, error: true);
+            if (ctx.mounted) Navigator.of(ctx).pop();
+          }
+          return ok;
+        },
+      ),
+    ).then((_) {
+      // Sheet dismissed without a started purchase: re-enable Buy.
+      // (A started purchase is resolved by the stream handler instead.)
+      if (mounted && !_buyStarted) {
+        setState(() => _buying = false);
+      }
+    });
+  }
+
+  /// Honest blocked state when store billing is unavailable
+  /// (sideloaded APK, no Play Store): purchases only work in the
+  /// store version of Virello. Offers to open the store listing.
+  void _showStoreUnavailableDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(s.storeBillingNotAvailable,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(s.storeBillingOnly,
+            style: const TextStyle(
+                fontSize: 14, color: VirelloColors.muted, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(s.billingCancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _openStore();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VirelloColors.pink,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(s.storeBillingOpenStore),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Opens the store listing for the store version of Virello.
+  Future<void> _openStore() async {
+    final uri = Uri.parse(Billing.isAmazon
+        ? 'https://www.amazon.com/gp/mas/dl/android?p=com.virello.virello'
+        : 'https://play.google.com/store/apps/details?id=com.virello.virello');
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      _snack(s.billingCouldNotOpenBrowser, error: true);
+    }
+  }
+
+  /// Server-verified purchase handling. A purchase only counts after the
+  /// backend verify endpoint succeeds — we do NOT complete (and therefore
+  /// do not acknowledge/consume) unverified purchases, so the store can
+  /// retry or the user can restore them later.
+  Future<void> _handleStorePurchases(List<BillingPurchase> purchases) async {
+    for (final p in purchases) {
+      switch (p.status) {
+        case BillingPurchaseStatus.pending:
+          _snack(s.packagePurchasePending);
+          break;
+        case BillingPurchaseStatus.error:
+          // User-cancelled checkouts surface here too; stay quiet then.
+          if (p.errorCode != 'userCancelled') {
+            _snack(s.billingProviderError, error: true);
+          }
+          _resetBuying();
+          break;
+        case BillingPurchaseStatus.canceled:
+          _resetBuying();
+          break;
+        case BillingPurchaseStatus.purchased:
+        case BillingPurchaseStatus.restored:
+          await _verifyAdPackagePurchase(p);
+          break;
+      }
+    }
+  }
+
+  Future<void> _verifyAdPackagePurchase(BillingPurchase p) async {
+    final mapping = Billing.instance.backendKindFor(p.productId);
+    if (mapping == null || mapping['kind'] != 'ad_package') {
+      return; // not an ad-package purchase — owned by another flow
+    }
+    final token = p.receipt;
+    if (token.isEmpty) {
+      _snack(s.packagePurchaseFailed, error: true);
+      _resetBuying();
+      return;
+    }
+    if (!_verifyingTokens.add(token)) return; // already in flight
+    try {
+      final res = await apiClient.verifyStorePurchase(
+        productId: p.productId,
+        receipt: token,
+        kind: 'ad_package',
+        adPackage: mapping['adPackage'],
+        campaignId: _campaign?.id,
+        amazonUserId: p.storeUserId,
+      );
+      if (_verifyOk(res)) {
+        // Server confirmed: NOW acknowledge/consume with the store.
+        try {
+          await Billing.instance.completePurchase(p);
+        } catch (_) {
+          // Already acknowledged elsewhere — the grant already happened.
+        }
+        if (!mounted) return;
+        setState(() {
+          _localPackagePaid = true;
+          _buying = false;
+          _buyStarted = false;
+        });
+        _snack(s.packagePurchaseSuccess);
+        // Server payment_status is the source of truth — refresh it.
+        await _refreshCampaign();
+      } else {
+        // Do NOT complete: the store keeps it restorable/retryable.
+        _snack(s.packagePurchaseFailed, error: true);
+        _resetBuying();
+      }
+    } on AuthException {
+      if (mounted) handleAuthFailure(s.sessionExpired);
+      _resetBuying();
+    } on ApiException catch (e) {
+      // 503 = store billing not configured server-side: honest message,
+      // purchase stays uncompleted so it can be retried later.
+      _snack(
+          e.status == 503 ? s.storeBillingNotAvailable : s.packagePurchaseFailed,
+          error: true);
+      _resetBuying();
+    } catch (_) {
+      _snack(s.packagePurchaseFailed, error: true);
+      _resetBuying();
+    } finally {
+      _verifyingTokens.remove(token);
+    }
+  }
+
+  /// Re-read the campaign from the server so payment_status (the source
+  /// of truth) drives the UI. Works whether the campaign was opened by id
+  /// or just built in this session.
+  Future<void> _refreshCampaign() async {
+    final id = _campaign?.id;
+    if (id == null || id.isEmpty) return;
+    try {
+      final detail = await apiClient.getAdCampaignDetail(id);
+      if (!mounted) return;
+      setState(() => _campaign = detail.campaign);
+    } on AuthException {
+      if (mounted) handleAuthFailure(s.sessionExpired);
+    } catch (_) {
+      // Non-fatal: the local paid flag already flipped the UI.
+    }
+  }
+
+  /// A verify only counts when the server says so. The verify endpoints
+  /// answer {"ok": true, ...} on success — accept that explicitly, plus
+  /// the legacy verified/status shapes for compatibility.
+  bool _verifyOk(Map<String, dynamic> res) {
+    if (res['ok'] == true) return true;
+    final v = res['verified'];
+    final st = '${res['status'] ?? ''}'.toLowerCase();
+    return v == true || st == 'completed' || st == 'success' || st == 'paid';
+  }
+
+  void _resetBuying() {
+    if (!mounted) return;
+    setState(() {
+      _buying = false;
+      _buyStarted = false;
+    });
+  }
+
+  void _snack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: error ? VirelloColors.danger : VirelloColors.navy,
+      ),
     );
   }
 
@@ -1200,58 +1579,75 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
 
   /// AI intelligence: writes 3 ad copy variants (headline + primary
   /// text + CTA) for the analyzed post.
+  ///
+  /// 3-tier chain: backend heuristic -> Pollinations AI -> local
+  /// heuristic. The "Couldn't reach Virello AI" error only shows if ALL
+  /// three tiers fail — tier 3 always produces 3 variants offline.
   Future<void> _generateAdCopy() async {
     final r = _result;
     if (r == null || _copyWorking) return;
     setState(() => _copyWorking = true);
     try {
       final sig = r.signals;
-      final topics = ((sig['topics'] as List?) ?? []).join(', ');
+      final topics =
+          ((sig['topics'] as List?) ?? []).map((e) => '$e').toList();
       final content = _campaign?.contentRef ?? '';
-      final langNote = appState.localeCode == 'ur'
-          ? 'Write in Roman Urdu.'
+      final lang = appState.localeCode == 'ur'
+          ? 'ur'
           : appState.localeCode == 'ar'
-              ? 'Write in Arabic.'
-              : 'Write in English.';
-      final prompt =
-          'Write 3 high-converting ad copy variants for this post. $langNote\n'
-          'Post: $content\nTopics: $topics\n\n'
-          'For each variant output exactly:\n'
-          'HEADLINE: <under 8 words>\nTEXT: <one punchy sentence>\nCTA: <2-4 words>\n'
-          'Separate variants with a blank line. No numbering, no extra commentary.';
-      final body =
-          await AiTextService.instance.generate(prompt: prompt);
+              ? 'ar'
+              : 'en';
+
+      List<Map<String, String>> out = const [];
+
+      // Tier 1: backend heuristic ad-copy endpoint (fast, reliable).
+      try {
+        out = await apiClient.generateAdCopy(
+          content: content,
+          topics: topics,
+          language: lang,
+          campaignId: _campaign?.id,
+        );
+      } catch (_) {
+        // fall through to tier 2
+      }
+
+      // Tier 2: Pollinations free-tier AI text.
+      if (out.isEmpty) {
+        try {
+          final langNote = lang == 'ur'
+              ? 'Write in Roman Urdu.'
+              : lang == 'ar'
+                  ? 'Write in Arabic.'
+                  : 'Write in English.';
+          final prompt =
+              'Write 3 high-converting ad copy variants for this post. $langNote\n'
+              'Post: $content\nTopics: ${topics.join(', ')}\n\n'
+              'For each variant output exactly:\n'
+              'HEADLINE: <under 8 words>\nTEXT: <one punchy sentence>\nCTA: <2-4 words>\n'
+              'Separate variants with a blank line. No numbering, no extra commentary.';
+          final body =
+              await AiTextService.instance.generate(prompt: prompt);
+          if (body != null && body.trim().isNotEmpty) {
+            out = _parseAdCopyText(body);
+          }
+        } catch (_) {
+          // fall through to tier 3
+        }
+      }
+
+      // Tier 3: local heuristic — always produces 3 variants, offline-safe.
+      if (out.isEmpty) {
+        out = _localAdCopyVariants(
+            content: content, topics: topics, lang: lang);
+      }
+
       if (!mounted) return;
-      if (body != null && body.trim().isNotEmpty) {
-        final blocks = body.split(RegExp(r'\n\s*\n'));
-        final out = <Map<String, String>>[];
-        for (final b in blocks) {
-          String h = '', t = '', cta = '';
-          for (final line in b.split('\n')) {
-            final l = line.trim();
-            if (l.toUpperCase().startsWith('HEADLINE:')) {
-              h = l.replaceFirst(RegExp(r'(?i)^headline:\s*'), '').trim();
-            } else if (l.toUpperCase().startsWith('TEXT:')) {
-              t = l.replaceFirst(RegExp(r'(?i)^text:\s*'), '').trim();
-            } else if (l.toUpperCase().startsWith('CTA:')) {
-              cta = l.replaceFirst(RegExp(r'(?i)^cta:\s*'), '').trim();
-            }
-          }
-          if (h.isNotEmpty || t.isNotEmpty) {
-            out.add({'headline': h, 'text': t, 'cta': cta});
-          }
-          if (out.length >= 3) break;
-        }
-        setState(() {
-          _adCopies = out;
-          _copyWorking = false;
-        });
-        if (out.isEmpty && mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(s.askFailed)));
-        }
-      } else {
-        setState(() => _copyWorking = false);
+      setState(() {
+        _adCopies = out;
+        _copyWorking = false;
+      });
+      if (out.isEmpty && mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(s.askFailed)));
       }
@@ -1261,6 +1657,188 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(s.askFailed)));
     }
+  }
+
+  /// Parse HEADLINE:/TEXT:/CTA: blocks from AI-generated ad copy text.
+  List<Map<String, String>> _parseAdCopyText(String body) {
+    final blocks = body.split(RegExp(r'\n\s*\n'));
+    final out = <Map<String, String>>[];
+    for (final b in blocks) {
+      String h = '', t = '', cta = '';
+      for (final line in b.split('\n')) {
+        final l = line.trim();
+        if (l.toUpperCase().startsWith('HEADLINE:')) {
+          h = l.replaceFirst(RegExp(r'^headline:\s*', caseSensitive: false), '').trim();
+        } else if (l.toUpperCase().startsWith('TEXT:')) {
+          t = l.replaceFirst(RegExp(r'^text:\s*', caseSensitive: false), '').trim();
+        } else if (l.toUpperCase().startsWith('CTA:')) {
+          cta = l.replaceFirst(RegExp(r'^cta:\s*', caseSensitive: false), '').trim();
+        }
+      }
+      if (h.isNotEmpty || t.isNotEmpty) {
+        out.add({'headline': h, 'text': t, 'cta': cta});
+      }
+      if (out.length >= 3) break;
+    }
+    return out;
+  }
+
+  /// Offline heuristic ad copy (tier 3). Mirrors the backend generator:
+  /// extracts keywords from the post and builds 3 angle-distinct
+  /// variants (benefit / curiosity / action). Never throws, never
+  /// returns empty.
+  List<Map<String, String>> _localAdCopyVariants({
+    required String content,
+    required List<String> topics,
+    required String lang,
+  }) {
+    final l = (lang == 'ur' || lang == 'ar') ? lang : 'en';
+    var text = content.replaceAll(RegExp(r'https?://\S+|www\.\S+'), ' ');
+    text = text.replaceAllMapped(RegExp(r'#(\w+)'),
+        (m) => ' ${(m.group(1) ?? '').replaceAllMapped(
+                RegExp(r'(?<!^)([A-Z])'), (x) => ' ${x.group(1)}')} ');
+    final stop = _localStopwords(l);
+    final minLen = l == 'ar' ? 2 : 3;
+    final words = text
+        .split(RegExp(r'[^\p{L}\p{N}]+', unicode: true))
+        .map((w) => w.trim())
+        .where((w) =>
+            w.length >= minLen && !stop.contains(w.toLowerCase()))
+        .toList();
+    final freq = <String, int>{};
+    final firstIdx = <String, int>{};
+    for (var i = 0; i < words.length; i++) {
+      final w = words[i].toLowerCase();
+      freq[w] = (freq[w] ?? 0) + 1;
+      firstIdx.putIfAbsent(w, () => i);
+    }
+    final sorted = freq.keys.toList()
+      ..sort((a, b) {
+        final c = (freq[b] ?? 0).compareTo(freq[a] ?? 0);
+        return c != 0 ? c : (firstIdx[a] ?? 0).compareTo(firstIdx[b] ?? 0);
+      });
+    String kw = sorted.isNotEmpty ? sorted.first : '';
+    if (kw.isEmpty && topics.isNotEmpty) {
+      kw = topics.first.trim().toLowerCase();
+    }
+    final kwTitle = kw.isEmpty
+        ? _localGenericSubject(l)
+        : (l == 'ar'
+            ? kw
+            : kw
+                .split(' ')
+                .map((w) =>
+                    w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+                .join(' '));
+    final kLow = kw.isEmpty ? _localGenericSubject(l) : kw;
+    final topic = topics.isNotEmpty
+        ? topics.first.trim()
+        : (l == 'en'
+            ? 'your content'
+            : l == 'ur'
+                ? 'apka content'
+                : 'محتواك');
+    return _localAdCopyTemplates(l, kwTitle, kLow, topic);
+  }
+
+  String _localGenericSubject(String l) =>
+      l == 'ur' ? 'apki post' : l == 'ar' ? 'منشورك' : 'your post';
+
+  List<Map<String, String>> _localAdCopyTemplates(
+      String l, String kw, String k, String topic) {
+    if (l == 'ur') {
+      return [
+        {
+          'headline': '$kw — Apke Liye Asaan',
+          'text':
+              'Dekhein $k $topic ko kaisay grow karta hai. Aaj hi free mein shuru karein.',
+          'cta': 'Mazeed Janein',
+        },
+        {
+          'headline': 'Kya $kw Itna Asaan Hai?',
+          'text':
+              'Aik click par dekhein $k apke content ke liye kya kar sakta hai.',
+          'cta': 'Dekhein Kaise',
+        },
+        {
+          'headline': 'Aaj Hi $kw Free Try Karein',
+          'text':
+              'Apki tarah kay creators pehle se $k use kar rahe hain. Aaj hi dekhein.',
+          'cta': 'Shuru Karein',
+        },
+      ];
+    }
+    if (l == 'ar') {
+      return [
+        {
+          'headline': '$kw يعمل من أجلك',
+          'text': 'اكتشف كيف يمكن لـ $kw أن ينمّي $topic. ابدأ اليوم مجانًا.',
+          'cta': 'اعرف المزيد',
+        },
+        {
+          'headline': 'ماذا لو كان $kw بهذه السهولة؟',
+          'text': 'اكتشف ما يمكن أن يفعله $kw لمحتواك بنقرة واحدة.',
+          'cta': 'شاهد كيف',
+        },
+        {
+          'headline': 'جرّب $kw مجانًا اليوم',
+          'text': 'المبدعون مثلك يستكشفون $kw بالفعل. ألقِ نظرة وابدأ مجانًا.',
+          'cta': 'ابدأ الآن',
+        },
+      ];
+    }
+    return [
+      {
+        'headline': '$kw That Works for You',
+        'text':
+            'See how $k can lift $topic. Start growing today — free, no ad spend needed.',
+        'cta': 'Learn More',
+      },
+      {
+        'headline': 'What If $kw Was This Easy?',
+        'text': 'Discover what $k can do for your content in a single click.',
+        'cta': 'See How',
+      },
+      {
+        'headline': 'Try $kw Free Today',
+        'text':
+            'Creators like you are already exploring $k. Take a look and start free.',
+        'cta': 'Get Started',
+      },
+    ];
+  }
+
+  Set<String> _localStopwords(String l) {
+    const en = {
+      'a','an','the','and','or','but','if','of','at','by','for','with','about',
+      'into','over','after','before','to','from','up','down','out','on','off',
+      'this','that','these','those','is','are','was','were','be','been',
+      'being','have','has','had','do','does','did','will','would','can',
+      'could','should','may','might','must','shall','i','you','he','she','it',
+      'we','they','them','his','her','its','our','their','my','your','me',
+      'him','us','what','which','who','whom','whose','when','where','why',
+      'how','not','no','yes','so','such','as','than','too','very','just',
+      'also','only','even','more','most','less','new','one','two','get','got',
+      'free','today','like','share','follow','comment','post','video','photo',
+      'check','now','here','there','all','any',
+    };
+    const ur = {
+      'ka','ki','ke','ko','se','ne','mein','me','par','aur','ya','to','tu',
+      'wo','woh','yeh','ye','hai','hain','ho','ga','gai','ge','hon','kar',
+      'kya','kab','kahan','kaise','kyon','kyun','lekin','magar','phir','bhi',
+      'sath','apne','apki','apka','mere','meri','mera','tumhe','tumhara',
+      'tumhari','ham','hamari','hamara','isme','iska','iski','uska','uski',
+      'unka','unki','jis','jiska','jinki','koi','kuch','sab','sabhi','tha',
+      'thi','theek','aaj','aj','nahi','nahin','sirf','bohot','zyada',
+    };
+    const ar = {
+      'من','في','على','إلى','أن','إن','كان','يكون','مع','هذا','هذه','ذلك',
+      'تلك','التي','الذي','الذين','ما','ماذا','كيف','متى','أين','لماذا',
+      'لكن','لكنه','ولكن','أو','و','ثم','قد','لا','نعم','هل','هو','هي','هم',
+      'هن','نحن','أنا','أنت','أنتم','كل','بعض','غير','عن','بين','قبل','بعد',
+      'خلال','أثناء','دون','ضد','نحو','حتى','إذا',
+    };
+    return l == 'ur' ? ur : l == 'ar' ? ar : en;
   }
 
   Widget _adCopyCard() {
@@ -2861,6 +3439,158 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Confirm sheet for an ad-package purchase: order summary with the real
+/// store price, then the store checkout. The sheet owns its own busy
+/// state; the purchase result arrives on the screen's purchase stream and
+/// only counts after the backend verify endpoint confirms it.
+class _AdPackageBuySheet extends StatefulWidget {
+  final String itemTitle;
+  final String itemSubtitle;
+  final BillingProduct product;
+  final Future<bool> Function() onBuy;
+  const _AdPackageBuySheet({
+    required this.itemTitle,
+    required this.itemSubtitle,
+    required this.product,
+    required this.onBuy,
+  });
+  @override
+  State<_AdPackageBuySheet> createState() => _AdPackageBuySheetState();
+}
+
+class _AdPackageBuySheetState extends State<_AdPackageBuySheet> {
+  AppStrings get s => AppStrings(appState.localeCode);
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final price = widget.product.price;
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 12,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: VirelloColors.muted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(s.buyPackage,
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: VirelloColors.chipBg,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s.billingOrderSummary,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: VirelloColors.muted,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.itemTitle,
+                                style: const TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w800)),
+                            if (widget.itemSubtitle.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(widget.itemSubtitle,
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: VirelloColors.muted)),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (price.isNotEmpty)
+                        Text(price,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: VirelloColors.pink)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.lock_outline,
+                    size: 14, color: VirelloColors.muted),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(s.storeBillingSecureNote,
+                      style: const TextStyle(
+                          fontSize: 12, color: VirelloColors.muted)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      try {
+                        await widget.onBuy();
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VirelloColors.pink,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(s.storeBillingTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
+            ),
+            TextButton(
+              onPressed: _busy ? null : () => Navigator.of(context).pop(),
+              child: Text(s.billingCancel),
+            ),
+          ],
+        ),
       ),
     );
   }

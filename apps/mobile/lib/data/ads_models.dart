@@ -190,6 +190,7 @@ class AdCampaign {
   final Map<String, dynamic> suggestedGeography; // {countries, reasons}
   final String plan; // free|paid — Free Grow (worldwide, $0) vs Paid Boost
   final String? packageId; // paid package id (starter|growth|pro|scale), null for free
+  final String paymentStatus; // unpaid|paid — paid only after store-verified buy
   final String growthAgent; // free_growth_agent | paid_growth_agent
 
   const AdCampaign({
@@ -215,6 +216,7 @@ class AdCampaign {
     this.suggestedGeography = const {},
     this.plan = 'paid',
     this.packageId,
+    this.paymentStatus = 'unpaid',
     this.growthAgent = 'paid_growth_agent',
   });
 
@@ -252,11 +254,13 @@ class AdCampaign {
             j['suggested_geography'] as Map? ?? const {}),
         plan: j['plan'] as String? ?? 'paid',
         packageId: j['package_id'] as String?,
+        paymentStatus: j['payment_status'] as String? ?? 'unpaid',
         growthAgent: j['growth_agent'] as String? ?? 'paid_growth_agent',
       );
 
   bool get isFree => plan == 'free';
   bool get isPaid => plan != 'free';
+  bool get isPackagePaid => paymentStatus == 'paid';
   bool get isFreeGrowthAgent => growthAgent == 'free_growth_agent';
   bool get isDraft => status == 'draft';
   bool get isPendingApproval => status == 'pending_approval';

@@ -23,6 +23,7 @@ from app.core.deps import get_current_user
 from app.core.database import get_db
 from app.models.billing import CreditLedger, PlanConfig, Transaction
 from app.models.core import Subscription, User
+from app.services.plans import get_package as _ad_package_def
 from app.services.payments import (
     Money, OrderRequest, PaymentProviderError, PaymentProviderNotConfigured,
     get_payment_provider, supported_providers,
@@ -187,7 +188,8 @@ async def verify_payment(body: VerifyIn, db: AsyncSession = Depends(get_db),
 
 
 async def _receipt_item_name(db: AsyncSession, plan_slug: str,
-                             credit_pack: str) -> str:
+                             credit_pack: str,
+                             ad_package: str = "") -> str:
     """Human-friendly purchased-item label for the receipt email."""
     if plan_slug:
         row = (await db.execute(
@@ -197,7 +199,41 @@ async def _receipt_item_name(db: AsyncSession, plan_slug: str,
             return f"{row.name} Plan"
     if credit_pack and credit_pack in CREDIT_PACKS:
         return f"{CREDIT_PACKS[credit_pack]['credits']:,} AI Credits"
+    if ad_package:
+        pkg = _ad_package_def(ad_package)
+        if pkg:
+            return f"{pkg['name']} Package"
     return "Virello Purchase"
+
+
+async def _mark_campaign_package_paid(db: AsyncSession, user: User,
+                                      campaign_id: str | None,
+                                      ad_package: str) -> None:
+    """Mark a campaign's package as paid after a verified ad-package buy.
+
+    Strict binding: marks only when the campaign belongs to the buyer and
+    its current package matches the purchased one. Anything else stays
+    unpaid — the completed transaction remains the audit trail, and the
+    app shows the honest state from campaign detail.
+    """
+    import uuid as _uuid
+
+    from app.models.ads import AdCampaign
+
+    if not campaign_id or not ad_package:
+        return
+    try:
+        cid = _uuid.UUID(str(campaign_id))
+    except (ValueError, AttributeError):
+        return
+    c = (await db.execute(
+        select(AdCampaign).where(AdCampaign.id == cid))).scalar_one_or_none()
+    if c is None or c.owner_id != user.id:
+        return
+    if c.plan == "free" or (c.package_id or "") != ad_package:
+        return
+    c.payment_status = "paid"
+    await db.commit()
 
 
 @router.post("/webhooks/{provider_name}")
@@ -293,7 +329,13 @@ from app.services.payments.google_play import (
 class PlayVerifyIn(BaseModel):
     product_id: str
     purchase_token: str
-    kind: str  # subscription | credits
+    kind: str  # subscription | credits | ad_package
+    plan_slug: str = ""
+    credit_pack: str = ""
+    # ad_package only: which Paid Boost package was bought
+    # (starter|growth|pro|scale) + the campaign it pays for.
+    ad_package: str = ""
+    campaign_id: str | None = None
 
 
 @router.post("/play/verify")
@@ -311,10 +353,12 @@ async def verify_play_purchase(body: PlayVerifyIn,
     if not expected:
         raise HTTPException(400, "Unknown Play product id")
     exp_kind, exp_slug = expected
-    if body.kind not in ("subscription", "credits") or body.kind != exp_kind:
+    if body.kind not in ("subscription", "credits", "ad_package") \
+            or body.kind != exp_kind:
         raise HTTPException(400, "kind does not match Play product id")
     plan_slug = exp_slug if body.kind == "subscription" else ""
     credit_pack = exp_slug if body.kind == "credits" else ""
+    ad_package = exp_slug if body.kind == "ad_package" else ""
 
     # Money comes from OUR catalog, never from the client.
     if body.kind == "credits":
@@ -322,6 +366,12 @@ async def verify_play_purchase(body: PlayVerifyIn,
         if not pack:
             raise HTTPException(400, "Unknown credit pack")
         money = Money(pack["price_usd"], settings.billing_currency)
+    elif body.kind == "ad_package":
+        pkg = _ad_package_def(ad_package)
+        if not pkg:
+            raise HTTPException(400, "Unknown ad package")
+        money = Money(Decimal(str(pkg["price_usd"])),
+                      settings.billing_currency)
     else:
         plan = next((p for p in await _plans(db)
                      if p.slug == plan_slug and p.active), None)
@@ -355,7 +405,8 @@ async def verify_play_purchase(body: PlayVerifyIn,
             money=money, status="pending",
             idempotency_key=f"google_play:{body.purchase_token}",
             raw={"product_id": body.product_id, "plan_slug": plan_slug,
-                 "credit_pack": credit_pack})
+                 "credit_pack": credit_pack, "ad_package": ad_package,
+                 "campaign_id": body.campaign_id})
 
     verification = Verification(
         provider="google_play", provider_ref=body.purchase_token,
@@ -365,13 +416,18 @@ async def verify_play_purchase(body: PlayVerifyIn,
     try:
         result = await apply_verified_purchase(
             db, txn, verification,
-            plan_slug=plan_slug, credit_pack=credit_pack)
+            plan_slug=plan_slug, credit_pack=credit_pack,
+            ad_package=ad_package)
     except ValueError as exc:
         raise HTTPException(402, str(exc))
     await db.refresh(txn)
     if not result.get("already_applied"):
-        item_name = await _receipt_item_name(db, plan_slug, credit_pack)
+        item_name = await _receipt_item_name(
+            db, plan_slug, credit_pack, ad_package)
         await send_payment_receipt(user, txn, item_name)
+    if body.kind == "ad_package" and body.campaign_id:
+        await _mark_campaign_package_paid(
+            db, user, body.campaign_id, ad_package)
     return {"ok": True, **result}
 
 
@@ -385,7 +441,10 @@ class AmazonVerifyIn(BaseModel):
     sku: str
     receipt_id: str
     amazon_user_id: str
-    kind: str  # subscription | credits
+    kind: str  # subscription | credits | ad_package
+    # ad_package only: bought package slug + the campaign it pays for.
+    ad_package: str = ""
+    campaign_id: str | None = None
 
 
 @router.post("/amazon/verify")
@@ -404,10 +463,12 @@ async def verify_amazon_purchase(body: AmazonVerifyIn,
     if not expected:
         raise HTTPException(400, "Unknown Amazon SKU")
     exp_kind, exp_slug = expected
-    if body.kind not in ("subscription", "credits") or body.kind != exp_kind:
+    if body.kind not in ("subscription", "credits", "ad_package") \
+            or body.kind != exp_kind:
         raise HTTPException(400, "kind does not match Amazon SKU")
     plan_slug = exp_slug if body.kind == "subscription" else ""
     credit_pack = exp_slug if body.kind == "credits" else ""
+    ad_package = exp_slug if body.kind == "ad_package" else ""
 
     # Money comes from OUR catalog, never from the client.
     if body.kind == "credits":
@@ -415,6 +476,12 @@ async def verify_amazon_purchase(body: AmazonVerifyIn,
         if not pack:
             raise HTTPException(400, "Unknown credit pack")
         money = Money(pack["price_usd"], settings.billing_currency)
+    elif body.kind == "ad_package":
+        pkg = _ad_package_def(ad_package)
+        if not pkg:
+            raise HTTPException(400, "Unknown ad package")
+        money = Money(Decimal(str(pkg["price_usd"])),
+                      settings.billing_currency)
     else:
         plan = next((p for p in await _plans(db)
                      if p.slug == plan_slug and p.active), None)
@@ -448,7 +515,8 @@ async def verify_amazon_purchase(body: AmazonVerifyIn,
             money=money, status="pending",
             idempotency_key=f"amazon_iap:{body.receipt_id}",
             raw={"sku": body.sku, "plan_slug": plan_slug,
-                 "credit_pack": credit_pack,
+                 "credit_pack": credit_pack, "ad_package": ad_package,
+                 "campaign_id": body.campaign_id,
                  "amazon_user_id": body.amazon_user_id})
 
     verification = Verification(
@@ -459,11 +527,16 @@ async def verify_amazon_purchase(body: AmazonVerifyIn,
     try:
         result = await apply_verified_purchase(
             db, txn, verification,
-            plan_slug=plan_slug, credit_pack=credit_pack)
+            plan_slug=plan_slug, credit_pack=credit_pack,
+            ad_package=ad_package)
     except ValueError as exc:
         raise HTTPException(402, str(exc))
     await db.refresh(txn)
     if not result.get("already_applied"):
-        item_name = await _receipt_item_name(db, plan_slug, credit_pack)
+        item_name = await _receipt_item_name(
+            db, plan_slug, credit_pack, ad_package)
         await send_payment_receipt(user, txn, item_name)
+    if body.kind == "ad_package" and body.campaign_id:
+        await _mark_campaign_package_paid(
+            db, user, body.campaign_id, ad_package)
     return {"ok": True, **result}

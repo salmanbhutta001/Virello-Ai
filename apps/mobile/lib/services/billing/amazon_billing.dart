@@ -22,11 +22,44 @@ import 'billing_provider.dart';
 /// (In-App Items tab) BEFORE the app is submitted:
 ///   Consumables: virello_credits_1000 / virello_credits_5000 / virello_credits_20000
 ///   Subscriptions: virello_pro_monthly / virello_scale_monthly
+///   Consumables (AI Ad Builder ad packages — NOT credit packs):
+///     virello_ad_starter / virello_ad_growth / virello_ad_pro / virello_ad_scale
 ///
 /// Testing: use the Amazon App Tester app (sandbox mode) — no real charges.
 class AmazonBilling implements BillingProvider {
   AmazonBilling._();
   static final AmazonBilling instance = AmazonBilling._();
+
+  static const Set<String> skuIds = {
+    'virello_credits_1000',
+    'virello_credits_5000',
+    'virello_credits_20000',
+    'virello_pro_monthly',
+    'virello_scale_monthly',
+    'virello_ad_starter',
+    'virello_ad_growth',
+    'virello_ad_pro',
+    'virello_ad_scale',
+  };
+
+  /// One-time (consumable-style) SKUs: credit packs AND ad packages.
+  static bool isOneTimeProduct(String sku) =>
+      sku.startsWith('virello_credits_') || sku.startsWith('virello_ad_');
+
+  /// Ad package id (starter|growth|pro|scale) -> its store SKU.
+  static String? adPackageSku(String adPackage) {
+    switch (adPackage) {
+      case 'starter':
+        return 'virello_ad_starter';
+      case 'growth':
+        return 'virello_ad_growth';
+      case 'pro':
+        return 'virello_ad_pro';
+      case 'scale':
+        return 'virello_ad_scale';
+    }
+    return null;
+  }
 
   static const _method = MethodChannel('virello/billing_amazon');
   static const _events = EventChannel('virello/billing_amazon/events');
@@ -50,6 +83,14 @@ class AmazonBilling implements BillingProvider {
         return {'kind': 'subscription', 'planSlug': 'pro'};
       case 'virello_scale_monthly':
         return {'kind': 'subscription', 'planSlug': 'scale'};
+      case 'virello_ad_starter':
+        return {'kind': 'ad_package', 'adPackage': 'starter'};
+      case 'virello_ad_growth':
+        return {'kind': 'ad_package', 'adPackage': 'growth'};
+      case 'virello_ad_pro':
+        return {'kind': 'ad_package', 'adPackage': 'pro'};
+      case 'virello_ad_scale':
+        return {'kind': 'ad_package', 'adPackage': 'scale'};
       default:
         return null;
     }
@@ -60,6 +101,7 @@ class AmazonBilling implements BillingProvider {
     required String kind,
     String? planSlug,
     String? creditPack,
+    String? adPackage,
   }) {
     if (kind == 'credits') {
       switch (creditPack) {
@@ -77,6 +119,8 @@ class AmazonBilling implements BillingProvider {
         case 'scale':
           return 'virello_scale_monthly';
       }
+    } else if (kind == 'ad_package') {
+      return adPackage == null ? null : adPackageSku(adPackage);
     }
     return null;
   }
@@ -99,15 +143,8 @@ class AmazonBilling implements BillingProvider {
   @override
   Future<List<BillingProduct>> queryProducts() async {
     try {
-      final skus = {
-        'virello_credits_1000',
-        'virello_credits_5000',
-        'virello_credits_20000',
-        'virello_pro_monthly',
-        'virello_scale_monthly',
-      };
-      final res = await _method
-          .invokeMapMethod<String, dynamic>('getProducts', {'skus': skus.toList()});
+      final res = await _method.invokeMapMethod<String, dynamic>(
+          'getProducts', {'skus': skuIds.toList()});
       if (res == null) return const [];
       final products = (res['products'] as List?) ?? const [];
       return products.whereType<Map>().map((p) {
@@ -119,8 +156,8 @@ class AmazonBilling implements BillingProvider {
           description: p['description'] as String? ?? '',
           price: p['price'] as String? ?? '',
           isSubscription:
-              itemType.toUpperCase().contains('SUBSCRIPTION') ||
-              !isCreditsProduct(sku),
+              itemType.toUpperCase().contains('SUBSCRIPTION') &&
+              !isOneTimeProduct(sku),
         );
       }).toList();
     } on MissingPluginException {
@@ -136,6 +173,10 @@ class AmazonBilling implements BillingProvider {
 
   @override
   Future<bool> buySubscription(BillingProduct product) =>
+      _purchase(product.productId);
+
+  @override
+  Future<bool> buyOneTime(BillingProduct product) =>
       _purchase(product.productId);
 
   Future<bool> _purchase(String sku) async {

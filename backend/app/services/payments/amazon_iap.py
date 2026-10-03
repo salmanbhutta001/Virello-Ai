@@ -23,15 +23,21 @@ from fastapi import HTTPException
 
 from app.core.config import settings
 
-# Amazon SKU -> (kind, plan_slug | credit_pack).
+# Amazon SKU -> (kind, plan_slug | credit_pack | ad_package).
 # These SKUs must match the In-App Items created in the Amazon
 # Developer Console (and the Flutter app's AmazonBilling SKU set).
+# Ad packages are CONSUMABLE in-app items (one per Paid Boost package),
+# separate from the credit packs — see google_play.py for the rationale.
 AMAZON_SKUS: dict[str, tuple[str, str]] = {
     "virello_credits_1000": ("credits", "starter"),
     "virello_credits_5000": ("credits", "growth"),
     "virello_credits_20000": ("credits", "scale"),
     "virello_pro_monthly": ("subscription", "pro"),
     "virello_scale_monthly": ("subscription", "scale"),
+    "virello_ad_starter": ("ad_package", "starter"),
+    "virello_ad_growth": ("ad_package", "growth"),
+    "virello_ad_pro": ("ad_package", "pro"),
+    "virello_ad_scale": ("ad_package", "scale"),
 }
 
 _RVS_PROD = "https://appstore-sdk.amazon.com/version/1.0/verifyReceiptId"

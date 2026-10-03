@@ -106,9 +106,10 @@ async def activate_subscription(db: AsyncSession, user_id: uuid.UUID, plan_slug:
 async def apply_verified_purchase(db: AsyncSession, txn: Transaction,
                                   verification: Verification,
                                   plan_slug: str = "",
-                                  credit_pack: str = "") -> dict:
-    """Turn a server-verified payment into subscription/credits. Safe to call
-    twice: a transaction already marked completed is a no-op."""
+                                  credit_pack: str = "",
+                                  ad_package: str = "") -> dict:
+    """Turn a server-verified payment into subscription/credits/ad-package.
+    Safe to call twice: a transaction already marked completed is a no-op."""
     if txn.status == "completed":
         return {"already_applied": True, "transaction_id": str(txn.id)}
     if verification.status != "completed":
@@ -120,6 +121,13 @@ async def apply_verified_purchase(db: AsyncSession, txn: Transaction,
         txn.status = "failed"
         await db.commit()
         raise ValueError("amount mismatch — possible tampering")
+    if txn.kind == "ad_package":
+        # Lazy import: app.services.plans must stay import-light.
+        from app.services.plans import get_package
+        if not get_package(ad_package):
+            txn.status = "failed"
+            await db.commit()
+            raise ValueError(f"unknown ad package '{ad_package}'")
     txn.status = "completed"
     txn.provider_ref = verification.provider_ref
     txn.raw = {**(txn.raw or {}), "verification": verification.raw}
@@ -137,4 +145,9 @@ async def apply_verified_purchase(db: AsyncSession, txn: Transaction,
         balance = await grant_credits(db, txn.user_id, pack["credits"],
                                       f"credit_pack:{credit_pack}", txn.id)
         result["credits_balance"] = balance
+    elif txn.kind == "ad_package" and ad_package:
+        # No credits/plan granted: the purchase marks the linked campaign's
+        # package as paid (done by the billing router, which owns the
+        # campaign check). The completed transaction is the audit trail.
+        result["ad_package"] = ad_package
     return result

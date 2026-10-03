@@ -834,12 +834,13 @@ class _PostsSection extends StatefulWidget {
 class _PostsSectionState extends State<_PostsSection>
     with _AdminGuard<_PostsSection> {
   final _q = TextEditingController();
+  bool _comments = false; // false = feed posts, true = user comments
   late Future<List<dynamic>> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = admin.comments();
+    _future = admin.posts();
   }
 
   @override
@@ -848,18 +849,48 @@ class _PostsSectionState extends State<_PostsSection>
     super.dispose();
   }
 
-  void _search() =>
-      setState(() => _future = admin.comments(q: _q.text.trim()));
+  void _search() => setState(() => _future = _comments
+      ? admin.comments(q: _q.text.trim())
+      : admin.posts(q: _q.text.trim()));
+
+  void _toggle(bool comments) {
+    if (_comments == comments) return;
+    setState(() {
+      _comments = comments;
+      _future = comments ? admin.comments() : admin.posts();
+    });
+  }
+
+  String _fmtMoney(dynamic cents) {
+    final c = cents is num ? cents : int.tryParse('$cents') ?? 0;
+    return '\$${(c / 100).toStringAsFixed(2)}';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Row(children: [
+          ChoiceChip(
+            label: Text(s.adminPosts),
+            selected: !_comments,
+            onSelected: (_) => _toggle(false),
+          ),
+          const SizedBox(width: 8),
+          ChoiceChip(
+            label: Text(s.boardComments),
+            selected: _comments,
+            onSelected: (_) => _toggle(true),
+          ),
+        ]),
+      ),
+      Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: TextField(
           controller: _q,
           decoration: InputDecoration(
-            hintText: s.searchComments,
+            hintText: _comments ? s.searchComments : s.searchPosts,
             prefixIcon: const Icon(Icons.search),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             contentPadding:
@@ -884,25 +915,7 @@ class _PostsSectionState extends State<_PostsSection>
                 itemCount: items.length,
                 itemBuilder: (_, i) {
                   final m = items[i] as Map<String, dynamic>;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                          child: Text(
-                              ('${m['author'] ?? '?'}').isNotEmpty
-                                  ? '${m['author']}'[0].toUpperCase()
-                                  : '?')),
-                      title: Text('${m['author'] ?? ''} · ${m['email'] ?? ''}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
-                      subtitle: Text('${m['text'] ?? ''}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _detail(m),
-                    ),
-                  );
+                  return _comments ? _commentCard(m) : _postCard(m);
                 },
               ),
             );
@@ -912,7 +925,136 @@ class _PostsSectionState extends State<_PostsSection>
     ]);
   }
 
-  void _detail(Map<String, dynamic> m) {
+  // ------------------------------------------------------------ post cards
+  Widget _postCard(Map<String, dynamic> p) {
+    final topics = (p['topics'] as List? ?? []).join(', ');
+    final reward = p['reward_cents'];
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        title: Text('${p['title'] ?? ''}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style:
+                const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: Text(
+            '${p['author_email'] ?? ''}\n${p['platform'] ?? ''}'
+            '${topics.isEmpty ? '' : ' · $topics'} · ${p['status'] ?? ''}'
+            '${reward != null ? ' · +${_fmtMoney(reward)}' : ''}',
+            style: const TextStyle(fontSize: 12)),
+        isThreeLine: true,
+        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 20),
+            tooltip: s.editPost,
+            onPressed: () => _editPostDialog(p),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline,
+                size: 20, color: Colors.red),
+            tooltip: s.deletePost,
+            onPressed: () async {
+              final yes = await confirmDelete(s.deletePostConfirm);
+              if (!yes) return;
+              final ok =
+                  await act(() => admin.deletePost('${p['placement_id']}'));
+              if (ok) {
+                toast(s.done);
+                _search();
+              }
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
+  /// Edit a feed post's title / topics / review status.
+  void _editPostDialog(Map<String, dynamic> p) {
+    final title = TextEditingController(text: '${p['title'] ?? ''}');
+    final topics =
+        TextEditingController(text: (p['topics'] as List? ?? []).join(', '));
+    var status = '${p['status'] ?? 'pending'}';
+    const statuses = ['pending', 'approved', 'rejected'];
+    if (!statuses.contains(status)) status = 'pending';
+    showDialog(
+      context: context,
+      builder: (dctx) => StatefulBuilder(
+        builder: (_, setD) => AlertDialog(
+          title: Text(s.editPost),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(controller: title,
+                  decoration:
+                      InputDecoration(labelText: s.productTitleLabel)),
+              TextField(controller: topics,
+                  decoration: InputDecoration(labelText: s.topicsLabel)),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: status,
+                decoration: InputDecoration(labelText: s.statusLabel),
+                items: statuses
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) => setD(() => status = v ?? status),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dctx), child: Text(s.cancel)),
+            FilledButton(
+              onPressed: () async {
+                final t = title.text.trim();
+                if (t.isEmpty) return;
+                Navigator.pop(dctx);
+                final ok = await act(() => admin.editPost(
+                    '${p['placement_id']}', {
+                      'title': t,
+                      'topics': topics.text
+                          .split(',')
+                          .map((e) => e.trim())
+                          .where((e) => e.isNotEmpty)
+                          .toList(),
+                      'status': status,
+                    }));
+                if (ok) {
+                  toast(s.done);
+                  _search();
+                }
+              },
+              child: Text(s.saveChanges),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------- comment cards
+  Widget _commentCard(Map<String, dynamic> m) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+            child: Text(
+                ('${m['author'] ?? '?'}').isNotEmpty
+                    ? '${m['author']}'[0].toUpperCase()
+                    : '?')),
+        title: Text('${m['author'] ?? ''} · ${m['email'] ?? ''}',
+            style: const TextStyle(
+                fontWeight: FontWeight.w600, fontSize: 13)),
+        subtitle: Text('${m['text'] ?? ''}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13)),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _commentDetail(m),
+      ),
+    );
+  }
+
+  void _commentDetail(Map<String, dynamic> m) {
     final id = '${m['id']}';
     showModalBottomSheet(
       context: context,
@@ -1287,6 +1429,7 @@ class _CampaignsSectionState extends State<_CampaignsSection>
                 itemBuilder: (_, i) {
                   final cp = items[i] as Map<String, dynamic>;
                   final live = cp['status'] == 'live' || cp['status'] == 'optimizing';
+                  final paused = cp['status'] == 'paused';
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
@@ -1305,6 +1448,14 @@ class _CampaignsSectionState extends State<_CampaignsSection>
                                 if (ok) { toast(s.done); _load(); }
                               },
                               child: Text(s.pause)),
+                        if (paused)
+                          TextButton(
+                              onPressed: () async {
+                                final ok = await act(
+                                    () => admin.resumeCampaign('${cp['id']}'));
+                                if (ok) { toast(s.done); _load(); }
+                              },
+                              child: Text(s.engineResume)),
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 20),
                           tooltip: s.editCampaign,

@@ -8,9 +8,10 @@ import '../../data/discovery_models.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
 
-/// Board screen 06 — "What are you interested in?": chip multi-select,
-/// pink Continue. Loads real topics from the backend when available;
-/// falls back to the board's static list. Saves via
+/// Board screen 06 — "What are you interested in?": premium 2-column card
+/// grid multi-select with pink gradient selected state, fixed bottom
+/// Continue. Loads real topics from the backend when available; falls back
+/// to the board's static list. Saves via
 /// PUT /api/v1/discovery/interests (local fallback on failure).
 class InterestsScreen extends StatefulWidget {
   const InterestsScreen({super.key, required this.onDone});
@@ -34,6 +35,33 @@ class _InterestsScreenState extends State<InterestsScreen> {
     ('gaming', 'Gaming', Icons.sports_esports_outlined),
     ('sports', 'Sports', Icons.fitness_center_outlined),
   ];
+
+  /// Icons for backend topic slugs beyond the board fallback, so any topic
+  /// count renders a proper card instead of a generic tag icon.
+  static const _iconBySlug = <String, IconData>{
+    'technology': Icons.devices_other_outlined,
+    'business': Icons.business_center_outlined,
+    'fashion': Icons.checkroom_outlined,
+    'food_recipes': Icons.restaurant_outlined,
+    'fitness': Icons.fitness_center_outlined,
+    'music': Icons.music_note_outlined,
+    'comedy': Icons.emoji_emotions_outlined,
+    'beauty_skincare': Icons.spa_outlined,
+    'finance': Icons.account_balance_outlined,
+    'photography': Icons.camera_alt_outlined,
+    'art_design': Icons.brush_outlined,
+    'motivation': Icons.local_fire_department_outlined,
+    'parenting': Icons.family_restroom_outlined,
+    'real_estate': Icons.home_work_outlined,
+    'automobiles': Icons.directions_car_outlined,
+    'pets': Icons.pets_outlined,
+    'news': Icons.newspaper_outlined,
+    'tech_gadgets': Icons.devices_other_outlined,
+    'health': Icons.favorite_outline,
+    'education': Icons.school_outlined,
+    'sports': Icons.emoji_events_outlined,
+    'gaming': Icons.sports_esports_outlined,
+  };
 
   List<Topic> _topics = [];
   final Set<String> _selected = {};
@@ -69,7 +97,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
     for (final f in _fallback) {
       if (f.$1 == slug) return f.$3;
     }
-    return Icons.tag_outlined;
+    return _iconBySlug[slug] ?? Icons.tag_outlined;
   }
 
   String _labelFor(Topic t) {
@@ -77,6 +105,16 @@ class _InterestsScreenState extends State<InterestsScreen> {
       if (f.$1 == t.slug) return f.$2;
     }
     return t.name(appState.localeCode);
+  }
+
+  void _toggle(String slug) {
+    setState(() {
+      if (_selected.contains(slug)) {
+        _selected.remove(slug);
+      } else {
+        _selected.add(slug);
+      }
+    });
   }
 
   Future<void> _continue() async {
@@ -111,59 +149,202 @@ class _InterestsScreenState extends State<InterestsScreen> {
     return Scaffold(
       backgroundColor: VTheme.scaffold(context),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                s.boardInterestedIn,
-                textAlign: TextAlign.center,
-                style:  TextStyle(
-                  color: VTheme.text(context),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  Text(
+                    s.boardInterestedIn,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: VTheme.text(context),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    s.interestsSelected(_selected.length),
+                    style: TextStyle(
+                      color: VTheme.textSec(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: VirelloColors.pink,
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.45,
+                      ),
+                      itemCount: topics.length,
+                      itemBuilder: (context, i) {
+                        final t = topics[i];
+                        final sel = _selected.contains(t.slug);
+                        return _InterestCard(
+                          label: _labelFor(t),
+                          icon: _iconFor(t.slug),
+                          selected: sel,
+                          onTap: () => _toggle(t.slug),
+                        );
+                      },
+                    ),
+            ),
+            // Fixed bottom CTA bar: the grid scrolls above it and can never
+            // slide underneath the Continue button.
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+              decoration: BoxDecoration(
+                color: VTheme.scaffold(context),
+                border: Border(
+                  top: BorderSide(
+                    color: VTheme.divider(context),
+                    width: 1,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _loading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: VirelloColors.pink,
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: topics.map((t) {
-                            final sel = _selected.contains(t.slug);
-                            return VSelectChip(
-                              label: _labelFor(t),
-                              icon: _iconFor(t.slug),
-                              selected: sel,
-                              onTap: () => setState(() {
-                                if (sel) {
-                                  _selected.remove(t.slug);
-                                } else {
-                                  _selected.add(t.slug);
-                                }
-                              }),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 12),
-              VPinkButton(
+              child: VPinkButton(
                 label: s.continueBtn,
                 loading: _saving,
                 onPressed: _selected.isEmpty ? null : _continue,
               ),
-              const SizedBox(height: 24),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium interest card: tinted icon tile + label on a hairline-bordered
+/// card; selected state gets a pink gradient border, soft pink wash, and a
+/// checkmark badge.
+class _InterestCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _InterestCard({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = VTheme.isDark(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(1.5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: selected ? VirelloColors.brandGradient : null,
+            border: selected
+                ? null
+                : Border.all(color: VTheme.divider(context), width: 1.2),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.5),
+              color: selected
+                  ? VirelloColors.pink
+                      .withValues(alpha: dark ? 0.12 : 0.06)
+                  : VTheme.card(context),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(9),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: selected
+                            ? VirelloColors.pink
+                                .withValues(alpha: dark ? 0.2 : 0.14)
+                            : VTheme.chip(context),
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 22,
+                        color: selected
+                            ? VirelloColors.pink
+                            : VTheme.textSec(context),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: selected
+                            ? VirelloColors.pink
+                            : VTheme.text(context),
+                      ),
+                    ),
+                  ],
+                ),
+                if (selected)
+                  PositionedDirectional(
+                    top: -8,
+                    end: -8,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: VirelloColors.brandGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: VirelloColors.pink
+                                .withValues(alpha: 0.45),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

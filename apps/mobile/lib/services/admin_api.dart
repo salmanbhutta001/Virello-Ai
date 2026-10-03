@@ -67,6 +67,10 @@ class AdminApi {
   Future<void> pauseCampaign(String id) =>
       _c.adminPost('/api/v1/admin/campaigns/$id/pause');
 
+  /// Resume a paused campaign (back to live).
+  Future<void> resumeCampaign(String id) =>
+      _c.adminPost('/api/v1/admin/campaigns/$id/resume');
+
   /// Edit a campaign's title / status / budget.
   Future<void> editCampaign(String id, Map<String, dynamic> body) =>
       _c.adminPatch('/api/v1/admin/campaigns/$id', body);
@@ -74,6 +78,26 @@ class AdminApi {
   /// Delete a campaign with all its children (metrics, runs, placements…).
   Future<void> deleteCampaign(String id) =>
       _c.adminDelete('/api/v1/admin/campaigns/$id');
+
+  // ------------------------------------------------------------- feed posts
+  /// Every user's feed post (placement + campaign + author), newest first.
+  /// Powers the Admin Panel Posts tab.
+  Future<List<dynamic>> posts({String q = '', String status = ''}) async {
+    final j = await _c.adminGet(
+        '/api/v1/admin/posts?q=${Uri.encodeQueryComponent(q)}'
+        '${status.isEmpty ? '' : '&status=$status'}');
+    return j['posts'] as List? ?? [];
+  }
+
+  /// Edit a feed post: campaign title / topics / review status.
+  /// Only the fields present in [body] change.
+  Future<void> editPost(String id, Map<String, dynamic> body) =>
+      _c.adminPatch('/api/v1/admin/posts/$id', body);
+
+  /// Delete any feed post (product tags + tracked clicks cascade,
+  /// creation points reversed). The campaign itself is kept.
+  Future<void> deletePost(String id) =>
+      _c.adminDelete('/api/v1/admin/posts/$id');
 
   Future<Map<String, dynamic>> aiUsage() =>
       _c.adminGet('/api/v1/admin/ai-usage');
@@ -156,10 +180,10 @@ class AdminApi {
   Future<void> deletePlacement(String id) =>
       _c.adminDelete('/api/v1/admin/discovery/$id');
 
-  // ------------------------------------------------------- comments ("posts")
-  /// Moderate what users wrote on posts: the feed items themselves are
-  /// external (Google News / Wikipedia) and cannot be edited by design —
-  /// this moderates the user-written comments on them.
+  // ------------------------------------------------------- comments
+  /// Moderate the user-written comments on feed posts: edit text or delete.
+  /// (The feed posts themselves are managed through posts()/editPost()/
+  /// deletePost() above.)
   Future<List<dynamic>> comments({String q = ''}) async {
     final j = await _c.adminGet(
         '/api/v1/admin/comments?q=${Uri.encodeQueryComponent(q)}');

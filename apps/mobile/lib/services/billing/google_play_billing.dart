@@ -12,6 +12,10 @@ import 'billing_provider.dart';
 ///     virello_credits_1000 / virello_credits_5000 / virello_credits_20000
 ///   Subscriptions:
 ///     virello_pro_monthly / virello_scale_monthly
+///   One-time products (AI Ad Builder ad packages — NOT credit packs;
+///   each buys one fixed-price/fixed-duration Paid Boost package):
+///     virello_ad_starter / virello_ad_growth / virello_ad_pro /
+///     virello_ad_scale
 class GooglePlayBilling implements BillingProvider {
   GooglePlayBilling._();
   static final GooglePlayBilling instance = GooglePlayBilling._();
@@ -22,10 +26,35 @@ class GooglePlayBilling implements BillingProvider {
     'virello_credits_20000',
     'virello_pro_monthly',
     'virello_scale_monthly',
+    'virello_ad_starter',
+    'virello_ad_growth',
+    'virello_ad_pro',
+    'virello_ad_scale',
   };
+
+  /// One-time (consumable-style) products: credit packs AND ad packages.
+  /// Everything else in [productIds] is a subscription.
+  static bool isOneTimeProduct(String productId) =>
+      productId.startsWith('virello_credits_') ||
+      productId.startsWith('virello_ad_');
 
   @override
   String get storeName => 'Google Play';
+
+  /// Ad package id (starter|growth|pro|scale) -> its Play product id.
+  static String? adPackageProductId(String adPackage) {
+    switch (adPackage) {
+      case 'starter':
+        return 'virello_ad_starter';
+      case 'growth':
+        return 'virello_ad_growth';
+      case 'pro':
+        return 'virello_ad_pro';
+      case 'scale':
+        return 'virello_ad_scale';
+    }
+    return null;
+  }
 
   @override
   Map<String, String>? backendKindFor(String productId) {
@@ -40,6 +69,14 @@ class GooglePlayBilling implements BillingProvider {
         return {'kind': 'subscription', 'planSlug': 'pro'};
       case 'virello_scale_monthly':
         return {'kind': 'subscription', 'planSlug': 'scale'};
+      case 'virello_ad_starter':
+        return {'kind': 'ad_package', 'adPackage': 'starter'};
+      case 'virello_ad_growth':
+        return {'kind': 'ad_package', 'adPackage': 'growth'};
+      case 'virello_ad_pro':
+        return {'kind': 'ad_package', 'adPackage': 'pro'};
+      case 'virello_ad_scale':
+        return {'kind': 'ad_package', 'adPackage': 'scale'};
       default:
         return null;
     }
@@ -50,6 +87,7 @@ class GooglePlayBilling implements BillingProvider {
     required String kind,
     String? planSlug,
     String? creditPack,
+    String? adPackage,
   }) {
     if (kind == 'credits') {
       switch (creditPack) {
@@ -67,6 +105,8 @@ class GooglePlayBilling implements BillingProvider {
         case 'scale':
           return 'virello_scale_monthly';
       }
+    } else if (kind == 'ad_package') {
+      return adPackage == null ? null : adPackageProductId(adPackage);
     }
     return null;
   }
@@ -88,7 +128,7 @@ class GooglePlayBilling implements BillingProvider {
             title: p.title,
             description: p.description,
             price: p.price,
-            isSubscription: !isCreditsProduct(p.id),
+            isSubscription: !isOneTimeProduct(p.id),
           ),
         )
         .toList();
@@ -96,6 +136,17 @@ class GooglePlayBilling implements BillingProvider {
 
   @override
   Future<bool> buyCredits(BillingProduct product) async {
+    final details = await _detailsFor(product.productId);
+    if (details == null) return false;
+    return InAppPurchase.instance.buyConsumable(
+      purchaseParam: PurchaseParam(productDetails: details),
+    );
+  }
+
+  @override
+  Future<bool> buyOneTime(BillingProduct product) async {
+    // Ad packages are one-time products: same consumable purchase path as
+    // credit packs. The backend maps the product id to kind "ad_package".
     final details = await _detailsFor(product.productId);
     if (details == null) return false;
     return InAppPurchase.instance.buyConsumable(

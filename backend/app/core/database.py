@@ -52,6 +52,9 @@ async def init_db() -> None:
     # Same for video_jobs.agnes_id (2026-10-03: created as VARCHAR(128) by
     # create_all, but Agnes returns longer IDs -> widen to TEXT).
     await _ensure_video_jobs_columns()
+    # Same for ad_campaigns.payment_status (2026-10-03: new column backing
+    # the AI Ad Builder Buy flow — paid only after store verification).
+    await _ensure_ad_campaigns_columns()
 
 
 async def _ensure_users_columns() -> None:
@@ -156,3 +159,32 @@ async def _ensure_video_jobs_columns() -> None:
                     print(f"init_db: could not widen video_jobs.agnes_id: {e}")
     except Exception as e:
         print(f"init_db: video_jobs column check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_ad_campaigns_columns() -> None:
+    """Add ad_campaigns.payment_status if missing. Idempotent.
+
+    Backs the AI Ad Builder Buy flow (2026-10-03): the column is set to
+    "paid" only by the billing verify endpoints after the store confirms
+    the matching ad-package purchase. Follows the users/products/video_jobs
+    ensure pattern — prod Alembic is unreliable. Never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            existing = await conn.run_sync(
+                lambda c: {col["name"] for col in sa.inspect(c).get_columns("ad_campaigns")}
+            )
+            if "payment_status" in existing:
+                return
+            try:
+                await conn.execute(sa.text(
+                    'ALTER TABLE ad_campaigns ADD COLUMN "payment_status" '
+                    "VARCHAR(16) DEFAULT 'unpaid'"
+                ))
+                print("init_db: added missing ad_campaigns.payment_status")
+            except Exception as e:
+                print(f"init_db: could not add ad_campaigns.payment_status: {e}")
+    except Exception as e:
+        print(f"init_db: ad_campaigns column check non-fatal ({type(e).__name__}): {e}")
