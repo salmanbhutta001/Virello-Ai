@@ -44,6 +44,50 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
 
   AppStrings get s => AppStrings(appState.localeCode);
 
+  /// AppBar action with a tiny function label under the icon, so users can
+  /// tell what each icon does without tapping it.
+  Widget _labeledAction({
+    Key? key,
+    required IconData icon,
+    required String label,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        key: key,
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 21, color: VTheme.text(context)),
+              const SizedBox(height: 1),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 56),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 8.5,
+                    height: 1.1,
+                    color: VTheme.textSec(context),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -175,26 +219,31 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         title: Text(s.campaigns,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
-          IconButton(
+          _labeledAction(
             key: TourTargets.growNewCampaign,
+            icon: Icons.addchart_outlined,
+            label: s.newAdShort,
             tooltip: s.adBuilder,
-            icon: const Icon(Icons.addchart_outlined),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const CampaignBuilderScreen(),
             )),
           ),
-          IconButton(
+          _labeledAction(
+            icon: Icons.hub_outlined,
+            label: s.audienceShort,
             tooltip: s.audienceIntel,
-            icon: const Icon(Icons.hub_outlined),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const AudienceIntelligenceScreen(),
             )),
           ),
-          IconButton(
+          _labeledAction(
+            icon: Icons.feed_outlined,
+            label: MyPostStrings(
+                    Localizations.localeOf(context).languageCode)
+                .myPosts,
             tooltip: MyPostStrings(
                     Localizations.localeOf(context).languageCode)
                 .myPosts,
-            icon: const Icon(Icons.feed_outlined),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const MyPostsScreen(),
             )),

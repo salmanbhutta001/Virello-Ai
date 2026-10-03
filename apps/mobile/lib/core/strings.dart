@@ -2905,6 +2905,8 @@ class AppStrings {
         'Pembuat Iklan AI',
         'AI বিজ্ঞাপন বিল্ডার'
       );
+  /// Short AppBar label under the "new campaign" icon.
+  String get newAdShort => _get('New Ad', 'نیا اشتہار');
   String get adBuilderTagline => _get(
         'Paste a post or link — AI analyzes it, proposes a campaign, and waits for your approval. Nothing launches without you.',
         'پوسٹ یا لنک پیسٹ کریں — AI اس کا تجزیہ کرے گا، مہم تجویز کرے گا اور آپ کی منظوری کا انتظار کرے گا۔ آپ کے بغیر کچھ شروع نہیں ہوگا۔',
@@ -3902,6 +3904,8 @@ class AppStrings {
         'Kecerdasan audiens',
         'অডিয়েন্স ইন্টেলিজেন্স'
       );
+  /// Short AppBar label under the audience-intelligence icon.
+  String get audienceShort => _get('Audience', 'آڈینس');
   String get aiSources => _get('Sources', 'ذرائع', 'المصادر',
         'स्रोत',
         'Sources',
