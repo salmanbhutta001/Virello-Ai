@@ -225,6 +225,9 @@ class _RootShellState extends State<RootShell> {
   bool _onboarded = false;
   bool _showTour = false;
   static const _onboardedKey = 'virello_onboarded';
+  // Hafiz 2026-10-03: Live Chat FAB is draggable — position persists.
+  static const _fabPosKey = 'virello_fab_pos';
+  Offset? _fabPos; // fraction of stack size (0..1), null = default bottom-right
 
   @override
   void initState() {
@@ -232,6 +235,32 @@ class _RootShellState extends State<RootShell> {
     requestedTab.addListener(_onRequestedTab);
     requestedTour.addListener(_onRequestedTour);
     _loadOnboarded();
+    _loadFabPos();
+  }
+
+  /// Hafiz 2026-10-03: restore the user's dragged Live Chat FAB position.
+  Future<void> _loadFabPos() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_fabPosKey);
+      if (raw != null) {
+        final parts = raw.split(',');
+        if (parts.length == 2) {
+          final dx = double.tryParse(parts[0]);
+          final dy = double.tryParse(parts[1]);
+          if (dx != null && dy != null && mounted) {
+            setState(() => _fabPos = Offset(dx, dy));
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveFabPos(Offset pos) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_fabPosKey, '${pos.dx},${pos.dy}');
+    } catch (_) {}
   }
 
   Future<void> _loadOnboarded() async {
@@ -358,61 +387,87 @@ class _RootShellState extends State<RootShell> {
         _ => null,
       };
 
+  /// Ask Virello FAB: visible on Home, Discover and Grow tabs.
+  /// Hafiz 2026-10-03: draggable — user can drag it anywhere, position persists.
   Widget _askFab() {
-    return Positioned(
-      right: 16,
-      bottom: 96,
-      child: GestureDetector(
-        key: TourTargets.askFab,
-        onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const AskVirelloScreen()));
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [VirelloColors.pink, Color(0xFFC2274E)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: VirelloColors.pink.withValues(alpha: 0.45),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+    const fabW = 84.0; // circle 56 + label width
+    const fabH = 92.0; // circle 56 + gap 4 + label ~32
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+        // Default: right 16, bottom 96.
+        final defX = w - fabW - 16;
+        final defY = h - fabH - 96;
+        final raw = _fabPos == null
+            ? Offset(defX, defY)
+            : Offset(_fabPos!.dx * w, _fabPos!.dy * h);
+        final cx = raw.dx.clamp(8.0, w - fabW - 8);
+        final cy = raw.dy.clamp(8.0, h - fabH - 8);
+        return Positioned(
+          left: cx,
+          top: cy,
+          child: GestureDetector(
+            key: TourTargets.askFab,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AskVirelloScreen()),
+              );
+            },
+            onPanUpdate: (d) {
+              final nx = (cx + d.delta.dx).clamp(8.0, w - fabW - 8);
+              final ny = (cy + d.delta.dy).clamp(8.0, h - fabH - 8);
+              setState(() => _fabPos = Offset(nx / w, ny / h));
+            },
+            onPanEnd: (_) {
+              if (_fabPos != null) _saveFabPos(_fabPos!);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [VirelloColors.pink, Color(0xFFC2274E)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: VirelloColors.pink.withValues(alpha: 0.45),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 26),
-            ),
-            const SizedBox(height: 4),
-            // Hafiz 2026-10-03: small "Live Chat Support" label under the FAB.
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: VirelloColors.pink,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Live Chat',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w700,
+                  child:  Icon(Icons.auto_awesome, color: VTheme.onBrand(context), size: 26),
                 ),
-              ),
+                const SizedBox(height: 4),
+                // Hafiz 2026-10-03: small "Live Chat" label under the FAB.
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: VirelloColors.pink,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Live Chat',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
