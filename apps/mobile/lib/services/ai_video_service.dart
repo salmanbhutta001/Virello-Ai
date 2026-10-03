@@ -131,7 +131,7 @@ class AiVideoService {
           body: jsonEncode({
             'prompt': prompt,
             'duration_sec': durationSec,
-            'aspect': '9:16',
+            'aspect': aspect,
           }),
         )
         .timeout(const Duration(seconds: 60));

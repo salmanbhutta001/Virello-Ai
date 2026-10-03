@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../core/config.dart';
-import '../../main.dart' show authStore;
+import '../core/config.dart';
+import '../main.dart' show authStore;
 import 'api_client.dart' show ApiException, AuthException;
 
 /// REST calls for user-side post & campaign edit/delete.

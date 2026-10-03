@@ -2870,7 +2870,16 @@ class _ClaimsSectionState extends State<_ClaimsSection>
                   width: 72, height: 72, fit: BoxFit.cover);
             },
           )
-        : Image.network(AppConfig.resolveImageUrl(url), width: 72, height: 72, fit: BoxFit.cover);
+        : Image.network(AppConfig.resolveImageUrl(url),
+            width: 72,
+            height: 72,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+                  width: 72,
+                  height: 72,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.broken_image, size: 28),
+                ));
     return GestureDetector(
       onTap: () => _viewProof(url),
       child: ClipRRect(
@@ -2893,7 +2902,10 @@ class _ClaimsSectionState extends State<_ClaimsSection>
               return InteractiveViewer(child: Image.memory(snap.data!));
             },
           )
-        : InteractiveViewer(child: Image.network(AppConfig.resolveImageUrl(url)));
+        : InteractiveViewer(
+            child: Image.network(AppConfig.resolveImageUrl(url),
+                errorBuilder: (_, __, ___) =>
+                    const Center(child: Icon(Icons.broken_image, size: 48))));
     showDialog(
       context: context,
       builder: (_) => Dialog(

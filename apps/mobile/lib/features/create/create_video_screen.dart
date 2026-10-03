@@ -53,6 +53,7 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   final _ideaCtrl = TextEditingController();
   int _tab = 0;
   List<_Scene> _scenes = [];
+  int _genToken = 0; // guards against double-tap go races (audit 2026-10-03)
   bool _generating = false;
   int _current = 0;
   bool _playing = false;
@@ -204,19 +205,22 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
 
     // Download scene images in the background (silent). The render reuses
     // them when available; otherwise it downloads during render with retries.
-    _downloadScenesInBackground();
+    final token = ++_genToken;
+    _downloadScenesInBackground(token);
   }
 
   /// Background pre-download of storyboard scene images, then auto-render.
   /// Hafiz 2026-10-03: user taps go -> preview shows -> images download ->
   /// video auto-renders into the player (no manual Render tap needed).
-  Future<void> _downloadScenesInBackground() async {
+  Future<void> _downloadScenesInBackground(int token) async {
     try {
       final tmp = await getTemporaryDirectory();
       final dlDir = Directory(
           '${tmp.path}/virello_scenes_${DateTime.now().millisecondsSinceEpoch}');
       await dlDir.create(recursive: true);
       for (var i = 0; i < _scenes.length; i++) {
+        // Stale task (user tapped go again) — stop touching the new list.
+        if (token != _genToken) return;
         final path = '${dlDir.path}/scene_$i.jpg';
         final ok = await _downloadWithRetry(_scenes[i].url, path);
         if (ok && mounted) {
@@ -227,8 +231,11 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       // Silent — the render will retry downloads itself.
     }
     // Auto-render once downloads settle (success or fail — the render
-    // retries missing images itself).
-    if (mounted && _scenes.isNotEmpty && !_rendering) {
+    // retries missing images itself). Skip if a newer go replaced this one.
+    if (token == _genToken &&
+        mounted &&
+        _scenes.isNotEmpty &&
+        !_rendering) {
       _renderVideo();
     }
   }

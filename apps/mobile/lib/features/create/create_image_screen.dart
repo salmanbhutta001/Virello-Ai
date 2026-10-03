@@ -70,6 +70,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   /// Hafiz 2026-10-03: generates via Agnes AI through the backend proxy
   /// (primary). Falls back to direct Pollinations URL if Agnes fails.
   Future<void> _generate() async {
+    if (_loading) return; // guard against double-tap (audit 2026-10-03)
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -139,6 +140,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   }
 
   Future<void> _regenerate() async {
+    if (_loading) return; // guard against double-tap (audit 2026-10-03)
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) return;
     final seed = Random().nextInt(999999);
