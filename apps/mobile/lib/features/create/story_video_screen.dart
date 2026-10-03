@@ -9,6 +9,9 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -33,12 +36,20 @@ class _StoryVideoScreenState extends State<StoryVideoScreen> {
   String? _voiceover;
   bool _assembling = false;
 
+  /// Finished story video: opens automatically in the in-app player below
+  /// with Download / Share buttons (stays on this screen).
+  String? _videoPath;
+  VideoPlayerController? _videoController;
+  bool _videoReady = false;
+  bool _downloading = false;
+
   AppStrings get s => AppStrings(appState.localeCode);
   final _ff = FfmpegService.instance;
 
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -115,11 +126,75 @@ class _StoryVideoScreenState extends State<StoryVideoScreen> {
         },
       );
       if (chosen != null && mounted) {
-        Navigator.of(context).pop(chosen);
+        // Keep the finished video on THIS screen: open it in the in-app
+        // player with Download / Share buttons (no pop-back).
+        setState(() => _videoPath = chosen);
+        await _openInPlayer(chosen);
       }
     } finally {
       if (mounted) setState(() => _assembling = false);
     }
+  }
+
+  /// Initializes the in-app player for the finished story video and
+  /// autoplays it.
+  Future<void> _openInPlayer(String mp4Path) async {
+    try {
+      await _videoController?.dispose();
+    } catch (_) {}
+    _videoController = null;
+    if (!mounted) return;
+    setState(() => _videoReady = false);
+    final controller = VideoPlayerController.file(File(mp4Path));
+    try {
+      await controller.initialize();
+      await controller.setLooping(true);
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      setState(() {
+        _videoController = controller;
+        _videoReady = true;
+      });
+      await controller.play();
+    } catch (_) {
+      await controller.dispose();
+    }
+  }
+
+  /// Saves the finished story video to the phone's gallery.
+  Future<void> _downloadVideo() async {
+    final path = _videoPath;
+    if (path == null || _downloading) return;
+    setState(() => _downloading = true);
+    try {
+      await Gal.putVideo(path, album: 'Virello');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSavedToGallery)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  /// Shares the finished story video via the system share sheet.
+  Future<void> _shareVideo() async {
+    final path = _videoPath;
+    if (path == null) return;
+    final title = _titleCtrl.text.trim();
+    await Share.shareXFiles(
+      [XFile(path, mimeType: 'video/mp4')],
+      text: '${title.isEmpty ? s.storyVideo : title}\n\nvia Virello',
+    );
   }
 
   Widget _audioRow(String label, String? path, VoidCallback onPick,
@@ -363,8 +438,125 @@ class _StoryVideoScreenState extends State<StoryVideoScreen> {
               ),
             ),
           ),
+          // Finished video: plays here automatically with Download/Share.
+          if (_videoReady && _videoController != null) ...[
+            const SizedBox(height: 20),
+            _buildVideoPlayer(),
+          ],
         ],
       ),
+    );
+  }
+
+  /// The finished story video playing in-app, with Download + Share below.
+  Widget _buildVideoPlayer() {
+    final controller = _videoController!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.play_circle_outline,
+              size: 16,
+              color: VirelloColors.pink,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                s.videoReady,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: VTheme.text(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        AspectRatio(
+          aspectRatio: 9 / 16,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: VTheme.divider(context)),
+              color: Colors.black,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() {
+                    controller.value.isPlaying
+                        ? controller.pause()
+                        : controller.play();
+                  }),
+                  child: VideoPlayer(controller),
+                ),
+                Center(
+                  child: ValueListenableBuilder<VideoPlayerValue>(
+                    valueListenable: controller,
+                    builder: (c, value, _) => AnimatedOpacity(
+                      opacity: value.isPlaying ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          value.isPlaying ? Icons.pause : Icons.play_arrow,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _downloading ? null : _downloadVideo,
+                icon: _downloading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.download, size: 18),
+                label: Text(s.downloadVideo),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VirelloColors.pink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _shareVideo,
+                icon: const Icon(Icons.share, size: 18),
+                label: Text(s.boardImageShare),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

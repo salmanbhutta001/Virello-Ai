@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
-    access_token_minutes: int = 30
+    access_token_minutes: int = 480
     refresh_token_days: int = 30
     cors_origins: list[str] = ["*"]
     # --- AI provider layer (provider-agnostic; swap via config, no rewrites) ---

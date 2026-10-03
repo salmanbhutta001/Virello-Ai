@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark background for the adaptive launcher icon + splash: the V logo
+         artwork is dark, so a dark backdrop keeps it seamless (no white). -->
+    <color name="ic_launcher_background">#0B0B14</color>
+</resources>

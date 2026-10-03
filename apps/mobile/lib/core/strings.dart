@@ -10401,8 +10401,8 @@ class AppStrings {
         'AI اسٹوری بورڈ',
       );
   String get boardStoryboardNote => _get(
-        'Storyboard preview — tap Render Video for a real MP4 with AI voiceover.',
-        'اسٹوری بورڈ پیش نظارہ — AI وائس اوور کے ساتھ اصل MP4 کے لیے رینڈر ویڈیو دبائیں۔',
+        'Storyboard preview — the real MP4 with AI voiceover renders automatically below.',
+        'اسٹوری بورڈ پیش نظارہ — AI وائس اوور کے ساتھ اصل MP4 خودکار طور پر نیچے بن جائے گی۔',
       );
   String get boardVideoRender => _get(
         'Render Video',

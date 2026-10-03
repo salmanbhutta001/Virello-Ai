@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -69,7 +70,35 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     _ideaCtrl.dispose();
     _timer?.cancel();
     _kenBurns.dispose();
+    _videoController?.dispose();
     super.dispose();
+  }
+
+  /// (Re)initializes the in-app player for a freshly rendered MP4 and
+  /// autoplays it. Called automatically when rendering finishes.
+  Future<void> _openInPlayer(String mp4Path) async {
+    try {
+      await _videoController?.dispose();
+    } catch (_) {}
+    _videoController = null;
+    if (!mounted) return;
+    setState(() => _videoReady = false);
+    final controller = VideoPlayerController.file(File(mp4Path));
+    try {
+      await controller.initialize();
+      await controller.setLooping(true);
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      setState(() {
+        _videoController = controller;
+        _videoReady = true;
+      });
+      await controller.play();
+    } catch (_) {
+      await controller.dispose();
+    }
   }
 
   String _sceneUrl(String prompt, int seed) {
@@ -128,12 +157,19 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
           ),
       ];
       _current = 0;
+      // A fresh storyboard invalidates any previous render/player.
+      _renderedVideoPath = null;
+      _videoReady = false;
     });
-    // Let the first scene start loading, then begin playback.
+    _videoController?.dispose();
+    _videoController = null;
+    // Let the first scene start loading, then begin playback — and kick off
+    // the real MP4 render automatically (no manual "Render Video" tap).
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         setState(() => _generating = false);
         _play();
+        _renderVideo();
       }
     });
   }
@@ -171,9 +207,14 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   double _renderProgress = 0.0;
 
   /// Path of the last successfully rendered MP4 (online or local).
-  /// When non-null, the Download / Share buttons appear right below.
+  /// When non-null, the video player + Download / Share buttons appear.
   String? _renderedVideoPath;
   bool _downloading = false;
+
+  /// In-app player for the finished render. Initialized (and autoplayed)
+  /// as soon as rendering completes — no extra tap needed.
+  VideoPlayerController? _videoController;
+  bool _videoReady = false;
 
   Future<String> _saveTempVideo(List<int> bytes) async {
     final dir = await getTemporaryDirectory();
@@ -184,73 +225,101 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   }
 
   /// Renders the storyboard into a REAL MP4 (online AI or on-device
-  /// FFmpeg + AI voiceover). The finished file stays on screen with
-  /// Download / Share buttons so the user can save it to their phone.
+  /// FFmpeg + AI voiceover). When rendering finishes the video opens
+  /// automatically in the in-app player below, with Download / Share
+  /// buttons right beside it.
   Future<void> _renderVideo() async {
     if (_scenes.isEmpty || _rendering) return;
     setState(() {
       _rendering = true;
       _renderProgress = 0.0;
       _renderedVideoPath = null;
+      _videoReady = false;
     });
+    _videoController?.dispose();
+    _videoController = null;
     try {
-      // Online AI text-to-video (backend proxy keeps the key server-side);
-      // falls back to the on-device FFmpeg slideshow when unavailable.
-      await AiVideoService.instance.refreshBackendStatus();
+      // Online AI text-to-video (backend proxy keeps the key server-side).
       String? mp4Path;
+      await AiVideoService.instance.refreshBackendStatus();
       if (AiVideoService.instance.isOnlineConfigured) {
-        final url = await AiVideoService.instance.generateOnline(
-          prompt: _ideaCtrl.text.trim(),
-          durationSec: 6,
-          onProgress: (p) {
-            if (mounted) setState(() => _renderProgress = p);
-          },
-        );
-        if (!mounted) return;
-        if (url != null && url.isNotEmpty) {
-          // Download the generated video to a local file.
-          final res = await http.get(Uri.parse(url)).timeout(
-                const Duration(minutes: 3),
-              );
-          if (res.statusCode == 200) {
-            mp4Path = await _saveTempVideo(res.bodyBytes);
-          } else if (mounted) {
-            setState(() => _rendering = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(s.videoDownloadFailed)),
-            );
-            return;
-          }
+        try {
+          mp4Path = await _renderOnline();
+        } catch (e) {
+          // Online failed (quota, provider error, timeout) — fall back to
+          // the on-device FFmpeg slideshow instead of giving up.
+          debugPrint('Online render failed, falling back to local: $e');
+          mp4Path = null;
         }
-      } else {
-        final renderer = StoryboardVideoRenderer();
-        mp4Path = await renderer.render(
-          scenes: _scenes
-              .map((s) =>
-                  StoryboardSceneInput(title: s.title, imageUrl: s.url))
-              .toList(),
-          idea: _ideaCtrl.text.trim(),
-          localeCode: appState.localeCode,
-          onProgress: (p) {
-            if (mounted) setState(() => _renderProgress = p);
-          },
-        );
       }
+      mp4Path ??= await _renderLocal();
       if (!mounted) return;
       setState(() {
         _rendering = false;
         _renderedVideoPath = mp4Path;
       });
+      if (mp4Path != null) {
+        await _openInPlayer(mp4Path);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.boardVideoRenderFailed)),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _rendering = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  '${s.boardVideoRenderFailed}: ${e.toString().split(':').last.trim()}')),
+          SnackBar(content: Text('${s.boardVideoRenderFailed}: ${_cleanErr(e)}')),
         );
       }
     }
+  }
+
+  /// Full error text for the snackbar — never chop on ':' (that mangled
+  /// URLs like https://... into //...).
+  String _cleanErr(Object e) {
+    var msg = e.toString();
+    const prefix = 'AiVideoException: ';
+    if (msg.startsWith(prefix)) msg = msg.substring(prefix.length);
+    return msg.trim();
+  }
+
+  /// Online AI text-to-video via the backend proxy. Returns the local MP4
+  /// path, or null when the provider produced no downloadable video.
+  Future<String?> _renderOnline() async {
+    final url = await AiVideoService.instance.generateOnline(
+      prompt: _ideaCtrl.text.trim(),
+      durationSec: 6,
+      onProgress: (p) {
+        if (mounted) setState(() => _renderProgress = p);
+      },
+    );
+    if (!mounted) return null;
+    if (url != null && url.isNotEmpty) {
+      final res = await http.get(Uri.parse(url)).timeout(
+            const Duration(minutes: 3),
+          );
+      if (res.statusCode == 200) {
+        return _saveTempVideo(res.bodyBytes);
+      }
+      throw Exception('video download failed (HTTP ${res.statusCode})');
+    }
+    return null;
+  }
+
+  /// On-device FFmpeg slideshow render (always available, no key needed).
+  Future<String?> _renderLocal() async {
+    final renderer = StoryboardVideoRenderer();
+    return renderer.render(
+      scenes: _scenes
+          .map((s) => StoryboardSceneInput(title: s.title, imageUrl: s.url))
+          .toList(),
+      idea: _ideaCtrl.text.trim(),
+      localeCode: appState.localeCode,
+      onProgress: (p) {
+        if (mounted) setState(() => _renderProgress = p);
+      },
+    );
   }
 
   /// Saves the rendered MP4 to the phone's gallery.
@@ -388,8 +457,12 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
             ),
           ),
           const SizedBox(height: 16),
-          // Storyboard player.
-          if (_scenes.isNotEmpty) _buildPlayer(),
+          // Finished render plays here automatically (with Download/Share);
+          // otherwise the storyboard preview.
+          if (_videoReady && _videoController != null) _buildVideoPlayer(),
+          if (!(_videoReady && _videoController != null) &&
+              _scenes.isNotEmpty)
+            _buildPlayer(),
           if (_scenes.isNotEmpty) const SizedBox(height: 16),
           // Real creators/topics for inspiration (board tabs).
           FutureBuilder<List<String>>(
@@ -661,77 +734,6 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
           const SizedBox(height: 8),
           LinearProgressIndicator(value: _renderProgress),
         ],
-        // After a successful render: Download + Share right here.
-        if (_renderedVideoPath != null && !_rendering) ...[
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: VTheme.card(context),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VirelloColors.pink.withOpacity(0.35)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.check_circle,
-                        color: Colors.green, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        s.videoReady,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: VTheme.text(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _downloading ? null : _downloadVideo,
-                        icon: _downloading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.download, size: 18),
-                        label: Text(s.downloadVideo),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: VirelloColors.pink,
-                          foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _shareRenderedVideo,
-                        icon: const Icon(Icons.share, size: 18),
-                        label: Text(s.boardImageShare),
-                        style: OutlinedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
         const SizedBox(height: 8),
         Text(
           s.boardStoryboardNote,
@@ -741,6 +743,122 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
             fontStyle: FontStyle.italic,
             color: VTheme.textSec(context),
           ),
+        ),
+      ],
+    );
+  }
+
+  /// The finished MP4 playing in-app (auto-opened when rendering completes),
+  /// with Download + Share right below it.
+  Widget _buildVideoPlayer() {
+    final controller = _videoController!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.play_circle_outline,
+              size: 16,
+              color: VirelloColors.pink,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                s.videoReady,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: VTheme.text(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        AspectRatio(
+          aspectRatio: 9 / 16,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: VTheme.divider(context)),
+              color: Colors.black,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() {
+                    controller.value.isPlaying
+                        ? controller.pause()
+                        : controller.play();
+                  }),
+                  child: VideoPlayer(controller),
+                ),
+                // Play/pause affordance.
+                Center(
+                  child: ValueListenableBuilder<VideoPlayerValue>(
+                    valueListenable: controller,
+                    builder: (c, value, _) => AnimatedOpacity(
+                      opacity: value.isPlaying ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          value.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _downloading ? null : _downloadVideo,
+                icon: _downloading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.download, size: 18),
+                label: Text(s.downloadVideo),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VirelloColors.pink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _shareRenderedVideo,
+                icon: const Icon(Icons.share, size: 18),
+                label: Text(s.boardImageShare),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

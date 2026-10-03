@@ -23,7 +23,10 @@ import 'features/tour/app_tour.dart';
 
 /// Shared app services.
 final authStore = AuthStore();
-final apiClient = ApiClient(tokenProvider: () => authStore.accessToken);
+final apiClient = ApiClient(
+  tokenProvider: () => authStore.accessToken,
+  onAuthFailure: () => authStore.refreshTokens(),
+);
 final savedStore = SavedStore();
 
 /// Cross-tab navigation: set [requestedTab] to jump the bottom nav,

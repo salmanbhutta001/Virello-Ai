@@ -13,11 +13,18 @@ import '../data/ads_models.dart';
 /// REST client for the Virello backend.
 /// Auth: Bearer JWT (email OTP). No social passwords, ever.
 /// The access token is supplied via [tokenProvider] (wired to AuthStore).
+/// When [onAuthFailure] is set, a 401 triggers one silent refresh attempt
+/// and the original request is retried once before [AuthException] is thrown.
 class ApiClient {
   final String baseUrl;
   final String? Function()? tokenProvider;
 
-  ApiClient({String? baseUrl, this.tokenProvider})
+  /// Called on HTTP 401. Should silently renew the token pair and return
+  /// true when the session was renewed (the failed request is then retried
+  /// once with the fresh token). Wired to AuthStore.refreshTokens.
+  Future<bool> Function()? onAuthFailure;
+
+  ApiClient({String? baseUrl, this.tokenProvider, this.onAuthFailure})
       : baseUrl = baseUrl ?? AppConfig.baseUrl;
 
   Map<String, String> get _headers {
@@ -26,6 +33,24 @@ class ApiClient {
       'Content-Type': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
+  }
+
+  /// Sends the request; on 401, tries one silent refresh via [onAuthFailure]
+  /// and retries the request once with the renewed token.
+  Future<http.Response> _withRefreshRetry(
+    Future<http.Response> Function() send,
+  ) async {
+    var res = await send();
+    if (res.statusCode == 401 && onAuthFailure != null) {
+      try {
+        if (await onAuthFailure!()) {
+          res = await send();
+        }
+      } catch (_) {
+        // Refresh blew up — fall through to the 401 handling below.
+      }
+    }
+    return res;
   }
 
   /// Public auth headers for services that make their own http calls.
@@ -47,6 +72,18 @@ class ApiClient {
       Uri.parse('$baseUrl/api/v1/auth/otp/verify'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'code': code}),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Exchanges a refresh token for a new token pair (silent session renew).
+  /// Throws on failure — callers treat that as "session truly expired".
+  Future<Map<String, dynamic>> refresh(String refreshToken) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/auth/refresh'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body) as Map<String, dynamic>;
@@ -694,7 +731,9 @@ class ApiClient {
   }
 
   Future<dynamic> _getDynamic(String path) async {
-    final res = await http.get(Uri.parse('$baseUrl$path'), headers: _headers);
+    final res = await _withRefreshRetry(
+      () => http.get(Uri.parse('$baseUrl$path'), headers: _headers),
+    );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return jsonDecode(res.body);
@@ -704,10 +743,12 @@ class ApiClient {
     String path,
     Map<String, dynamic> body,
   ) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers,
-      body: jsonEncode(body),
+    final res = await _withRefreshRetry(
+      () => http.post(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers,
+        body: jsonEncode(body),
+      ),
     );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -720,10 +761,12 @@ class ApiClient {
     String path,
     Map<String, dynamic> body,
   ) async {
-    final res = await http.put(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers,
-      body: jsonEncode(body),
+    final res = await _withRefreshRetry(
+      () => http.put(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers,
+        body: jsonEncode(body),
+      ),
     );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
@@ -731,9 +774,8 @@ class ApiClient {
   }
 
   Future<Map<String, dynamic>> _deleteJson(String path) async {
-    final res = await http.delete(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers,
+    final res = await _withRefreshRetry(
+      () => http.delete(Uri.parse('$baseUrl$path'), headers: _headers),
     );
     if (res.statusCode == 401) throw const AuthException();
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);

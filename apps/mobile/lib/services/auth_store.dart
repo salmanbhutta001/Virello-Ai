@@ -26,6 +26,32 @@ class AuthStore extends ChangeNotifier {
   bool get signedIn => _accessToken != null && _accessToken!.isNotEmpty;
   String? get accessToken => _accessToken;
 
+  Future<bool>? _refreshInFlight;
+
+  /// Silently renews the token pair using the stored refresh token.
+  /// Concurrent callers share one in-flight request (no refresh storms).
+  /// Returns true when the session was renewed; false means the session is
+  /// truly dead and the UI should route to sign-in.
+  Future<bool> refreshTokens() {
+    return _refreshInFlight ??= _doRefresh().whenComplete(
+      () => _refreshInFlight = null,
+    );
+  }
+
+  Future<bool> _doRefresh() async {
+    final rt = _refreshToken;
+    if (rt == null || rt.isEmpty) return false;
+    try {
+      final tokens = await ApiClient().refresh(rt);
+      final access = tokens['access_token'] as String?;
+      if (access == null || access.isEmpty) return false;
+      await _persistTokens(tokens, email);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
