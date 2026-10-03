@@ -117,7 +117,14 @@ async def generate_video(
         logger.warning("agnes submit HTTP %s: %s", resp.status_code, resp.text[:200])
         raise HTTPException(status_code=502, detail="Video provider rejected the request.")
 
-    data = resp.json()
+    data: dict = {}
+    try:
+        data = resp.json()
+    except ValueError:
+        logger.warning("agnes submit returned non-JSON HTTP %s", resp.status_code)
+        raise HTTPException(
+            status_code=502, detail="Video provider returned an invalid response."
+        ) from None
     agnes_id = data.get("video_id") or data.get("id")
     direct = data.get("video_url") or data.get("url")
     job = VideoJob(
@@ -170,7 +177,11 @@ async def job_status(
     if resp.status_code != 200:
         return {"job_id": job.job_id, "status": "processing", "video_url": None}
 
-    data = resp.json()
+    try:
+        data = resp.json()
+    except ValueError:
+        return {"job_id": job.job_id, "status": "processing", "video_url": None}
+
     state = str(data.get("status", "")).lower()
     if state in ("completed", "succeeded", "done", "ready"):
         job.status = "ready"
