@@ -22,11 +22,18 @@ import 'ffmpeg_service.dart';
 import 'tts_service.dart';
 
 /// One storyboard scene: a display title and the AI image URL.
+/// [localPath], when set, points to an already-downloaded image file —
+/// the renderer reuses it instead of downloading again.
 class StoryboardSceneInput {
   final String title;
   final String imageUrl;
+  final String? localPath;
 
-  const StoryboardSceneInput({required this.title, required this.imageUrl});
+  const StoryboardSceneInput({
+    required this.title,
+    required this.imageUrl,
+    this.localPath,
+  });
 }
 
 class StoryboardVideoRenderer {
@@ -56,19 +63,38 @@ class StoryboardVideoRenderer {
         '${tmp.path}/storyboard_${DateTime.now().millisecondsSinceEpoch}');
     await workDir.create(recursive: true);
 
-    // 1) Download scene images.
+    // 1) Scene images: reuse already-downloaded local files when available
+    // (Hafiz 2026-10-03: the storyboard screen downloads them once, so the
+    // render never hits the network for images it already has).
     final images = <String>[];
     for (var i = 0; i < scenes.length; i++) {
       report(0.0, 0.25, i / scenes.length);
-      final path = '${workDir.path}/scene_$i.jpg';
-      final res = await http
-          .get(Uri.parse(scenes[i].imageUrl))
-          .timeout(const Duration(seconds: 120));
-      if (res.statusCode != 200 || res.bodyBytes.isEmpty) {
-        throw FfmpegException(FfmpegErrorKind.executionFailed,
-            'Could not download scene ${i + 1} image.');
+      final cached = scenes[i].localPath;
+      if (cached != null && await File(cached).exists()) {
+        images.add(cached);
+        continue;
       }
-      await File(path).writeAsBytes(res.bodyBytes);
+      final path = '${workDir.path}/scene_$i.jpg';
+      var downloaded = false;
+      for (var attempt = 0; attempt < 3 && !downloaded; attempt++) {
+        try {
+          final res = await http
+              .get(Uri.parse(scenes[i].imageUrl))
+              .timeout(const Duration(seconds: 45));
+          if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
+            await File(path).writeAsBytes(res.bodyBytes);
+            downloaded = true;
+          }
+        } catch (_) {
+          if (attempt < 2) {
+            await Future.delayed(Duration(seconds: 2 * (attempt + 1)));
+          }
+        }
+      }
+      if (!downloaded) {
+        throw FfmpegException(FfmpegErrorKind.executionFailed,
+            'Could not download scene ${i + 1} image. Check your internet connection and try again.');
+      }
       images.add(path);
     }
     report(0.0, 0.25, 1.0);

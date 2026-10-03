@@ -39,6 +39,12 @@ class _Scene {
   final String title;
   final String prompt;
   final String url;
+
+  /// Local file path after the image is downloaded (null until downloaded).
+  /// Hafiz 2026-10-03: download once at storyboard time so the render never
+  /// re-downloads over a flaky network.
+  String? localPath;
+
   _Scene(this.title, this.prompt, this.url);
 }
 
@@ -107,6 +113,29 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
         '?width=1024&height=1024&seed=$seed&nologo=true&model=turbo&private=true';
   }
 
+  /// Downloads a URL to [path] with retries. Returns true on success.
+  /// Hafiz 2026-10-03: short timeouts + 3 attempts so a flaky network fails
+  /// fast instead of hanging the whole render.
+  Future<bool> _downloadWithRetry(String url, String path) async {
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        final res = await http
+            .get(Uri.parse(url))
+            .timeout(const Duration(seconds: 45));
+        if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
+          await File(path).writeAsBytes(res.bodyBytes, flush: true);
+          return true;
+        }
+      } catch (_) {
+        // Retry after a short backoff.
+        if (attempt < 2) {
+          await Future.delayed(Duration(seconds: 2 * (attempt + 1)));
+        }
+      }
+    }
+    return false;
+  }
+
   Future<List<String>> _loadTab() async {
     try {
       if (_tab == 0) {
@@ -123,7 +152,10 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   }
 
   /// AI storyboard intelligence: splits the idea into 3 cinematic beats.
-  void _generate() {
+  /// Hafiz 2026-10-03: downloads each scene image ONCE here (with retries),
+  /// so the later MP4 render reuses local files and never fails on a
+  /// flaky network mid-render.
+  Future<void> _generate() async {
     final idea = _ideaCtrl.text.trim();
     if (idea.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,6 +195,30 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     });
     _videoController?.dispose();
     _videoController = null;
+
+    // Download scene images now (with retries) — the render reuses them.
+    final tmp = await getTemporaryDirectory();
+    final dlDir = Directory(
+        '${tmp.path}/virello_scenes_${DateTime.now().millisecondsSinceEpoch}');
+    await dlDir.create(recursive: true);
+    var allOk = true;
+    for (var i = 0; i < _scenes.length; i++) {
+      final path = '${dlDir.path}/scene_$i.jpg';
+      final ok = await _downloadWithRetry(_scenes[i].url, path);
+      if (ok) {
+        _scenes[i].localPath = path;
+      } else {
+        allOk = false;
+      }
+    }
+    if (!mounted) return;
+    if (!allOk) {
+      setState(() => _generating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.boardSceneDownloadFailed)),
+      );
+      return;
+    }
     // Let the first scene start loading, then begin playback — and kick off
     // the real MP4 render automatically (no manual "Render Video" tap).
     Future.delayed(const Duration(milliseconds: 800), () {
@@ -277,21 +333,33 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
 
   /// Full error text for the snackbar — never chop on ':' (that mangled
   /// URLs like https://... into //...).
+  /// Hafiz 2026-10-03: technical network errors become friendly messages.
   String _cleanErr(Object e) {
     var msg = e.toString();
     const prefix = 'AiVideoException: ';
     if (msg.startsWith(prefix)) msg = msg.substring(prefix.length);
+    // Network errors -> friendly message (never show raw SocketException).
+    if (msg.contains('SocketException') ||
+        msg.contains('Failed host lookup') ||
+        msg.contains('Connection refused') ||
+        msg.contains('Network is unreachable') ||
+        msg.contains('ClientException')) {
+      return s.boardSceneDownloadFailed;
+    }
     return msg.trim();
   }
 
   /// Online AI text-to-video via the backend proxy. Returns the local MP4
   /// path, or null when the provider produced no downloadable video.
+  /// Hafiz 2026-10-03: 4-minute cap so a slow provider fails fast and the
+  /// local render takes over instead of hanging the UI.
   Future<String?> _renderOnline() async {
     final url = await AiVideoService.instance.generateOnline(
       prompt: _ideaCtrl.text.trim(),
       durationSec: 6,
+      timeout: const Duration(minutes: 4),
       onProgress: (p) {
-        if (mounted) setState(() => _renderProgress = p);
+        if (mounted) setState(() => _renderProgress = p * 0.9);
       },
     );
     if (!mounted) return null;
@@ -312,7 +380,11 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     final renderer = StoryboardVideoRenderer();
     return renderer.render(
       scenes: _scenes
-          .map((s) => StoryboardSceneInput(title: s.title, imageUrl: s.url))
+          .map((s) => StoryboardSceneInput(
+                title: s.title,
+                imageUrl: s.url,
+                localPath: s.localPath,
+              ))
           .toList(),
       idea: _ideaCtrl.text.trim(),
       localeCode: appState.localeCode,
@@ -587,19 +659,35 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                       ),
                     );
                   },
-                  child: Image.network(AppConfig.resolveImageUrl(scene.url),
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, st) => Container(
-                      color: VTheme.chip(context),
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          size: 48,
-                          color: VirelloColors.pink,
+                  child: scene.localPath != null
+                      // Hafiz 2026-10-03: show the downloaded file — no
+                      // re-download, works even if network drops later.
+                      ? Image.file(File(scene.localPath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, st) => Container(
+                            color: VTheme.chip(context),
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 48,
+                                color: VirelloColors.pink,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Image.network(AppConfig.resolveImageUrl(scene.url),
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, st) => Container(
+                            color: VTheme.chip(context),
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 48,
+                                color: VirelloColors.pink,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
                 // Bottom gradient + scene title.
                 Positioned(

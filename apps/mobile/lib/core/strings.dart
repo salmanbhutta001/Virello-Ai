@@ -10469,6 +10469,12 @@ class AppStrings {
         'Video render failed',
         'ویڈیو بنانے میں ناکامی',
       );
+  // Hafiz 2026-10-03: friendly message when scene images can't download.
+  String get boardSceneDownloadFailed => _get(
+        'Could not load scene images. Check your internet connection and try again.',
+        'سین کی تصاویر لوڈ نہیں ہو سکیں۔ اپنا انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔',
+        'تعذر تحميل صور المشاهد. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+      );
   String get boardImageRetry => _get(
         'Retry',
         'دوبارہ کوشش',
