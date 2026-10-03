@@ -53,11 +53,10 @@ class SplashScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Spacer(flex: 2),
-                  // Original colorful logo — already carries the
-                  // "Virello AI" wordmark, so no separate text below it.
+                  // Virello V logo (Hafiz 2026-10-03) — the high-res origami V.
                   Image.asset(
-                    'assets/images/logo-virello-dark.png',
-                    height: 68,
+                    'assets/images/logo-v-icon.png',
+                    height: 96,
                     errorBuilder: (_, __, ___) => const Text(
                       'Virello AI',
                       style: TextStyle(
