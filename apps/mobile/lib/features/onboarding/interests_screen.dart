@@ -191,9 +191,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.45,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 2.1,
                       ),
                       itemCount: topics.length,
                       itemBuilder: (context, i) {
@@ -234,9 +234,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
   }
 }
 
-/// Premium interest card: tinted icon tile + label on a hairline-bordered
-/// card; selected state gets a pink gradient border, soft pink wash, and a
-/// checkmark badge.
+/// Compact interest card: tinted icon tile + label on a hairline-bordered
+/// card; selected state gets a solid pink fill with white icon/text and a
+/// white checkmark badge (Hafiz 2026-10-03: selected text must stay visible).
 class _InterestCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -252,99 +252,87 @@ class _InterestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = VTheme.isDark(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: selected ? VirelloColors.brandGradient : null,
+            borderRadius: BorderRadius.circular(14),
+            color: selected ? VirelloColors.pink : VTheme.card(context),
             border: selected
                 ? null
                 : Border.all(color: VTheme.divider(context), width: 1.2),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.5),
-              color: selected
-                  ? VirelloColors.pink
-                      .withValues(alpha: dark ? 0.12 : 0.06)
-                  : VTheme.card(context),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(9),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: selected
-                            ? VirelloColors.pink
-                                .withValues(alpha: dark ? 0.2 : 0.14)
-                            : VTheme.chip(context),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 22,
-                        color: selected
-                            ? VirelloColors.pink
-                            : VTheme.textSec(context),
-                      ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: VirelloColors.pink.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
+                  ]
+                : null,
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: selected
+                          ? Colors.white.withValues(alpha: 0.22)
+                          : VTheme.chip(context),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 20,
+                      color: selected
+                          ? Colors.white
+                          : VTheme.textSec(context),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
                       label,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: selected
-                            ? VirelloColors.pink
-                            : VTheme.text(context),
-                      ),
-                    ),
-                  ],
-                ),
-                if (selected)
-                  PositionedDirectional(
-                    top: -8,
-                    end: -8,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        gradient: VirelloColors.brandGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: VirelloColors.pink
-                                .withValues(alpha: 0.45),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        size: 14,
-                        color: Colors.white,
+                        color:
+                            selected ? Colors.white : VTheme.text(context),
                       ),
                     ),
                   ),
-              ],
-            ),
+                ],
+              ),
+              if (selected)
+                PositionedDirectional(
+                  top: -14,
+                  end: -6,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 13,
+                      color: VirelloColors.pink,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
