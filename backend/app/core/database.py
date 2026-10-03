@@ -49,6 +49,9 @@ async def init_db() -> None:
     # Same for products trend columns (2026-10-01: trending_001 never
     # applied on prod; without these every product query 500s).
     await _ensure_products_trend_columns()
+    # Same for video_jobs.agnes_id (2026-10-03: created as VARCHAR(128) by
+    # create_all, but Agnes returns longer IDs -> widen to TEXT).
+    await _ensure_video_jobs_columns()
 
 
 async def _ensure_users_columns() -> None:
@@ -123,3 +126,33 @@ async def _ensure_products_trend_columns() -> None:
                     print(f"init_db: could not create trend index: {e}")
     except Exception as e:
         print(f"init_db: products trend column check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_video_jobs_columns() -> None:
+    """Widen video_jobs.agnes_id to TEXT if still VARCHAR. Idempotent.
+
+    Production Alembic does not reliably apply migrations, so the
+    video_jobs_002 alter is ensured here like the users/products columns
+    above. Runs on every startup; never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            cols = await conn.run_sync(
+                lambda c: {col["name"]: col for col in sa.inspect(c).get_columns("video_jobs")}
+            )
+            agnes = cols.get("agnes_id")
+            if agnes is None:
+                return  # table not created yet; create_all above handles it
+            ctype = str(agnes["type"]).upper()
+            if "VARCHAR(128)" in ctype or ctype == "VARCHAR":
+                try:
+                    await conn.execute(
+                        sa.text("ALTER TABLE video_jobs ALTER COLUMN agnes_id TYPE TEXT")
+                    )
+                    print("init_db: widened video_jobs.agnes_id to TEXT")
+                except Exception as e:
+                    print(f"init_db: could not widen video_jobs.agnes_id: {e}")
+    except Exception as e:
+        print(f"init_db: video_jobs column check non-fatal ({type(e).__name__}): {e}")
