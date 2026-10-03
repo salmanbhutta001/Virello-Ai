@@ -55,6 +55,9 @@ async def init_db() -> None:
     # Same for ad_campaigns.payment_status (2026-10-03: new column backing
     # the AI Ad Builder Buy flow — paid only after store verification).
     await _ensure_ad_campaigns_columns()
+    # Same for share_clicks table (2026-10-03: /s/{code} 500s on prod when
+    # the table is missing — click logging must never break the redirect).
+    await _ensure_share_clicks_table()
 
 
 async def _ensure_users_columns() -> None:
@@ -188,3 +191,31 @@ async def _ensure_ad_campaigns_columns() -> None:
                 print(f"init_db: could not add ad_campaigns.payment_status: {e}")
     except Exception as e:
         print(f"init_db: ad_campaigns column check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_share_clicks_table() -> None:
+    """Create the share_clicks table if missing. Idempotent.
+
+    Backs GET /s/{code} click logging (2026-10-03): prod returned 500 on
+    share links when the table was missing. The handler is now resilient
+    (redirect always happens), but the table should exist for the +25
+    points attribution to work. Follows the existing ensure pattern —
+    prod Alembic is unreliable. Never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            if "share_clicks" in tables:
+                return
+            # Create just this table from metadata.
+            from app.models.rewards import ShareClick
+            await conn.run_sync(
+                lambda c: ShareClick.__table__.create(c, checkfirst=True)
+            )
+            print("init_db: created missing share_clicks table")
+    except Exception as e:
+        print(f"init_db: share_clicks table check non-fatal ({type(e).__name__}): {e}")

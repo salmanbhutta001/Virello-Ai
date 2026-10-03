@@ -260,7 +260,11 @@ async def follow_share_link(code: str, request: Request,
                             db: AsyncSession = Depends(get_db)):
     """Public share-link landing: verify, log the visit, pay the sharer
     cash per verified click, then hand off to /shop/go (affiliate tag +
-    unified click logging live there). Tampered codes 404."""
+    unified click logging live there). Tampered codes 404.
+
+    Hafiz 2026-10-03: the redirect MUST always happen — click logging is
+    best-effort. A DB failure must never turn a valid share link into a 500.
+    """
     verified = wallet_svc.verify_share_code(code)
     if verified is None:
         raise HTTPException(404, "Invalid share link")
@@ -278,13 +282,21 @@ async def follow_share_link(code: str, request: Request,
     ip = request.client.host if request.client else "unknown"
     ip_hash = hashlib.sha256(ip.encode()).hexdigest()
 
-    db.add(ShareClick(code=code, sharer_user_id=sharer_id, asin=asin,
-                      viewer_user_id=viewer_id, viewer_ip_hash=ip_hash))
-    await db.commit()
-    viewer_key = f"user:{viewer_id}" if viewer_id else f"ip:{ip_hash}"
+    # Best-effort click logging — never block the redirect on DB errors.
     try:
-        await rewards_svc.award_share_click_points(db, sharer_id, viewer_key,
-                                                   viewer_id, asin, code)
+        db.add(ShareClick(code=code, sharer_user_id=sharer_id, asin=asin,
+                          viewer_user_id=viewer_id, viewer_ip_hash=ip_hash))
+        await db.commit()
+        viewer_key = f"user:{viewer_id}" if viewer_id else f"ip:{ip_hash}"
+        try:
+            await rewards_svc.award_share_click_points(db, sharer_id, viewer_key,
+                                                       viewer_id, asin, code)
+        except Exception:
+            log.exception("rewards: share_click points award failed")
     except Exception:
-        log.exception("rewards: share_click points award failed")
+        log.exception("rewards: share_click logging failed (non-fatal)")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
     return RedirectResponse(f"/api/v1/shop/go/{asin}", status_code=302)
