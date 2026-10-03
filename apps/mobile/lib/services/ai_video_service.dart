@@ -87,6 +87,7 @@ class AiVideoService {
       return _backendGenerate(
         prompt: prompt,
         durationSec: durationSec,
+        aspect: aspect,
         timeout: timeout,
         onProgress: onProgress,
       );
@@ -118,6 +119,7 @@ class AiVideoService {
   Future<String?> _backendGenerate({
     required String prompt,
     required int durationSec,
+    required String aspect,
     required Duration timeout,
     void Function(double)? onProgress,
   }) async {
