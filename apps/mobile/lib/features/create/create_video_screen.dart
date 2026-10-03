@@ -882,7 +882,20 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
                         ? controller.pause()
                         : controller.play();
                   }),
-                  child: VideoPlayer(controller),
+                  // Hafiz 2026-10-03: always fill the 9:16 frame (crop if
+                  // the source video isn't exactly 9:16).
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: controller.value.size.width > 0
+                          ? controller.value.size.width
+                          : 9,
+                      height: controller.value.size.height > 0
+                          ? controller.value.size.height
+                          : 16,
+                      child: VideoPlayer(controller),
+                    ),
+                  ),
                 ),
                 // Play/pause affordance.
                 Center(

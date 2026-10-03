@@ -114,6 +114,7 @@ class AiVideoService {
   }
 
   /// Backend proxy flow: submit, then poll the job endpoint.
+  /// Hafiz 2026-10-03: always requests 9:16 vertical.
   Future<String?> _backendGenerate({
     required String prompt,
     required int durationSec,
@@ -127,7 +128,11 @@ class AiVideoService {
         .post(
           Uri.parse('$base/api/v1/video/generate'),
           headers: headers,
-          body: jsonEncode({'prompt': prompt, 'duration_sec': durationSec}),
+          body: jsonEncode({
+            'prompt': prompt,
+            'duration_sec': durationSec,
+            'aspect': '9:16',
+          }),
         )
         .timeout(const Duration(seconds: 60));
 

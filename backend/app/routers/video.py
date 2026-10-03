@@ -44,6 +44,8 @@ _MAX_DURATION = 10  # Agnes free tier caps short clips
 class GenerateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=2000)
     duration_sec: int = Field(default=6, ge=3, le=_MAX_DURATION)
+    # Hafiz 2026-10-03: default 9:16 vertical for short-form video.
+    aspect: str = Field(default="9:16", max_length=10)
 
 
 def _key_or_503() -> str:
@@ -102,6 +104,8 @@ async def generate_video(
                     "model": _AGNES_MODEL,
                     "prompt": body.prompt,
                     "duration": body.duration_sec,
+                    # Hafiz 2026-10-03: request 9:16 vertical by default.
+                    "aspect_ratio": body.aspect,
                 },
             )
     except httpx.RequestError as exc:
