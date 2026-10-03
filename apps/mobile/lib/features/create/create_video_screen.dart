@@ -152,9 +152,9 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   }
 
   /// AI storyboard intelligence: splits the idea into 3 cinematic beats.
-  /// Hafiz 2026-10-03: downloads each scene image ONCE here (with retries),
-  /// so the later MP4 render reuses local files and never fails on a
-  /// flaky network mid-render.
+  /// Hafiz 2026-10-03: NO auto-render — user taps go for the storyboard
+  /// preview, then taps "Render Video" manually. Scene images download in
+  /// the background (silent on failure; the render retries them).
   Future<void> _generate() async {
     final idea = _ideaCtrl.text.trim();
     if (idea.isEmpty) {
@@ -196,38 +196,34 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     _videoController?.dispose();
     _videoController = null;
 
-    // Download scene images now (with retries) — the render reuses them.
-    final tmp = await getTemporaryDirectory();
-    final dlDir = Directory(
-        '${tmp.path}/virello_scenes_${DateTime.now().millisecondsSinceEpoch}');
-    await dlDir.create(recursive: true);
-    var allOk = true;
-    for (var i = 0; i < _scenes.length; i++) {
-      final path = '${dlDir.path}/scene_$i.jpg';
-      final ok = await _downloadWithRetry(_scenes[i].url, path);
-      if (ok) {
-        _scenes[i].localPath = path;
-      } else {
-        allOk = false;
-      }
-    }
-    if (!mounted) return;
-    if (!allOk) {
+    // Show the storyboard preview right away — don't block on downloads.
+    if (mounted) {
       setState(() => _generating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.boardSceneDownloadFailed)),
-      );
-      return;
+      _play();
     }
-    // Let the first scene start loading, then begin playback — and kick off
-    // the real MP4 render automatically (no manual "Render Video" tap).
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() => _generating = false);
-        _play();
-        _renderVideo();
+
+    // Download scene images in the background (silent). The render reuses
+    // them when available; otherwise it downloads during render with retries.
+    _downloadScenesInBackground();
+  }
+
+  /// Background pre-download of storyboard scene images. Silent on failure.
+  Future<void> _downloadScenesInBackground() async {
+    try {
+      final tmp = await getTemporaryDirectory();
+      final dlDir = Directory(
+          '${tmp.path}/virello_scenes_${DateTime.now().millisecondsSinceEpoch}');
+      await dlDir.create(recursive: true);
+      for (var i = 0; i < _scenes.length; i++) {
+        final path = '${dlDir.path}/scene_$i.jpg';
+        final ok = await _downloadWithRetry(_scenes[i].url, path);
+        if (ok && mounted) {
+          _scenes[i].localPath = path;
+        }
       }
-    });
+    } catch (_) {
+      // Silent — the render will retry downloads itself.
+    }
   }
 
   void _play() {
