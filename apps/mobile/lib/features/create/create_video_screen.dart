@@ -152,9 +152,9 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   }
 
   /// AI storyboard intelligence: splits the idea into 3 cinematic beats.
-  /// Hafiz 2026-10-03: NO auto-render — user taps go for the storyboard
-  /// preview, then taps "Render Video" manually. Scene images download in
-  /// the background (silent on failure; the render retries them).
+  /// Hafiz 2026-10-03: user taps go -> storyboard preview shows immediately,
+  /// scene images download in background, then the video AUTO-RENDERS into
+  /// the player (no manual Render tap needed).
   Future<void> _generate() async {
     final idea = _ideaCtrl.text.trim();
     if (idea.isEmpty) {
@@ -207,7 +207,9 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     _downloadScenesInBackground();
   }
 
-  /// Background pre-download of storyboard scene images. Silent on failure.
+  /// Background pre-download of storyboard scene images, then auto-render.
+  /// Hafiz 2026-10-03: user taps go -> preview shows -> images download ->
+  /// video auto-renders into the player (no manual Render tap needed).
   Future<void> _downloadScenesInBackground() async {
     try {
       final tmp = await getTemporaryDirectory();
@@ -223,6 +225,11 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       }
     } catch (_) {
       // Silent — the render will retry downloads itself.
+    }
+    // Auto-render once downloads settle (success or fail — the render
+    // retries missing images itself).
+    if (mounted && _scenes.isNotEmpty && !_rendering) {
+      _renderVideo();
     }
   }
 
