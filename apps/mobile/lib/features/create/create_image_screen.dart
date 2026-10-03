@@ -34,6 +34,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   bool _loading = false;
   Timer? _genTimer;
   bool _loadFailed = false;
+  // Hafiz 2026-10-03: track network errors separately for a clear message.
+  bool _networkError = false;
   bool _sharing = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
@@ -75,8 +77,21 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _imageUrl = _buildImageUrl(prompt, _style, _seed);
       _loading = true;
       _loadFailed = false;
+      _networkError = false;
     });
     _armTimeout();
+  }
+
+  /// Hafiz 2026-10-03: detects network-level failures (DNS, connection)
+  /// so the UI can show "check your internet" instead of a generic error.
+  bool _isNetworkError(Object err) {
+    final msg = err.toString().toLowerCase();
+    return msg.contains('socketexception') ||
+        msg.contains('failed host lookup') ||
+        msg.contains('network is unreachable') ||
+        msg.contains('connection refused') ||
+        msg.contains('connection timed out') ||
+        msg.contains('clientexception');
   }
 
   /// Safety net: image generation can stall on slow networks — never spin
@@ -101,6 +116,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _imageUrl = _buildImageUrl(prompt, _style, _seed);
       _loading = true;
       _loadFailed = false;
+      _networkError = false;
     });
     _armTimeout();
   }
@@ -256,6 +272,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                     setState(() {
                       _loading = false;
                       _loadFailed = true;
+                      // Hafiz 2026-10-03: network errors get a specific message.
+                      _networkError = _isNetworkError(err);
                     });
                   }
                 });
@@ -275,7 +293,10 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
             fit: BoxFit.cover,
             errorBuilder: (ctx, err, stack) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() => _loadFailed = true);
+                if (mounted) setState(() {
+                  _loadFailed = true;
+                  _networkError = _isNetworkError(err);
+                });
               });
               return const SizedBox.shrink();
             },
@@ -318,7 +339,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              s.boardImageFailed,
+              // Hafiz 2026-10-03: network errors get a specific message.
+              _networkError ? s.boardImageNetworkFailed : s.boardImageFailed,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13.5,

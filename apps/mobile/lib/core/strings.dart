@@ -10433,6 +10433,12 @@ class AppStrings {
         'Image generation failed. Please try again.',
         'تصویر بنانے میں ناکامی۔ دوبارہ کوشش کریں۔',
       );
+  // Hafiz 2026-10-03: specific message when the image server is unreachable.
+  String get boardImageNetworkFailed => _get(
+        'Could not reach the image server. Check your internet connection and try again.',
+        'امیج سرور تک رسائی نہیں ہو سکی۔ اپنا انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔',
+        'تعذر الوصول إلى خادم الصور. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+      );
   String get boardScriptDraftLabel => _get(
         'Basic draft',
         'بنیادی مسودہ',
