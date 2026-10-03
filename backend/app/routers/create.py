@@ -354,3 +354,92 @@ async def hooks(body: HooksIn, db: AsyncSession = Depends(get_db),
     return await _settle_generation(
         db, user, "hooks", {"hooks": items, "count": len(items)},
         provider, dev)
+
+
+# ---------------------------------------------------------------------------
+# AI image generation via Agnes (Hafiz 2026-10-03)
+# Pollinations is unreachable from some phones/networks (DNS fails), so
+# Create Image now uses Agnes AI's image model through the backend proxy
+# (key stays server-side, same pattern as /api/v1/video).
+# ---------------------------------------------------------------------------
+import httpx as _httpx
+from fastapi.responses import JSONResponse as _JSONResponse
+
+_AGNES_IMAGE_BASE = "https://apihub.agnes-ai.com/v1"
+_AGNES_IMAGE_MODEL = "agnes-image-2.5-flash"
+
+
+class AgnesImageIn(BaseModel):
+    prompt: str = Field(min_length=3, max_length=1000)
+    style: str = Field(default="realistic", max_length=20)
+    seed: int = Field(default=0, ge=0)
+
+
+_AGNES_STYLE_SUFFIX = {
+    "realistic": "photorealistic, highly detailed, professional photography",
+    "cartoon": "cartoon style, vibrant illustration, animated",
+    "3d": "3d render, octane render, detailed 3d illustration",
+}
+
+
+def _agnes_image_key() -> str:
+    from app.core.config import settings
+    key = (settings.agnes_api_key or "").strip()
+    if not key:
+        raise HTTPException(
+            status_code=503,
+            detail="AI image generation is not configured on the server yet.",
+        )
+    return key
+
+
+@router.post("/image-agnes")
+async def generate_image_agnes(
+    body: AgnesImageIn,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Generate an image via Agnes AI (server-side key).
+
+    Returns {"image_url": ...}. The mobile app displays the URL directly.
+    """
+    key = _agnes_image_key()
+    suffix = _AGNES_STYLE_SUFFIX.get(body.style, _AGNES_STYLE_SUFFIX["realistic"])
+    full_prompt = f"{body.prompt}, {suffix}"
+    try:
+        async with _httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{_AGNES_IMAGE_BASE}/images/generations",
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": _AGNES_IMAGE_MODEL,
+                    "prompt": full_prompt,
+                    "n": 1,
+                    "size": "1024x1024",
+                },
+            )
+    except _httpx.RequestError as exc:
+        logger.warning("agnes image transport error: %s", exc)
+        raise HTTPException(
+            status_code=502, detail="Image service unreachable.") from exc
+    if resp.status_code == 429:
+        raise HTTPException(
+            status_code=429,
+            detail="Image quota is busy right now — try again in a minute.")
+    if resp.status_code < 200 or resp.status_code >= 300:
+        logger.warning(
+            "agnes image HTTP %s: %s", resp.status_code, resp.text[:200])
+        raise HTTPException(
+            status_code=502, detail="Image service rejected the request.")
+    try:
+        data = resp.json()
+        url = data["data"][0]["url"]
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise HTTPException(
+            status_code=502, detail="Image service returned invalid data.")
+    if not url:
+        raise HTTPException(
+            status_code=502, detail="Image service returned no image.")
+    return {"image_url": url}

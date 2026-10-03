@@ -64,7 +64,9 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     super.dispose();
   }
 
-  void _generate() {
+  /// Hafiz 2026-10-03: generates via Agnes AI through the backend proxy
+  /// (primary). Falls back to direct Pollinations URL if Agnes fails.
+  Future<void> _generate() async {
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,14 +74,39 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       );
       return;
     }
+    final seed = Random().nextInt(999999);
+    final styleName = ['realistic', 'cartoon', '3d'][_style];
     setState(() {
-      _seed = Random().nextInt(999999);
-      _imageUrl = _buildImageUrl(prompt, _style, _seed);
+      _seed = seed;
+      _imageUrl = null;
       _loading = true;
       _loadFailed = false;
       _networkError = false;
     });
     _armTimeout();
+
+    // Primary: Agnes via backend proxy.
+    final agnesUrl = await AiImageService.instance.generateViaAgnes(
+      prompt: prompt,
+      style: styleName,
+      seed: seed,
+    );
+    if (!mounted) return;
+    if (agnesUrl != null) {
+      _genTimer?.cancel();
+      setState(() {
+        _imageUrl = agnesUrl;
+        // Keep _loading true until Image.network finishes loading.
+      });
+      return;
+    }
+
+    // Fallback: direct Pollinations URL (works when the device can reach it).
+    if (!mounted) return;
+    setState(() {
+      _imageUrl = _buildImageUrl(prompt, _style, seed);
+      // _loading stays true; Image.network errorBuilder handles failure.
+    });
   }
 
   /// Hafiz 2026-10-03: detects network-level failures (DNS, connection)
@@ -108,17 +135,33 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     });
   }
 
-  void _regenerate() {
+  Future<void> _regenerate() async {
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) return;
+    final seed = Random().nextInt(999999);
+    final styleName = ['realistic', 'cartoon', '3d'][_style];
     setState(() {
-      _seed = Random().nextInt(999999);
-      _imageUrl = _buildImageUrl(prompt, _style, _seed);
+      _seed = seed;
+      _imageUrl = null;
       _loading = true;
       _loadFailed = false;
       _networkError = false;
     });
     _armTimeout();
+
+    final agnesUrl = await AiImageService.instance.generateViaAgnes(
+      prompt: prompt,
+      style: styleName,
+      seed: seed,
+    );
+    if (!mounted) return;
+    if (agnesUrl != null) {
+      _genTimer?.cancel();
+      setState(() => _imageUrl = agnesUrl);
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _imageUrl = _buildImageUrl(prompt, _style, seed));
   }
 
   Future<void> _share() async {
@@ -241,8 +284,9 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   }
 
   Widget _buildPreview() {
-    // Loading state.
-    if (_loading && _imageUrl != null) {
+    // Loading state — Hafiz 2026-10-03: also covers Agnes generation where
+    // _imageUrl is still null (backend is generating).
+    if (_loading) {
       return Stack(
         fit: StackFit.expand,
         children: [
