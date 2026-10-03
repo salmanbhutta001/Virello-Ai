@@ -29,7 +29,7 @@ class VideoJob(Base):
     job_id: Mapped[str] = mapped_column(String(12), primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("users.id"), index=True)
-    agnes_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    agnes_id: Mapped[str | None] = mapped_column(Text(), nullable=True)
     status: Mapped[str] = mapped_column(
         String(16), default="submitted", index=True)
     # submitted | processing | ready | failed

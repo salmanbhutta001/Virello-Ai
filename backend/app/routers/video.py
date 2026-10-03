@@ -146,7 +146,7 @@ async def generate_video(
         logger.exception("video_jobs insert failed")
         raise HTTPException(
             status_code=502,
-            detail=f"Could not save video job: {type(exc).__name__}: {str(exc)[:200]}",
+            detail=f"Could not save video job ({type(exc).__name__}).",
         ) from None
     return {"job_id": job.job_id, "status": job.status}
 
