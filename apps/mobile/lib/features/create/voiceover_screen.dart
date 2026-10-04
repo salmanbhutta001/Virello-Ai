@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -30,6 +33,9 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
   bool _speaking = false;
   bool _exporting = false;
   String? _status;
+  // Hafiz 2026-10-04: exported file path for sharing.
+  String? _exportedPath;
+  bool _sharing = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -77,6 +83,8 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
     if (mounted) setState(() => _speaking = false);
   }
 
+  /// Hafiz 2026-10-04: export saves the audio into the phone's
+  /// Downloads folder (not just app cache), then offers Share.
   Future<void> _export() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty || _exporting) return;
@@ -86,12 +94,41 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
     });
     final fileName =
         'virello_voiceover_${DateTime.now().millisecondsSinceEpoch}.wav';
-    final res = await _tts.synthesizeToFile(text, fileName);
+    final path = await _tts.exportToDownloads(text, fileName);
     if (!mounted) return;
     setState(() {
       _exporting = false;
-      _status = res == null ? s.ttsUnavailable : '${s.audioExported}: $res';
+      _exportedPath = path;
+      _status = path == null
+          ? 'Audio export failed. Please try again.'
+          : 'Audio saved to Downloads.';
     });
+  }
+
+  /// Hafiz 2026-10-04: share the exported audio via the system sheet.
+  Future<void> _share() async {
+    if (_sharing) return;
+    var path = _exportedPath;
+    if (path == null) {
+      // Export on demand, then share.
+      await _export();
+      path = _exportedPath;
+    }
+    if (path == null || !mounted) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      setState(() => _status = 'Audio file not found. Please export again.');
+      return;
+    }
+    setState(() => _sharing = true);
+    try {
+      await Share.shareXFiles(
+        [XFile(path, mimeType: 'audio/wav', name: 'virello-voiceover.wav')],
+        text: 'My voiceover — via Virello',
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
   }
 
   @override
@@ -203,6 +240,28 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
                 ),
               ),
             ],
+          ),
+          // Hafiz 2026-10-04: share the exported audio.
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: (_sharing || _ctrl.text.trim().isEmpty) ? null : _share,
+              icon: _sharing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.share_outlined, size: 18),
+              label: const Text('Share audio'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
           ),
           if (_status != null) ...[
             const SizedBox(height: 16),

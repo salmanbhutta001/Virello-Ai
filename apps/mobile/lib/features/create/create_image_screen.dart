@@ -15,9 +15,8 @@ import '../../core/config.dart';
 
 /// Board screen 22: "Create Image" — fully functional AI image generation.
 ///
-/// Uses the free Pollinations.ai image API (no key required) as the default
-/// provider. The provider is abstracted in [_buildImageUrl] so a keyed
-/// provider (OpenAI, Stability, etc.) can be swapped in later via config.
+/// Hafiz 2026-10-04: Agnes AI is the ONLY provider (via backend proxy).
+/// Pollinations.ai was removed entirely.
 ///
 /// HONEST: every generated image is labeled "AI-generated" in the UI.
 class CreateImageScreen extends StatefulWidget {
@@ -35,30 +34,13 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   bool _loading = false;
   Timer? _genTimer;
   bool _loadFailed = false;
-  // Hafiz 2026-10-03: track network errors separately for a clear message.
-  bool _networkError = false;
+  // Hafiz 2026-10-04: the actual failure reason, shown to the user.
+  String? _failMessage;
   bool _sharing = false;
   // Hafiz 2026-10-03: image download to gallery.
   bool _downloading = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
-
-  static const _styleSuffix = [
-    'photorealistic, ultra-detailed, professional photography, sharp focus',
-    'vibrant cartoon illustration, bold outlines, flat colors, playful',
-    '3d render, pixar style, soft volumetric lighting, high detail',
-  ];
-
-  /// Builds the AI image URL via [AiImageService].
-  /// Free provider (Pollinations.ai) by default, no key needed.
-  /// A keyed provider (OpenAI, Stability) can be configured in one place.
-  String _buildImageUrl(String prompt, int style, int seed) {
-    return AiImageService.instance.buildImageUrl(
-      prompt,
-      _styleSuffix[style],
-      seed,
-    );
-  }
 
   @override
   void dispose() {
@@ -67,8 +49,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     super.dispose();
   }
 
-  /// Hafiz 2026-10-03: generates via Agnes AI through the backend proxy
-  /// (primary). Falls back to direct Pollinations URL if Agnes fails.
+  /// Hafiz 2026-10-04: Agnes AI is the ONLY provider. No Pollinations
+  /// fallback. Failures throw AgnesException with a user-facing message.
   Future<void> _generate() async {
     if (_loading) return; // guard against double-tap (audit 2026-10-03)
     final prompt = _promptCtrl.text.trim();
@@ -85,44 +67,31 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _imageUrl = null;
       _loading = true;
       _loadFailed = false;
-      _networkError = false;
+      _failMessage = null;
     });
     _armTimeout();
 
-    // Primary: Agnes via backend proxy.
-    final agnesUrl = await AiImageService.instance.generateViaAgnes(
-      prompt: prompt,
-      style: styleName,
-      seed: seed,
-    );
-    if (!mounted) return;
-    if (agnesUrl != null) {
+    try {
+      final agnesUrl = await AiImageService.instance.generateViaAgnes(
+        prompt: prompt,
+        style: styleName,
+        seed: seed,
+      );
+      if (!mounted) return;
       _genTimer?.cancel();
       setState(() {
         _imageUrl = agnesUrl;
         // Keep _loading true until Image.network finishes loading.
       });
-      return;
+    } on AgnesException catch (e) {
+      if (!mounted) return;
+      _genTimer?.cancel();
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+        _failMessage = e.message;
+      });
     }
-
-    // Fallback: direct Pollinations URL (works when the device can reach it).
-    if (!mounted) return;
-    setState(() {
-      _imageUrl = _buildImageUrl(prompt, _style, seed);
-      // _loading stays true; Image.network errorBuilder handles failure.
-    });
-  }
-
-  /// Hafiz 2026-10-03: detects network-level failures (DNS, connection)
-  /// so the UI can show "check your internet" instead of a generic error.
-  bool _isNetworkError(Object err) {
-    final msg = err.toString().toLowerCase();
-    return msg.contains('socketexception') ||
-        msg.contains('failed host lookup') ||
-        msg.contains('network is unreachable') ||
-        msg.contains('connection refused') ||
-        msg.contains('connection timed out') ||
-        msg.contains('clientexception');
   }
 
   /// Safety net: image generation can stall on slow networks — never spin
@@ -150,23 +119,28 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _imageUrl = null;
       _loading = true;
       _loadFailed = false;
-      _networkError = false;
+      _failMessage = null;
     });
     _armTimeout();
 
-    final agnesUrl = await AiImageService.instance.generateViaAgnes(
-      prompt: prompt,
-      style: styleName,
-      seed: seed,
-    );
-    if (!mounted) return;
-    if (agnesUrl != null) {
+    try {
+      final agnesUrl = await AiImageService.instance.generateViaAgnes(
+        prompt: prompt,
+        style: styleName,
+        seed: seed,
+      );
+      if (!mounted) return;
       _genTimer?.cancel();
       setState(() => _imageUrl = agnesUrl);
-      return;
+    } on AgnesException catch (e) {
+      if (!mounted) return;
+      _genTimer?.cancel();
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+        _failMessage = e.message;
+      });
     }
-    if (!mounted) return;
-    setState(() => _imageUrl = _buildImageUrl(prompt, _style, seed));
   }
 
   Future<void> _share() async {
@@ -392,8 +366,9 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
                     setState(() {
                       _loading = false;
                       _loadFailed = true;
-                      // Hafiz 2026-10-03: network errors get a specific message.
-                      _networkError = _isNetworkError(err);
+                      // Hafiz 2026-10-04: show the actual load error.
+                      _failMessage =
+                          'The image could not be loaded. Please try again.';
                     });
                   }
                 });
@@ -415,7 +390,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) setState(() {
                   _loadFailed = true;
-                  _networkError = _isNetworkError(err);
+                  _failMessage =
+                      'The image could not be loaded. Please try again.';
                 });
               });
               return const SizedBox.shrink();
@@ -459,8 +435,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              // Hafiz 2026-10-03: network errors get a specific message.
-              _networkError ? s.boardImageNetworkFailed : s.boardImageFailed,
+              // Hafiz 2026-10-04: show the actual failure reason.
+              _failMessage ?? s.boardImageFailed,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13.5,

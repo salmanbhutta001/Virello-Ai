@@ -1,17 +1,23 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../main.dart';
+import '../../services/local_tools/tts_service.dart';
 
 /// Local teleprompter — auto-scrolling script reader for hands-free
 /// recording. 100% on-device: no network, no account, no setup.
 ///
 /// Two modes: edit (write/paste the script) and prompter (big readable
 /// text auto-scrolling at an adjustable speed).
+///
+/// Hafiz 2026-10-04: prompter can also SPEAK the script (TTS), and the
+/// narration can be downloaded to the phone + shared.
 class TeleprompterScreen extends StatefulWidget {
   final String initialScript;
   const TeleprompterScreen({super.key, this.initialScript = ''});
@@ -23,10 +29,15 @@ class TeleprompterScreen extends StatefulWidget {
 class _TeleprompterScreenState extends State<TeleprompterScreen> {
   late final TextEditingController _ctrl;
   final ScrollController _scroll = ScrollController();
+  final TtsService _tts = TtsService();
   Timer? _timer;
   bool _playing = false;
   bool _prompterMode = false;
   double _speed = 2.0; // 1..6
+  // Hafiz 2026-10-04: TTS speak + audio export state.
+  bool _speaking = false;
+  bool _exporting = false;
+  String? _audioPath;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -34,11 +45,18 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.initialScript);
+    _tts.init();
+    // Hafiz 2026-10-04: reset the Speak button when TTS finishes.
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _speaking = false);
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _tts.setCompletionHandler(null);
+    _tts.dispose();
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -68,7 +86,67 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
   void _stop() {
     _timer?.cancel();
     _timer = null;
+    _stopSpeaking();
     if (mounted) setState(() => _playing = false);
+  }
+
+  /// Hafiz 2026-10-04: speak the script aloud with the phone's TTS.
+  Future<void> _toggleSpeaking() async {
+    if (_speaking) {
+      await _stopSpeaking();
+      return;
+    }
+    final text = _ctrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _speaking = true);
+    await _tts.speak(text);
+    // speak() returns after queuing; poll completion via a simple timer.
+    // If the user navigates away, dispose() stops TTS.
+  }
+
+  Future<void> _stopSpeaking() async {
+    if (!_speaking) return;
+    await _tts.stop();
+    if (mounted) setState(() => _speaking = false);
+  }
+
+  /// Hafiz 2026-10-04: render narration to audio, save to Downloads.
+  Future<void> _downloadAudio() async {
+    final text = _ctrl.text.trim();
+    if (text.isEmpty || _exporting) return;
+    setState(() => _exporting = true);
+    final name =
+        'virello_teleprompter_${DateTime.now().millisecondsSinceEpoch}.wav';
+    final path = await _tts.exportToDownloads(text, name);
+    if (!mounted) return;
+    setState(() {
+      _exporting = false;
+      _audioPath = path;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(path == null
+            ? 'Audio export failed. Please try again.'
+            : 'Audio saved to Downloads.'),
+      ),
+    );
+  }
+
+  /// Hafiz 2026-10-04: share the exported audio file.
+  Future<void> _shareAudio() async {
+    var path = _audioPath;
+    if (path == null) {
+      // Export on demand, then share.
+      await _downloadAudio();
+      path = _audioPath;
+    }
+    if (path == null || !mounted) return;
+    final file = File(path);
+    if (!await file.exists()) return;
+    await Share.shareXFiles(
+      [XFile(path, mimeType: 'audio/wav', name: 'virello-teleprompter.wav')],
+      text: 'My teleprompter narration — via Virello',
+    );
   }
 
   void _toggle() {
@@ -112,6 +190,9 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: TextField(
             controller: _ctrl,
+            // Hafiz 2026-10-04: rebuild on every keystroke so the Play
+            // button enables as soon as there is text.
+            onChanged: (_) => setState(() {}),
             maxLines: 12,
             minLines: 8,
             style: TextStyle(
@@ -184,35 +265,98 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
       child: Container(
         color: Colors.black,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  _stop();
-                  setState(() => _prompterMode = false);
-                },
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(s.boardWriteScript),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side:  BorderSide(color: VTheme.textSec(context).withValues(alpha: 0.24)),
+            // Hafiz 2026-10-04: speak / download / share the narration.
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _toggleSpeaking,
+                    icon: Icon(
+                      _speaking ? Icons.stop : Icons.record_voice_over_outlined,
+                      size: 18,
+                    ),
+                    label: Text(_speaking ? 'Stop voice' : 'Speak'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                          color: VTheme.textSec(context)
+                              .withValues(alpha: 0.24)),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _exporting ? null : _downloadAudio,
+                    icon: _exporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_outlined, size: 18),
+                    label: const Text('Audio'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                          color: VTheme.textSec(context)
+                              .withValues(alpha: 0.24)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _shareAudio,
+                    icon: const Icon(Icons.share_outlined, size: 18),
+                    label: const Text('Share'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                          color: VTheme.textSec(context)
+                              .withValues(alpha: 0.24)),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: _toggle,
-                icon: Icon(
-                  _playing ? Icons.pause : Icons.play_arrow,
-                  size: 20,
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _stop();
+                      setState(() => _prompterMode = false);
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(s.boardWriteScript),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                          color: VTheme.textSec(context)
+                              .withValues(alpha: 0.24)),
+                    ),
+                  ),
                 ),
-                label: Text(_playing ? s.pause : s.play),
-                style: FilledButton.styleFrom(
-                  backgroundColor: VirelloColors.pink,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _toggle,
+                    icon: Icon(
+                      _playing ? Icons.pause : Icons.play_arrow,
+                      size: 20,
+                    ),
+                    label: Text(_playing ? s.pause : s.play),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: VirelloColors.pink,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

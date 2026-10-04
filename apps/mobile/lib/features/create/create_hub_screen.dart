@@ -24,8 +24,23 @@ import 'write_script_screen.dart';
 /// Upload Content, Use Template → each opens its own board-faithful screen.
 /// AI Image/Video have no provider key configured, so their screens show an
 /// honest "coming soon" state — never fake generation.
-class CreateHubScreen extends StatelessWidget {
+///
+/// Hafiz 2026-10-04: tools open INLINE within the Create tab (not via
+/// Navigator.push) so the bottom nav tabs NEVER disappear. The system back
+/// button / AppBar back returns to the hub grid, not out of the tab.
+class CreateHubScreen extends StatefulWidget {
   const CreateHubScreen({super.key});
+
+  @override
+  State<CreateHubScreen> createState() => _CreateHubScreenState();
+}
+
+class _CreateHubScreenState extends State<CreateHubScreen> {
+  /// The currently open tool, or null for the hub grid.
+  Widget? _activeTool;
+
+  void _openTool(Widget tool) => setState(() => _activeTool = tool);
+  void _closeTool() => setState(() => _activeTool = null);
 
   Widget _row({
     required BuildContext context,
@@ -85,6 +100,19 @@ class CreateHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tool = _activeTool;
+    if (tool != null) {
+      // Hafiz 2026-10-04: tool open hai — bottom nav visible rehta hai.
+      // Back button (AppBar ya system) dabane pe hub grid pe wapas,
+      // tab se bahar nahi.
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _closeTool();
+        },
+        child: tool,
+      );
+    }
     final s = AppStrings(appState.localeCode);
     return Scaffold(
       appBar: AppBar(title: Text(s.boardCreateHub)),
@@ -109,10 +137,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: VirelloColors.pink,
             title: s.boardAiImage,
             desc: s.boardAiImageDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateImageScreen()),
-            ),
+            onTap: () => _openTool(const CreateImageScreen()),
           ),
           _row(
             context: context,
@@ -120,10 +145,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF8B5CF6),
             title: s.boardAiVideo,
             desc: s.boardAiVideoDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateVideoScreen()),
-            ),
+            onTap: () => _openTool(const CreateVideoScreen()),
           ),
           _row(
             context: context,
@@ -131,10 +153,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFFF59E0B),
             title: s.boardWriteScript,
             desc: s.boardWriteScriptDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WriteScriptScreen()),
-            ),
+            onTap: () => _openTool(const WriteScriptScreen()),
           ),
           _row(
             context: context,
@@ -142,10 +161,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF3B82F6),
             title: s.boardAiStory,
             desc: s.boardAiStoryDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AiStoryScreen()),
-            ),
+            onTap: () => _openTool(const AiStoryScreen()),
           ),
           // Phase B: assemble a 9:16 story video from photos on-device.
           _row(
@@ -154,12 +170,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF3B82F6),
             title: s.storyVideo,
             desc: s.storyVideoDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const StoryVideoScreen(),
-              ),
-            ),
+            onTap: () => _openTool(const StoryVideoScreen()),
           ),
           _row(
             context: context,
@@ -167,10 +178,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFFF97316),
             title: s.boardUploadContent,
             desc: s.boardUploadContentDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const UploadContentScreen()),
-            ),
+            onTap: () => _openTool(const UploadContentScreen()),
           ),
           _row(
             context: context,
@@ -178,10 +186,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: VirelloColors.pink,
             title: s.boardUseTemplate,
             desc: s.boardUseTemplateDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TemplatesScreen()),
-            ),
+            onTap: () => _openTool(const TemplatesScreen()),
           ),
           // Board extras reachable from hub: conversion + captions.
           _row(
@@ -190,10 +195,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF10B981),
             title: s.boardConversion,
             desc: s.boardConvert,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ConversionScreen()),
-            ),
+            onTap: () => _openTool(const ConversionScreen()),
           ),
           _row(
             context: context,
@@ -201,12 +203,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF06B6D4),
             title: s.boardGenerateCaptions,
             desc: s.boardGenerateCaptions,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const GenerateCaptionsScreen(),
-              ),
-            ),
+            onTap: () => _openTool(const GenerateCaptionsScreen()),
           ),
           // Phase A local tools: on-device, no account or setup needed.
           _row(
@@ -215,12 +212,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFFEC4899),
             title: s.imageTools,
             desc: s.imageToolsDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ImageToolsScreen(),
-              ),
-            ),
+            onTap: () => _openTool(const ImageToolsScreen()),
           ),
           _row(
             context: context,
@@ -228,12 +220,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFF14B8A6),
             title: s.teleprompter,
             desc: s.teleprompterDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const TeleprompterScreen(),
-              ),
-            ),
+            onTap: () => _openTool(const TeleprompterScreen()),
           ),
           _row(
             context: context,
@@ -241,12 +228,7 @@ class CreateHubScreen extends StatelessWidget {
             iconColor: const Color(0xFFA855F7),
             title: s.voiceover,
             desc: s.voiceoverDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const VoiceoverScreen(),
-              ),
-            ),
+            onTap: () => _openTool(const VoiceoverScreen()),
           ),
         ],
       ),

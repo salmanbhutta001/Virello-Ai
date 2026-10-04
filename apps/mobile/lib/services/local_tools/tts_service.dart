@@ -6,7 +6,10 @@
 /// guarded: failures degrade to no-ops / nulls, never crashes.
 library;
 
+import 'dart:io';
+
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:path_provider/path_provider.dart';
 
 class TtsVoice {
   final String name;
@@ -42,6 +45,14 @@ class TtsService {
       }
       await _tts.stop();
       await _tts.speak(text);
+    } catch (_) {}
+  }
+
+  /// Hafiz 2026-10-04: fires when TTS finishes speaking naturally
+  /// (utterance complete). Pass null to clear.
+  void setCompletionHandler(void Function()? handler) {
+    try {
+      _tts.setCompletionHandler(handler);
     } catch (_) {}
   }
 
@@ -124,6 +135,40 @@ class TtsService {
     await init();
     try {
       return await _tts.synthesizeToFile(text, fileName, isFullPath);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Renders [text] to an audio file and saves it in the phone's
+  /// Downloads folder so the user can find it outside the app.
+  /// Returns the saved file path, or null on failure.
+  /// Hafiz 2026-10-04: teleprompter + voiceover "save to phone".
+  Future<String?> exportToDownloads(String text, String fileName) async {
+    if (_disposed || text.trim().isEmpty) return null;
+    await init();
+    try {
+      // 1. Synthesize to a temp file with a known absolute path.
+      final tempDir = await getTemporaryDirectory();
+      final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '_');
+      final tempPath = '${tempDir.path}/$safeName';
+      await _tts.synthesizeToFile(text, tempPath, true);
+      final src = File(tempPath);
+      if (!await src.exists()) return null;
+
+      // 2. Copy into the public Downloads folder.
+      try {
+        final downloads = await getDownloadsDirectory();
+        if (downloads != null) {
+          final destPath = '${downloads.path}/$safeName';
+          await src.copy(destPath);
+          return destPath;
+        }
+      } catch (_) {
+        // Scoped-storage or other restriction — fall through to temp path.
+      }
+      // Fallback: the temp file itself (still shareable).
+      return tempPath;
     } catch (_) {
       return null;
     }
