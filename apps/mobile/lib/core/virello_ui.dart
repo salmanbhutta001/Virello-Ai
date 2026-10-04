@@ -846,40 +846,15 @@ class VGlassLangBadge extends StatelessWidget {
 
 /// Small reward badge shown on product cards: "+25" points for sharing.
 /// Gold background, dark text — visible on both themes and white images.
+///
+/// NOTE (2026-10-04): Hidden for store policy compliance — renders nothing.
+/// The class is kept so existing imports/usages don't break.
 class RewardBadge extends StatelessWidget {
   final int points;
   const RewardBadge({super.key, this.points = 25});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFC93C),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star_rounded, size: 13, color: Color(0xFF5C3D00)),
-          const SizedBox(width: 2),
-          Text(
-            '+$points',
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF5C3D00),
-            ),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }

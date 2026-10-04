@@ -240,20 +240,17 @@ class ShoppableProducts extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            // Share & earn $0.05 — tracked personal link.
-                            Tooltip(
-                              message: s.shareEarnHint,
-                              child: InkWell(
-                                onTap: () =>
-                                    ShareEarn.shareProduct(ctx, product: p),
-                                borderRadius: BorderRadius.circular(20),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Icon(
-                                    Icons.share_outlined,
-                                    size: 16,
-                                    color: VirelloColors.muted,
-                                  ),
+                            // Share — tracked personal link.
+                            InkWell(
+                              onTap: () =>
+                                  ShareEarn.shareProduct(ctx, product: p),
+                              borderRadius: BorderRadius.circular(20),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.share_outlined,
+                                  size: 16,
+                                  color: VirelloColors.muted,
                                 ),
                               ),
                             ),

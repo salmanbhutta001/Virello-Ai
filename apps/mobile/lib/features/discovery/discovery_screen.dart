@@ -8,7 +8,6 @@ import '../../main.dart';
 import '../../features/tour/app_tour.dart';
 import '../settings/notifications_screen.dart';
 import '../shop/product_detail_screen.dart';
-import '../wallet/share_proof_flow.dart';
 import 'categories_screen.dart';
 import 'post_reader_screen.dart';
 import 'search_screen.dart';
@@ -374,16 +373,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                             ),
                           ),
                         ),
-                        // Proof-based share reward: small green cash badge
-                        // with the post's own reward_display amount.
-                        if (item.hasShareReward) ...[
-                          const SizedBox(width: 6),
-                          ShareRewardBadge(
-                            item: item,
-                            onTap: () =>
-                                ShareProofFlow.start(context, item),
-                          ),
-                        ],
                       ],
                     ),
                     // Shoppable post: creator-tagged products, compact card.
@@ -512,11 +501,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                         : Icon(Icons.shopping_bag_outlined,
                             color: VTheme.textSec(context)),
                   ),
-                ),
-                const Positioned(
-                  top: 6,
-                  right: 6,
-                  child: RewardBadge(points: 25),
                 ),
               ],
             ),

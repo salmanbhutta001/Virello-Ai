@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../../core/notifications_sheet.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
-import '../../core/virello_ui.dart';
 import '../../core/config.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
@@ -681,11 +680,6 @@ class _ShopScreenState extends State<ShopScreen> {
                                   color: Colors.black)),
                         ),
                       ),
-                    const Positioned(
-                      top: 10,
-                      right: 10,
-                      child: RewardBadge(points: 25),
-                    ),
                   ],
                 ),
               ),
@@ -706,12 +700,9 @@ class _ShopScreenState extends State<ShopScreen> {
                       : _liked.add(id)),
                 ),
                 const SizedBox(width: 8),
-                Tooltip(
-                  message: s.shareEarnHint,
-                  child: _actionBtn(
-                    icon: Icons.send_outlined,
-                    onTap: () => _shareProduct(p),
-                  ),
+                _actionBtn(
+                  icon: Icons.send_outlined,
+                  onTap: () => _shareProduct(p),
                 ),
               ],
             ),
@@ -835,11 +826,6 @@ class _ShopScreenState extends State<ShopScreen> {
                                 color: Colors.black)),
                       ),
                     ),
-                  const Positioned(
-                    top: 8,
-                    right: 8,
-                    child: RewardBadge(points: 25),
-                  ),
                 ],
               ),
             ),

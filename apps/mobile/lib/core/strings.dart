@@ -4419,9 +4419,9 @@ class AppStrings {
 
   // ---- Approved 10-screen board (2026-09-26) ----
   String get splashTagline => _get(
-        'Create • Discover • Grow • Earn • Viral',
-        'تخلیق • دریافت • گرو • کمائیں • وائرل',
-        'أنشئ • اكتشف • نمِّ • اكسب • فيروسي',
+        'Create • Discover • Grow • Viral',
+        'تخلیق • دریافت • گرو • وائرل',
+        'أنشئ • اكتشف • نمِّ • فيروسي',
       
         'बनाएं • डिस्कवर • ग्रो',
         'Créer • Découvrir • Croissance',

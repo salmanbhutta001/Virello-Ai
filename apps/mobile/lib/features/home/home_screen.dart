@@ -522,11 +522,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         : _imgFallback(),
                   ),
                 ),
-                const Positioned(
-                  top: 8,
-                  right: 8,
-                  child: RewardBadge(points: 25),
-                ),
               ],
             ),
             Expanded(

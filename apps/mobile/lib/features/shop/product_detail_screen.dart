@@ -3,7 +3,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
-import '../../core/virello_ui.dart';
 import '../../core/config.dart';
 import '../../services/api_client.dart';
 import '../../main.dart';
@@ -289,11 +288,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   : _imgPlaceholder(360),
             ),
             // Creator pill (top): honest publisher + real listing age.
-            const Positioned(
-              top: 14,
-              right: 14,
-              child: RewardBadge(points: 25),
-            ),
             // Floating like / share (bottom, overlapping).
             Positioned(
               bottom: -26,
@@ -310,12 +304,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 onTap: () => _toggleWishlist(p),
               ),
                   const SizedBox(width: 12),
-                  Tooltip(
-                    message: s.shareEarnHint,
-                    child: _floatBtn(
-                      icon: Icons.send_outlined,
-                      onTap: () => _share(p),
-                    ),
+                  _floatBtn(
+                    icon: Icons.send_outlined,
+                    onTap: () => _share(p),
                   ),
                 ],
               ),

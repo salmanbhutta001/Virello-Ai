@@ -98,6 +98,21 @@ jobs:
           name: virello-amazon-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-amazon-release.apk
 
+      - name: Publish APKs to GitHub Release (latest)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: apps/mobile
+        run: |
+          # Hafiz downloads APKs from the Releases page (no token needed in browser).
+          # Recreate the 'latest' tag each build so it always points at the newest APKs.
+          gh release delete latest --yes 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          gh release create latest \
+            --title "Latest Virello APKs" \
+            --notes "Play + Amazon flavors, built from main $(git rev-parse --short HEAD) on $(date -u +%Y-%m-%d)." \
+            build/app/outputs/flutter-apk/app-play-release.apk#virello-play.apk \
+            build/app/outputs/flutter-apk/app-amazon-release.apk#virello-amazon.apk
+
       - name: Build AAB (release, Play Store)
         if: env.KEYSTORE_OK == 'true'
         working-directory: apps/mobile

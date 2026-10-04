@@ -16,8 +16,6 @@ import '../discovery/result_screen.dart';
 import '../settings/settings_screen.dart';
 import '../tour/app_tour.dart';
 import '../shop/seller_dashboard_screen.dart';
-import '../wallet/wallet_screen.dart';
-import '../../services/rewards_api.dart';
 import '../social/activity_screen.dart';
 import '../social/creator_dashboard_screen.dart';
 import '../social/following_screen.dart';
@@ -38,10 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int? _campaignCount;
   Set<String> _interests = {};
   Map<String, String> _topicNames = {};
-  // Cash balance for the wallet chip (hidden when the backend is silent).
-  late final Future<Map<String, dynamic>> _cashFuture =
-      RewardsApi(apiClient).walletBalance().catchError((_) =>
-          <String, dynamic>{});
   // Hidden admin entry: 5 taps on the version footer within 3 seconds.
   int _verTaps = 0;
   DateTime? _firstVerTap;
@@ -85,14 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String get _plan => '${_me?['plan'] ?? 'free'}';
   int get _credits => (_me?['credits'] as num? ?? 0).toInt();
 
-  /// Rewards balance from /users/me (points_balance, points_level).
-  /// Null when the backend does not send them — chip hides then.
-  int? get _pointsBalance {
-    final v = _me?['points_balance'];
-    return v == null ? null : (v as num).toInt();
-  }
-  String get _pointsLevel => '${_me?['points_level'] ?? 'Sprout'}';
-
   /// True when the signed-in email is on the admin allowlist.
   /// (Must match backend VIRELLO_ADMIN_EMAILS.)
   bool get _isAdminEmail {
@@ -113,96 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }).catchError((_) {});
         },
       );
-
-  /// Wallet chip: points balance + cash balance, opens WalletScreen on tap.
-  /// Cash comes from GET /api/v1/wallet/balance (hidden when unavailable).
-  Widget _pointsChip() {
-    final s = AppStrings(appState.localeCode);
-    return VCard(
-      padding: EdgeInsets.zero,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const WalletScreen()),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: VirelloColors.brandGradient,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child:  Icon(
-                Icons.account_balance_wallet_rounded,
-                color: VTheme.onBrand(context),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.stars_rounded,
-                          size: 15, color: VirelloColors.pink),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '${_pointsBalance ?? 0} ${s.virelloPoints}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      const Icon(Icons.payments_outlined,
-                          size: 15, color: Colors.green),
-                      const SizedBox(width: 4),
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: _cashFuture,
-                        builder: (c, snap) {
-                          final w = snap.data ?? {};
-                          final cents =
-                              (w['balance_cents'] as num? ?? 0).toInt();
-                          final display =
-                              '${w['balance_display'] ?? '\$${(cents / 100).toStringAsFixed(2)}'}';
-                          return Text(
-                            display,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.green,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '${s.level}: $_pointsLevel',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: VirelloColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -344,10 +240,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                if (_pointsBalance != null) ...[
-                  const SizedBox(height: 12),
-                  _pointsChip(),
-                ],
                 const SizedBox(height: 20),
                 VSectionHeader(title: s.myInterests),
                 const SizedBox(height: 10),
@@ -489,20 +381,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: s.adminPanel,
                           onTap: _openAdminPanel,
                         ),
-                      _menuRow(
-                        key: TourTargets.profileRewards,
-                        icon: Icons.stars_outlined,
-                        iconColor: VirelloColors.pink,
-                        title: s.rewards,
-                        subtitle: _pointsBalance != null
-                            ? '$_pointsBalance ${s.virelloPoints}'
-                            : null,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const WalletScreen(),
-                          ),
-                        ),
-                      ),
                       // "Take App Tour" — replay the professional app tour.
                       _menuRow(
                         icon: Icons.tour_outlined,

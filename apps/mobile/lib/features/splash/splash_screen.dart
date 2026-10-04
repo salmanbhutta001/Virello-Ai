@@ -6,26 +6,37 @@ import '../../main.dart';
 
 /// Board screen 01 — cinematic splash: full-bleed hero image (no blur),
 /// original colorful logo (single, no duplicate wordmark), tagline
-/// "Create • Discover • Grow • Earn • Viral", and the pink arrow CTA.
+/// "Create • Discover • Grow • Viral", and the pink arrow CTA.
+///
+/// Background color is sampled from the hero image edges (#2A3733 dark
+/// slate) so the image blends seam-free edge-to-edge with no black bars
+/// and no stretching (BoxFit.cover crops, never distorts).
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, required this.onGetStarted});
   final VoidCallback onGetStarted;
+
+  /// Seam color sampled from splash-hero.jpg edges.
+  static const _seamColor = Color(0xFF2A3733);
 
   @override
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: _seamColor,
       body: Stack(
         children: [
           // Cinematic background — full-bleed, sharp, aligned (no blur).
+          // BoxFit.cover fills every pixel: crops overflow, never stretches.
           Positioned.fill(
             child: Image.asset(
               'assets/images/splash-hero.jpg',
               fit: BoxFit.cover,
               alignment: Alignment.center,
+              width: double.infinity,
+              height: double.infinity,
+              filterQuality: FilterQuality.high,
               errorBuilder: (_, __, ___) =>
-                  const ColoredBox(color: Colors.black),
+                  const ColoredBox(color: _seamColor),
             ),
           ),
           // Gentle scrims: a touch of dark at the very top (logo legibility)

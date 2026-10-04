@@ -77,18 +77,17 @@ class _ShareToFeedDialogState extends State<ShareToFeedDialog> {
     if (_selectedTopics.isEmpty || _sharing) return;
     setState(() => _sharing = true);
     try {
-      final res = await apiClient.shareToFeed(
+      await apiClient.shareToFeed(
         campaignId: widget.campaign.id,
         topics: _selectedTopics.toList(),
         asins: _tagged.map((t) => t.asin).toList(),
       );
       if (!mounted) return;
-      final points = (res['points_earned'] as num? ?? 0).toInt();
       final nav = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
       nav.pop();
       messenger.showSnackBar(
-        SnackBar(content: Text(s.pointsEarnedSnackbar(points))),
+        SnackBar(content: Text(s.done)),
       );
       widget.onShared();
     } on AuthException {
