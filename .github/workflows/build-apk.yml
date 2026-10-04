@@ -17,6 +17,11 @@ concurrency:
   group: apk-build-main
   cancel-in-progress: true
 
+# The release-publish step needs write access to create/update the
+# 'latest' GitHub Release (repo default token permissions are restricted).
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
