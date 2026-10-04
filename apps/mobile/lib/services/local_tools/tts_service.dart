@@ -52,7 +52,8 @@ class TtsService {
   /// (utterance complete). Pass null to clear.
   void setCompletionHandler(void Function()? handler) {
     try {
-      _tts.setCompletionHandler(handler);
+      // flutter_tts needs a non-null callback — use a no-op when clearing.
+      _tts.setCompletionHandler(handler ?? () {});
     } catch (_) {}
   }
 

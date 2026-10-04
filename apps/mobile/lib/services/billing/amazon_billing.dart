@@ -34,8 +34,11 @@ class AmazonBilling implements BillingProvider {
     'virello_credits_1000',
     'virello_credits_5000',
     'virello_credits_20000',
-    'virello_pro_monthly',
-    'virello_scale_monthly',
+    // Subscriptions are purchased via their TERM SKUs (Amazon requires
+    // term SKU != parent SKU). Parents: virello_pro_monthly /
+    // virello_scale_monthly (defined in Amazon console).
+    'virello_pro_monthly_term',
+    'virello_scale_monthly_term',
     'virello_ad_starter',
     'virello_ad_growth',
     'virello_ad_pro',
@@ -79,9 +82,9 @@ class AmazonBilling implements BillingProvider {
         return {'kind': 'credits', 'creditPack': 'growth'};
       case 'virello_credits_20000':
         return {'kind': 'credits', 'creditPack': 'scale'};
-      case 'virello_pro_monthly':
+      case 'virello_pro_monthly_term':
         return {'kind': 'subscription', 'planSlug': 'pro'};
-      case 'virello_scale_monthly':
+      case 'virello_scale_monthly_term':
         return {'kind': 'subscription', 'planSlug': 'scale'};
       case 'virello_ad_starter':
         return {'kind': 'ad_package', 'adPackage': 'starter'};
@@ -115,9 +118,9 @@ class AmazonBilling implements BillingProvider {
     } else if (kind == 'subscription') {
       switch (planSlug) {
         case 'pro':
-          return 'virello_pro_monthly';
+          return 'virello_pro_monthly_term';
         case 'scale':
-          return 'virello_scale_monthly';
+          return 'virello_scale_monthly_term';
       }
     } else if (kind == 'ad_package') {
       return adPackage == null ? null : adPackageSku(adPackage);
