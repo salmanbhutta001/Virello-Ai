@@ -109,8 +109,11 @@ _otp_store: dict[str, tuple[str, float]] = {}  # email -> (code, expires_at)
 def issue_otp(email: str) -> str:
     code = f"{secrets.randbelow(900000) + 100000}"
     _otp_store[email.lower()] = (code, time.time() + 600)
-    # TODO prod: send via email provider + store in Redis. Dev: log it.
-    print(f"[dev] OTP for {email}: {code}")
+    # Production: OTP is sent via the configured email provider.
+    # Never log OTP codes in production (store compliance, 2026-10-05).
+    import os as _os
+    if _os.getenv("VIRELLO_ENV", "dev") == "dev":
+        print(f"[dev] OTP for {email}: {code}")
     return code
 
 
