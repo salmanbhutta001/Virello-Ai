@@ -41,12 +41,21 @@ async def me(user: User = Depends(get_current_user),
         login_pts = 0
     bal = await rewards_svc.get_balance(db, user.id)
     cash_cents = await wallet_svc.cash_balance(db, user.id)
+    # getattr: photo columns may not exist if the DB hasn't migrated yet.
+    try:
+        avatar_url = user.avatar_url
+    except Exception:
+        avatar_url = None
+    try:
+        cover_url = user.cover_url
+    except Exception:
+        cover_url = None
     return {
         "id": str(user.id),
         "email": user.email,
         "name": user.name,
-        "avatar_url": user.avatar_url,
-        "cover_url": user.cover_url,
+        "avatar_url": avatar_url,
+        "cover_url": cover_url,
         "plan": user.plan.value,
         "credits": user.credits,
         "locale": user.locale,
@@ -73,10 +82,15 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
         user.name = str(payload["name"])[:255]
     # Edit Profile photos (Hafiz 2026-10-05): the mobile sheet uploads the
     # image then PATCHes the URL. Empty string clears the photo.
-    if "avatar_url" in payload:
-        user.avatar_url = str(payload["avatar_url"] or "")[:1024] or None
-    if "cover_url" in payload:
-        user.cover_url = str(payload["cover_url"] or "")[:1024] or None
+    # Wrapped in try/except: if the DB hasn't migrated yet, photo saves
+    # are skipped instead of breaking the whole profile update.
+    try:
+        if "avatar_url" in payload:
+            user.avatar_url = str(payload["avatar_url"] or "")[:1024] or None
+        if "cover_url" in payload:
+            user.cover_url = str(payload["cover_url"] or "")[:1024] or None
+    except Exception:
+        pass
     if "locale" in payload and payload["locale"] in ("en", "ur", "ar"):
         user.locale = payload["locale"]
     if "preferred_language" in payload:
@@ -105,12 +119,21 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
         except Exception:
             profile_pts = 0
     await db.refresh(user)
+    # getattr: photo columns may not exist if the DB hasn't migrated yet.
+    try:
+        avatar_url = user.avatar_url
+    except Exception:
+        avatar_url = None
+    try:
+        cover_url = user.cover_url
+    except Exception:
+        cover_url = None
     return {
         "updated": True,
         "profile_points": profile_pts,
         "name": user.name,
-        "avatar_url": user.avatar_url,
-        "cover_url": user.cover_url,
+        "avatar_url": avatar_url,
+        "cover_url": cover_url,
     }
 
 

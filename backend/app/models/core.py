@@ -5,7 +5,7 @@ from enum import Enum
 
 from sqlalchemy import CHAR, JSON, DateTime, Enum as SAEnum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, deferred, mapped_column
 from sqlalchemy.types import TypeDecorator
 
 
@@ -73,8 +73,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str | None] = mapped_column(String(255))
     # Profile photos (Hafiz 2026-10-05): set via PATCH /users/me.
-    avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    cover_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    # Deferred: not loaded on plain select(User), so a DB missing these
+    # columns (migration pending) doesn't break every User query.
+    avatar_url: Mapped[str | None] = deferred(mapped_column(String(1024), nullable=True))
+    cover_url: Mapped[str | None] = deferred(mapped_column(String(1024), nullable=True))
     locale: Mapped[str] = mapped_column(String(8), default="en")
     # Multilingual preferences: UI/content default, extra content
     # languages, and "match me in all relevant languages".
