@@ -130,9 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   _searchBar(),
                   const SizedBox(height: 16),
-                  _quickGrid(),
-                  const SizedBox(height: 22),
+                  // Shop is the hero: trending products sit right below search,
+                  // above the Create/Grow/Shop/Learn quick actions (Hafiz, 2026-10-05).
                   _trendingSection(data.trending, snap),
+                  const SizedBox(height: 22),
+                  _quickGrid(),
                   const SizedBox(height: 22),
                   _campaignsCompact(data.campaigns, snap),
                   const SizedBox(height: 20),
