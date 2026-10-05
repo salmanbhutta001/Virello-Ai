@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -135,6 +135,32 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
         "avatar_url": avatar_url,
         "cover_url": cover_url,
     }
+
+
+@router.delete("/me")
+async def delete_me(user: User = Depends(get_current_user),
+                    db: AsyncSession = Depends(get_db)) -> dict:
+    """User-initiated account deletion (store compliance, 2026-10-05).
+
+    Deletes the user and all their data via the shared cascade helper.
+    Required by Google Play and Apple App Store policies.
+    """
+    # Import here to avoid circular imports
+    from app.routers.admin import _delete_user_cascade
+
+    # Prevent deleting the last admin
+    if user.is_admin:
+        remaining = (await db.execute(
+            select(func.count()).select_from(User).where(
+                User.is_admin == True,  # noqa: E712
+                User.id != user.id))).scalar() or 0
+        if remaining == 0:
+            raise HTTPException(400, "Cannot delete the last admin account")
+
+    await _delete_user_cascade(db, user)
+    await db.delete(user)
+    await db.commit()
+    return {"ok": True, "deleted": True}
 
 
 @router.get("/notifications")

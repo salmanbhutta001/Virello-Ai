@@ -126,6 +126,46 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final s = _s();
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(s.deleteAccount,
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+        content: Text(s.deleteAccountConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(s.cancelBtn),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(s.deleteAccount,
+                style: const TextStyle(color: VirelloColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (yes == true) {
+      try {
+        await apiClient.deleteAccount();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(s.deleteAccountDone)),
+          );
+        }
+        await authStore.signOut();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString())),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = _s();
@@ -295,6 +335,15 @@ class SettingsScreen extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
+                      color: VirelloColors.danger)),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => _confirmDeleteAccount(context),
+              child: Text(s.deleteAccount,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: VirelloColors.danger)),
             ),
           ],

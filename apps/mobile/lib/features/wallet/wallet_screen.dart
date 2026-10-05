@@ -240,21 +240,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(s.wallet),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const RewardsTermsScreen()),
-            ),
-            child: Text(
-              s.terms,
-              style: const TextStyle(
-                color: VirelloColors.pink,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
+        // Rewards Terms removed (2026-10-05): the earn/cash/withdrawal
+        // language violates store content policies. No user-facing
+        // rewards terms remain in the app.
       ),
       body: RefreshIndicator(
         onRefresh: () async => _load(),

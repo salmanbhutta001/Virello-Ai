@@ -1333,6 +1333,44 @@ class AppStrings {
         'Keluar dari Virello?',
         'Virello থেকে সাইন আউট করবেন?'
       );
+  String get deleteAccount => _get('Delete account', 'اکاؤنٹ ڈیلیٹ کریں', 'حذف الحساب',
+        'अकाउंट डिलीट करें',
+        'Supprimer le compte',
+        'Eliminar cuenta',
+        'Excluir conta',
+        'Konto löschen',
+        'Hesabı sil',
+        'Hapus akun',
+        'অ্যাকাউন্ট ডিলিট করুন'
+      );
+  String get deleteAccountConfirm => _get(
+        'Permanently delete your account and all your data? This cannot be undone.',
+        'اپنا اکاؤنٹ اور تمام ڈیٹا مستقل طور پر ڈیلیٹ کریں؟ یہ واپس نہیں ہو سکتا۔',
+        'حذف حسابك وجميع بياناتك نهائيًا؟ لا يمكن التراجع عن هذا.',
+      
+        'अपना अकाउंट और सारा डेटा स्थायी रूप से डिलीट करें? यह वापस नहीं होगा।',
+        'Supprimer définitivement ton compte et toutes tes données ? Irréversible.',
+        '¿Eliminar permanentemente tu cuenta y todos tus datos? No se puede deshacer.',
+        'Excluir permanentemente sua conta e todos os seus dados? Não pode ser desfeito.',
+        'Dein Konto und alle Daten endgültig löschen? Kann nicht rückgängig gemacht werden.',
+        'Hesabını ve tüm verilerini kalıcı olarak sil? Bu geri alınamaz.',
+        'Hapus akunmu dan semua datamu secara permanen? Tidak bisa dibatalkan.',
+        'আপনার অ্যাকাউন্ট ও সমস্ত ডেটা স্থায়ীভাবে ডিলিট করবেন? এটি ফেরানো যাবে না।'
+      );
+  String get deleteAccountDone => _get(
+        'Your account has been deleted.',
+        'آپ کا اکاؤنٹ ڈیلیٹ کر دیا گیا ہے۔',
+        'تم حذف حسابك.',
+      
+        'आपका अकाउंट डिलीट कर दिया गया है।',
+        'Ton compte a été supprimé.',
+        'Tu cuenta ha sido eliminada.',
+        'Sua conta foi excluída.',
+        'Dein Konto wurde gelöscht.',
+        'Hesabın silindi.',
+        'Akunmu telah dihapus.',
+        'আপনার অ্যাকাউন্ট ডিলিট করা হয়েছে।'
+      );
   String get cancelBtn => _get('Cancel', 'منسوخ کریں', 'إلغاء',
         'रद्द करें',
         'Annuler',
@@ -8801,19 +8839,19 @@ class AppStrings {
         'Beli Sekarang',
         'এখনই কিনুন'
       );
-  String get shopCheckoutSoon => _get(
-        'Checkout via PayPal / Payoneer / Google Pay is being connected. This product page is live — payment opens soon.',
-        'PayPal / Payoneer / Google Pay کے ذریعے چیک آؤٹ جلد منسلک ہو رہا ہے۔ یہ پروڈکٹ پیج لائیو ہے — ادائیگی جلد کھلے گی۔',
-        'الدفع عبر PayPal / Payoneer / Google Pay قيد الربط. صفحة المنتج نشطة — سيُفتح الدفع قريبًا.',
+    String get shopCheckoutSoon => _get(
+        'Checkout is being connected. This product page is live \u2014 payment opens soon.',
+        '\u0686\u06cc\u06a9 \u0622\u0624\u0679 \u062c\u0644\u062f \u0645\u0646\u0633\u0644\u06a9 \u06c1\u0648 \u0631\u06c1\u0627 \u06c1\u06d2\u06d4 \u06cc\u06c1 \u067e\u0631\u0648\u0688\u06a9\u0679 \u067e\u06cc\u062c \u0644\u0627\u0626\u06cc\u0648 \u06c1\u06d2 \u2014 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u062c\u0644\u062f \u06a9\u06be\u0644\u06d2 \u06af\u06cc\u06d4',
+        '\u0627\u0644\u062f\u0641\u0639 \u0642\u064a\u062f \u0627\u0644\u0631\u0628\u0637. \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u0646\u062a\u062c \u0646\u0634\u0637\u0629 \u2014 \u0633\u064a\u064f\u0641\u062a\u062d \u0627\u0644\u062f\u0641\u0639 \u0642\u0631\u064a\u0628\u064b\u0627.',
       
-        'PayPal / Payoneer / Google Pay के ज़रिए चेकआउट जुड़ रहा है। यह प्रोडक्ट पेज लाइव है — भुगतान जल्द खुलेगा।',
-        'Le paiement via PayPal / Payoneer / Google Pay est en cours de connexion. Cette page produit est en ligne — le paiement arrive bientôt.',
-        'Estamos conectando el pago con PayPal / Payoneer / Google Pay. Esta página de producto ya está activa: el pago llegará pronto.',
-        'O checkout via PayPal / Payoneer / Google Pay está sendo conectado. Esta página de produto já está no ar — o pagamento abre em breve.',
-        'Der Checkout via PayPal / Payoneer / Google Pay wird gerade angebunden. Diese Produktseite ist live — die Zahlung folgt in Kürze.',
-        'PayPal / Payoneer / Google Pay ile ödeme bağlanıyor. Bu ürün sayfası yayında — ödeme yakında açılacak.',
-        'Checkout via PayPal / Payoneer / Google Pay sedang disambungkan. Halaman produk ini sudah live — pembayaran segera dibuka.',
-        'PayPal / Payoneer / Google Pay-এর মাধ্যমে চেকআউট সংযুক্ত করা হচ্ছে। এই পণ্যের পৃষ্ঠা লাইভ — পেমেন্ট শীঘ্রই খুলবে।'
+        '\u091a\u0947\u0915\u0906\u0909\u091f \u091c\u0941\u0921\u093c \u0930\u0939\u093e \u0939\u0948\u0964 \u092f\u0939 \u092a\u094d\u0930\u094b\u0921\u0915\u094d\u091f \u092a\u0947\u091c \u0932\u093e\u0907\u0935 \u0939\u0948 \u2014 \u092d\u0941\u0917\u0924\u093e\u0928 \u091c\u0932\u094d\u0926 \u0916\u0941\u0932\u0947\u0917\u093e\u0964',
+        'Le paiement est en cours de connexion. Cette page produit est en ligne \u2014 le paiement arrive bient\u00f4t.',
+        'Estamos conectando el pago. Esta p\u00e1gina de producto ya est\u00e1 activa: el pago llegar\u00e1 pronto.',
+        'O checkout est\u00e1 sendo conectado. Esta p\u00e1gina de produto j\u00e1 est\u00e1 no ar \u2014 o pagamento abre em breve.',
+        'Der Checkout wird gerade angebunden. Diese Produktseite ist live \u2014 die Zahlung folgt in K\u00fcrze.',
+        '\u00d6deme ba\u011flan\u0131yor. Bu \u00fcr\u00fcn sayfas\u0131 yay\u0131nda \u2014 \u00f6deme yak\u0131nda a\u00e7\u0131lacak.',
+        'Checkout sedang disambungkan. Halaman produk ini sudah live \u2014 pembayaran segera dibuka.',
+        '\u099a\u09c7\u0995\u0986\u0989\u099f \u09b8\u0982\u09af\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09be \u09b9\u099a\u09cd\u099b\u09c7\u0964 \u098f\u0987 \u09aa\u09a3\u09cd\u09af\u09c7\u09b0 \u09aa\u09c3\u09b7\u09cd\u09a0\u09be \u09b2\u09be\u0987\u09ad \u2014 \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09b6\u09c0\u0998\u09cd\u09b0\u0987 \u0996\u09c1\u09b2\u09ac\u09c7\u0964'
       );
   String get shopInStock => _get('In stock', 'اسٹاک میں', 'متوفر',
         'स्टॉक में',
@@ -14653,15 +14691,15 @@ class AppStrings {
       );
   String get tourShopTitle => _get('Shop', 'خریداری', 'تسوق');
   String get tourShopDesc => _get(
-        'Shop curated products across 26 departments. Share products to earn points.',
-        '26 شعبوں میں منتخب مصنوعات خریدیں۔ مصنوعات شیئر کر کے پوائنٹس کمائیں۔',
-        'تسوق المنتجات المختارة في 26 قسمًا. شارك المنتجات لتربح النقاط.',
+        'Shop curated products across 26 departments. Discover trending finds.',
+        '26 شعبوں میں منتخب مصنوعات خریدیں۔ مقبول مصنوعات دریافت کریں۔',
+        'تسوق المنتجات المختارة في 26 قسمًا. اكتشف المنتجات الرائجة.',
       );
-  String get tourProfileTitle => _get('Profile & Wallet', 'پروفائل اور والیٹ', 'الملف والمحفظة');
+  String get tourProfileTitle => _get('Profile', 'پروفائل', 'الملف الشخصي');
   String get tourProfileDesc => _get(
-        'Manage your profile, check your points wallet, redeem credits, and track your rewards.',
-        'اپنا پروفائل منظم کریں، پوائنٹس والیٹ دیکھیں، کریڈٹس حاصل کریں اور انعامات ٹریک کریں۔',
-        'أدر ملفك الشخصي وتحقق من محفظة النقاط واستبدل الأرصدة وتتبع مكافآتك.',
+        'Manage your profile, credits, and premium features.',
+        'اپنا پروفائل، کریڈٹس اور پریمیم فیچرز منظم کریں۔',
+        'أدر ملفك الشخصي والأرصدة والمزايا المميزة.',
       );
   String get tourAskTitle => _get('Ask Virello', 'Virello سے پوچھیں', 'اسأل Virello');
   String get tourAskDesc => _get(
@@ -14705,14 +14743,14 @@ class AppStrings {
       );
   String get tourShopSearchTitle => _get('Find your niche', 'اپنا شعبہ تلاش کریں', 'جد مجال تخصصك');
   String get tourShopSearchDesc => _get(
-        'Search 26 departments or browse categories. Every product shows its share reward in points.',
-        '26 شعبوں میں تلاش کریں یا زمرے دیکھیں۔ ہر پروڈکٹ پر شیئر کرنے کا انعام پوائنٹس میں دکھایا جاتا ہے۔',
-        'ابحث في 26 قسمًا أو تصفح الفئات. كل منتج يعرض مكافأة المشاركة بالنقاط.',
+        'Search 26 departments or browse categories. Find trending products.',
+        '26 شعبوں میں تلاش کریں یا زمرے دیکھیں۔ مقبول مصنوعات تلاش کریں۔',
+        'ابحث في 26 قسمًا أو تصفح الفئات. اعثر على المنتجات الرائجة.',
       );
-  String get tourProfileRewardsTitle => _get('Your points wallet', 'آپ کا پوائنٹس والیٹ', 'محفظة نقاطك');
+  String get tourProfileRewardsTitle => _get('Your credits', 'آپ کے کریڈٹس', 'أرصدتك');
   String get tourProfileRewardsDesc => _get(
-        'Share products, finish tasks and grow — points pile up here and unlock credits and premium.',
-        'مصنوعات شیئر کریں، ٹاسک مکمل کریں اور بڑھیں — پوائنٹس یہاں جمع ہوتے ہیں اور کریڈٹس اور پریمیم کھولتے ہیں۔',
-        'شارك المنتجات وأكمل المهام ونمُ — تتراكم النقاط هنا وتفتح الأرصدة والمزايا.',
+        'Manage your credits and premium features here.',
+        'اپنے کریڈٹس اور پریمیم فیچرز یہاں منظم کریں۔',
+        'أدر أرصدتك ومزاياك المميزة هنا.',
       );
 }

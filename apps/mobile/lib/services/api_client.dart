@@ -734,6 +734,15 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  /// User-initiated account deletion (store compliance).
+  Future<Map<String, dynamic>> deleteAccount() async {
+    final res = await http.delete(Uri.parse('$baseUrl/api/v1/users/me'),
+        headers: _headers);
+    if (res.statusCode == 401) throw const AuthException();
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   // ------------------------------ analysis ------------------------------
   Future<Map<String, dynamic>> _getJson(String path) async {
     final data = await _getDynamic(path);
