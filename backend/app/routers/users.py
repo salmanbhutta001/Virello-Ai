@@ -45,6 +45,8 @@ async def me(user: User = Depends(get_current_user),
         "id": str(user.id),
         "email": user.email,
         "name": user.name,
+        "avatar_url": user.avatar_url,
+        "cover_url": user.cover_url,
         "plan": user.plan.value,
         "credits": user.credits,
         "locale": user.locale,
@@ -69,6 +71,12 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
     was_complete = wallet_svc.profile_is_completed(user)
     if "name" in payload and payload["name"]:
         user.name = str(payload["name"])[:255]
+    # Edit Profile photos (Hafiz 2026-10-05): the mobile sheet uploads the
+    # image then PATCHes the URL. Empty string clears the photo.
+    if "avatar_url" in payload:
+        user.avatar_url = str(payload["avatar_url"] or "")[:1024] or None
+    if "cover_url" in payload:
+        user.cover_url = str(payload["cover_url"] or "")[:1024] or None
     if "locale" in payload and payload["locale"] in ("en", "ur", "ar"):
         user.locale = payload["locale"]
     if "preferred_language" in payload:
@@ -96,7 +104,14 @@ async def update_me(payload: dict, user: User = Depends(get_current_user),
                 db, user.id, user.name, user.preferred_language)
         except Exception:
             profile_pts = 0
-    return {"updated": True, "profile_points": profile_pts}
+    await db.refresh(user)
+    return {
+        "updated": True,
+        "profile_points": profile_pts,
+        "name": user.name,
+        "avatar_url": user.avatar_url,
+        "cover_url": user.cover_url,
+    }
 
 
 @router.get("/notifications")

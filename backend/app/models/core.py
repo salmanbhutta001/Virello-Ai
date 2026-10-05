@@ -72,6 +72,9 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str | None] = mapped_column(String(255))
+    # Profile photos (Hafiz 2026-10-05): set via PATCH /users/me.
+    avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    cover_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     locale: Mapped[str] = mapped_column(String(8), default="en")
     # Multilingual preferences: UI/content default, extra content
     # languages, and "match me in all relevant languages".

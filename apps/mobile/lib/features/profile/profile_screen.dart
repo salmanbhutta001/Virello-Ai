@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
+import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
@@ -116,67 +117,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                height: 150,
-                decoration: const BoxDecoration(
-                  gradient: VirelloColors.brandGradient,
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 12, 0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            s.profile,
-                            style:  TextStyle(
-                              color: VTheme.text(context),
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                            ),
+              Builder(builder: (ctx) {
+                final coverUrl = '${_me?['cover_url'] ?? ''}';
+                return SizedBox(
+                  height: 150,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: VirelloColors.brandGradient,
+                        ),
+                      ),
+                      if (coverUrl.isNotEmpty)
+                        Image.network(
+                          AppConfig.resolveImageUrl(coverUrl),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const SizedBox.shrink(),
+                        ),
+                      SafeArea(
+                        bottom: false,
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(20, 12, 12, 0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  s.profile,
+                                  style: TextStyle(
+                                    color: VTheme.text(context),
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: AppStrings(appState.localeCode)
+                                    .settingsTitle,
+                                icon: Icon(
+                                  Icons.settings_outlined,
+                                  color: VTheme.text(context),
+                                ),
+                                onPressed: () =>
+                                    Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const SettingsScreen(),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        IconButton(
-                          tooltip:
-                              AppStrings(appState.localeCode).settingsTitle,
-                          icon:  Icon(
-                            Icons.settings_outlined,
-                            color: VTheme.text(context),
-                          ),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsScreen(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
+                );
+              }),
               Positioned(
                 left: 20,
                 bottom: -34,
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: VTheme.text(context),
-                    border: Border.all(color: VTheme.text(context), width: 3),
-                    boxShadow: VirelloColors.cardShadow,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: VirelloColors.pink,
+                child: Builder(builder: (ctx) {
+                  final avatarUrl = '${_me?['avatar_url'] ?? ''}';
+                  return Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: VTheme.text(context),
+                      border:
+                          Border.all(color: VTheme.text(context), width: 3),
+                      boxShadow: VirelloColors.cardShadow,
                     ),
-                  ),
-                ),
+                    alignment: Alignment.center,
+                    child: ClipOval(
+                      child: avatarUrl.isNotEmpty
+                          ? Image.network(
+                              AppConfig.resolveImageUrl(avatarUrl),
+                              width: 70,
+                              height: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Text(
+                                initial,
+                                style: const TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w900,
+                                  color: VirelloColors.pink,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              initial,
+                              style: const TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                color: VirelloColors.pink,
+                              ),
+                            ),
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -755,11 +798,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               if (!mounted) return;
                               sheetNav.pop();
                               handleAuthFailure(s.sessionExpired);
-                            } catch (_) {
+                            } catch (e) {
                               if (!mounted) return;
                               setSheet(() => saving = false);
+                              // Show the real error so save failures can be
+                              // diagnosed instead of a generic message.
                               messenger.showSnackBar(
-                                SnackBar(content: Text(s.growFailed)),
+                                SnackBar(
+                                    content: Text(
+                                        '${s.growFailed}: ${e.toString().split('\n').first}')),
                               );
                             }
                           },
