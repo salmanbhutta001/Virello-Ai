@@ -86,22 +86,10 @@ jobs:
         # --flavor play selects Google Play Billing on the Dart side.
         run: flutter build apk --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
-      - name: Upload APK (play)
-        uses: actions/upload-artifact@v4
-        with:
-          name: virello-release-apk
-          path: apps/mobile/build/app/outputs/flutter-apk/app-play-release.apk
-
       - name: Build APK (release, amazon flavor — Appstore submission)
         working-directory: apps/mobile
         # --flavor amazon selects Amazon IAP on the Dart side.
         run: flutter build apk --release --flavor amazon --dart-define=VIRELLO_STORE=amazon --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
-
-      - name: Upload APK (amazon)
-        uses: actions/upload-artifact@v4
-        with:
-          name: virello-amazon-apk
-          path: apps/mobile/build/app/outputs/flutter-apk/app-amazon-release.apk
 
       - name: Verify release signature (never ship debug-signed)
         working-directory: apps/mobile
@@ -121,21 +109,6 @@ jobs:
           done
           echo "Release signature OK."
 
-      - name: Publish APKs to GitHub Release (latest)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: apps/mobile
-        run: |
-          # Hafiz downloads APKs from the Releases page (no token needed in browser).
-          # Recreate the 'latest' tag each build so it always points at the newest APKs.
-          gh release delete latest --yes 2>/dev/null || true
-          git push origin :refs/tags/latest 2>/dev/null || true
-          gh release create latest \
-            --title "Latest Virello APKs" \
-            --notes "Play + Amazon flavors, built from main $(git rev-parse --short HEAD) on $(date -u +%Y-%m-%d)." \
-            build/app/outputs/flutter-apk/app-play-release.apk#virello-play.apk \
-            build/app/outputs/flutter-apk/app-amazon-release.apk#virello-amazon.apk
-
       - name: Build AAB (release, Play Store)
         if: env.KEYSTORE_OK == 'true'
         working-directory: apps/mobile
@@ -143,12 +116,28 @@ jobs:
         # --flavor play selects Google Play Billing on the Dart side.
         run: flutter build appbundle --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
-      - name: Upload AAB
-        if: env.KEYSTORE_OK == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: virello-release-aab
-          path: apps/mobile/build/app/outputs/bundle/playRelease/app-play-release.aab
+      - name: Publish to GitHub Release (latest)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: apps/mobile
+        run: |
+          # Hafiz downloads APKs from the Releases page (no token needed in browser).
+          # Recreate the 'latest' tag each build so it always points at the newest APKs.
+          # (upload-artifact steps were removed 2026-10-06: the Actions artifact
+          # storage quota is exhausted; the Release carries the same files and the
+          # AAB rides along here too when it was built.)
+          ASSETS=(
+            build/app/outputs/flutter-apk/app-play-release.apk#virello-play.apk
+            build/app/outputs/flutter-apk/app-amazon-release.apk#virello-amazon.apk
+          )
+          AAB=build/app/outputs/bundle/playRelease/app-play-release.aab
+          if [ -f "$AAB" ]; then ASSETS+=("$AAB#virello-play.aab"); fi
+          gh release delete latest --yes 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          gh release create latest \
+            --title "Latest Virello APKs" \
+            --notes "Play + Amazon flavors, built from main $(git rev-parse --short HEAD) on $(date -u +%Y-%m-%d)." \
+            "${ASSETS[@]}"
 
       - name: AAB skipped (no keystore secrets)
         if: env.KEYSTORE_OK != 'true'
