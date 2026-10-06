@@ -103,6 +103,24 @@ jobs:
           name: virello-amazon-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-amazon-release.apk
 
+      - name: Verify release signature (never ship debug-signed)
+        working-directory: apps/mobile
+        run: |
+          # 2026-10-06: CI silently shipped debug-signed APKs for weeks because the
+          # release-keystore secrets were missing (each build got a fresh ephemeral
+          # debug key -> Uptodown signature-mismatch ban). Fail loudly instead.
+          APKSIGNER=$(find "${ANDROID_HOME:-$HOME/Android/Sdk}" -name apksigner -type f 2>/dev/null | head -1)
+          if [ -z "$APKSIGNER" ]; then echo "::error::apksigner not found"; exit 1; fi
+          for apk in build/app/outputs/flutter-apk/app-play-release.apk build/app/outputs/flutter-apk/app-amazon-release.apk; do
+            DN=$("$APKSIGNER" verify --print-certs "$apk" | grep "certificate DN" | head -1)
+            echo "$apk -> $DN"
+            if echo "$DN" | grep -qi "CN=Android Debug"; then
+              echo "::error::$apk is signed with the DEBUG key — VIRELLO_KEYSTORE_* secrets missing/misconfigured. Refusing to publish."
+              exit 1
+            fi
+          done
+          echo "Release signature OK."
+
       - name: Publish APKs to GitHub Release (latest)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

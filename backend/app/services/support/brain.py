@@ -269,10 +269,15 @@ _KEYWORDS: dict[str, dict[str, tuple[str, ...]]] = {
         "en": ("can't login", "cannot login", "cant login", "login problem",
                "login issue", "signin issue", "stuck at login",
                "unable to login", "won't let me in", "can't log in",
-               "cannot log in", "cant log in", "couldn't log in", "log in"),
+               "cannot log in", "cant log in", "couldn't log in", "log in",
+               "how do i log in", "how to log in", "how can i log in",
+               "how to sign in", "how do i sign in"),
         "ur": ("login nahi", "لاگ ان", "login nahi ho raha",
-               "لاگ ان نہیں ہو رہا", "andar nahi"),
-        "ar": ("لا أستطيع الدخول", "مشكلة تسجيل الدخول", "تعذر الدخول"),
+               "لاگ ان نہیں ہو رہا", "andar nahi", "login kaise",
+               "kaise login", "login kese", "kese login",
+               "sign in kaise", "لاگ ان کیسے"),
+        "ar": ("لا أستطيع الدخول", "مشكلة تسجيل الدخول", "تعذر الدخول",
+               "كيف أسجل الدخول", "كيفية تسجيل الدخول", "كيف ادخل"),
     },
     ACCOUNT_DELETE: {
         "en": ("delete account", "delete my", "remove account", "deactivate",
@@ -391,7 +396,8 @@ def _wants_ticket(lowered: str) -> bool:
 # - Free Grow = $0 organic worldwide, winds down near 1,000-impression cap.
 # - Paid Boost packages: Starter $10/7d, Growth $25/14d, Pro $50/30d,
 #   Scale $100/30d. No manual budgeting.
-# - Sign-in: email OTP, email + password, Google, Apple (iOS only).
+# - Sign-in: email + password, Google, Apple (iOS only). OTP codes are
+#   only sent for password resets — never for sign-in.
 # - Shop = Amazon affiliate links, always labeled "Sponsored" (مشتہر);
 #   "Check price on Amazon" when no live price.
 # - Academy = free lessons. Never fake engagement/bots/virality guarantees.
@@ -551,20 +557,24 @@ ANSWERS: dict[str, dict[str, str]] = {
                "الطلب وكنت تعتقد أن ذلك خطأ، أنشئ تذكرة دعم وسنراجع حالتك."),
     },
     LOGIN_OTP: {
-        "en": ("To sign in with email, enter your address and we'll send you "
-               "a one-time code — it usually arrives within a minute. If "
-               "it's missing, check your spam or junk folder and confirm the "
-               "address is typed correctly. Never share your OTP code with "
-               "anyone."),
-        "ur": ("Email se login ke liye apna address likhein — hum aapko "
-               "one-time code bhejein ge, jo aam tor par ek minute mein aa "
-               "jata hai. Agar na aaye to spam ya junk folder check karein "
-               "aur address durust likhein. Apna OTP code kabhi kisi se "
-               "share na karein."),
-        "ar": ("لتسجيل الدخول بالبريد الإلكتروني، أدخل عنوانك وسنرسل لك رمزًا "
-               "لمرة واحدة — يصل عادة خلال دقيقة. إذا لم يصلك، تحقق من مجلد "
-               "الرسائل غير المرغوب فيها وتأكد من كتابة العنوان بشكل صحيح. لا "
-               "تشارك رمز OTP مع أي شخص أبدًا."),
+        "en": ("Virello doesn't sign you in with one-time codes — use your "
+               "email + password, Google, or Apple sign-in (iOS) on the "
+               "sign-in screen instead. OTP codes are only sent when you "
+               "reset your password via 'Forgot password'. If that code "
+               "didn't arrive, check your spam folder and request a new "
+               "one. Never share OTP codes with anyone."),
+        "ur": ("Virello one-time codes se sign-in nahi karata — sign-in "
+               "screen par apne email + password, Google, ya Apple sign-in "
+               "(iOS) se login karein. OTP codes sirf 'Forgot password' se "
+               "password reset par bheje jate hain. Agar wo code na aaye to "
+               "spam folder check karein aur naya code mangwayein. OTP "
+               "codes kabhi kisi se share na karein."),
+        "ar": ("لا يسجّل Virello الدخول برموز لمرة واحدة — سجّل الدخول "
+               "بالبريد وكلمة المرور أو عبر Google أو Apple (iOS) من شاشة "
+               "تسجيل الدخول. تُرسل رموز OTP فقط عند إعادة تعيين كلمة "
+               "المرور عبر «نسيت كلمة المرور». إذا لم يصلك الرمز، تحقق من "
+               "مجلد الرسائل غير المرغوب فيها واطلب رمزًا جديدًا. لا "
+               "تشارك رموز OTP مع أي شخص أبدًا."),
     },
     LOGIN_PASSWORD: {
         "en": ("If you signed up with email + password, tap 'Forgot "
@@ -731,21 +741,22 @@ ANSWERS: dict[str, dict[str, str]] = {
                "لفريقنا."),
     },
     TROUBLESHOOTING_LOGIN: {
-        "en": ("Let's fix your sign-in. For OTP: check your spam folder and "
-               "confirm the email is correct. For password: use 'Forgot "
-               "password' to reset it. For Google or Apple: make sure you're "
-               "signed into that account on your device. If none of that "
-               "works, tell me and I'll escalate it."),
-        "ur": ("Aaiye aapka sign-in theek karte hain. OTP ke liye: spam "
-               "folder check karein aur email durust hon. Password ke liye: "
-               "'Forgot password' se reset karein. Google ya Apple ke liye: "
-               "device par us account mein signed-in hon. Agar kuch na kaam "
-               "kare to batayein — main ise escalate kar doon ga."),
-        "ar": ("لنصلح تسجيل دخولك. لرمز OTP: تحقق من مجلد الرسائل غير "
-               "المرغوب فيها وتأكد من صحة البريد. لكلمة المرور: استخدم 'نسيت "
-               "كلمة المرور' لإعادة تعيينها. لـGoogle أو Apple: تأكد من تسجيل "
-               "دخولك إلى ذلك الحساب على جهازك. إذا لم ينجح شيء، أخبرني "
-               "وسأصعّد الأمر."),
+        "en": ("Let's fix your sign-in. For email + password: use 'Forgot "
+               "password' to reset it — the reset code goes to your email, "
+               "so check your spam folder too. For Google or Apple: make "
+               "sure you're signed into that account on your device. If "
+               "none of that works, tell me and I'll escalate it."),
+        "ur": ("Aaiye aapka sign-in theek karte hain. Email + password ke "
+               "liye: 'Forgot password' se reset karein — reset code aapke "
+               "email par aata hai, is liye spam folder bhi check karein. "
+               "Google ya Apple ke liye: device par us account mein "
+               "signed-in hon. Agar kuch na kaam kare to batayein — main "
+               "ise escalate kar doon ga."),
+        "ar": ("لنصلح تسجيل دخولك. للبريد وكلمة المرور: استخدم «نسيت كلمة "
+               "المرور» لإعادة التعيين — يصل رمز التعيين إلى بريدك، فتحقق "
+               "أيضًا من مجلد الرسائل غير المرغوب فيها. لـGoogle أو Apple: "
+               "تأكد من تسجيل دخولك إلى ذلك الحساب على جهازك. إذا لم ينجح "
+               "شيء، أخبرني وسأصعّد الأمر."),
     },
     ACCOUNT_DELETE: {
         "en": ("You can request account deletion from the app's Settings "
@@ -932,17 +943,17 @@ SUGGESTIONS: dict[str, dict[str, list[str]]] = {
                "التحدث مع إنسان"],
     },
     LOGIN_PASSWORD: {
-        "en": ["Reset my password", "Use OTP instead", "Talk to a human"],
-        "ur": ["Password reset karein", "OTP istemal karein",
+        "en": ["Reset my password", "I can't log in", "Talk to a human"],
+        "ur": ["Password reset karein", "Login nahi ho raha",
                "Insan se baat karein"],
-        "ar": ["إعادة تعيين كلمة المرور", "استخدام OTP بدلًا من ذلك",
+        "ar": ["إعادة تعيين كلمة المرور", "لا أستطيع تسجيل الدخول",
                "التحدث مع إنسان"],
     },
     LOGIN_GOOGLE_APPLE: {
-        "en": ["Use OTP instead", "I can't log in", "Talk to a human"],
-        "ur": ["OTP istemal karein", "Login nahi ho raha",
+        "en": ["Reset my password", "I can't log in", "Talk to a human"],
+        "ur": ["Password reset karein", "Login nahi ho raha",
                "Insan se baat karein"],
-        "ar": ["استخدام OTP بدلًا من ذلك", "لا أستطيع تسجيل الدخول",
+        "ar": ["إعادة تعيين كلمة المرور", "لا أستطيع تسجيل الدخول",
                "التحدث مع إنسان"],
     },
     PLANS_COMPARE: {
