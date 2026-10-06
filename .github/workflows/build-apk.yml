@@ -65,8 +65,14 @@ jobs:
       - name: Setup release keystore
         working-directory: apps/mobile/android
         run: |
-          if [ -z "${{ secrets.VIRELLO_KEYSTORE_BASE64 }}" ]; then
-            echo "::warning::Release keystore secrets not configured — APK builds normally; AAB will be skipped until secrets are added."
+          # Diagnose exactly which secrets are visible to the workflow (names only, never values).
+          MISSING=""
+          [ -n "${{ secrets.VIRELLO_KEYSTORE_BASE64 }}" ] || MISSING="$MISSING VIRELLO_KEYSTORE_BASE64"
+          [ -n "${{ secrets.VIRELLO_KEYSTORE_PASSWORD }}" ] || MISSING="$MISSING VIRELLO_KEYSTORE_PASSWORD"
+          [ -n "${{ secrets.VIRELLO_KEY_ALIAS }}" ] || MISSING="$MISSING VIRELLO_KEY_ALIAS"
+          [ -n "${{ secrets.VIRELLO_KEY_PASSWORD }}" ] || MISSING="$MISSING VIRELLO_KEY_PASSWORD"
+          if [ -n "$MISSING" ]; then
+            echo "::warning::Secrets not visible to workflow:$MISSING — APK builds normally; AAB will be skipped until secrets are added."
             echo "KEYSTORE_OK=false" >> "$GITHUB_ENV"
           else
             echo "${{ secrets.VIRELLO_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
