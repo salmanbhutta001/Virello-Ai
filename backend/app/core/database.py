@@ -58,6 +58,11 @@ async def init_db() -> None:
     # Same for share_clicks table (2026-10-03: /s/{code} 500s on prod when
     # the table is missing — click logging must never break the redirect).
     await _ensure_share_clicks_table()
+    # Same for referral_codes / referral_events (2026-10-08: prod 500 on
+    # POST /api/v1/auth/password/signup — award_referral_credits UPDATEs
+    # referral_events, which Alembic never created on prod and create_all
+    # missed. Signup must never depend on these tables existing).
+    await _ensure_referral_tables()
 
 
 async def _ensure_users_columns() -> None:
@@ -219,3 +224,37 @@ async def _ensure_share_clicks_table() -> None:
             print("init_db: created missing share_clicks table")
     except Exception as e:
         print(f"init_db: share_clicks table check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_referral_tables() -> None:
+    """Create referral_codes / referral_events if missing. Idempotent.
+
+    Backs POST /api/v1/auth/password/signup (2026-10-08): prod 500'd
+    because award_referral_credits UPDATEs referral_events, which no
+    Alembic migration ever created on prod. The signup path is also
+    hardened to survive the tables being absent, but they should exist
+    for the referral loop to work. Follows the existing ensure pattern —
+    prod Alembic is unreliable. Never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            missing = [t for t in ("referral_codes", "referral_events")
+                       if t not in tables]
+            if not missing:
+                return
+            from app.models.referrals import ReferralCode, ReferralEvent
+            by_name = {"referral_codes": ReferralCode,
+                       "referral_events": ReferralEvent}
+            for t in missing:
+                await conn.run_sync(
+                    lambda c, tbl=by_name[t]: tbl.__table__.create(
+                        c, checkfirst=True)
+                )
+            print(f"init_db: created missing tables {missing}")
+    except Exception as e:
+        print(f"init_db: referral tables check non-fatal ({type(e).__name__}): {e}")

@@ -91,7 +91,29 @@ async def record_referral_signup(db: AsyncSession, *,
     silently ignored so signup itself always succeeds. Returns a small
     status dict for logging/tests: ok | missing | invalid | self |
     already_referred.
+
+    Never raises for DB problems either (2026-10-08: prod lacked the
+    referral tables entirely, which 500'd signup). Referral attribution
+    is best-effort; account creation is critical.
     """
+    try:
+        return await _record_referral_signup_inner(
+            db, referral_code=referral_code, new_user=new_user)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "referral: record_referral_signup failed (non-fatal)")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
+        return {"referral": "error"}
+
+
+async def _record_referral_signup_inner(db: AsyncSession, *,
+                                       referral_code: str | None,
+                                       new_user: User) -> dict:
+    """Inner implementation of record_referral_signup (may raise)."""
     if not referral_code:
         return {"referral": "missing"}
     normalized = referral_code.strip().upper()
@@ -135,7 +157,27 @@ async def award_referral_credits(db: AsyncSession, user_id: uuid.UUID) -> dict:
     Idempotent: the pending -> credited transition is a single conditional
     UPDATE; only the writer that flips the row pays out. Retries and double
     calls can never double-credit.
+
+    Never raises (2026-10-08): the referral tables may be absent on
+    databases created before the referral feature (prod 500'd signup
+    because of this). Bonus payout is best-effort; signup must succeed.
     """
+    try:
+        return await _award_referral_credits_inner(db, user_id)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "referral: award_referral_credits failed (non-fatal)")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
+        return {"awarded": False, "error": "referral-unavailable"}
+
+
+async def _award_referral_credits_inner(
+        db: AsyncSession, user_id: uuid.UUID) -> dict:
+    """Inner implementation of award_referral_credits (may raise)."""
     now = datetime.now(timezone.utc)
     result = await db.execute(
         update(ReferralEvent)

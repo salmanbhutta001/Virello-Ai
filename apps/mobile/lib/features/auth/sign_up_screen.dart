@@ -9,6 +9,7 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
+import '../settings/legal_document_screen.dart';
 import '../../main.dart';
 
 /// Board screen 03 — Create Account: dark fields (Full name / Email /
@@ -260,6 +261,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ..onTap = _working
                               ? null
                               : () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                // Huawei AppGallery rule 7.5: privacy policy must be
+                // prominently shown on the sign-up page.
+                const SizedBox(height: 14),
+                Text.rich(
+                  TextSpan(
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: VTheme.textSec(context),
+                    ),
+                    children: [
+                      TextSpan(text: s.agreePrivacyPrefix),
+                      TextSpan(
+                        text: s.privacyPolicyLink,
+                        style: const TextStyle(
+                          color: VirelloColors.pink,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const LegalDocumentScreen(
+                                    doc: LegalDoc.privacyPolicy,
+                                  ),
+                                ),
+                              ),
                       ),
                     ],
                   ),

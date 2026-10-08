@@ -14753,4 +14753,46 @@ class AppStrings {
         'اپنے کریڈٹس اور پریمیم فیچرز یہاں منظم کریں۔',
         'أدر أرصدتك ومزاياك المميزة هنا.',
       );
+
+  // --- First-launch privacy consent (Huawei AppGallery rule 7.5) ---
+  String get privacyConsentTitle => _get(
+        'Your privacy matters',
+        'آپ کی پرائیویسی اہم ہے',
+        'خصوصيتك تهمنا',
+      );
+  String get privacyConsentBody => _get(
+        'Virello AI collects your email, name and app activity to run your account and improve the service. We never sell your personal data.',
+        'Virello AI آپ کا ای میل، نام اور ایپ کی سرگرمی آپ کا اکاؤنٹ چلانے اور سروس بہتر بنانے کے لیے جمع کرتی ہے۔ ہم آپ کا ذاتی ڈیٹا کبھی فروخت نہیں کرتے۔',
+        'يجمع Virello AI بريدك الإلكتروني واسمك ونشاطك في التطبيق لتشغيل حسابك وتحسين الخدمة. لا نبيع بياناتك الشخصية أبدًا.',
+      );
+  String get privacyConsentAccept => _get(
+        'Accept & Continue',
+        'قبول کریں اور جاری رکھیں',
+        'قبول ومتابعة',
+      );
+  String get privacyConsentRead => _get(
+        'Read Privacy Policy',
+        'پرائیویسی پالیسی پڑھیں',
+        'اقرأ سياسة الخصوصية',
+      );
+  String get privacyConsentDecline => _get(
+        'Decline',
+        'مسترد کریں',
+        'رفض',
+      );
+  String get privacyConsentDeclineMsg => _get(
+        'You need to accept the Privacy Policy to use Virello AI.',
+        'Virello AI استعمال کرنے کے لیے پرائیویسی پالیسی قبول کرنا ضروری ہے۔',
+        'يجب قبول سياسة الخصوصية لاستخدام Virello AI.',
+      );
+  String get agreePrivacyPrefix => _get(
+        'By continuing, you agree to our ',
+        'جاری رکھ کر آپ ہماری ',
+        'بالمتابعة، أنت توافق على ',
+      );
+  String get privacyPolicyLink => _get(
+        'Privacy Policy',
+        'پرائیویسی پالیسی',
+        'سياسة الخصوصية',
+      );
 }

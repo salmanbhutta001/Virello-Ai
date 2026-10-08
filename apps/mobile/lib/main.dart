@@ -7,6 +7,7 @@ import 'services/api_client.dart';
 import 'services/auth_store.dart';
 import 'services/saved_store.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/legal/privacy_consent_gate.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/language_select_screen.dart';
 import 'features/onboarding/interests_screen.dart';
@@ -99,6 +100,9 @@ class _VirelloAppState extends State<VirelloApp> {
   // Master-board post-sign-in onboarding: 0 = language select, 1 = interests.
   int _boardStep = 0;
   bool _boardOnboarded = false;
+  // Huawei AppGallery rule 7.5: first-launch privacy consent.
+  bool _privacyLoaded = false;
+  bool _privacyAccepted = false;
 
   /// Navigator key so auth transitions can reset the route stack.
   /// (Changing MaterialApp.home alone does NOT clear routes that were
@@ -114,6 +118,24 @@ class _VirelloAppState extends State<VirelloApp> {
     appState.addListener(() => setState(() {}));
     authStore.addListener(_onAuthChanged);
     _loadBoardFlag();
+    _loadPrivacyFlag();
+  }
+
+  /// Huawei AppGallery rule 7.5: the user must be prompted to read the
+  /// privacy policy on first launch. Persisted once accepted.
+  Future<void> _loadPrivacyFlag() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _privacyAccepted =
+              prefs.getBool('virello_privacy_accepted') ?? false;
+          _privacyLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _privacyLoaded = true);
+    }
   }
 
   Future<void> _loadBoardFlag() async {
@@ -178,8 +200,14 @@ class _VirelloAppState extends State<VirelloApp> {
   }
 
   Widget _root() {
-    if (!authStore.loaded) {
+    if (!authStore.loaded || !_privacyLoaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    // First launch: explicit privacy-policy consent before anything else.
+    if (!_privacyAccepted) {
+      return PrivacyConsentGate(
+        onAccepted: () => setState(() => _privacyAccepted = true),
+      );
     }
     // Signed-out: Splash (board 01) -> Welcome (board 02) -> Sign In.
     if (!authStore.signedIn) {

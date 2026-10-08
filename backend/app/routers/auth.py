@@ -102,15 +102,18 @@ async def otp_verify(body: OtpVerifyIn, db: AsyncSession = Depends(get_db)) -> d
     user = await _upsert_user(db, body.email, None, "email", body.email)
     # A correct OTP proves ownership of this email address.
     user.email_verified = True
+    # Capture the id NOW (see password_signup: referral helpers may roll
+    # back on DB trouble, expiring ORM attributes).
+    user_id = user.id
     if is_new_signup:
         # OTP verification == verified signup: record the referral and pay
         # out immediately. Invalid/self codes are ignored, never an error.
         await record_referral_signup(db, referral_code=body.referral_code,
                                      new_user=user)
-        await award_referral_credits(db, user.id)
-    db.add(UserActivity(user_id=user.id, event="login"))
+        await award_referral_credits(db, user_id)
+    db.add(UserActivity(user_id=user_id, event="login"))
     await db.commit()
-    return create_token_pair(str(user.id))
+    return create_token_pair(str(user_id))
 
 
 @router.post("/refresh")
@@ -179,15 +182,19 @@ async def password_signup(body: PasswordSignupIn,
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    # Capture the id NOW: the referral helpers below are hardened to
+    # roll back on DB trouble (2026-10-08), which expires ORM attributes —
+    # touching user.id afterwards would raise MissingGreenlet.
+    user_id = user.id
     # Password signup completes the account in one step, so it counts as a
     # verified signup for referrals: record the event and pay out. Invalid /
     # self codes are ignored, never an error.
     await record_referral_signup(db, referral_code=body.referral_code,
                                  new_user=user)
-    await award_referral_credits(db, user.id)
-    db.add(UserActivity(user_id=user.id, event="login"))
+    await award_referral_credits(db, user_id)
+    db.add(UserActivity(user_id=user_id, event="login"))
     await db.commit()
-    return create_token_pair(str(user.id))
+    return create_token_pair(str(user_id))
 
 
 @router.post("/password/login")

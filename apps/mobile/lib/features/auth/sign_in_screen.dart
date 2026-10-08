@@ -16,6 +16,7 @@ import '../../services/api_client.dart';
 import '../../main.dart';
 import 'forgot_password_screen.dart';
 import 'sign_up_screen.dart';
+import '../settings/legal_document_screen.dart';
 
 /// Board screen 04 — Welcome Back: dark fields (Email / Password),
 /// "Forgot password?", pink Log In, "or continue with" + social circles.
@@ -334,6 +335,38 @@ class _SignInScreenState extends State<SignInScreen> {
                                         builder: (_) => const SignUpScreen(),
                                       ),
                                     ),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    // Huawei AppGallery rule 7.5: privacy policy must be
+                    // prominently shown on the sign-in page.
+                    const SizedBox(height: 14),
+                    Text.rich(
+                      TextSpan(
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: VTheme.textSec(context),
+                        ),
+                        children: [
+                          TextSpan(text: s.agreePrivacyPrefix),
+                          TextSpan(
+                            text: s.privacyPolicyLink,
+                            style: const TextStyle(
+                              color: VirelloColors.pink,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const LegalDocumentScreen(
+                                        doc: LegalDoc.privacyPolicy,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
