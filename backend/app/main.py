@@ -83,7 +83,8 @@ _PRIVACY_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 margin:0 auto;padding:24px;line-height:1.6;color:#222}h1{color:#d6336c}
 h2{color:#333;margin-top:32px}p,li{color:#444}.updated{color:#888;font-size:14px}</style>
 </head><body><h1>Privacy Policy — Virello AI</h1>
-<p class="updated">Last updated: October 3, 2026</p>
+<p class="updated">Last updated: October 8, 2026</p>
+<p><strong>App:</strong> Virello AI &nbsp;|&nbsp; <strong>Developer:</strong> Hafiz Muhmmad Salman</p>
 <p>Virello AI ("we", "our", "us") is an AI-powered social media growth platform.
 This Privacy Policy explains what data we collect, how we use it, and your rights.</p>
 <h2>1. Data We Collect</h2><ul>
@@ -127,7 +128,10 @@ from children under 13.</p>
 <p>We may update this policy; the "Last updated" date will reflect changes. Continued
 use of the app after changes means you accept the updated policy.</p>
 <h2>8. Contact</h2>
-<p>For privacy questions or data requests: <strong>alif01fiverr@gmail.com</strong></p>
+<p><strong>Developer:</strong> Hafiz Muhmmad Salman<br>
+<strong>App:</strong> Virello AI<br>
+For privacy questions or data requests: <strong>alif01fiverr@gmail.com</strong></p>
+<p class="updated">© 2026 Hafiz Muhmmad Salman — Virello AI. All rights reserved.</p>
 </body></html>"""
 
 
