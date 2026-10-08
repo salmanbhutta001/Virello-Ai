@@ -29,6 +29,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Free disk space (runner hygiene)
+        # 2026-10-08: build #210 died with "No space left on device" on the
+        # runner itself. Each run gets a fresh VM, but heavy Flutter+Gradle
+        # builds still benefit from dropping the big pre-installed
+        # toolchains we never use (dotnet, ghc, swift). Frees ~5-10 GB.
+        run: |
+          echo "Disk before:"; df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /opt/hostedtoolcache/CodeQL 2>/dev/null || true
+          sudo apt-get clean 2>/dev/null || true
+          echo "Disk after:"; df -h / | tail -1
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
