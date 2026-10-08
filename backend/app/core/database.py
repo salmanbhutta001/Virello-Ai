@@ -77,6 +77,12 @@ async def _ensure_users_columns() -> None:
         ("preferred_language", "VARCHAR(16)", "'en'"),
         ("all_relevant_languages", "BOOLEAN", "false"),
         ("credits", "INTEGER", "300"),
+        # 2026-10-08: prod 500 on signup — INSERT INTO users included
+        # avatar_url/cover_url (deferred() only saves SELECTs, not
+        # INSERTs) but prod's users table lacked the columns.
+        ("avatar_url", "VARCHAR(1024)", None),
+        ("cover_url", "VARCHAR(1024)", None),
+        ("content_languages", "JSON", None),
     ]
     try:
         async with engine.begin() as conn:
