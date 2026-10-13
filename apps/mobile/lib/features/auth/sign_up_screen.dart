@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../services/api_client.dart';
 import '../settings/legal_document_screen.dart';
+import 'complete_profile_screen.dart';
 import '../../main.dart';
 
 /// Board screen 03 — Create Account: dark fields (Full name / Email /
@@ -63,7 +64,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _passwordCtrl.text,
         _nameCtrl.text.trim(),
       );
-      // AuthStore notifies; main.dart swaps to the app shell.
+      // Hafiz 2026-10-13: after signup, offer profile completion (name,
+      // avatar, cover — all optional). AuthStore notifies; main.dart swaps
+      // to the app shell after this screen is popped.
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const CompleteProfileScreen(),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {

@@ -2501,6 +2501,56 @@ class AppStrings {
         'Selesai',
         'হয়ে গেছে'
       );
+  String get skip => _get('Skip', 'چھوڑیں', 'تخطَّ',
+        'छोड़ें',
+        'Passer',
+        'Omitir',
+        'Salta',
+        'Überspringen',
+        'Atla',
+        'Lewati',
+        'এড়িয়ে যান'
+      );
+  String get optional => _get('optional', 'اختیاری', 'اختياري',
+        'वैकल्पिक',
+        'facultatif',
+        'opcional',
+        'facoltativo',
+        'optional',
+        'isteğe bağlı',
+        'opsional',
+        'ঐচ্ছিক'
+      );
+  String get completeProfileTitle => _get('Complete your profile', 'اپنی پروفائل مکمل کریں', 'أكمل ملفك الشخصي',
+        'अपनी प्रोफ़ाइल पूरी करें',
+        'Complétez votre profil',
+        'Completa tu perfil',
+        'Completa il tuo profilo',
+        'Vervollständige dein Profil',
+        'Profilini tamamla',
+        'Lengkapi profil Anda',
+        'আপনার প্রোফাইল সম্পূর্ণ করুন'
+      );
+  String get completeProfileHint => _get('Add a name, profile picture, and cover photo — or skip, your choice.', 'نام، پروفائل تصویر اور کور فوٹو شامل کریں — یا چھوڑ دیں، آپ کی مرضی۔', 'أضف اسمًا وصورة ملف شخصي وصورة غلاف — أو تخطَّ، الأمر لك.',
+        'नाम, प्रोफ़ाइल फ़ोटो और कवर फ़ोटो जोड़ें — या छोड़ दें, आपकी मर्ज़ी।',
+        'Ajoutez un nom, une photo de profil et une photo de couverture — ou passez, à vous de choisir.',
+        'Agrega un nombre, foto de perfil y foto de portada — u omite, tú decides.',
+        'Aggiungi nome, foto profilo e copertina — o salta, a te la scelta.',
+        'Füge Name, Profilbild und Titelbild hinzu — oder überspringe, deine Wahl.',
+        'İsim, profil fotoğrafı ve kapak fotoğrafı ekle — ya da atla, senin seçimin.',
+        'Tambahkan nama, foto profil, dan foto sampul — atau lewati, terserah Anda.',
+        'নাম, প্রোফাইল ছবি এবং কভার ফটো যোগ করুন — অথবা এড়িয়ে যান, আপনার ইচ্ছা।'
+      );
+  String get addProfilePhoto => _get('Add profile photo', 'پروفائل فوٹو شامل کریں', 'أضف صورة الملف الشخصي',
+        'प्रोफ़ाइल फ़ोटो जोड़ें',
+        'Ajouter une photo de profil',
+        'Agregar foto de perfil',
+        'Aggiungi foto profilo',
+        'Profilbild hinzufügen',
+        'Profil fotoğrafı ekle',
+        'Tambahkan foto profil',
+        'প্রোফাইল ফটো যোগ করুন'
+      );
   String get actionDone => _get('Done', 'ہو گیا', 'تم',
         'हो गया',
         'Terminé',
