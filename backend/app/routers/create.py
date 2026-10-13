@@ -378,7 +378,7 @@ _AGNES_IMAGE_MODEL = "agnes-image-2.5-flash"
 class AgnesImageIn(BaseModel):
     prompt: str = Field(min_length=3, max_length=1000)
     style: str = Field(default="realistic", max_length=20)
-    seed: int = Field(default=0, ge=0)
+    seed: int = Field(default=0, ge=-1, le=999)
 
 
 _AGNES_STYLE_SUFFIX = {

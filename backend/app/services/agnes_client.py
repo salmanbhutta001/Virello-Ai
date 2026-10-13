@@ -409,7 +409,9 @@ async def agnes_image_generate(
         "n": 1,
         "size": "1024x1024",
     }
+    # Agnes API requires seed in [-1, 999]. Clamp as safety net (mobile should already send valid seeds).
     if seed is not None:
+        seed = max(-1, min(999, seed))
         body["seed"] = seed
 
     try:

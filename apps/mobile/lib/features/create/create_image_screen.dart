@@ -95,7 +95,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       await AiImageService.instance.cancelJob(previousJob);
     }
     final epoch = ++_genEpoch;
-    final seed = Random().nextInt(999999);
+    // Agnes API requires seed in [-1, 999]. -1 = random.
+    final seed = Random().nextInt(1000);
     final styleName = ['realistic', 'cartoon', '3d'][_style];
     setState(() {
       _seed = seed;
