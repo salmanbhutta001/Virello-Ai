@@ -759,13 +759,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: saving
                         ? null
                         : () async {
+                            // Hafiz 2026-10-13: each field saves independently.
+                            // Name alone, avatar alone, cover alone — or all together.
                             final name = nameCtrl.text.trim();
-                            if (name.isEmpty) return;
+                            final hasName = name.isNotEmpty;
+                            final hasAvatar = avatarFile != null;
+                            final hasCover = coverFile != null;
+                            // Nothing to save.
+                            if (!hasName && !hasAvatar && !hasCover) return;
                             final messenger = ScaffoldMessenger.of(context);
                             final sheetNav = Navigator.of(sheetCtx);
                             setSheet(() => saving = true);
                             try {
-                              await apiClient.updateName(name);
+                              // Update name if provided.
+                              if (hasName) {
+                                await apiClient.updateName(name);
+                              }
                               // Upload avatar if changed
                               if (avatarFile != null) {
                                 try {
