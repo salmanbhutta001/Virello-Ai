@@ -223,8 +223,8 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
 
     // Download scene images in the background (silent). The render reuses
     // them when available; otherwise it downloads during render with retries.
-    final token = ++_genToken;
-    _downloadScenesInBackground(token);
+    final dlToken = ++_genToken;
+    _downloadScenesInBackground(dlToken);
   }
 
   /// Background pre-download of storyboard scene images, then auto-render.
