@@ -340,9 +340,35 @@ class GoogleProvider(_RestProvider):
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+class FallbackProvider(AIProvider):
+    """Hafiz 2026-10-13: tries primary provider first, falls back to dev
+    provider on failure (e.g. expired API key). Ensures AI features keep
+    working even if the primary key expires."""
+
+    name = "fallback"
+
+    def __init__(self, primary: AIProvider, fallback: AIProvider) -> None:
+        self._primary = primary
+        self._fallback = fallback
+
+    async def complete(self, req: AIRequest) -> AIResponse:
+        try:
+            return await self._primary.complete(req)
+        except (AIProviderError, AIProviderNotConfigured) as exc:
+            # Primary failed (expired key, quota, network) — use fallback.
+            import logging
+            logging.getLogger(__name__).warning(
+                "Primary AI provider '%s' failed, using fallback: %s",
+                self._primary.name, exc
+            )
+            return await self._fallback.complete(req)
+
+
 def get_ai_provider(name: str = "") -> AIProvider:
     """Select the AI provider from configuration. Defaults to the dev
-    (Muse environment) provider so local development needs no API keys."""
+    (Muse environment) provider so local development needs no API keys.
+    Hafiz 2026-10-13: Groq wraps with fallback to dev provider, so expiry
+    (90 days) doesn't break AI features."""
     selected = (name or settings.ai_provider or "dev").lower()
     if selected == "anthropic":
         return AnthropicProvider()
@@ -351,5 +377,6 @@ def get_ai_provider(name: str = "") -> AIProvider:
     if selected == "google":
         return GoogleProvider()
     if selected == "groq":
-        return GroqProvider()
+        # Groq with automatic fallback to dev provider on failure/expiry.
+        return FallbackProvider(GroqProvider(), DevMuseProvider())
     return DevMuseProvider()
