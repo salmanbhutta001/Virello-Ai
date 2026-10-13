@@ -234,6 +234,59 @@ class OpenAIProvider(_RestProvider):
 
 
 # ---------------------------------------------------------------------------
+# Groq (OpenAI-compatible API, fast inference)
+# Hafiz 2026-10-13: Groq API key provided for text AI features.
+# ---------------------------------------------------------------------------
+class GroqProvider(_RestProvider):
+    name = "groq"
+
+    def __init__(self, api_key: str = "", model: str = "") -> None:
+        super().__init__()
+        self._api_key = api_key or settings.groq_api_key
+        self.model = model or settings.groq_model
+
+    def _key_env(self) -> str:
+        return "VIRELLO_GROQ_API_KEY"
+
+    def _model_env(self) -> str:
+        return "VIRELLO_GROQ_MODEL"
+
+    async def complete(self, req: AIRequest) -> AIResponse:
+        client = self._client_or_raise(self._api_key)
+        start = time.monotonic()
+        body: dict = {
+            "model": self.model,
+            "temperature": req.temperature,
+            "max_tokens": req.max_tokens,
+            "messages": [
+                {"role": "system", "content": req.system},
+                {"role": "user", "content": req.user},
+            ],
+        }
+        if req.json_mode:
+            body["response_format"] = {"type": "json_object"}
+        try:
+            resp = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"authorization": f"Bearer {self._api_key}"},
+                json=body,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise AIProviderError(f"groq: {exc}") from exc
+        choice = (data.get("choices") or [{}])[0]
+        text = ((choice.get("message") or {}).get("content") or "")
+        usage = data.get("usage", {})
+        return AIResponse(
+            text=text, provider=self.name, model=self.model,
+            input_tokens=int(usage.get("prompt_tokens", 0)),
+            output_tokens=int(usage.get("completion_tokens", 0)),
+            latency_ms=int((time.monotonic() - start) * 1000),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Google (Gemini)
 # ---------------------------------------------------------------------------
 class GoogleProvider(_RestProvider):
@@ -297,4 +350,6 @@ def get_ai_provider(name: str = "") -> AIProvider:
         return OpenAIProvider()
     if selected == "google":
         return GoogleProvider()
+    if selected == "groq":
+        return GroqProvider()
     return DevMuseProvider()
