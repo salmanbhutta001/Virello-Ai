@@ -75,7 +75,8 @@ def _campaign_json(c: AdCampaign) -> dict:
 async def _owned(db: AsyncSession, user: User, campaign_id: str) -> AdCampaign:
     c = (await db.execute(select(AdCampaign).where(
         AdCampaign.id == uuid.UUID(campaign_id)))).scalar_one_or_none()
-    if c is None or c.owner_id != user.id:
+    # Hafiz 2026-10-13: admins can manage any campaign (inline edit/delete).
+    if c is None or (c.owner_id != user.id and not user.is_admin):
         raise HTTPException(404, "Ad campaign not found")
     return c
 

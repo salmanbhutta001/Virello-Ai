@@ -18,6 +18,10 @@ class AuthStore extends ChangeNotifier {
 
   /// Display name from /users/me (kept in sync after profile edits).
   String? name;
+
+  /// Admin flag from /users/me (is_admin). Hafiz 2026-10-13: admin gets
+  /// inline edit/delete on content across the app.
+  bool isAdmin = false;
   bool loaded = false;
 
   /// One-shot notice shown on the sign-in screen (e.g. "session expired").
@@ -89,6 +93,12 @@ class AuthStore extends ChangeNotifier {
     if (_accessToken != null) await prefs.setString(_kAccess, _accessToken!);
     if (_refreshToken != null) await prefs.setString(_kRefresh, _refreshToken!);
     if (this.email != null) await prefs.setString(_kEmail, this.email!);
+    // Hafiz 2026-10-13: fetch profile to get is_admin flag for inline admin actions.
+    try {
+      final me = await ApiClient(tokenProvider: () => _accessToken).me();
+      name = me['name'] as String?;
+      isAdmin = me['is_admin'] == true;
+    } catch (_) {}
     notifyListeners();
   }
 
@@ -129,6 +139,7 @@ class AuthStore extends ChangeNotifier {
   /// Refresh cached profile fields after a /users/me update (e.g. name edit).
   void refreshProfile(Map<String, dynamic> me) {
     name = me['name'] as String?;
+    isAdmin = me['is_admin'] == true;
     notifyListeners();
   }
 
@@ -136,6 +147,7 @@ class AuthStore extends ChangeNotifier {
     _accessToken = null;
     _refreshToken = null;
     email = null;
+    isAdmin = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_kAccess);
