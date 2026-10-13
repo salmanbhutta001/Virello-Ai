@@ -118,35 +118,49 @@ class StoryboardVideoRenderer {
       temperature: 0.85,
     );
 
-    // 3) TTS voiceover (optional — video still renders without it).
+    // 3) TTS voiceover — Hafiz 2026-10-13: audio is essential, not optional.
+    // Retry up to 3 times if the WAV is invalid; fail loudly if all fail.
     String? voicePath;
     if (narration != null && narration.trim().isNotEmpty) {
-      try {
-        final tts = TtsService();
-        final out = '${workDir.path}/voiceover.wav';
-        final result = await tts.synthesizeToFile(
-          narration.trim(),
-          out,
-          isFullPath: true,
-        );
-        if (result != null) {
-          // synthesizeToFile returns the path or a status; accept real files.
-          final candidate = result.toString();
-          final f = File(candidate);
-          final f2 = File(out);
-          final validFile = await f.exists() ? f : (await f2.exists() ? f2 : null);
-          if (validFile != null) {
-            // Hafiz 2026-10-13: validate WAV before passing to FFmpeg.
-            // An invalid/corrupt file causes "Invalid data found" errors.
-            if (await _isValidWav(validFile)) {
+      for (var attempt = 0; attempt < 3 && voicePath == null; attempt++) {
+        try {
+          final tts = TtsService();
+          final out = '${workDir.path}/voiceover.wav';
+          // Delete any previous (possibly corrupt) file.
+          try {
+            final old = File(out);
+            if (await old.exists()) await old.delete();
+          } catch (_) {}
+          final result = await tts.synthesizeToFile(
+            narration.trim(),
+            out,
+            isFullPath: true,
+          );
+          if (result != null) {
+            final candidate = result.toString();
+            final f = File(candidate);
+            final f2 = File(out);
+            final validFile =
+                await f.exists() ? f : (await f2.exists() ? f2 : null);
+            if (validFile != null && await _isValidWav(validFile)) {
               voicePath = validFile.path;
             }
-            // else: skip voiceover, video renders without audio.
           }
+          tts.dispose();
+          if (voicePath == null && attempt < 2) {
+            // Wait before retry — TTS engine may need a moment.
+            await Future.delayed(const Duration(seconds: 1));
+          }
+        } catch (_) {
+          voicePath = null;
         }
-        tts.dispose();
-      } catch (_) {
-        voicePath = null; // Narration is a bonus, not a blocker.
+      }
+      // If all retries failed, throw — audio is essential, don't render silent video.
+      if (voicePath == null) {
+        throw Exception(
+          'Voiceover generation failed after 3 attempts. '
+          'Please check that your device has a TTS engine installed and try again.',
+        );
       }
     }
     report(0.25, 0.4, 1.0);
