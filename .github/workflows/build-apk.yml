@@ -104,11 +104,6 @@ jobs:
         # --flavor play selects Google Play Billing on the Dart side.
         run: flutter build apk --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
 
-      - name: Build APK (release, amazon flavor — Appstore submission)
-        working-directory: apps/mobile
-        # --flavor amazon selects Amazon IAP on the Dart side.
-        run: flutter build apk --release --flavor amazon --dart-define=VIRELLO_STORE=amazon --dart-define=VIRELLO_API_URL=https://virello-api-production.up.railway.app
-
       - name: Verify release signature (never ship debug-signed)
         working-directory: apps/mobile
         run: |
@@ -117,7 +112,7 @@ jobs:
           # debug key -> Uptodown signature-mismatch ban). Fail loudly instead.
           APKSIGNER=$(find "${ANDROID_HOME:-$HOME/Android/Sdk}" -name apksigner -type f 2>/dev/null | head -1)
           if [ -z "$APKSIGNER" ]; then echo "::error::apksigner not found"; exit 1; fi
-          for apk in build/app/outputs/flutter-apk/app-play-release.apk build/app/outputs/flutter-apk/app-amazon-release.apk; do
+          for apk in build/app/outputs/flutter-apk/app-play-release.apk; do
             DN=$("$APKSIGNER" verify --print-certs "$apk" | grep "certificate DN" | head -1)
             echo "$apk -> $DN"
             if echo "$DN" | grep -qi "CN=Android Debug"; then
@@ -146,7 +141,6 @@ jobs:
           # AAB rides along here too when it was built.)
           ASSETS=(
             build/app/outputs/flutter-apk/app-play-release.apk#virello-play.apk
-            build/app/outputs/flutter-apk/app-amazon-release.apk#virello-amazon.apk
           )
           AAB=build/app/outputs/bundle/playRelease/app-play-release.aab
           if [ -f "$AAB" ]; then ASSETS+=("$AAB#virello-play.aab"); fi
@@ -154,7 +148,7 @@ jobs:
           git push origin :refs/tags/latest 2>/dev/null || true
           gh release create latest \
             --title "Latest Virello APKs" \
-            --notes "Play + Amazon flavors, built from main $(git rev-parse --short HEAD) on $(date -u +%Y-%m-%d)." \
+            --notes "Play flavor, built from main $(git rev-parse --short HEAD) on $(date -u +%Y-%m-%d)." \
             "${ASSETS[@]}"
 
       - name: AAB skipped (no keystore secrets)
