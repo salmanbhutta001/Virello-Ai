@@ -409,6 +409,27 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
 
   /// Board-style row: goal icon + campaign name + status. Tapping opens the
   /// action sheet (growth engine, share, pause) — metrics only when real.
+  /// Hafiz 2026-10-13: user-friendly — friendly title instead of raw URL.
+  String _friendlyTitle(Campaign cp) {
+    if (cp.title.isNotEmpty) return cp.title;
+    // No title: derive a friendly name from platform or URL.
+    final url = cp.postUrl.toLowerCase();
+    if (url.contains('youtu.be') || url.contains('youtube.com')) {
+      return 'YouTube Video';
+    } else if (url.contains('instagram.com')) {
+      return 'Instagram Post';
+    } else if (url.contains('tiktok.com')) {
+      return 'TikTok Video';
+    } else if (url.contains('facebook.com') || url.contains('fb.com')) {
+      return 'Facebook Post';
+    } else if (url.contains('twitter.com') || url.contains('x.com')) {
+      return 'X Post';
+    } else if (cp.platform.isNotEmpty) {
+      return '${cp.platform[0].toUpperCase()}${cp.platform.substring(1)} Post';
+    }
+    return 'Campaign';
+  }
+
   Widget _row(Campaign cp) {
     final color = _statusColor(cp.status);
     return VBoardCard(
@@ -431,7 +452,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(cp.title.isEmpty ? cp.postUrl : cp.title,
+                Text(_friendlyTitle(cp),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style:  TextStyle(
