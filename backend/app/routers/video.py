@@ -103,7 +103,7 @@ async def generate_video(
                 json={
                     "model": _AGNES_MODEL,
                     "prompt": body.prompt,
-                    "duration": body.duration_sec,
+                    # Hafiz 2026-10-13: 2.5-flash rejects 'duration' param.
                     # Hafiz 2026-10-03: request 9:16 vertical by default.
                     "aspect_ratio": body.aspect,
                 },
