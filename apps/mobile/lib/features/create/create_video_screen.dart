@@ -328,32 +328,17 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     _videoController?.dispose();
     _videoController = null;
     try {
-      // Online AI text-to-video (backend proxy keeps the key server-side).
+      // Hafiz 2026-10-13: Agnes AI only — FFmpeg on-device rendering removed.
+      // No more local fallback; online generation is the single path.
       String? mp4Path;
       await AiVideoService.instance.refreshBackendStatus();
-      if (AiVideoService.instance.isOnlineConfigured) {
-        try {
-          mp4Path = await _renderOnline();
-        } catch (e) {
-          // Online failed (quota, provider error, timeout) — fall back to
-          // the on-device FFmpeg slideshow instead of giving up.
-          debugPrint('Online render failed, falling back to local: $e');
-          mp4Path = null;
-        }
+      if (!AiVideoService.instance.isOnlineConfigured) {
+        throw const AiVideoException(
+          'Video generation is not configured. '
+          'Check your connection and try again later.',
+        );
       }
-      if (mp4Path == null) {
-        // Only attempt the local render when FFmpeg is actually healthy —
-        // otherwise fail fast with an honest message.
-        final ffmpegOk = await FfmpegService.instance.isAvailable();
-        if (!ffmpegOk) {
-          throw const AiVideoException(
-            'On-device video rendering is not available on this phone, '
-            'and online generation is not configured. '
-            'Check your connection and try again later.',
-          );
-        }
-        mp4Path = await _renderLocal();
-      }
+      mp4Path = await _renderOnline();
       if (!mounted) return;
       setState(() {
         _rendering = false;
