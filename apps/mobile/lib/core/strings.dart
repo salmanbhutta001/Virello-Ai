@@ -1993,8 +1993,6 @@ class AppStrings {
       'Topics (comma separated)', 'موضوعات (کاما سے الگ کریں)', 'المواضيع (مفصولة بفواصل)');
   String get editProduct => _get('Edit product', 'پراڈکٹ ایڈٹ کریں', 'تعديل المنتج');
   String get deleteProduct => _get('Delete product', 'پراڈکٹ حذف کریں', 'حذف المنتج');
-  String get deleteProductConfirm => _get(
-      'Delete this product?', 'کیا یہ پراڈکٹ حذف کر دیں؟', 'حذف هذا المنتج؟');
   String get productTitleLabel => _get('Title', 'عنوان', 'العنوان');
   String get productPriceLabel => _get('Price (USD)', 'قیمت (USD)', 'السعر (دولار)');
   String get productCategoryLabel => _get('Category', 'کیٹیگری', 'الفئة');
