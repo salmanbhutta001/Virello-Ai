@@ -15,6 +15,7 @@ import '../../core/virello_ui.dart';
 import '../../main.dart';
 
 import '../../services/ai_video_service.dart';
+import '../../services/ai_image_service.dart';
 import '../../services/local_tools/ffmpeg_service.dart';
 import '../../services/local_tools/storyboard_video_renderer.dart';
 import '../../core/config.dart';
@@ -109,12 +110,6 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
     }
   }
 
-  String _sceneUrl(String prompt, int seed) {
-    final q = Uri.encodeComponent(prompt);
-    return 'https://image.pollinations.ai/prompt/$q'
-        '?width=1024&height=1024&seed=$seed&nologo=true&model=turbo&private=true';
-  }
-
   /// Downloads a URL to [path] with retries. Returns true on success.
   /// Hafiz 2026-10-03: short timeouts + 3 attempts so a flaky network fails
   /// fast instead of hanging the whole render.
@@ -154,9 +149,8 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   }
 
   /// AI storyboard intelligence: splits the idea into 3 cinematic beats.
-  /// Hafiz 2026-10-03: user taps go -> storyboard preview shows immediately,
-  /// scene images download in background, then the video AUTO-RENDERS into
-  /// the player (no manual Render tap needed).
+  /// Hafiz 2026-10-13: scene images now generated via Agnes AI (backend),
+  /// replacing the removed Pollinations URLs which were unreachable.
   Future<void> _generate() async {
     final idea = _ideaCtrl.text.trim();
     if (idea.isEmpty) {
@@ -165,7 +159,17 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       );
       return;
     }
-    final seed = Random().nextInt(999999);
+    final token = ++_genToken;
+    setState(() {
+      _generating = true;
+      _scenes = [];
+      _current = 0;
+      _renderedVideoPath = null;
+      _videoReady = false;
+    });
+    _videoController?.dispose();
+    _videoController = null;
+
     final sceneDefs = [
       (
         s.boardSceneEstablishing,
@@ -180,28 +184,41 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
         '$idea, epic finale wide shot, breathtaking climax, cinematic film still, golden hour',
       ),
     ];
-    setState(() {
-      _generating = true;
-      _scenes = [
-        for (var i = 0; i < 3; i++)
-          _Scene(
-            sceneDefs[i].$1,
-            sceneDefs[i].$2,
-            _sceneUrl(sceneDefs[i].$2, seed + i * 101),
-          ),
-      ];
-      _current = 0;
-      // A fresh storyboard invalidates any previous render/player.
-      _renderedVideoPath = null;
-      _videoReady = false;
-    });
-    _videoController?.dispose();
-    _videoController = null;
 
-    // Show the storyboard preview right away — don't block on downloads.
-    if (mounted) {
-      setState(() => _generating = false);
+    try {
+      // Generate 3 scene images via Agnes AI (backend proxy).
+      final scenes = <_Scene>[];
+      for (var i = 0; i < 3; i++) {
+        if (token != _genToken) return; // superseded
+        final seed = Random().nextInt(1000); // Agnes: -1 to 999
+        final url = await AiImageService.instance.generateViaAgnes(
+          prompt: sceneDefs[i].$2,
+          style: 'realistic',
+          seed: seed,
+        );
+        if (token != _genToken) return;
+        scenes.add(_Scene(sceneDefs[i].$1, sceneDefs[i].$2, url));
+        // Show progress as scenes complete.
+        if (mounted) {
+          setState(() {
+            _scenes = List.from(scenes);
+          });
+        }
+      }
+      if (token != _genToken || !mounted) return;
+      setState(() {
+        _scenes = scenes;
+        _generating = false;
+      });
       _play();
+    } catch (e) {
+      if (token != _genToken || !mounted) return;
+      setState(() => _generating = false);
+      final msg = e.toString().replaceFirst('AgnesException: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Storyboard failed: $msg')),
+      );
+      return;
     }
 
     // Download scene images in the background (silent). The render reuses
