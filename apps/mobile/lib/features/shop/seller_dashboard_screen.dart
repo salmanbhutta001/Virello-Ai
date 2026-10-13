@@ -360,20 +360,33 @@ class _LeadBars extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 28,
+              height: 32,
               child: Row(
                 children: List.generate(n, (i) {
                   final t = titleOf(shown[i]);
-                  final short = t.length > 8 ? '${t.substring(0, 8)}…' : t;
+                  // Hafiz 2026-10-13: show more of the title (was 8 chars).
+                  final short = t.length > 14 ? '${t.substring(0, 14)}…' : t;
                   return SizedBox(
                     width: slot,
-                    child: Text(
-                      short,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 9, color: VirelloColors.muted),
+                    child: GestureDetector(
+                      onTap: () {
+                        // Show full title + lead count on tap.
+                        final v = values[i];
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$t — $v ${v == 1 ? 'lead' : 'leads'}'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        short,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 9, color: VirelloColors.muted),
+                      ),
                     ),
                   );
                 }),
