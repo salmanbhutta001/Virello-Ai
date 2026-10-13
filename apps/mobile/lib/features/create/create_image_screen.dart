@@ -39,12 +39,25 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   bool _sharing = false;
   // Hafiz 2026-10-03: image download to gallery.
   bool _downloading = false;
+  // Hafiz 2026-10-13: resilient async generation — determinate progress,
+  // cancel support, and an epoch guard so a stale in-flight future can
+  // never clobber a newer generation's state.
+  double _progress = 0.0;
+  bool _jobStarted = false;
+  String? _activeJobId;
+  int _genEpoch = 0;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
   @override
   void dispose() {
     _genTimer?.cancel();
+    final jobId = _activeJobId;
+    if (jobId != null) {
+      // Best effort — never await inside dispose. Stops the poll loop so
+      // a generation can't complete into a dead widget.
+      unawaited(AiImageService.instance.cancelJob(jobId));
+    }
     _promptCtrl.dispose();
     super.dispose();
   }
@@ -60,58 +73,28 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       );
       return;
     }
-    final seed = Random().nextInt(999999);
-    final styleName = ['realistic', 'cartoon', '3d'][_style];
-    setState(() {
-      _seed = seed;
-      _imageUrl = null;
-      _loading = true;
-      _loadFailed = false;
-      _failMessage = null;
-    });
-    _armTimeout();
-
-    try {
-      final agnesUrl = await AiImageService.instance.generateViaAgnes(
-        prompt: prompt,
-        style: styleName,
-        seed: seed,
-      );
-      if (!mounted) return;
-      _genTimer?.cancel();
-      setState(() {
-        _imageUrl = agnesUrl;
-        // Keep _loading true until Image.network finishes loading.
-      });
-    } on AgnesException catch (e) {
-      if (!mounted) return;
-      _genTimer?.cancel();
-      setState(() {
-        _loading = false;
-        _loadFailed = true;
-        _failMessage = e.message;
-      });
-    }
+    await _runGeneration(prompt: prompt);
   }
 
-  /// Safety net: image generation can stall on slow networks — never spin
-  /// forever. After 2 minutes without a loaded image, show retry.
-  void _armTimeout() {
-    _genTimer?.cancel();
-    _genTimer = Timer(const Duration(seconds: 150), () {
-      if (mounted && _loading) {
-        setState(() {
-          _loading = false;
-          _loadFailed = true;
-        });
-      }
-    });
-  }
-
+  /// Hafiz 2026-10-13: resilient async generation with determinate progress
+  /// and user cancellation. Retries with the same prompt (new seed).
   Future<void> _regenerate() async {
     if (_loading) return; // guard against double-tap (audit 2026-10-03)
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) return;
+    await _runGeneration(prompt: prompt);
+  }
+
+  /// Shared generation flow. The epoch guard ensures a stale in-flight
+  /// future (e.g. after cancel + quick regenerate) can never clobber a
+  /// newer generation's state.
+  Future<void> _runGeneration({required String prompt}) async {
+    // Cancel any in-flight job before starting a new one.
+    final previousJob = _activeJobId;
+    if (previousJob != null) {
+      await AiImageService.instance.cancelJob(previousJob);
+    }
+    final epoch = ++_genEpoch;
     final seed = Random().nextInt(999999);
     final styleName = ['realistic', 'cartoon', '3d'][_style];
     setState(() {
@@ -120,6 +103,9 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
       _loading = true;
       _loadFailed = false;
       _failMessage = null;
+      _progress = 0.0;
+      _jobStarted = false;
+      _activeJobId = null;
     });
     _armTimeout();
 
@@ -128,19 +114,97 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
         prompt: prompt,
         style: styleName,
         seed: seed,
+        onProgress: (p) {
+          if (mounted && epoch == _genEpoch) {
+            setState(() => _progress = p);
+          }
+        },
+        onJobId: (jobId) {
+          if (epoch == _genEpoch) {
+            // setState is illegal after dispose — store directly instead.
+            _activeJobId = jobId;
+            if (mounted) setState(() => _jobStarted = true);
+          } else {
+            // Stale generation answered late — cancel its job too.
+            unawaited(AiImageService.instance.cancelJob(jobId));
+          }
+        },
       );
-      if (!mounted) return;
+      if (!mounted || epoch != _genEpoch) return;
       _genTimer?.cancel();
-      setState(() => _imageUrl = agnesUrl);
+      setState(() {
+        _imageUrl = agnesUrl;
+        _activeJobId = null;
+        // Job phase is over — the overlay goes back to indeterminate
+        // while Image.network downloads the bytes.
+        _jobStarted = false;
+        // Keep _loading true until Image.network finishes loading.
+      });
+      // Safety net now guards only the image-download phase (60s).
+      _armTimeout(const Duration(seconds: 60));
+    } on GenerationCancelled {
+      // User cancelled (or navigated away) — silent return to idle.
+      if (!mounted || epoch != _genEpoch) return;
+      _genTimer?.cancel();
+      setState(() {
+        _loading = false;
+        _activeJobId = null;
+        _progress = 0.0;
+        _jobStarted = false;
+      });
     } on AgnesException catch (e) {
-      if (!mounted) return;
+      if (!mounted || epoch != _genEpoch) return;
       _genTimer?.cancel();
       setState(() {
         _loading = false;
         _loadFailed = true;
         _failMessage = e.message;
+        _activeJobId = null;
+        _progress = 0.0;
+        _jobStarted = false;
       });
     }
+  }
+
+  /// Hafiz 2026-10-13: user-initiated cancel during async generation.
+  /// Not an error — returns to idle without touching _loadFailed.
+  Future<void> _cancel() async {
+    _genEpoch++;
+    final jobId = _activeJobId;
+    if (jobId != null) {
+      await AiImageService.instance.cancelJob(jobId);
+    }
+    if (!mounted) return;
+    _genTimer?.cancel();
+    setState(() {
+      _loading = false;
+      _activeJobId = null;
+      _progress = 0.0;
+      _jobStarted = false;
+    });
+  }
+
+  /// Safety net: never spin forever. Covers the whole generation flow
+  /// (5.5 min — just beyond the service's own 5-min poll deadline) and,
+  /// after the URL arrives, the image-download phase (60s).
+  void _armTimeout([Duration after = const Duration(seconds: 330)]) {
+    _genTimer?.cancel();
+    _genTimer = Timer(after, () {
+      if (mounted && _loading) {
+        final jobId = _activeJobId;
+        if (jobId != null) {
+          // Best effort — never await inside a timer callback.
+          unawaited(AiImageService.instance.cancelJob(jobId));
+        }
+        setState(() {
+          _loading = false;
+          _loadFailed = true;
+          _activeJobId = null;
+          _progress = 0.0;
+          _jobStarted = false;
+        });
+      }
+    });
   }
 
   Future<void> _share() async {
@@ -444,7 +508,8 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            // Hafiz 2026-10-13: prominent retry — same prompt, new seed.
+            ElevatedButton.icon(
               onPressed: _regenerate,
               icon: const Icon(Icons.refresh, size: 18),
               label: Text(s.boardImageRetry),
@@ -464,6 +529,9 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   }
 
   Widget _loadingPlaceholder(double? progress) {
+    // Hafiz 2026-10-13: determinate progress + cancel during async polling;
+    // indeterminate spinner otherwise (submit phase / image download).
+    final pct = progress == null ? null : (progress * 100).round();
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -479,12 +547,23 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            s.boardImageGenerating,
+            pct == null
+                ? s.boardImageGenerating
+                : '${s.boardImageGenerating} $pct%',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.5,
               color: VTheme.textSec(context),
             ),
           ),
+          if (_loading && _activeJobId != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _cancel,
+              icon: const Icon(Icons.close, size: 18),
+              label: Text(s.cancel),
+            ),
+          ],
         ],
       ),
     );
@@ -493,7 +572,7 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   Widget _loadingOverlay() {
     return Container(
       color: VTheme.chip(context).withValues(alpha: 0.85),
-      child: _loadingPlaceholder(null),
+      child: _loadingPlaceholder(_jobStarted ? _progress : null),
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../core/config.dart';
 import '../main.dart' show apiClient;
+import 'local_tools/ffmpeg_service.dart';
 
 /// Central AI video generation service for Virello Create Hub.
 ///
@@ -68,6 +70,75 @@ class AiVideoService {
   String get providerName {
     if (_backendAvailable == true) return 'Online AI video (Virello)';
     return _provider ?? 'Local slideshow (FFmpeg)';
+  }
+
+  /// Generates a video with automatic fallback across both render paths.
+  ///
+  /// This is the resilient entry point for slideshow-style video creation:
+  /// 1. Checks [FfmpegService.isAvailable] — if the on-device engine is
+  ///    healthy, renders the slideshow locally from [imagePaths].
+  /// 2. If FFmpeg is unavailable OR the local render throws, automatically
+  ///    falls back to online AI generation via [generateOnline] using
+  ///    [prompt].
+  /// 3. If both paths fail, throws [AiVideoException] describing both
+  ///    attempts so the UI can show one clear, honest error.
+  ///
+  /// The fallback is transparent to the caller — they receive a local file
+  /// path (FFmpeg) or a remote video URL (online), or a single error.
+  /// Fallback attempts are logged via `debugPrint` for debugging.
+  Future<String?> generateWithFallback({
+    required List<String> imagePaths,
+    required String prompt,
+    List<double>? durationsSec,
+    String? audioPath,
+    int width = 1080,
+    int height = 1920,
+    int durationSec = 5,
+    String aspect = '9:16',
+    Duration timeout = const Duration(minutes: 10),
+    void Function(double)? onProgress,
+  }) async {
+    final ffmpegOk = await FfmpegService.instance.isAvailable();
+    if (ffmpegOk) {
+      try {
+        final durs =
+            durationsSec ?? List<double>.filled(imagePaths.length, 2.0);
+        final localPath = await FfmpegService.instance.slideshow(
+          images: imagePaths,
+          durationsSec: durs,
+          audioPath: audioPath,
+          width: width,
+          height: height,
+          onProgress: onProgress,
+        );
+        return localPath;
+      } catch (e) {
+        // Local render failed — fall through to online instead of giving up.
+        debugPrint('AiVideoService.generateWithFallback: local FFmpeg render '
+            'failed ($e); trying online generation.');
+      }
+    } else {
+      debugPrint('AiVideoService.generateWithFallback: FFmpeg not available on '
+          'this device; using online generation directly.');
+    }
+
+    // Online fallback (backend proxy first, then direct provider key).
+    try {
+      return await generateOnline(
+        prompt: prompt,
+        durationSec: durationSec,
+        aspect: aspect,
+        timeout: timeout,
+        onProgress: onProgress,
+      );
+    } catch (e) {
+      throw AiVideoException(
+        'Video creation failed on both paths: on-device rendering '
+        '(${ffmpegOk ? 'failed during render' : 'not available on this phone'}) '
+        'and online generation failed ($e). '
+        'Check your connection and try again.',
+      );
+    }
   }
 
   /// Request a text-to-video generation from the online provider.

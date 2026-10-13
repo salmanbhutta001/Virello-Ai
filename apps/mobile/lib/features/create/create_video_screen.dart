@@ -15,6 +15,7 @@ import '../../core/virello_ui.dart';
 import '../../main.dart';
 
 import '../../services/ai_video_service.dart';
+import '../../services/local_tools/ffmpeg_service.dart';
 import '../../services/local_tools/storyboard_video_renderer.dart';
 import '../../core/config.dart';
 
@@ -294,6 +295,11 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
   /// FFmpeg + AI voiceover). When rendering finishes the video opens
   /// automatically in the in-app player below, with Download / Share
   /// buttons right beside it.
+  ///
+  /// Resilient chain: online first (when configured), then on-device
+  /// FFmpeg — but only when [FfmpegService.isAvailable] says the engine
+  /// is healthy, so a broken FFmpeg install fails fast with a clear
+  /// message instead of hanging the render.
   Future<void> _renderVideo() async {
     if (_scenes.isEmpty || _rendering) return;
     setState(() {
@@ -318,7 +324,19 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
           mp4Path = null;
         }
       }
-      mp4Path ??= await _renderLocal();
+      if (mp4Path == null) {
+        // Only attempt the local render when FFmpeg is actually healthy —
+        // otherwise fail fast with an honest message.
+        final ffmpegOk = await FfmpegService.instance.isAvailable();
+        if (!ffmpegOk) {
+          throw const AiVideoException(
+            'On-device video rendering is not available on this phone, '
+            'and online generation is not configured. '
+            'Check your connection and try again later.',
+          );
+        }
+        mp4Path = await _renderLocal();
+      }
       if (!mounted) return;
       setState(() {
         _rendering = false;

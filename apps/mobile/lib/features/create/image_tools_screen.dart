@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 
 import '../../core/strings.dart';
@@ -159,6 +160,28 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
         : ImageTools.textOverlay(im, text: text, fontSize: size.round()));
   }
 
+  /// Hafiz 2026-10-13: download the edited image straight to the phone
+  /// gallery (in addition to the existing Save-to-file option).
+  Future<void> _downloadToGallery() async {
+    final base = _committed;
+    if (base == null || _busy) {
+      if (base == null) _snack(s.noImagePicked);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      _commitSliders();
+      final out =
+          ImageTools.encodeJpg(ImageTools.downscaleForUpload(_committed!));
+      await Gal.putImageBytes(out, album: 'Virello');
+      _snack(s.imageSaved);
+    } catch (_) {
+      _snack(s.noImagePicked);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _save() async {
     final base = _committed;
     if (base == null) {
@@ -193,6 +216,12 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
       appBar: AppBar(
         title: Text(s.imageTools),
         actions: [
+          if (_committed != null)
+            IconButton(
+              tooltip: s.boardImageDownload,
+              icon: const Icon(Icons.download_outlined),
+              onPressed: _busy ? null : _downloadToGallery,
+            ),
           if (_committed != null)
             IconButton(
               tooltip: s.saveImage,
@@ -288,6 +317,22 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : _downloadToGallery,
+            icon: const Icon(Icons.download_outlined, size: 18),
+            label: Text(s.boardImageDownload),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: VirelloColors.pink,
+              side: const BorderSide(color: VirelloColors.pink),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         _sectionTitle(s.filters),

@@ -7,6 +7,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
@@ -155,6 +156,30 @@ class _ResultDialog extends StatefulWidget {
 class _ResultDialogState extends State<_ResultDialog> {
   VideoPlayerController? _ctrl;
   bool _sharing = false;
+  bool _downloading = false;
+
+  /// Hafiz 2026-10-13: download the rendered video straight to the phone
+  /// gallery (covers template renders and every other ffmpeg task result).
+  Future<void> _download() async {
+    if (_downloading) return;
+    setState(() => _downloading = true);
+    try {
+      await Gal.putVideo(widget.videoPath, album: 'Virello');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(widget.strings.videoSavedToGallery)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(widget.strings.videoSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
 
   @override
   void initState() {
@@ -261,6 +286,28 @@ class _ResultDialogState extends State<_ResultDialog> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _downloading ? null : _download,
+                icon: _downloading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_outlined, size: 18),
+                label: Text(s.downloadVideo),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

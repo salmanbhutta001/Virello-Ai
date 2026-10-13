@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
@@ -33,6 +36,7 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
   String? _storyBody;
   bool _isAi = false;
   bool _sharing = false;
+  bool _downloading = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
 
@@ -181,6 +185,38 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
     }
   }
 
+  /// Hafiz 2026-10-13: download the story as a .txt file so users can
+  /// save their work (share sheet -> Save to Files/Downloads).
+  Future<void> _downloadStory() async {
+    if (_storyBody == null || _downloading) return;
+    setState(() => _downloading = true);
+    try {
+      final dir = await getTemporaryDirectory();
+      final name =
+          'virello_story_${DateTime.now().millisecondsSinceEpoch}.txt';
+      final file = File('${dir.path}/$name');
+      await file.writeAsString(
+          '${_storyTitle ?? s.boardAiStory}\n\n$_storyBody\n\nvia Virello');
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'text/plain', name: name)],
+        text: '${_storyTitle ?? ''}\n\nvia Virello',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.boardImageDownload)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.boardImageSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lengths = [
@@ -311,6 +347,22 @@ class _AiStoryScreenState extends State<AiStoryScreen> {
                               )
                             : const Icon(
                                 Icons.share_outlined,
+                                color: VirelloColors.pink,
+                                size: 20,
+                              ),
+                      ),
+                      IconButton(
+                        tooltip: s.boardImageDownload,
+                        onPressed: _downloading ? null : _downloadStory,
+                        icon: _downloading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                            : const Icon(
+                                Icons.download_outlined,
                                 color: VirelloColors.pink,
                                 size: 20,
                               ),

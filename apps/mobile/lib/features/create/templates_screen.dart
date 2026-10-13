@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -258,6 +262,32 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     }
   }
 
+  /// Hafiz 2026-10-13: download any template text as a .txt file so
+  /// users can save their work (share sheet -> Save to Files/Downloads).
+  Future<void> _downloadTextFile(
+      BuildContext ctx, String filename, String content) async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$filename');
+      await file.writeAsString('$content\n\nvia Virello');
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'text/plain', name: filename)],
+        text: 'via Virello',
+      );
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text(s.boardImageDownload)),
+        );
+      }
+    } catch (_) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text(s.boardImageSaveFailed)),
+        );
+      }
+    }
+  }
+
   void _openTemplate(_Template t) {
     // Local project plans (Phase A) exist for a subset of the catalog.
     final engineT = TemplatesEngine.byId(t.id);
@@ -321,6 +351,21 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: s.boardImageDownload,
+                    onPressed: () => _downloadTextFile(
+                      ctx,
+                      'virello_template_${t.id}.txt',
+                      '${t.name}\n${t.category}\n\n${t.description}\n\n'
+                      'STRUCTURE:\n${t.structure}\n\n'
+                      'EXAMPLE:\n${t.example}',
+                    ),
+                    icon: const Icon(
+                      Icons.download_outlined,
+                      color: VirelloColors.pink,
+                      size: 22,
                     ),
                   ),
                   if (t.trending)
@@ -809,18 +854,38 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: plan));
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(content: Text(s.boardCopied)),
-              );
-            },
-            icon: const Icon(Icons.copy_outlined, size: 18),
-            label: Text(s.copyText),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: plan));
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(s.boardCopied)),
+                  );
+                },
+                icon: const Icon(Icons.copy_outlined, size: 18),
+                label: Text(s.copyText),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _downloadTextFile(
+                  ctx,
+                  'virello_template_plan.txt',
+                  'SHOT LIST\n\n$plan\n\nCAPTION TIMING (SRT)\n\n'
+                  '${CaptionTools.toSrt(project.captions)}',
+                ),
+                icon: const Icon(Icons.download_outlined, size: 18),
+                label: Text(s.boardImageDownload),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -918,6 +983,16 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                       );
                     },
                     icon: const Icon(Icons.copy_outlined,
+                        color: VirelloColors.pink),
+                  ),
+                  IconButton(
+                    tooltip: s.boardImageDownload,
+                    onPressed: () => _downloadTextFile(
+                      ctx,
+                      'virello_template_${t.id}_custom.txt',
+                      '${t.name} (AI customized)\n\n$script',
+                    ),
+                    icon: const Icon(Icons.download_outlined,
                         color: VirelloColors.pink),
                   ),
                 ],

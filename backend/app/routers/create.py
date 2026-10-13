@@ -11,19 +11,25 @@ voice) generation yet — text only, honestly.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import random
+import uuid
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import SessionLocal, get_db
 from app.core.deps import get_current_user
 from app.models.core import User
+from app.models.image import ImageJob
 from app.services.ai.base import AIRequest, get_ai_provider
 
 logger = logging.getLogger(__name__)
@@ -393,18 +399,37 @@ def _agnes_image_key() -> str:
     return key
 
 
-@router.post("/image-agnes")
-async def generate_image_agnes(
-    body: AgnesImageIn,
-    user: User = Depends(get_current_user),
-) -> dict:
-    """Generate an image via Agnes AI (server-side key).
+# ---------------------------------------------------------------------------
+# Async image jobs — POST /image-agnes returns 202 + {job_id} immediately;
+# a background task performs the Agnes call; the app polls
+# GET /image-jobs/{job_id} until status is ready|failed.
+# (Hafiz 2026-10-13: the old synchronous 120s call timed out too often —
+#  this is the permanent fix, mirroring the /video job pattern.)
+# ---------------------------------------------------------------------------
 
-    Returns {"image_url": ...}. The mobile app displays the URL directly.
+_IMAGE_JOB_TTL = timedelta(hours=1)      # prune jobs older than this
+_IMAGE_JOB_TIMEOUT = 300.0               # background-task safety timeout (s)
+_IMAGE_JOB_STALE_AFTER = timedelta(minutes=10)  # orphan reaper threshold
+
+
+async def _prune_image_jobs(db: AsyncSession) -> None:
+    """Delete image jobs older than _IMAGE_JOB_TTL. Lazy cleanup, like video."""
+    cutoff = datetime.now(timezone.utc) - _IMAGE_JOB_TTL
+    await db.execute(delete(ImageJob).where(ImageJob.created_at < cutoff))
+
+
+async def _agnes_image_generate_inline(
+    prompt: str, style: str, seed: int | None, request_id: str,
+) -> str:
+    """Legacy synchronous Agnes image call (pre-async rollout).
+
+    Raises HTTPException (503/502/429) on failure — the same contract as
+    the old POST /image-agnes. Used for ?sync=true and as a fallback when
+    app.services.agnes_client is not (yet) available.
     """
     key = _agnes_image_key()
-    suffix = _AGNES_STYLE_SUFFIX.get(body.style, _AGNES_STYLE_SUFFIX["realistic"])
-    full_prompt = f"{body.prompt}, {suffix}"
+    suffix = _AGNES_STYLE_SUFFIX.get(style, _AGNES_STYLE_SUFFIX["realistic"])
+    full_prompt = f"{prompt}, {suffix}"
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
@@ -419,11 +444,11 @@ async def generate_image_agnes(
                     "n": 1,
                     "size": "1024x1024",
                     # Pass the seed through when the app sends one (Regenerate).
-                    **({"seed": body.seed} if body.seed is not None else {}),
+                    **({"seed": seed} if seed is not None else {}),
                 },
             )
     except httpx.RequestError as exc:
-        logger.warning("agnes image transport error: %s", exc)
+        logger.warning("agnes image transport error [%s]: %s", request_id, exc)
         raise HTTPException(
             status_code=502, detail="Image service unreachable.") from exc
     if resp.status_code == 429:
@@ -432,7 +457,8 @@ async def generate_image_agnes(
             detail="Image quota is busy right now — try again in a minute.")
     if resp.status_code < 200 or resp.status_code >= 300:
         logger.warning(
-            "agnes image HTTP %s: %s", resp.status_code, resp.text[:200])
+            "agnes image HTTP %s [%s]: %s", resp.status_code, request_id,
+            resp.text[:200])
         raise HTTPException(
             status_code=502, detail="Image service rejected the request.")
     try:
@@ -444,4 +470,161 @@ async def generate_image_agnes(
     if not url:
         raise HTTPException(
             status_code=502, detail="Image service returned no image.")
-    return {"image_url": url}
+    return url
+
+
+async def _process_image_job(job_id: str, request_id: str) -> None:
+    """Background worker for one image job. Own DB session — never touches
+    the request's session. Never raises: all failures land on the job row."""
+    try:
+        async with SessionLocal() as db:
+            job = (await db.execute(
+                select(ImageJob).where(ImageJob.id == job_id)
+            )).scalar_one_or_none()
+            if job is None:
+                logger.warning(
+                    "image job %s [%s]: row vanished before processing",
+                    job_id, request_id)
+                return
+            job.status = "processing"
+            await db.commit()
+
+            try:
+                try:
+                    from app.services.agnes_client import agnes_image_generate
+                except ImportError:
+                    logger.warning(
+                        "image job %s [%s]: agnes_client missing — "
+                        "inline fallback", job_id, request_id)
+                    url = await asyncio.wait_for(
+                        _agnes_image_generate_inline(
+                            job.prompt, job.style, job.seed, request_id),
+                        timeout=_IMAGE_JOB_TIMEOUT,
+                    )
+                else:
+                    suffix = _AGNES_STYLE_SUFFIX.get(
+                        job.style, _AGNES_STYLE_SUFFIX["realistic"])
+                    url = await asyncio.wait_for(
+                        agnes_image_generate(
+                            prompt=job.prompt,
+                            style_suffix=suffix,
+                            seed=job.seed,
+                            request_id=request_id,
+                        ),
+                        timeout=_IMAGE_JOB_TIMEOUT,
+                    )
+                job.status = "ready"
+                job.image_url = url
+                logger.info(
+                    "image job %s [%s]: ready", job_id, request_id)
+            except Exception as exc:
+                job.status = "failed"
+                detail = (exc.detail if isinstance(exc, HTTPException)
+                          else str(exc)) or "Image generation failed."
+                job.error = detail[:500]
+                logger.warning(
+                    "image job %s [%s]: failed: %s", job_id, request_id,
+                    detail[:200])
+            await db.commit()
+    except Exception:
+        logger.exception(
+            "image job %s [%s]: background task crashed", job_id, request_id)
+
+
+@router.post("/image-agnes")
+async def generate_image_agnes(
+    body: AgnesImageIn,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    sync: bool = Query(
+        default=False,
+        description="Legacy blocking flow — returns {image_url} directly. "
+                    "Default (async) returns 202 {job_id, status}.",
+    ),
+) -> dict:
+    """Generate an image via Agnes AI (server-side key).
+
+    Async by default: persists an ImageJob and returns 202 immediately —
+    the Agnes call runs in a background task. Poll
+    GET /image-jobs/{job_id} for the result. Pass ?sync=true for the
+    legacy blocking behavior during rollout.
+    """
+    request_id = uuid.uuid4().hex
+    if sync:
+        url = await _agnes_image_generate_inline(
+            body.prompt, body.style, body.seed, request_id)
+        return {"image_url": url}
+
+    # Fail fast when the provider key is missing (same 503 as before),
+    # before a job row is created.
+    _agnes_image_key()
+    await _prune_image_jobs(db)
+    job = ImageJob(
+        id=uuid.uuid4().hex,
+        user_id=user.id,
+        prompt=body.prompt,
+        style=body.style,
+        seed=body.seed,
+        status="pending",
+        request_id=request_id,
+    )
+    try:
+        db.add(job)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        logger.exception("image_jobs insert failed [%s]", request_id)
+        raise HTTPException(
+            status_code=502,
+            detail="Could not save the image job. Please try again.",
+        ) from None
+    logger.info(
+        "image job %s submitted [%s] user=%s style=%s",
+        job.id, request_id, user.id, body.style)
+    asyncio.create_task(_process_image_job(job.id, request_id))
+    return JSONResponse(
+        status_code=202,
+        content={"job_id": job.id, "status": job.status},
+    )
+
+
+@router.get("/image-jobs/{job_id}")
+async def image_job_status(
+    job_id: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Poll an image job. status: pending|processing|ready|failed.
+
+    404 when the job does not exist, belongs to another user, or was
+    pruned (>1h old).
+    """
+    await _prune_image_jobs(db)
+    job = (await db.execute(
+        select(ImageJob).where(
+            ImageJob.id == job_id,
+            ImageJob.user_id == user.id,
+        )
+    )).scalar_one_or_none()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Unknown image job.")
+    if job.status in ("pending", "processing"):
+        # Stale reaper: a worker crash/restart can orphan a job in a
+        # non-terminal state — never leave the app polling forever.
+        updated = job.updated_at
+        if updated is not None and updated.tzinfo is None:
+            updated = updated.replace(tzinfo=timezone.utc)
+        if (updated is None
+                or datetime.now(timezone.utc) - updated > _IMAGE_JOB_STALE_AFTER):
+            old = job.status
+            job.status = "failed"
+            job.error = "Generation timed out. Please try again."
+            await db.commit()
+            logger.warning(
+                "image job %s: reaped stale %s job", job.id, old)
+    return {
+        "job_id": job.id,
+        "status": job.status,
+        "image_url": job.image_url,
+        "error": job.error,
+    }

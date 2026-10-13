@@ -366,6 +366,7 @@ class FfmpegService {
 
   bool _busy = false;
   bool? _hwH264;
+  bool? _healthCheckCache;
 
   /// True when the Android hardware H.264 encoder is available (probed once).
   Future<bool> get supportsHwH264 async {
@@ -377,6 +378,38 @@ class FfmpegService {
       _hwH264 = false;
     }
     return _hwH264!;
+  }
+
+  /// Health check: verifies the FFmpeg native library loads and responds.
+  ///
+  /// Runs a trivial `-version` command with a 5-second timeout. Returns
+  /// true when FFmpeg executes successfully, false on any failure
+  /// (library load failure, timeout, native crash).
+  ///
+  /// The result is cached for the app session — call [resetHealthCheck]
+  /// to force a re-probe (useful in tests or after an app update).
+  ///
+  /// This is fast (<5s) and safe to call lazily; never call it during
+  /// app startup — only when a video operation is about to run.
+  Future<bool> isAvailable() async {
+    if (_healthCheckCache != null) return _healthCheckCache!;
+    try {
+      final session =
+          await FFmpegKit.execute('-version').timeout(const Duration(seconds: 5));
+      final rc = await session.getReturnCode();
+      _healthCheckCache = ReturnCode.isSuccess(rc);
+    } catch (_) {
+      _healthCheckCache = false;
+    }
+    return _healthCheckCache!;
+  }
+
+  /// Clears the cached [isAvailable] (and hardware-encoder probe) results
+  /// so the next call re-probes the device. Intended for tests and
+  /// diagnostics; not needed in normal app flow.
+  Future<void> resetHealthCheck() async {
+    _healthCheckCache = null;
+    _hwH264 = null;
   }
 
   Future<Directory> _workDir() async {

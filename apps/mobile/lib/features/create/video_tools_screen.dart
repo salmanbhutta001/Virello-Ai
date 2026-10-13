@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -30,6 +31,7 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
   String? _video;
   double? _duration;
   bool _probing = false;
+  bool _downloading = false;
 
   AppStrings get s => AppStrings(appState.localeCode);
   final _ff = FfmpegService.instance;
@@ -66,9 +68,48 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
     return picked?.path;
   }
 
+  /// Hafiz 2026-10-13: download the current (possibly processed) video
+  /// straight to the phone gallery.
+  Future<void> _downloadVideo() async {
+    final v = _video;
+    if (v == null || _downloading) return;
+    setState(() => _downloading = true);
+    try {
+      await Gal.putVideo(v, album: 'Virello');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSavedToGallery)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.videoSaveFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   /// Runs [op] with the progress dialog; on "Use video" keeps editing output.
+  ///
+  /// Fails fast with a clear message when the on-device FFmpeg engine is
+  /// not available — every tool on this screen needs it.
   Future<void> _do(String title,
       Future<String> Function(void Function(double)) op) async {
+    final ffmpegOk = await _ff.isAvailable();
+    if (!ffmpegOk && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'On-device video tools are not available on this phone '
+            '(video engine failed to start).',
+          ),
+        ),
+      );
+      return;
+    }
     final chosen = await runVideoTaskDialog(context, title: title, task: op);
     if (chosen != null && mounted) _setVideo(chosen);
   }
@@ -416,7 +457,23 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
   Widget build(BuildContext context) {
     final hasVideo = _video != null;
     return Scaffold(
-      appBar: AppBar(title: Text(s.videoTools)),
+      appBar: AppBar(
+        title: Text(s.videoTools),
+        actions: [
+          if (hasVideo)
+            IconButton(
+              tooltip: s.downloadVideo,
+              onPressed: _downloading ? null : _downloadVideo,
+              icon: _downloading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download_outlined),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -504,6 +561,30 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
           const SizedBox(height: 10),
           _action(context, Icons.gif_outlined, s.toolGif,
               hasVideo ? _onGif : null),
+          if (hasVideo) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _downloading ? null : _downloadVideo,
+                icon: _downloading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_outlined, size: 18),
+                label: Text(s.downloadVideo),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VirelloColors.pink,
+                  side: const BorderSide(color: VirelloColors.pink),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
