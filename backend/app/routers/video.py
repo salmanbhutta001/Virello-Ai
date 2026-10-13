@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _AGNES_BASE = "https://apihub.agnes-ai.com/v1"
-_AGNES_MODEL = "agnes-video-v2.0"
+_AGNES_MODEL = "agnes-video-2.5-flash"
 _SUBMIT_TIMEOUT = 60.0
 _POLL_TIMEOUT = 30.0
 _MAX_DURATION = 10  # Agnes free tier caps short clips
