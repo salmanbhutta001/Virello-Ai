@@ -269,6 +269,7 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Hafiz 2026-10-04: speak / download / share the narration.
+            // Hafiz 2026-10-13: fixed text wrapping — smaller font, no wrap.
             Row(
               children: [
                 Expanded(
@@ -278,7 +279,12 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
                       _speaking ? Icons.stop : Icons.record_voice_over_outlined,
                       size: 18,
                     ),
-                    label: Text(_speaking ? 'Stop voice' : 'Speak'),
+                    label: Text(
+                      _speaking ? 'Stop voice' : 'Speak',
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(
@@ -298,7 +304,12 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.download_outlined, size: 18),
-                    label: const Text('Audio'),
+                    label: const Text(
+                      'Audio',
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(
@@ -312,7 +323,12 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _shareAudio,
                     icon: const Icon(Icons.share_outlined, size: 18),
-                    label: const Text('Share'),
+                    label: const Text(
+                      'Share',
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(

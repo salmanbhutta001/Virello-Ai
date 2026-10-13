@@ -134,10 +134,14 @@ class StoryboardVideoRenderer {
           final candidate = result.toString();
           final f = File(candidate);
           final f2 = File(out);
-          if (await f.exists()) {
-            voicePath = candidate;
-          } else if (await f2.exists()) {
-            voicePath = out;
+          final validFile = await f.exists() ? f : (await f2.exists() ? f2 : null);
+          if (validFile != null) {
+            // Hafiz 2026-10-13: validate WAV before passing to FFmpeg.
+            // An invalid/corrupt file causes "Invalid data found" errors.
+            if (await _isValidWav(validFile)) {
+              voicePath = validFile.path;
+            }
+            // else: skip voiceover, video renders without audio.
           }
         }
         tts.dispose();
@@ -159,5 +163,22 @@ class StoryboardVideoRenderer {
     );
     onProgress?.call(1.0);
     return mp4;
+  }
+
+  /// Hafiz 2026-10-13: validates a WAV file before FFmpeg uses it.
+  /// Returns false for missing, empty, or corrupt files (wrong header).
+  static Future<bool> _isValidWav(File f) async {
+    try {
+      final len = await f.length();
+      if (len < 44) return false; // WAV header is 44 bytes minimum.
+      final bytes = await f.openRead(0, 12).first;
+      if (bytes.length < 12) return false;
+      // Check RIFF....WAVE header.
+      final riff = String.fromCharCodes(bytes.sublist(0, 4));
+      final wave = String.fromCharCodes(bytes.sublist(8, 12));
+      return riff == 'RIFF' && wave == 'WAVE';
+    } catch (_) {
+      return false;
+    }
   }
 }
