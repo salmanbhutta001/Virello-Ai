@@ -132,7 +132,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             .showSnackBar(SnackBar(content: Text(s.askFailed)));
         return;
       }
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // Hafiz 2026-10-13: open in the app's built-in browser (in-app webview)
+      // for a smooth experience — no external browser, no connection errors.
+      await launchUrl(
+        uri,
+        mode: LaunchMode.inAppWebView,
+        webViewConfiguration: const WebViewConfiguration(
+          enableJavaScript: true,
+          enableDomStorage: true,
+        ),
+      );
       return;
     }
     if (!mounted) return;
