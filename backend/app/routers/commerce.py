@@ -447,7 +447,8 @@ async def deactivate_product(
 ):
     """Soft-delete: deactivates the listing (orders/leads history preserved)."""
     product = await _get_product(db, _parse_uuid(product_id))
-    if str(product.creator_id) != str(user.id):
+    # Hafiz 2026-10-13: admins can deactivate any product.
+    if str(product.creator_id) != str(user.id) and not user.is_admin:
         raise HTTPException(403, "Only the creator can remove this product")
     product.is_active = False
     await db.commit()

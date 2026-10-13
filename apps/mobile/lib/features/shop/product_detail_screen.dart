@@ -160,6 +160,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  /// Hafiz 2026-10-13: admin can deactivate any product inline.
+  Future<void> _adminDeleteProduct() async {
+    final productId = widget.productId;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        title: Text(s.delete),
+        content: Text(s.deleteProductConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dctx).pop(false),
+            child: Text(s.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dctx).pop(true),
+            child: Text(s.delete,
+                style: const TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await apiClient.deleteProduct(productId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.deletedToast)),
+      );
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.deleteFailed)),
+      );
+    }
+  }
+
   void _askVirello(Map<String, dynamic> p) {
     final title = '${p['title'] ?? ''}';
     final price = _priceCents(p) > 0
@@ -191,6 +228,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: _ink)),
+        // Hafiz 2026-10-13: admin can deactivate any product inline.
+        actions: [
+          if (authStore.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              tooltip: s.delete,
+              onPressed: () => _adminDeleteProduct(),
+            ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

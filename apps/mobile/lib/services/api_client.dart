@@ -233,6 +233,12 @@ class ApiClient {
     return j['deleted'] == true;
   }
 
+  /// Hafiz 2026-10-13: admin can deactivate any product.
+  Future<bool> deleteProduct(String id) async {
+    final j = await _deleteJson('/api/v1/commerce/products/$id');
+    return j['ok'] == true;
+  }
+
   /// Get the public trackable share link for a campaign.
   Future<Map<String, dynamic>> getCampaignShareLink(String id) async {
     return await _getJson('/api/v1/campaigns/$id/share-link');

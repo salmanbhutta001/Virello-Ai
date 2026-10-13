@@ -11586,6 +11586,19 @@ class AppStrings {
         'Hapus kampanye ini secara permanen? Tindakan ini tidak dapat dibatalkan.',
         'এই ক্যাম্পেইনটি স্থায়ীভাবে মুছে ফেলবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।'
       );
+  String get deleteProductConfirm => _get(
+        'Remove this product from the Shop? It will be deactivated.',
+        'اس پروڈکٹ کو شاپ سے ہٹائیں؟ یہ غیر فعال ہو جائے گا۔',
+        'إزالة هذا المنتج من المتجر؟ سيتم إلغاء تنشيطه.',
+        'इस उत्पाद को शॉप से हटाएं? यह निष्क्रिय हो जाएगा।',
+        'Retirer ce produit de la boutique ? Il sera désactivé.',
+        '¿Eliminar este producto de la tienda? Se desactivará.',
+        'Rimuovere questo prodotto dal negozio? Verrà disattivato.',
+        'Dieses Produkt aus dem Shop entfernen? Es wird deaktiviert.',
+        'Bu ürün Shop\'tan kaldırılsın mı? Devre dışı bırakılacak.',
+        'Hapus produk ini dari Toko? Produk akan dinonaktifkan.',
+        'এই পণ্যটি শপ থেকে সরিয়ে ফেলবেন? এটি নিষ্ক্রিয় হয়ে যাবে।'
+      );
   String get deletedToast =>
       _get('Campaign deleted', 'مہم حذف ہو گئی', 'تم حذف الحملة',
         'अभियान हटा दिया गया',
