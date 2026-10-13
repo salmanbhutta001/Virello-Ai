@@ -487,52 +487,110 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
     );
   }
 
-  /// AI intelligence: reads the user's REAL campaign list and produces
-  /// 3 short actionable insights (pause/draft winners, underperformers,
-  /// completion nudges) — grounded in actual counts and metrics, never
-  /// fabricated.
+  /// AI intelligence: advanced reality-based campaign analysis.
+  /// Hafiz 2026-10-13: upgraded from generic advice to data-grounded strategy.
+  /// Analyzes per-campaign metrics (spend, budget, reach, engagement) to identify
+  /// winners to scale, losers to pause, and budget efficiency — never fabricated.
   Future<void> _generateInsights(List<Campaign> all) async {
     _insightTried = true;
     if (_insightWorking || !mounted) return;
     setState(() => _insightWorking = true);
     try {
-      int live = 0, paused = 0, drafts = 0, completed = 0;
-      for (final c in all) {
-        switch (c.status) {
-          case CampaignStatus.live:
-          case CampaignStatus.optimizing:
-            live++;
-          case CampaignStatus.paused:
-            paused++;
-          case CampaignStatus.completed:
-            completed++;
-          default:
-            drafts++;
+      final live = all.where((c) =>
+          c.status == CampaignStatus.live ||
+          c.status == CampaignStatus.optimizing).toList();
+      final paused = all.where((c) => c.status == CampaignStatus.paused).length;
+      final drafts = all.where((c) =>
+          c.status != CampaignStatus.live &&
+          c.status != CampaignStatus.optimizing &&
+          c.status != CampaignStatus.paused &&
+          c.status != CampaignStatus.completed).length;
+      final completed = all.where((c) => c.status == CampaignStatus.completed).length;
+
+      // If no live campaigns, give honest guidance instead of fake insights.
+      if (live.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _insights = [
+            'No live campaigns right now — create one to start growing.',
+          ];
+          _insightWorking = false;
+        });
+        return;
+      }
+
+      // Build per-campaign data with real metrics.
+      final buffer = StringBuffer();
+      buffer.writeln('Live campaigns: ${live.length}, Paused: $paused, Drafts: $drafts, Completed: $completed');
+      buffer.writeln('Per-campaign data:');
+
+      double totalSpend = 0, totalBudget = 0, totalEngagement = 0;
+      int withMetrics = 0;
+      Campaign? best, worst;
+      double bestRate = -1, worstRate = 999;
+
+      for (var i = 0; i < live.length; i++) {
+        final c = live[i];
+        final name = c.title.isEmpty
+            ? (c.postUrl.length > 30 ? '${c.postUrl.substring(0, 30)}...' : c.postUrl)
+            : (c.title.length > 40 ? '${c.title.substring(0, 40)}...' : c.title);
+        final budgetPct = c.budgetUsd > 0
+            ? (c.spendUsd / c.budgetUsd * 100).toStringAsFixed(0)
+            : 'n/a';
+        buffer.writeln(
+          '- "$name": status=${c.status.name}, spend=\$${c.spendUsd.toStringAsFixed(2)}/\$${c.budgetUsd.toStringAsFixed(2)} ($budgetPct% used), '
+          'reach=${c.reach.toStringAsFixed(0)}, engagement=${c.engagementRate.toStringAsFixed(1)}%, '
+          'clicks=${c.clicks.toStringAsFixed(0)}, conversions=${c.conversions.toStringAsFixed(0)}, '
+          'goal=${c.goal.name}, mode=${c.mode.name}'
+        );
+        totalSpend += c.spendUsd;
+        totalBudget += c.budgetUsd;
+        if (c.hasMetrics) {
+          withMetrics++;
+          totalEngagement += c.engagementRate;
+          if (c.engagementRate > bestRate) { bestRate = c.engagementRate; best = c; }
+          if (c.engagementRate < worstRate) { worstRate = c.engagementRate; worst = c; }
         }
       }
-      Campaign? top;
-      double best = 0;
-      for (final c in all) {
-        if (c.hasMetrics && c.engagementRate > best) {
-          best = c.engagementRate;
-          top = c;
+
+      final avgEngagement = withMetrics > 0 ? totalEngagement / withMetrics : 0;
+
+      // Local pre-analysis: flag clear winners/losers for the AI to refine.
+      buffer.writeln('Analysis:');
+      buffer.writeln('- Total spend: \$${totalSpend.toStringAsFixed(2)} of \$${totalBudget.toStringAsFixed(2)} budget');
+      buffer.writeln('- Campaigns with metrics: $withMetrics/${live.length}, avg engagement: ${avgEngagement.toStringAsFixed(1)}%');
+      if (best != null && withMetrics > 1) {
+        final bestName = best.title.isEmpty ? best.postUrl : best.title;
+        buffer.writeln('- Top performer: "$bestName" at ${bestRate.toStringAsFixed(1)}% engagement');
+      }
+      if (worst != null && withMetrics > 1 && worst != best) {
+        final worstName = worst.title.isEmpty ? worst.postUrl : worst.title;
+        buffer.writeln('- Lowest performer: "$worstName" at ${worstRate.toStringAsFixed(1)}% engagement');
+      }
+      // Flag budget hogs: high spend, low engagement.
+      for (final c in live) {
+        if (c.budgetUsd > 0 && c.spendUsd / c.budgetUsd > 0.5 && c.hasMetrics && c.engagementRate < 1.0) {
+          final n = c.title.isEmpty ? c.postUrl : c.title;
+          buffer.writeln('- WARNING: "$n" has used ${(c.spendUsd / c.budgetUsd * 100).toStringAsFixed(0)}% of budget with only ${c.engagementRate.toStringAsFixed(1)}% engagement');
         }
       }
+
       final langNote = appState.localeCode == 'ur'
           ? 'Write in Roman Urdu.'
           : appState.localeCode == 'ar'
               ? 'Write in Arabic.'
               : 'Write in English.';
-      final topName = top != null
-          ? (top.title.isEmpty ? top.postUrl : top.title)
-          : '';
-      final data =
-          'Live: $live, Paused: $paused, Drafts: $drafts, Completed: $completed'
-          '${top != null ? ', best performer "$topName" with ${best.toStringAsFixed(1)}% engagement rate' : ''}';
       final prompt =
-          'You are Virello AI. Based on this real campaign data, give exactly 3 short actionable insights, each under 20 words. $langNote '
-          'Data: $data '
-          'Format: one insight per line, no numbering, no extra commentary.';
+          'You are Virello AI, an expert campaign strategist. Based on the REAL campaign data below, '
+          'give exactly 3 short, specific, actionable insights. Each under 25 words. $langNote\n\n'
+          'Rules:\n'
+          '- Reference specific campaigns by name and cite their actual numbers (spend, engagement %, budget used).\n'
+          '- If a campaign is wasting budget (high spend, low engagement), recommend pausing it by name.\n'
+          '- If a campaign is performing well, recommend scaling it by name.\n'
+          '- If there is not enough metric data yet, say "Not enough data yet on [name] — check back after more impressions."\n'
+          '- NEVER invent metrics, NEVER give generic advice like "add creative assets". Be specific and data-driven.\n'
+          '- Format: one insight per line, no numbering, no bullet points, no extra commentary.\n\n'
+          'Data:\n${buffer.toString()}';
       final body =
           await AiTextService.instance.generate(prompt: prompt);
       if (!mounted) return;
