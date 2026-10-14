@@ -13,8 +13,9 @@ import hmac
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import delete as sa_delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2110,18 +2111,58 @@ class BgRemoveBody(BaseModel):
 @router.post("/commerce/remove-backgrounds")
 async def remove_product_backgrounds(
     body: BgRemoveBody,
+    request: Request,
     db: AsyncSession = Depends(get_db),
-    admin: User = Depends(require_admin),
+    x_curator_token: Optional[str] = Header(default=None),
 ):
     """Run the background-remover robot: clean hero images get transparent
-    backgrounds uploaded to Cloudinary and swapped into the catalog."""
+    backgrounds uploaded to Cloudinary and swapped into the catalog.
+
+    Auth: admin JWT (Bearer) OR the curator service token (X-Curator-Token
+    header) — the robot is part of the curation pipeline, so the pipeline
+    token is authorized to trigger it.
+    """
     from app.services.bg_remover import run_bg_remover
+
+    admin_id = await _robot_auth(request, db, x_curator_token)
 
     scope = (body.scope or "hero").strip().lower()
     if scope not in ("hero", "all"):
         scope = "hero"
-    _audit(db, admin.id, "admin.commerce.remove_backgrounds",
+    _audit(db, admin_id, "admin.commerce.remove_backgrounds",
            f"dry_run={body.dry_run} batch_size={body.batch_size} scope={scope}")
     summary = await run_bg_remover(
         db, batch_size=body.batch_size, dry_run=body.dry_run, scope=scope)
     return {"ok": True, "dry_run": body.dry_run, "summary": summary}
+
+
+async def _robot_auth(request: Request, db: AsyncSession,
+                     x_curator_token: Optional[str]):
+    """Return admin user id, or None when authorized via curator token.
+
+    Raises 401/403 when neither credential is valid.
+    """
+    import os
+    import secrets as _secrets
+
+    expected = os.environ.get("VIRELLO_CURATOR_TOKEN", "")
+    if expected and x_curator_token and _secrets.compare_digest(
+            x_curator_token, expected):
+        return None  # pipeline robot — no admin user row
+    # fall back to admin JWT
+    from app.core.security import decode_token
+
+    auth = request.headers.get("authorization", "")
+    if not auth.lower().startswith("bearer "):
+        raise HTTPException(401, "Admin login or curator token required")
+    try:
+        user_id = decode_token(auth.split(" ", 1)[1])
+    except ValueError as e:
+        raise HTTPException(401, str(e))
+    res = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    user = res.scalar_one_or_none()
+    if user is None or not getattr(user, "is_admin", False):
+        raise HTTPException(403, "Admin access required")
+    if not is_admin_email(getattr(user, "email", None)):
+        raise HTTPException(403, "Admin access required")
+    return user.id
