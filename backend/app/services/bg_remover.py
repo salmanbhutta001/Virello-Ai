@@ -161,6 +161,19 @@ async def run_bg_remover(db: AsyncSession, batch_size: int = 20,
     rows = (await db.execute(
         select(Product).order_by(Product.id).limit(5000))).scalars().all()
 
+    # Filter to products that actually need work FIRST, then take the batch —
+    # otherwise every run would re-scan the same already-processed head rows
+    # and never advance through the catalog.
+    def _row_needs(p) -> bool:
+        urls = p.image_urls or []
+        if not urls:
+            return False
+        idxs = [0] if scope == "hero" else range(len(urls))
+        return any(i < len(urls) and _needs_processing(urls[i]) for i in idxs)
+
+    pending = [p for p in rows if _row_needs(p)]
+    summary["pending_total"] = len(pending)
+
     import asyncio
     sem = asyncio.Semaphore(MAX_CONCURRENT)
 
@@ -215,7 +228,7 @@ async def run_bg_remover(db: AsyncSession, batch_size: int = 20,
                 product.image_urls = urls
 
     # process in batches so one admin request doesn't run forever
-    batch = rows[:batch_size]
+    batch = pending[:batch_size]
     await asyncio.gather(*(handle(p) for p in batch))
     if not dry_run:
         await db.commit()
