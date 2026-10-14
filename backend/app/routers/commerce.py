@@ -810,31 +810,56 @@ async def upload_gallery_image(
     file: UploadFile = File(...),
     asin: str = Form(""),
     slot: str = Form("main"),
+    suffix: str = Form(""),
     x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
 ):
     """Upload one gallery image to Cloudinary (replaces the old git-push
     flow — new images are never committed to the repo anymore).
-    Auth: X-Curator-Token header. Multipart: file (JPEG), asin, slot
-    (main|angle2|angle3). Returns {"url": "<live cloudinary url>"} —
+    Auth: X-Curator-Token header. Multipart: file (JPEG or PNG), asin, slot
+    (main|angle2|angle3), optional suffix (e.g. "_nobg" for transparent
+    background-removed images). Returns {"url": "<live cloudinary url>"} —
     the URL is usable immediately, no deploy needed."""
     _check_curator_token(x_curator_token or "")
     asin = (asin or "").strip().upper()
     slot = (slot or "").strip().lower()
+    suffix = (suffix or "").strip()
     if not asin or not re.fullmatch(r"[A-Z0-9]{10}", asin):
         raise HTTPException(status_code=400, detail="valid 10-char asin required")
     if slot not in ("main", "angle2", "angle3"):
         raise HTTPException(status_code=400, detail="slot must be main|angle2|angle3")
+    if suffix and not re.fullmatch(r"[A-Za-z0-9_]{1,20}", suffix):
+        raise HTTPException(status_code=400, detail="invalid suffix")
     data = await file.read()
+    is_png = data.startswith(b"\x89PNG\r\n\x1a\n")
     from app.curation.gallery import check_jpeg
-    ok, why = check_jpeg(data)
-    if not ok:
-        raise HTTPException(status_code=400, detail=f"invalid JPEG: {why}")
+    if is_png:
+        # transparent background-removed image: basic PNG integrity check
+        from PIL import Image
+        import io
+        try:
+            with Image.open(io.BytesIO(data)) as im:
+                im.verify()
+            with Image.open(io.BytesIO(data)) as im:
+                w, h = im.size
+                if im.mode not in ("RGBA", "LA", "PA", "RGB", "P"):
+                    raise ValueError("unsupported mode")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"invalid PNG: {type(e).__name__}")
+        if min(w, h) < 300:
+            raise HTTPException(status_code=400, detail=f"dimensions too small ({w}x{h})")
+        content_type = "image/png"
+    else:
+        ok, why = check_jpeg(data)
+        if not ok:
+            raise HTTPException(status_code=400, detail=f"invalid JPEG: {why}")
+        content_type = "image/jpeg"
     from app.curation.cloudinary_store import cloudinary_enabled, upload_image
     if not cloudinary_enabled():
         raise HTTPException(status_code=503,
                             detail="cloudinary not configured on server")
     try:
-        url = await upload_image(data, f"{asin}_{slot}")
+        url = await upload_image(data, f"{asin}_{slot}{suffix}",
+                                 content_type=content_type)
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e)[:200])
     return {"asin": asin, "slot": slot, "url": url}
