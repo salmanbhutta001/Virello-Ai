@@ -8,11 +8,10 @@ bilkul sahi ho aur product kay kinaro per kahi background nzr na aye."
 What it does:
 1. Scans the product catalog for hero images that still have backgrounds.
 2. Downloads each hero image.
-3. Removes the background with a high-quality segmentation model
-   (isnet-general-use). Plain inference was verified on real product
-   photos to give clean edges with no background remnants at the
-   borders (alpha matting was tested and rejected — it reintroduces
-   a translucent halo on studio-gradient backgrounds).
+3. Removes the background with a segmentation model (u2net by default;
+   VIRELLO_BG_MODEL=isnet-general-use on bigger instances for max quality).
+   Plain inference was verified on real product photos to give clean edges
+   with no background remnants at the borders.
 4. Verifies the result (corners fully transparent, real opaque subject,
    soft anti-aliased edges) before accepting it.
 5. Uploads the transparent PNG to Cloudinary as "<ASIN>_main_nobg" and
@@ -35,16 +34,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger("bg_remover")
 
-# High-quality segmentation model — much cleaner edges than u2net.
-# Downloads (~170MB) to ~/.u2net on first use; lazy-loaded so a missing
-# model never breaks app startup or deploys.
-MODEL_NAME = "isnet-general-use"
+# Segmentation model. "u2net" is the default: light enough for small
+# Railway instances (~170MB download, modest RAM) yet clean on product
+# photos. Override with VIRELLO_BG_MODEL=isnet-general-use on bigger
+# instances for max edge quality. (isnet was tested locally: prettier,
+# but OOM-kills small workers.)
+# Downloads to ~/.u2net on first use; lazy-loaded so a missing model
+# never breaks app startup or deploys.
+def _model_name() -> str:
+    import os
+
+    return os.environ.get("VIRELLO_BG_MODEL", "u2net").strip() or "u2net"
 
 # Don't process absurdly small images (thumbnails) or huge ones in RAM.
 MIN_IMAGE_BYTES = 8_192
 MAX_IMAGE_BYTES = 15_000_000
 DOWNLOAD_TIMEOUT = 30.0
-MAX_CONCURRENT = 4  # rembg is CPU-heavy; keep concurrency low
+MAX_CONCURRENT = 2  # rembg is CPU/RAM-heavy; keep concurrency low on small instances
 
 NOBG_MARKER = "_nobg"
 
@@ -55,10 +61,16 @@ def _get_session():
     """Lazy-load the rembg session (downloads model on first call)."""
     global _session
     if _session is None:
+        import os
+
+        # keep onnxruntime from spawning threads per core on tiny instances
+        os.environ.setdefault("OMP_NUM_THREADS", "2")
+        os.environ.setdefault("ORT_NUM_THREADS", "2")
         from rembg import new_session
 
-        logger.info("bg_remover: loading segmentation model %s ...", MODEL_NAME)
-        _session = new_session(MODEL_NAME)
+        model = _model_name()
+        logger.info("bg_remover: loading segmentation model %s ...", model)
+        _session = new_session(model)
         logger.info("bg_remover: model ready")
     return _session
 
