@@ -19,6 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.models.trending import TrendingTopic
+from app.routers.admin import require_admin
+from app.services.trending_orchestrator import run_trending_update
 
 router = APIRouter(prefix="/trending", tags=["trending"])
 
@@ -89,3 +91,17 @@ async def get_topic(
     if topic is None:
         raise HTTPException(status_code=404, detail="Topic not found")
     return {"topic": _to_out(topic)}
+
+
+@router.post("/refresh")
+async def refresh_topics(
+    _admin=Depends(require_admin),
+) -> dict:
+    """Trigger the trending robot (admin only).
+
+    Discovers fresh trends, writes original content + images for new
+    topics, and refreshes scores for existing ones.
+    Returns {"added", "updated", "candidates"}.
+    """
+    result = await run_trending_update()
+    return {"ok": True, **result}
