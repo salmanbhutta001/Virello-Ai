@@ -56,11 +56,14 @@ def _sign(params: dict[str, str], api_secret: str) -> str:
 
 
 async def upload_image(data: bytes, public_id: str,
-                       *, folder: str = "virello/gallery") -> str:
-    """Upload JPEG bytes to Cloudinary. Returns the secure_url.
+                       *, folder: str = "virello/gallery",
+                       content_type: str = "image/jpeg") -> str:
+    """Upload image bytes to Cloudinary. Returns the secure_url.
 
     Raises RuntimeError on any failure (message never contains credentials).
     public_id should be like "<ASIN>_main" / "<ASIN>_angle2".
+    content_type selects the multipart filename/mime (default JPEG for the
+    gallery flow; "image/png" for transparent background-removed images).
     """
     creds = _creds()
     if creds is None:
@@ -75,7 +78,8 @@ async def upload_image(data: bytes, public_id: str,
     signature = _sign(form_params, api_secret)
 
     url = f"https://api.cloudinary.com/v1_1/{cloud_name}/image/upload"
-    files = {"file": ("image.jpg", data, "image/jpeg")}
+    _ext = "png" if content_type == "image/png" else "jpg"
+    files = {"file": (f"image.{_ext}", data, content_type)}
     form = {"api_key": api_key, "signature": signature, **form_params}
     try:
         async with httpx.AsyncClient(timeout=UPLOAD_TIMEOUT) as client:

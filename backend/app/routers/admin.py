@@ -2089,3 +2089,39 @@ async def heal_product_images(
     summary = await run_image_healer(
         db, batch_size=body.batch_size, dry_run=body.dry_run)
     return {"ok": True, "dry_run": body.dry_run, "summary": summary}
+
+
+# ---------------------------------------------------------------------------
+# Background Remover Robot (Hafiz, 2026-10-14)
+# Removes product image backgrounds so shop cards look professional.
+# Only the hero image is processed by default (scope="hero"); scope="all"
+# processes every gallery image. Already-processed images ("_nobg" in URL)
+# are skipped. Edges are alpha-matted + verified clean before upload.
+# POST /api/v1/admin/commerce/remove-backgrounds?dry_run=true — preview only
+# POST /api/v1/admin/commerce/remove-backgrounds                — apply
+# ---------------------------------------------------------------------------
+
+class BgRemoveBody(BaseModel):
+    dry_run: bool = False
+    batch_size: int = 20
+    scope: str = "hero"  # hero | all
+
+
+@router.post("/commerce/remove-backgrounds")
+async def remove_product_backgrounds(
+    body: BgRemoveBody,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """Run the background-remover robot: clean hero images get transparent
+    backgrounds uploaded to Cloudinary and swapped into the catalog."""
+    from app.services.bg_remover import run_bg_remover
+
+    scope = (body.scope or "hero").strip().lower()
+    if scope not in ("hero", "all"):
+        scope = "hero"
+    _audit(db, admin.id, "admin.commerce.remove_backgrounds",
+           f"dry_run={body.dry_run} batch_size={body.batch_size} scope={scope}")
+    summary = await run_bg_remover(
+        db, batch_size=body.batch_size, dry_run=body.dry_run, scope=scope)
+    return {"ok": True, "dry_run": body.dry_run, "summary": summary}
