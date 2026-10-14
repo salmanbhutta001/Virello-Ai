@@ -280,7 +280,6 @@ async def list_products(
     limit: int = Query(default=24, ge=1, le=60),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
     """Browse the catalog. Empty catalog → {"products": [], "total": 0}."""
     stmt = select(Product).where(Product.is_active.is_(True))
