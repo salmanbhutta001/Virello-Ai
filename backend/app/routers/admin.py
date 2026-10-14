@@ -2061,3 +2061,31 @@ async def admin_post_reward(post_id: str, body: PostRewardIn,
     await db.commit()
     return {"ok": True, "placement_id": post_id,
             "reward_cents": body.reward_cents}
+
+
+# ---------------------------------------------------------------------------
+# Image Healer Robot (Hafiz, 2026-10-14)
+# Auto-detects and fixes broken product hero/thumbnail images.
+# POST /api/v1/admin/commerce/heal-images?dry_run=true  — preview only
+# POST /api/v1/admin/commerce/heal-images                — apply fixes
+# ---------------------------------------------------------------------------
+
+class HealImagesBody(BaseModel):
+    dry_run: bool = False
+    batch_size: int = 100
+
+
+@router.post("/commerce/heal-images")
+async def heal_product_images(
+    body: HealImagesBody,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """Run the image-healer robot: scan catalog, fix broken hero images."""
+    from app.services.image_healer import run_image_healer
+
+    _audit(db, admin.id, "admin.commerce.heal_images",
+           f"dry_run={body.dry_run} batch_size={body.batch_size}")
+    summary = await run_image_healer(
+        db, batch_size=body.batch_size, dry_run=body.dry_run)
+    return {"ok": True, "dry_run": body.dry_run, "summary": summary}
