@@ -35,6 +35,7 @@ from app.routers import academy as academy_router
 from app.routers import entertain as entertain_router
 from app.routers import shop as shop_router
 from app.routers import video as video_router
+from app.routers import trending as trending_router
 
 
 @asynccontextmanager
@@ -194,6 +195,9 @@ app.include_router(posts_router.router, prefix="/api/v1/posts", tags=["posts"])
 app.include_router(
     video_router.router, prefix="/api/v1/video", tags=["video"]
 )  # AI video proxy (Create Hub online mode)
+app.include_router(
+    trending_router.router, prefix="/api/v1", tags=["trending"]
+)  # Trending topics (website "Trending Now" + app)
 
 
 @app.get("/health")
