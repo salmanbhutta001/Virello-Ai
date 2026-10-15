@@ -38,6 +38,7 @@ from app.routers import video as video_router
 from app.routers import trending as trending_router
 from app.routers import media as media_router
 from app.routers import distribution as distribution_router
+from app.routers import spotlight as spotlight_router
 
 
 @asynccontextmanager
@@ -206,6 +207,9 @@ app.include_router(
 app.include_router(
     distribution_router.router, prefix="/api/v1/distribution", tags=["distribution"]
 )  # Distribution Engine v1: cross-platform repurposing
+app.include_router(
+    spotlight_router.router, prefix="/api/v1/spotlight", tags=["spotlight"]
+)  # Spotlight: opt-in creator featuring (transparent)
 
 @app.get("/health")
 async def health() -> dict:

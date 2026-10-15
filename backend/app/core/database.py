@@ -63,6 +63,33 @@ async def init_db() -> None:
     # referral_events, which Alembic never created on prod and create_all
     # missed. Signup must never depend on these tables existing).
     await _ensure_referral_tables()
+    # Same for spotlight_submissions (2026-10-15: new Spotlight feature —
+    # prod Alembic is unreliable, so create the table if missing).
+    await _ensure_spotlight_table()
+
+
+async def _ensure_spotlight_table() -> None:
+    """Create the spotlight_submissions table if missing. Idempotent.
+
+    Backs Virello Spotlight (opt-in creator featuring). Follows the existing
+    ensure pattern — never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            if "spotlight_submissions" in tables:
+                return
+            from app.models.spotlight import SpotlightSubmission
+            await conn.run_sync(
+                lambda c: SpotlightSubmission.__table__.create(c, checkfirst=True)
+            )
+            print("init_db: created missing spotlight_submissions table")
+    except Exception as e:
+        print(f"init_db: spotlight table check non-fatal ({type(e).__name__}): {e}")
 
 
 async def _ensure_users_columns() -> None:
