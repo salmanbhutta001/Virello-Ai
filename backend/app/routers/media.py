@@ -350,6 +350,9 @@ async def _pollinations_text(system: str, user_prompt: str) -> str | None:
                 "https://text.pollinations.ai/openai",
                 json={
                     "model": "openai-fast",
+                    # The anonymous tier is a reasoning model; "low" keeps
+                    # it from spending all tokens thinking instead of answering.
+                    "reasoning_effort": "low",
                     "messages": [
                         {"role": "system", "content": system},
                         {"role": "user", "content": user_prompt},
