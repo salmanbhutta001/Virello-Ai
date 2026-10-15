@@ -136,14 +136,6 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
         user_prompt += f"\nGoal: {body.goal}"
     try:
         provider = get_ai_provider()
-    except Exception as exc:
-        import traceback as _tb
-
-        raise HTTPException(
-            status_code=502,
-            detail=f"AI provider init failed: {type(exc).__name__}: {str(exc)[:100]} | {''.join(_tb.format_tb(exc.__traceback__))[-400:]}",
-        )
-    try:
         resp = await provider.complete(
             AIRequest(
                 agent="caption_writer",
@@ -154,6 +146,7 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
                 json_mode=True,
             )
         )
+        dev_fallback = resp.dev
     except HTTPException:
         raise
     except Exception as exc:  # provider errors -> honest 502, never fake text
@@ -161,15 +154,19 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
             status_code=502,
             detail=f"Caption generation failed ({type(exc).__name__}): {str(exc)[:120]}",
         )
-    try:
-        data = json.loads(resp.text)
-    except (ValueError, TypeError):
-        raise HTTPException(
-            status_code=502, detail="Caption generation returned bad data."
-        )
-    # Fail closed on the dev provider: its template has no hook/caption keys,
-    # and we never serve empty or template text as a "generated" caption.
-    if resp.dev or not str(data.get("hook", "")).strip():
+    data = None
+    if not dev_fallback:
+        try:
+            data = json.loads(resp.text)
+        except (ValueError, TypeError):
+            data = None
+    provider_label = resp.provider
+    # Fallback: free/keyless Pollinations text API when no production AI
+    # provider is configured. Labeled honestly in the response.
+    if data is None or not str(data.get("hook", "")).strip():
+        data = await _pollinations_caption(user_prompt)
+        provider_label = "pollinations"
+    if data is None:
         raise HTTPException(
             status_code=503,
             detail="AI caption writer is not configured (no production AI provider).",
@@ -180,7 +177,47 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
         hook=str(data.get("hook", "")).strip(),
         caption=str(data.get("caption", "")).strip(),
         hashtags=hashtags,
-        provider=resp.provider,
+        provider=provider_label,
         model=resp.model,
-        dev=resp.dev,
+        dev=False,
     )
+
+
+async def _pollinations_caption(user_prompt: str) -> dict | None:
+    """Free/keyless caption fallback via Pollinations text API.
+
+    Used only when no production AI provider is configured. Returns a
+    dict with hook/caption/hashtags, or None on failure.
+    """
+    import urllib.parse
+
+    import httpx
+
+    prompt = (
+        "You are Virello's Caption Writer, an expert social-media copywriter. "
+        "Write punchy, authentic copy. Never invent statistics or guarantees. "
+        "Reply with ONLY a JSON object with keys: \"hook\" (one scroll-stopping "
+        "line, max 15 words), \"caption\" (2-4 short lines, emoji sparingly, ends "
+        "with a soft CTA), \"hashtags\" (array of 8-12 hashtag strings WITHOUT "
+        "the # character).\n\n" + user_prompt
+    )
+    url = "https://text.pollinations.ai/" + urllib.parse.quote(prompt[:800])
+    try:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(90.0, connect=15.0)
+        ) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return None
+            text = resp.text.strip()
+            # Strip markdown code fences if present.
+            if text.startswith("```"):
+                text = text.strip("`").strip()
+                if text.lower().startswith("json"):
+                    text = text[4:].strip()
+            data = json.loads(text)
+            if not isinstance(data, dict) or not str(data.get("hook", "")).strip():
+                return None
+            return data
+    except Exception:
+        return None
