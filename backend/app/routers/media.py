@@ -15,6 +15,7 @@ import json
 import time
 from collections import defaultdict, deque
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -32,6 +33,8 @@ router = APIRouter()
 _RATE_LIMITS = {
     "generate-image": (30, 3600),    # 30 images / hour / IP
     "generate-caption": (60, 3600),  # 60 captions / hour / IP
+    "generate-text": (60, 3600),     # 60 AI text generations / hour / IP
+    "assemble-video": (8, 3600),     # 8 MP4 assemblies / hour / IP (CPU-heavy)
 }
 _hits: dict[str, deque] = defaultdict(deque)
 
@@ -221,3 +224,309 @@ async def _pollinations_caption(user_prompt: str) -> dict | None:
             return data
     except Exception:
         return None
+
+
+# ---------------------------------------------------------------------------
+# AI text tools (Script Writer, Story Writer, Content Converter)
+# ---------------------------------------------------------------------------
+
+_TEXT_SYSTEMS = {
+    "script": """You are Virello's Script Writer, an expert short-form video scriptwriter for Instagram Reels, TikTok and YouTube Shorts. Write a REAL structured script in the creator's voice: punchy, authentic, no corporate fluff, no fake claims or invented statistics. Format exactly as:
+HOOK: (one scroll-stopping opening line, max 12 words)
+BEATS: (3-5 timed beats like 0:00-0:03 — what happens on screen + what is said)
+CTA: (one soft call to action)
+Keep the whole script under 220 words.""",
+    "story": """You are Virello's Story Writer, a skilled storyteller for social media. Write a REAL, engaging story in the requested length and language: vivid, emotional, authentic. No fake claims or invented statistics. Plain paragraphs, no headings.""",
+    "convert": """You are Virello's Content Converter. Convert the user's text into the requested native format, keeping the core message and voice. Never invent statistics, earnings or guarantees. Formats:
+- Video Script: HOOK line, 3-5 timed BEATS, CTA
+- Carousel: 5-7 slide texts (Slide 1 is the hook), each under 25 words
+- Thread: 5-8 short posts, first one is the hook, numbered
+- Story Caption: 2-4 short lines with a soft CTA
+Reply with ONLY the converted content.""",
+}
+
+_TEXT_LENGTHS = {
+    "short": "about 120 words",
+    "medium": "about 300 words",
+    "long": "about 600 words",
+}
+
+
+class GenerateTextIn(BaseModel):
+    kind: str = Field(pattern="^(script|story|convert)$")
+    prompt: str = Field(min_length=3, max_length=2000)
+    niche: str = Field(default="", max_length=80)
+    format: str = Field(default="", max_length=40)   # convert target / story length / language hint
+
+
+class GenerateTextOut(BaseModel):
+    text: str
+    provider: str
+    model: str
+
+
+@router.post("/generate-text", response_model=GenerateTextOut)
+async def generate_text(body: GenerateTextIn, request: Request):
+    """Real AI text generation for Script Writer, Story Writer and Content
+    Converter. Production AI provider first, free/keyless Pollinations
+    fallback — always labeled honestly."""
+    _check_rate_limit(request, "generate-text")
+    system = _TEXT_SYSTEMS[body.kind]
+    user_prompt = body.prompt.strip()
+    if body.kind == "story" and body.format:
+        length = _TEXT_LENGTHS.get(body.format.lower(), "about 300 words")
+        user_prompt += f"\nLength: {length}."
+        if "urdu" in body.format.lower():
+            user_prompt += " Write in Urdu (Nastaliq-friendly plain Urdu)."
+    if body.kind == "convert" and body.format:
+        user_prompt = f"Target format: {body.format}\n\nContent to convert:\n{user_prompt}"
+    if body.niche:
+        user_prompt += f"\nNiche: {body.niche}"
+    text, provider_label, model = None, "pollinations", "pollinations-text"
+    try:
+        provider = get_ai_provider()
+        resp = await provider.complete(
+            AIRequest(
+                agent=f"{body.kind}_writer",
+                system=system,
+                user=user_prompt,
+                max_tokens=1200,
+                temperature=0.8,
+            )
+        )
+        if resp.text and not resp.dev:
+            text, provider_label, model = resp.text.strip(), resp.provider, resp.model
+    except Exception:
+        text = None
+    if not text:
+        text = await _pollinations_text(system, user_prompt)
+    if not text:
+        raise HTTPException(
+            status_code=503,
+            detail="AI text generation is unavailable right now. Please try again.",
+        )
+    return GenerateTextOut(text=text, provider=provider_label, model=model)
+
+
+async def _pollinations_text(system: str, user_prompt: str) -> str | None:
+    """Free/keyless text fallback via Pollinations text API. Returns the raw
+    text or None on failure."""
+    import urllib.parse
+
+    import httpx
+
+    full = system + "\n\n" + user_prompt
+    url = "https://text.pollinations.ai/" + urllib.parse.quote(full[:1500])
+    try:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(120.0, connect=15.0)
+        ) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return None
+            text = resp.text.strip()
+            return text or None
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Free MP4 assembly — Ken Burns slideshow from photos (no paid video API)
+# ---------------------------------------------------------------------------
+
+class AssembleVideoJson(BaseModel):
+    image_urls: list[str] = Field(min_length=2, max_length=8)
+    captions: list[str] = Field(default_factory=list)
+    seconds_per_scene: float = Field(default=4.0, ge=2.0, le=10.0)
+
+
+def _ffmpeg_or_503() -> str:
+    import shutil
+
+    ff = shutil.which("ffmpeg")
+    if not ff:
+        raise HTTPException(
+            status_code=503,
+            detail="Video assembly is not available on this server (ffmpeg missing).",
+        )
+    return ff
+
+
+async def _fetch_image(url: str, dest, client) -> bool:
+    try:
+        r = await client.get(url, timeout=httpx.Timeout(60.0, connect=15.0))
+        if r.status_code == 200 and len(r.content) > 1024:
+            dest.write_bytes(r.content)
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _build_slideshow(ff: str, frames: list, captions: list[str], sps: float, out_path) -> None:
+    """Ken Burns slideshow -> 720x1280 H.264 MP4. Each frame gets a slow
+    zoom-in (zoompan), scenes concatenated."""
+    import subprocess
+
+    W, H, FPS = 720, 1280, 30
+    seg_files = []
+    n = len(frames)
+    for i, img in enumerate(frames):
+        seg = out_path.parent / f"seg{i}.mp4"
+        # Alternate zoom direction for variety; zoompan over sps seconds.
+        z_from, z_to = (1.0, 1.12) if i % 2 == 0 else (1.12, 1.0)
+        total_frames = int(sps * FPS)
+        vf = (
+            f"scale=1440:2560:force_original_aspect_ratio=increase,"
+            f"crop=1440:2560,"
+            f"zoompan=z='min(max(zoom,pzoom)+{((z_to - z_from) / total_frames):.6f},1.5)':"
+            f"d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps={FPS},"
+            f"format=yuv420p"
+        )
+        draw = ""
+        cap = captions[i] if i < len(captions) and captions[i].strip() else ""
+        if cap:
+            safe = cap.replace(":", "\\:").replace("'", "")
+            draw = (
+                f",drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:"
+                f"text='{safe[:60]}':fontcolor=white:fontsize=44:"
+                f"x=(w-text_w)/2:y=h-220:shadowcolor=black@0.6:shadowx=2:shadowy=2"
+            )
+        cmd = [
+            ff, "-y", "-loop", "1", "-i", str(img),
+            "-vf", vf + draw,
+            "-t", str(sps), "-r", str(FPS),
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+            "-pix_fmt", "yuv420p", str(seg),
+        ]
+        r = subprocess.run(cmd, capture_output=True, timeout=300)
+        if r.returncode != 0:
+            raise RuntimeError(f"ffmpeg scene {i} failed")
+        seg_files.append(seg)
+    # Concat
+    lst = out_path.parent / "list.txt"
+    lst.write_text("".join(f"file '{s.name}'\n" for s in seg_files))
+    cmd = [ff, "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+           "-c", "copy", str(out_path)]
+    r = subprocess.run(cmd, capture_output=True, timeout=120)
+    if r.returncode != 0 or not out_path.exists():
+        raise RuntimeError("ffmpeg concat failed")
+
+
+@router.post("/assemble-video")
+async def assemble_video(request: Request):
+    """Assemble a real vertical MP4 from photos — FREE, no video API key.
+
+    Accepts either JSON {"image_urls": [...], "captions": [...],
+    "seconds_per_scene": 4} or multipart form with image files
+    (field name "images") + optional "captions" / "seconds_per_scene" fields.
+    Returns the MP4 as a direct download response."""
+    import tempfile
+    from pathlib import Path as _P
+
+    import httpx
+    from fastapi import UploadFile
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
+
+    _check_rate_limit(request, "assemble-video")
+    ff = _ffmpeg_or_503()
+    ctype = request.headers.get("content-type", "")
+
+    captions: list[str] = []
+    sps = 4.0
+    tmpdir = _P(tempfile.mkdtemp(prefix="vsl_"))
+    frames: list[_P] = []
+
+    try:
+        if ctype.startswith("multipart/"):
+            form = await request.form()
+            sps_raw = form.get("seconds_per_scene")
+            try:
+                sps = max(2.0, min(10.0, float(sps_raw or 4.0)))
+            except (TypeError, ValueError):
+                sps = 4.0
+            cap_raw = form.get("captions")
+            if cap_raw:
+                captions = [c.strip() for c in str(cap_raw).split("\n")]
+            files = [v for v in form.values() if isinstance(v, UploadFile)]
+            if not 2 <= len(files) <= 8:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Upload 2 to 8 photos.",
+                )
+            for i, f in enumerate(files):
+                data = await f.read()
+                if len(data) > 15 * 1024 * 1024:
+                    raise HTTPException(status_code=400, detail="Each photo must be under 15 MB.")
+                dest = tmpdir / f"up{i}.jpg"
+                dest.write_bytes(data)
+                frames.append(dest)
+        else:
+            try:
+                body = AssembleVideoJson.model_validate(await request.json())
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Send JSON {image_urls:[...]} or multipart images.",
+                )
+            sps = body.seconds_per_scene
+            captions = body.captions
+            import httpx as _hx
+
+            async with _hx.AsyncClient() as client:
+                for i, url in enumerate(body.image_urls):
+                    dest = tmpdir / f"dl{i}.jpg"
+                    ok = await _fetch_image(url, dest, client)
+                    if ok:
+                        frames.append(dest)
+            if len(frames) < 2:
+                raise HTTPException(
+                    status_code=502,
+                    detail="Could not download enough images to build the video.",
+                )
+
+        # Validate images are decodable (Pillow) so ffmpeg never chokes.
+        try:
+            from PIL import Image
+
+            good = []
+            for fr in frames:
+                try:
+                    with Image.open(fr) as im:
+                        im.verify()
+                    good.append(fr)
+                except Exception:
+                    continue
+            frames = good
+        except ImportError:
+            pass
+        if len(frames) < 2:
+            raise HTTPException(status_code=400, detail="No usable images found.")
+
+        out_path = tmpdir / "virello-video.mp4"
+        _build_slideshow(ff, frames, captions, sps, out_path)
+
+        def _cleanup():
+            import shutil as _sh
+
+            _sh.rmtree(tmpdir, ignore_errors=True)
+
+        return FileResponse(
+            out_path,
+            media_type="video/mp4",
+            filename="virello-video.mp4",
+            background=BackgroundTask(_cleanup),
+        )
+    except HTTPException:
+        import shutil as _sh
+
+        _sh.rmtree(tmpdir, ignore_errors=True)
+        raise
+    except Exception as exc:
+        import shutil as _sh
+
+        _sh.rmtree(tmpdir, ignore_errors=True)
+        raise HTTPException(
+            status_code=502, detail=f"Video assembly failed: {str(exc)[:160]}"
+        )

@@ -1,4 +1,4 @@
-# Virello API — production image (Railway-ready, no apt-get)
+# Virello API — production image (Railway-ready)
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -6,6 +6,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /srv/virello
+
+# ffmpeg: free server-side MP4 assembly for Creator Hub video tools
+# (Ken Burns slideshow from AI/user photos — no paid video API needed).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
