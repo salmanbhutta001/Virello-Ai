@@ -14,7 +14,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -45,5 +45,43 @@ class SocialMetricSnapshot(Base):
     #  "saves": int, "reach": int, "followers_delta": int}
     source: Mapped[str] = mapped_column(String(64), default="")
     # "manual:official-dashboard" | "meta:graph-api" | …
+    captured_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class AccountMetricSnapshot(Base):
+    """One account-level official-metrics reading for a user + platform.
+
+    Unlike SocialMetricSnapshot (per-campaign), this captures the whole
+    connected account's official numbers (e.g. Instagram account insights)
+    for a window of `period_days` days. Written by the MetricsAgent worker
+    (service-token auth); read by the dashboard.
+
+    Owner scoping flows through user_id. `source` records exactly where each
+    figure came from (e.g. "instagram:account-insights") — Virello never
+    fabricates platform metrics.
+
+    metrics uses the METRIC_KEYS shape:
+    {"views", "likes", "comments", "shares", "saves", "reach",
+     "followers_delta", "profile_views", "accounts_engaged"}
+    - "profile_views": Instagram `profile_visits` (visit events, not people).
+    - "accounts_engaged": Instagram `engaged_accounts` (estimated accounts
+      that interacted: likes, saves, comments, shares, replies).
+    """
+
+    __tablename__ = "account_metric_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    platform: Mapped[str] = mapped_column(String(32), index=True)
+    # instagram | facebook | tiktok | youtube | other
+    account_ref: Mapped[str] = mapped_column(String(255), default="")
+    # e.g. the IG username the numbers belong to
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict)
+    source: Mapped[str] = mapped_column(String(64), default="")
+    # "instagram:account-insights" | "facebook:page-insights" | …
+    period_days: Mapped[int] = mapped_column(Integer, default=7)
+    # the insights window the numbers cover (days)
     captured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True)

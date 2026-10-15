@@ -28,7 +28,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 
 METRIC_KEYS = ("views", "likes", "comments", "shares", "saves", "reach",
-               "followers_delta")
+               "followers_delta", "profile_views", "accounts_engaged")
+# "profile_views": profile-visit events (Instagram `profile_visits`) — events,
+#   not people. "accounts_engaged": estimated accounts that interacted
+#   (Instagram `engaged_accounts`). Both default to 0 via validate_metrics
+#   for older 7-key payloads, so this extension is backwards compatible.
 
 # Hard sanity ceilings — reject values that are numerically impossible for a
 # human-entered dashboard figure (protects against typos like 10**12).

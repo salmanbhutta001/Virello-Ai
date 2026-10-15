@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
-    access_token_minutes: int = 480
+    access_token_minutes: int = 30
     refresh_token_days: int = 30
     cors_origins: list[str] = ["*"]
     # --- AI provider layer (provider-agnostic; swap via config, no rewrites) ---
@@ -18,8 +18,6 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5"
     google_api_key: str = ""
     google_model: str = "gemini-2.5-pro"
-    groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
     # --- Payments: PayPal / Payoneer / Google Pay (no Stripe) ---
     billing_currency: str = "USD"
     paypal_client_id: str = ""
@@ -32,34 +30,12 @@ class Settings(BaseSettings):
     google_pay_merchant_id: str = ""
     google_pay_gateway: str = ""  # operator's payment processor for capture
     google_pay_gateway_merchant_id: str = ""
-    play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON (service-account JSON text)
+    # --- Google Play Billing (in-app purchases; service-account JSON) ---
+    play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON
     play_package_name: str = "com.virello.virello"  # VIRELLO_PLAY_PACKAGE_NAME
-    # --- Amazon Appstore IAP (Receipt Verification Service) ---
-    amazon_developer_secret: str = ""  # VIRELLO_AMAZON_DEVELOPER_SECRET (from Amazon Developer Console)
-    amazon_sandbox: bool = False  # VIRELLO_AMAZON_SANDBOX=true for App Tester / sandbox receipts
-    # --- AI video generation proxy (Create Hub online mode) ---
-    # Key = VIRELLO_AGNES_API_KEY. Never shipped in the APK.
-    agnes_api_key: str = ""
-    # --- Autonomous gallery publishing: backend pushes new gallery images
-    # to GitHub itself (no Termux/phone/Muse needed). Token = fine-grained
-    # PAT with Contents: read+write on the repo. Empty -> push skipped.
-    github_token: str = ""  # VIRELLO_GITHUB_TOKEN
-    github_repo: str = "salmanbhutta001/Virello-Ai"  # VIRELLO_GITHUB_REPO
-    # --- Product gallery image store: Cloudinary (free tier). NEW gallery
-    # images are uploaded here instead of being committed to the GitHub repo
-    # (keeps the repo under GitHub's 1GB recommendation). Existing /gallery/*
-    # images already in the repo keep serving as before.
-    # Full URL: cloudinary://<api_key>:<api_secret>@<cloud_name>
-    # Empty -> Cloudinary uploads disabled (gallery builds are skipped).
-    cloudinary_url: str = ""  # VIRELLO_CLOUDINARY_URL
-    # --- Admin panel: hidden PIN entry (profile version tapped 5x -> PIN
-    # screen). A correct PIN elevates the signed-in user to admin server-side.
-    admin_pin: str = "0000"  # VIRELLO_ADMIN_PIN
-    # --- Admin panel access: ONLY these emails (comma-separated, lowercase
-    # compared) may unlock/be admin — everyone else gets 403 even with the
-    # right PIN. Hafiz 2026-09-30: admin is his alone.
-    admin_emails: str = "salman09bhutta@gmail.com,alif01fiverr@gmail.com"  # VIRELLO_ADMIN_EMAILS
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
+    # --- Metrics agent (social-metrics data worker; service-token auth) ---
+    metrics_agent_token: str = ""  # VIRELLO_METRICS_AGENT_TOKEN
     celery_eager: bool = True  # dev: run Celery tasks inline, no Redis needed
     dev_noauth: bool = False  # dev only: bypass JWT, use demo user
     stage_delay_seconds: float = 0.2  # simulated agent work per stage (dev)
