@@ -235,14 +235,14 @@ _TEXT_SYSTEMS = {
 HOOK: (one scroll-stopping opening line, max 12 words)
 BEATS: (3-5 timed beats like 0:00-0:03 — what happens on screen + what is said)
 CTA: (one soft call to action)
-Keep the whole script under 220 words.""",
-    "story": """You are Virello's Story Writer, a skilled storyteller for social media. Write a REAL, engaging story in the requested length and language: vivid, emotional, authentic. No fake claims or invented statistics. Plain paragraphs, no headings.""",
+Keep the whole script under 220 words. Output ONLY the final script — never show your reasoning or thinking process.""",
+    "story": """You are Virello's Story Writer, a skilled storyteller for social media. Write a REAL, engaging story in the requested length and language: vivid, emotional, authentic. No fake claims or invented statistics. Plain paragraphs, no headings. Output ONLY the final story — never show your reasoning or thinking process.""",
     "convert": """You are Virello's Content Converter. Convert the user's text into the requested native format, keeping the core message and voice. Never invent statistics, earnings or guarantees. Formats:
 - Video Script: HOOK line, 3-5 timed BEATS, CTA
 - Carousel: 5-7 slide texts (Slide 1 is the hook), each under 25 words
 - Thread: 5-8 short posts, first one is the hook, numbered
 - Story Caption: 2-4 short lines with a soft CTA
-Reply with ONLY the converted content.""",
+Reply with ONLY the converted content. Never show your reasoning or thinking process.""",
 }
 
 _TEXT_LENGTHS = {
@@ -325,7 +325,33 @@ async def _pollinations_text(system: str, user_prompt: str) -> str | None:
             if resp.status_code != 200:
                 return None
             text = resp.text.strip()
-            return text or None
+            if not text:
+                return None
+            # Pollinations sometimes wraps the answer in a JSON envelope
+            # like {"role":"assistant","reasoning":"...","content":"..."} —
+            # extract the real content, never leak the reasoning.
+            if text.startswith("{"):
+                try:
+                    data = json.loads(text)
+                except (ValueError, TypeError):
+                    data = None
+                if isinstance(data, dict):
+                    for key in ("content", "text", "answer", "story", "script"):
+                        val = data.get(key)
+                        if isinstance(val, str) and val.strip():
+                            return val.strip()
+                    # Fallback: join string values except role/reasoning.
+                    parts = [
+                        str(v).strip()
+                        for k, v in data.items()
+                        if k not in ("role", "reasoning", "model")
+                        and isinstance(v, str)
+                        and v.strip()
+                    ]
+                    if parts:
+                        return "\n\n".join(parts)
+                    return None
+            return text
     except Exception:
         return None
 
