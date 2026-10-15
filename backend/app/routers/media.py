@@ -129,12 +129,17 @@ strings WITHOUT the # character, mixing niche and broad tags)."""
 async def generate_caption(body: GenerateCaptionIn, request: Request):
     """Write a real AI hook + caption + hashtags for the Creator Hub."""
     _check_rate_limit(request, "generate-caption")
-    provider = get_ai_provider()
     user_prompt = f"Topic: {body.topic}"
     if body.niche:
         user_prompt += f"\nNiche: {body.niche}"
     if body.goal:
         user_prompt += f"\nGoal: {body.goal}"
+    try:
+        provider = get_ai_provider()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail=f"AI provider init failed: {type(exc).__name__}"
+        )
     try:
         resp = await provider.complete(
             AIRequest(
@@ -146,9 +151,12 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
                 json_mode=True,
             )
         )
+    except HTTPException:
+        raise
     except Exception as exc:  # provider errors -> honest 502, never fake text
         raise HTTPException(
-            status_code=502, detail=f"Caption generation failed: {exc}"
+            status_code=502,
+            detail=f"Caption generation failed ({type(exc).__name__}): {str(exc)[:120]}",
         )
     try:
         data = json.loads(resp.text)
