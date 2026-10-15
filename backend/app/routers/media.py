@@ -137,8 +137,11 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
     try:
         provider = get_ai_provider()
     except Exception as exc:
+        import traceback as _tb
+
         raise HTTPException(
-            status_code=502, detail=f"AI provider init failed: {type(exc).__name__}"
+            status_code=502,
+            detail=f"AI provider init failed: {type(exc).__name__}: {str(exc)[:100]} | {''.join(_tb.format_tb(exc.__traceback__))[-400:]}",
         )
     try:
         resp = await provider.complete(
