@@ -328,29 +328,35 @@ async def _pollinations_text(system: str, user_prompt: str) -> str | None:
             if not text:
                 return None
             # Pollinations sometimes wraps the answer in a JSON envelope
-            # like {"role":"assistant","reasoning":"...","content":"..."} —
-            # extract the real content, never leak the reasoning.
+            # (flat or OpenAI-style choices) — extract the real content,
+            # never leak the reasoning. Longest string wins: the actual
+            # answer is always longer than any metadata.
             if text.startswith("{"):
                 try:
                     data = json.loads(text)
                 except (ValueError, TypeError):
                     data = None
-                if isinstance(data, dict):
-                    for key in ("content", "text", "answer", "story", "script"):
-                        val = data.get(key)
-                        if isinstance(val, str) and val.strip():
-                            return val.strip()
-                    # Fallback: join string values except role/reasoning.
-                    parts = [
-                        str(v).strip()
-                        for k, v in data.items()
-                        if k not in ("role", "reasoning", "model")
-                        and isinstance(v, str)
-                        and v.strip()
-                    ]
-                    if parts:
-                        return "\n\n".join(parts)
-                    return None
+                if data is not None:
+                    best = ""
+
+                    def _walk(o):
+                        nonlocal best
+                        if isinstance(o, dict):
+                            for k, v in o.items():
+                                if k in (
+                                    "role", "reasoning", "model", "created",
+                                    "id", "object", "usage",
+                                ):
+                                    continue
+                                _walk(v)
+                        elif isinstance(o, list):
+                            for v in o:
+                                _walk(v)
+                        elif isinstance(o, str) and len(o.strip()) > len(best):
+                            best = o.strip()
+
+                    _walk(data)
+                    return best or None
             return text
     except Exception:
         return None
