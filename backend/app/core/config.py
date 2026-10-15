@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     cors_origins: list[str] = ["*"]
     # --- AI provider layer (provider-agnostic; swap via config, no rewrites) ---
-    ai_provider: str = "dev"  # dev | anthropic | openai | google
+    ai_provider: str = "dev"  # dev | anthropic | openai | google | groq
+    image_provider: str = "pollinations"  # pollinations | none (modular, optional)
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-20250514"
     openai_api_key: str = ""

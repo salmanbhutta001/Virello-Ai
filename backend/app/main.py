@@ -36,6 +36,7 @@ from app.routers import entertain as entertain_router
 from app.routers import shop as shop_router
 from app.routers import video as video_router
 from app.routers import trending as trending_router
+from app.routers import media as media_router
 
 
 @asynccontextmanager
@@ -198,7 +199,9 @@ app.include_router(
 app.include_router(
     trending_router.router, prefix="/api/v1", tags=["trending"]
 )  # Trending topics (website "Trending Now" + app)
-
+app.include_router(
+    media_router.router, prefix="/api/v1/media", tags=["media"]
+)  # Creator Hub: real AI image + caption generation
 
 @app.get("/health")
 async def health() -> dict:
