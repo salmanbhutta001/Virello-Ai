@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5"
     google_api_key: str = ""
     google_model: str = "gemini-2.5-pro"
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
     # --- Payments: PayPal / Payoneer / Google Pay (no Stripe) ---
     billing_currency: str = "USD"
     paypal_client_id: str = ""
