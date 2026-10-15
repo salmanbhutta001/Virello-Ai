@@ -35,6 +35,7 @@ _RATE_LIMITS = {
     "generate-caption": (60, 3600),  # 60 captions / hour / IP
     "generate-text": (60, 3600),     # 60 AI text generations / hour / IP
     "assemble-video": (8, 3600),     # 8 MP4 assemblies / hour / IP (CPU-heavy)
+    "distribution-repurpose": (20, 3600),  # 20 repurposes / hour / IP (multi-call)
 }
 _hits: dict[str, deque] = defaultdict(deque)
 
