@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
     # --- Metrics agent (social-metrics data worker; service-token auth) ---
     metrics_agent_token: str = ""  # VIRELLO_METRICS_AGENT_TOKEN
+    # --- Cloudinary (product gallery image store; Hafiz's free-tier account) ---
+    cloudinary_url: str = ""  # VIRELLO_CLOUDINARY_URL (cloudinary://key:secret@cloud)
     celery_eager: bool = True  # dev: run Celery tasks inline, no Redis needed
     dev_noauth: bool = False  # dev only: bypass JWT, use demo user
     stage_delay_seconds: float = 0.2  # simulated agent work per stage (dev)
