@@ -524,7 +524,10 @@ async def assemble_video(request: Request):
             captions = body.captions
             import httpx as _hx
 
-            async with _hx.AsyncClient() as client:
+            async with _hx.AsyncClient(
+                follow_redirects=True,
+                headers={"User-Agent": "Mozilla/5.0 (Virello-AI media pipeline)"},
+            ) as client:
                 for i, url in enumerate(body.image_urls):
                     dest = tmpdir / f"dl{i}.jpg"
                     ok = await _fetch_image(url, dest, client)
