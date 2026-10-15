@@ -308,56 +308,61 @@ async def generate_text(body: GenerateTextIn, request: Request):
     return GenerateTextOut(text=text, provider=provider_label, model=model)
 
 
-async def _pollinations_text(system: str, user_prompt: str) -> str | None:
-    """Free/keyless text fallback via Pollinations text API. Returns the raw
-    text or None on failure."""
-    import urllib.parse
+def _extract_pollinations_content(data) -> str | None:
+    """Extract the real answer from a Pollinations JSON envelope, never
+    leaking the model's private reasoning. Longest string wins: the actual
+    answer is always longer than any metadata."""
+    best = ""
 
+    def _walk(o):
+        nonlocal best
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in (
+                    "role", "reasoning", "model", "created",
+                    "id", "object", "usage", "user_tier",
+                ):
+                    continue
+                _walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                _walk(v)
+        elif isinstance(o, str) and len(o.strip()) > len(best):
+            best = o.strip()
+
+    _walk(data)
+    return best or None
+
+
+async def _pollinations_text(system: str, user_prompt: str) -> str | None:
+    """Free/keyless text fallback via Pollinations' OpenAI-compatible API.
+
+    Uses POST /openai (the GET endpoint's anonymous tier is a reasoning
+    model that sometimes returns only its thinking as a JSON envelope).
+    Returns the clean answer text or None on failure."""
     import httpx
 
-    full = system + "\n\n" + user_prompt
-    url = "https://text.pollinations.ai/" + urllib.parse.quote(full[:1500])
     try:
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(120.0, connect=15.0)
         ) as client:
-            resp = await client.get(url)
+            resp = await client.post(
+                "https://text.pollinations.ai/openai",
+                json={
+                    "model": "openai-fast",
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                },
+            )
             if resp.status_code != 200:
                 return None
-            text = resp.text.strip()
-            if not text:
+            try:
+                data = resp.json()
+            except (ValueError, TypeError):
                 return None
-            # Pollinations sometimes wraps the answer in a JSON envelope
-            # (flat or OpenAI-style choices) — extract the real content,
-            # never leak the reasoning. Longest string wins: the actual
-            # answer is always longer than any metadata.
-            if text.startswith("{"):
-                try:
-                    data = json.loads(text)
-                except (ValueError, TypeError):
-                    data = None
-                if data is not None:
-                    best = ""
-
-                    def _walk(o):
-                        nonlocal best
-                        if isinstance(o, dict):
-                            for k, v in o.items():
-                                if k in (
-                                    "role", "reasoning", "model", "created",
-                                    "id", "object", "usage",
-                                ):
-                                    continue
-                                _walk(v)
-                        elif isinstance(o, list):
-                            for v in o:
-                                _walk(v)
-                        elif isinstance(o, str) and len(o.strip()) > len(best):
-                            best = o.strip()
-
-                    _walk(data)
-                    return best or None
-            return text
+            return _extract_pollinations_content(data)
     except Exception:
         return None
 
