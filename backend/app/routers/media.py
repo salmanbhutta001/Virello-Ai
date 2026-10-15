@@ -340,34 +340,44 @@ async def _pollinations_text(system: str, user_prompt: str) -> str | None:
     Uses POST /openai (the GET endpoint's anonymous tier is a reasoning
     model that sometimes returns only its thinking as a JSON envelope).
     Returns the clean answer text or None on failure."""
+    import asyncio
+
     import httpx
 
-    try:
-        async with httpx.AsyncClient(
-            timeout=httpx.Timeout(120.0, connect=15.0)
-        ) as client:
-            resp = await client.post(
-                "https://text.pollinations.ai/openai",
-                json={
-                    "model": "openai-fast",
-                    # The anonymous tier is a reasoning model; "low" keeps
-                    # it from spending all tokens thinking instead of answering.
-                    "reasoning_effort": "low",
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                },
-            )
-            if resp.status_code != 200:
-                return None
-            try:
-                data = resp.json()
-            except (ValueError, TypeError):
-                return None
-            return _extract_pollinations_content(data)
-    except Exception:
-        return None
+    # Two attempts: the free tier is flaky (dropped connections, brief
+    # rate limits). A quick retry usually succeeds.
+    for attempt in range(2):
+        try:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(120.0, connect=15.0)
+            ) as client:
+                resp = await client.post(
+                    "https://text.pollinations.ai/openai",
+                    json={
+                        "model": "openai-fast",
+                        # The anonymous tier is a reasoning model; "low" keeps
+                        # it from spending all tokens thinking instead of answering.
+                        "reasoning_effort": "low",
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                    },
+                )
+                if resp.status_code != 200:
+                    continue
+                try:
+                    data = resp.json()
+                except (ValueError, TypeError):
+                    continue
+                text = _extract_pollinations_content(data)
+                if text:
+                    return text
+        except Exception:
+            pass
+        if attempt == 0:
+            await asyncio.sleep(3)
+    return None
 
 
 # ---------------------------------------------------------------------------
