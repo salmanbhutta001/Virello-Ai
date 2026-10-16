@@ -34,38 +34,63 @@ async def search_users(
 @router.get("/me")
 async def me(user: User = Depends(get_current_user),
              db: AsyncSession = Depends(get_db)) -> dict:
-    # Daily login points: idempotent per day, never breaks the profile read.
-    try:
-        login_pts = await rewards_svc.award_daily_login(db, user.id)
-    except Exception:
-        login_pts = 0
-    bal = await rewards_svc.get_balance(db, user.id)
-    cash_cents = await wallet_svc.cash_balance(db, user.id)
+    # Capture the id FIRST: award_daily_login commits, which expires the
+    # user object's attributes (expire_on_commit). Any later user.id access
+    # would trigger a lazy reload and can 500 (MissingGreenlet). Using the
+    # plain uuid value avoids the reload entirely. (Hafiz 2026-10-16: profile
+    # save showed ApiException 500 on the refresh call.)
+    uid = user.id
+    u_email = user.email
+    u_name = user.name
+    u_plan = user.plan.value if user.plan else "free"
+    u_credits = user.credits
+    u_locale = user.locale
+    u_pref_lang = user.preferred_language or "en"
+    u_content_langs = list(user.content_languages or [])
+    u_all_langs = bool(user.all_relevant_languages)
+    u_is_admin = bool(user.is_admin)
+    u_suspended = bool(user.suspended)
+    u_email_verified = bool(user.email_verified)
+    u_profile_completed = wallet_svc.profile_is_completed(user)
     # getattr: photo columns may not exist if the DB hasn't migrated yet.
     try:
-        avatar_url = user.avatar_url
+        u_avatar_url = user.avatar_url
     except Exception:
-        avatar_url = None
+        u_avatar_url = None
     try:
-        cover_url = user.cover_url
+        u_cover_url = user.cover_url
     except Exception:
-        cover_url = None
+        u_cover_url = None
+    # Daily login points: idempotent per day, never breaks the profile read.
+    try:
+        login_pts = await rewards_svc.award_daily_login(db, uid)
+    except Exception:
+        login_pts = 0
+    try:
+        bal = await rewards_svc.get_balance(db, uid)
+    except Exception:
+        bal = {"balance": 0, "level": 1, "next_level": None, "progress": 0.0}
+    try:
+        cash_cents = await wallet_svc.cash_balance(db, uid)
+    except Exception:
+        cash_cents = 0
+    # (avatar/cover captured before the commit above)
     return {
-        "id": str(user.id),
-        "email": user.email,
-        "name": user.name,
-        "avatar_url": avatar_url,
-        "cover_url": cover_url,
-        "plan": user.plan.value,
-        "credits": user.credits,
-        "locale": user.locale,
-        "preferred_language": user.preferred_language or "en",
-        "content_languages": list(user.content_languages or []),
-        "all_relevant_languages": bool(user.all_relevant_languages),
-        "is_admin": user.is_admin,
-        "suspended": user.suspended,
-        "email_verified": bool(user.email_verified),
-        "profile_completed": wallet_svc.profile_is_completed(user),
+        "id": str(uid),
+        "email": u_email,
+        "name": u_name,
+        "avatar_url": u_avatar_url,
+        "cover_url": u_cover_url,
+        "plan": u_plan,
+        "credits": u_credits,
+        "locale": u_locale,
+        "preferred_language": u_pref_lang,
+        "content_languages": u_content_langs,
+        "all_relevant_languages": u_all_langs,
+        "is_admin": u_is_admin,
+        "suspended": u_suspended,
+        "email_verified": u_email_verified,
+        "profile_completed": u_profile_completed,
         "points_balance": bal["balance"],
         "points_level": bal["level"],
         "daily_login_points": login_pts,
