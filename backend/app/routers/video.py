@@ -119,7 +119,7 @@ async def generate_video(
         )
     if resp.status_code < 200 or resp.status_code >= 300:
         logger.warning("agnes submit HTTP %s: %s", resp.status_code, resp.text[:200])
-        raise HTTPException(status_code=502, detail="Video provider rejected the request.")
+        raise HTTPException(status_code=503, detail="Your internet connection is weak. Please try again.")
 
     data: dict = {}
     try:
