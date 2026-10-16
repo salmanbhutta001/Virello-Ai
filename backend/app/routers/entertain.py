@@ -31,7 +31,7 @@ router = APIRouter(prefix="/entertain", tags=["entertain"])
 class StoryIn(BaseModel):
     topic: str | None = Field(default=None, max_length=200)
     prompt: str | None = Field(default=None, max_length=1000)
-    length: str = Field(default="short", pattern="^(short|medium)$")
+    length: str = Field(default="short", pattern="^(short|medium|long)$")
     language: str = Field(default="en", pattern="^(en|ur|ar)$")
 
 
@@ -138,7 +138,8 @@ async def write_story(
     user: User = Depends(get_current_user),
 ):
     subject = body.topic or body.prompt or "a small act of kindness"
-    words = "~150-word" if body.length == "short" else "~350-word"
+    words = {"short": "~150-word", "medium": "~350-word", "long": "~600-word"}.get(body.length, "~350-word")
+    max_tok = {"short": 1500, "medium": 2500, "long": 3500}.get(body.length, 2500)
     provider = get_ai_provider()
     try:
         resp = await provider.complete(
@@ -147,7 +148,7 @@ async def write_story(
                 system=_STORY_SYSTEM,
                 user=(f"Write a {words} original short story about: {subject}. "
                       f"Language: {body.language}."),
-                max_tokens=1500 if body.length == "short" else 2500,
+                max_tokens=max_tok,
                 temperature=0.8,
                 json_mode=False,
             )
