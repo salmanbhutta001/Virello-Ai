@@ -66,6 +66,11 @@ async def init_db() -> None:
     # Same for spotlight_submissions (2026-10-15: new Spotlight feature —
     # prod Alembic is unreliable, so create the table if missing).
     await _ensure_spotlight_table()
+    # Same for image_jobs / video_jobs (2026-10-16: prod 500 on Create
+    # Image and Create Video — create_all missed both tables and no
+    # ensure function existed for either).
+    await _ensure_image_jobs_table()
+    await _ensure_video_jobs_table()
 
 
 async def _ensure_spotlight_table() -> None:
@@ -90,6 +95,57 @@ async def _ensure_spotlight_table() -> None:
             print("init_db: created missing spotlight_submissions table")
     except Exception as e:
         print(f"init_db: spotlight table check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_image_jobs_table() -> None:
+    """Create the image_jobs table if missing. Idempotent.
+
+    Backs POST /api/v1/create/image-agnes (Agnes AI image generation).
+    2026-10-16: prod 500 on image generation — create_all missed the
+    table and no ensure function existed. Follows the existing ensure
+    pattern — never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            if "image_jobs" in tables:
+                return
+            from app.models.image import ImageJob
+            await conn.run_sync(
+                lambda c: ImageJob.__table__.create(c, checkfirst=True)
+            )
+            print("init_db: created missing image_jobs table")
+    except Exception as e:
+        print(f"init_db: image_jobs table check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_video_jobs_table() -> None:
+    """Create the video_jobs table if missing. Idempotent.
+
+    Backs POST /api/v1/video/generate (Agnes AI video generation).
+    2026-10-16: prod 500 on video generation — same root cause as
+    image_jobs. Follows the existing ensure pattern — never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            if "video_jobs" in tables:
+                return
+            from app.models.video import VideoJob
+            await conn.run_sync(
+                lambda c: VideoJob.__table__.create(c, checkfirst=True)
+            )
+            print("init_db: created missing video_jobs table")
+    except Exception as e:
+        print(f"init_db: video_jobs table check non-fatal ({type(e).__name__}): {e}")
 
 
 async def _ensure_users_columns() -> None:
