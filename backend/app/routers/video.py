@@ -119,7 +119,8 @@ async def generate_video(
         )
     if resp.status_code < 200 or resp.status_code >= 300:
         logger.warning("agnes submit HTTP %s: %s", resp.status_code, resp.text[:200])
-        raise HTTPException(status_code=502, detail="Video provider rejected the request.")
+        # TEMP DEBUG 2026-10-16: surface provider error to diagnose 502
+        raise HTTPException(status_code=502, detail=f"Video provider said: {resp.text[:200]}")
 
     data: dict = {}
     try:
