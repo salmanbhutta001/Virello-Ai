@@ -28,6 +28,7 @@ AI labels/badges are added anywhere (silent-intelligence rule).
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import re
