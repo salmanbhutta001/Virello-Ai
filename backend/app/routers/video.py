@@ -119,7 +119,27 @@ async def generate_video(
         )
     if resp.status_code < 200 or resp.status_code >= 300:
         logger.warning("agnes submit HTTP %s: %s", resp.status_code, resp.text[:200])
-        raise HTTPException(status_code=503, detail="Your internet connection is weak. Please try again.")
+        # Hafiz 2026-10-17: the app hardcodes its own message for HTTP 503
+        # ("Online video is not configured on the server yet.") and ignores
+        # the backend's detail. So instead of raising 503, create an
+        # immediately-failed job carrying Hafiz's message in the error field.
+        # The app polls the job and displays: "Video generation failed:
+        # Your internet connection is weak. Please try again."
+        # Backend-only fix — no app update needed.
+        job = VideoJob(
+            job_id=uuid.uuid4().hex[:12],
+            user_id=user.id,
+            agnes_id=None,
+            status="failed",
+            video_url=None,
+        )
+        job.error = "Your internet connection is weak. Please try again."
+        try:
+            db.add(job)
+            await db.commit()
+        except Exception:
+            await db.rollback()
+        return {"job_id": job.job_id, "status": job.status}
 
     data: dict = {}
     try:
