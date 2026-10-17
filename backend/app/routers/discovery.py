@@ -569,10 +569,12 @@ async def trending_now(
         except Exception:
             pass
 
-    # Fill display images for topics missing one: real Wikipedia pageimage
-    # first, cached value second, stylized illustration generated in the
-    # background otherwise. Shape unchanged — mobile already renders
-    # `thumbnail_url` (gradient fallback when empty).
+    # Fill display images for topics missing one: DB cache first, then the
+    # real article og:image, then the real Wikipedia pageimage, then a
+    # deterministic abstract illustration URL returned synchronously
+    # (person topics keep the gradient fallback by design). Shape
+    # unchanged — mobile already renders `thumbnail_url` (gradient fallback
+    # when empty).
     await resolve_trend_thumbnails(trends, db, lang)
 
     return {

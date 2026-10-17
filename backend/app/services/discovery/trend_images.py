@@ -5,10 +5,16 @@ Resolution order (truthfulness first):
      photo of the topic beats anything generated.
   2. DB cache (``trend_image_cache``) — a topic is resolved once, never on
      every Trending load.
-  3. Stylized thematic illustration via the keyless Pollinations
-     text-to-image endpoint (the same built-in generation family the app
-     uses elsewhere). The prompt is deliberately ABSTRACT — geometric
-     shapes only, never a depiction of a person.
+  3. News article ``og:image`` — the real article's own photo, fetched with
+     a browser-like user agent so publishers don't bot-block the request.
+  4. Deterministic abstract illustration URL (keyless Pollinations
+     text-to-image, same built-in generation family the app uses
+     elsewhere). The prompt is deliberately ABSTRACT — geometric
+     shapes only, never a depiction of a person. The URL is stable per
+     topic (seeded), so it is returned AND cached synchronously — the
+     old "generate in the background, show on next load" design could
+     never converge when generation failed, leaving cards permanently
+     imageless (2026-10-17 permanent fix).
 
 Hard rule: a topic that is (or looks like) a real person's name NEVER gets
 a generated image when no real photo exists — a fabricated face next to a
@@ -22,7 +28,6 @@ AI labels/badges are added anywhere (silent-intelligence rule).
 """
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import logging
 import re
@@ -38,9 +43,18 @@ log = logging.getLogger(__name__)
 
 _WIKI_UA = "Virello/1.0 (trend-images; contact@virello.app)"
 
-# Topics already being generated in the background — avoids duplicate work
-# when many users open Trending at once.
-_in_flight: set[str] = set()
+# Browser-like UA for publisher article pages: big news sites bot-block
+# unknown/programmatic user agents, which made og:image resolution fail
+# permanently for Google News trends (2026-10-17 permanent fix).
+_BROWSER_UA = (
+    "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+)
+_BROWSER_HEADERS = {
+    "User-Agent": _BROWSER_UA,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 # 2-3 capitalized Latin words: "Christa Pike", "Case Keenum". Conservative
 # person-name signal (non-Latin names fall through to the category check).
@@ -164,7 +178,7 @@ async def fetch_og_image(url: str, timeout: float = 10.0) -> str:
         async with httpx.AsyncClient(
             timeout=timeout, follow_redirects=True, max_redirects=5
         ) as client:
-            resp = await client.get(target, headers={"User-Agent": _WIKI_UA})
+            resp = await client.get(target, headers=_BROWSER_HEADERS)
             if resp.status_code != 200:
                 return ""
             # Bound the parse: og:image lives in <head>.
@@ -215,38 +229,14 @@ def generated_image_url(key: str, query: str) -> str:
     return pollinations_t2i_url(thematic_prompt(query), _stable_seed(key))
 
 
-async def _generate_and_cache(key: str, query: str) -> None:
-    """Background: generate the thematic illustration, verify, cache it."""
-    if key in _in_flight:
-        return
-    _in_flight.add(key)
-    try:
-        from app.core.database import SessionLocal
-        from app.curation.gallery import check_jpeg, download_bytes
-
-        url = generated_image_url(key, query)
-        try:
-            data = await download_bytes(url, timeout=150.0)
-        except Exception as e:
-            log.info("trend image generation failed for %r: %s", query, e)
-            return
-        ok, reason = check_jpeg(data)
-        if not ok:
-            log.info("trend image failed verification for %r: %s", query, reason)
-            return
-        async with SessionLocal() as db:
-            await put_cached_image(db, key, url, "generated")
-        log.info("cached generated trend image for %r", query)
-    finally:
-        _in_flight.discard(key)
-
-
 async def _resolve_one(query: str, lang: str, db: AsyncSession,
                      article_url: str = "") -> str:
-    """Return a thumbnail URL for one topic ("" when none available yet).
+    """Return a thumbnail URL for one topic ("" only for person topics with
+    no real photo, by design).
 
     Resolution order: cache → article og:image (news, real article photo) →
-    Wikipedia pageimage → skip persons → background abstract illustration.
+    Wikipedia pageimage → skip persons → deterministic abstract
+    illustration URL, returned and cached synchronously.
     """
     key = topic_key(query)
     if not key:
@@ -270,11 +260,17 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
         # generated image. The card keeps the built-in gradient fallback.
         log.info("skipping generated image for person topic %r", query)
         return ""
-    # No real photo and not a person: generate a purely abstract thematic
-    # illustration in the background so the request stays fast; the card
-    # shows it on the next load.
-    asyncio.create_task(_generate_and_cache(key, query))
-    return ""
+    # Permanent fix (2026-10-17): return the deterministic abstract
+    # illustration URL synchronously and cache it. The old design fired a
+    # background generate-and-verify task and returned "" for this load;
+    # when generation failed (common), every later load re-queued and
+    # re-failed — cards stayed imageless forever. The URL is stable per
+    # topic (seeded), clearly non-photographic by prompt construction,
+    # and the app's errorBuilder falls back to its gradient if the image
+    # ever fails to load, so there is no broken-image risk.
+    url = generated_image_url(key, query)
+    await put_cached_image(db, key, url, "generated")
+    return url
 
 
 async def resolve_trend_thumbnails(trends: list[dict], db: AsyncSession,
