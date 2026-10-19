@@ -39,6 +39,7 @@ from app.routers import trending as trending_router
 from app.routers import media as media_router
 from app.routers import distribution as distribution_router
 from app.routers import spotlight as spotlight_router
+from app.routers import public_score as public_score_router
 
 
 @asynccontextmanager
@@ -210,6 +211,9 @@ app.include_router(
 app.include_router(
     spotlight_router.router, prefix="/api/v1/spotlight", tags=["spotlight"]
 )  # Spotlight: opt-in creator featuring (transparent)
+app.include_router(
+    public_score_router.router, prefix="/api/v1/public", tags=["public"]
+)  # Free AI Post Score: public no-auth endpoint for virelloai.online
 
 @app.get("/health")
 async def health() -> dict:
