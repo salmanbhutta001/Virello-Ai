@@ -388,6 +388,13 @@ _AGNES_STYLE_SUFFIX = {
 }
 
 
+def _image_engine() -> str:
+    """Image Studio engine: "robot" (local renderer, no API — the
+    default since 2026-10-21) or "agnes" (external API)."""
+    from app.core.config import settings
+    return (getattr(settings, "image_engine", "robot") or "robot").lower()
+
+
 def _agnes_image_key() -> str:
     from app.core.config import settings
     key = (settings.agnes_api_key or "").strip()
@@ -475,7 +482,11 @@ async def _agnes_image_generate_inline(
 
 async def _process_image_job(job_id: str, request_id: str) -> None:
     """Background worker for one image job. Own DB session — never touches
-    the request's session. Never raises: all failures land on the job row."""
+    the request's session. Never raises: all failures land on the job row.
+
+    Engine: the local studio robot by default (no external API);
+    "agnes" restores the old external-API path (VIRELLO_IMAGE_ENGINE).
+    """
     try:
         async with SessionLocal() as db:
             job = (await db.execute(
@@ -490,29 +501,39 @@ async def _process_image_job(job_id: str, request_id: str) -> None:
             await db.commit()
 
             try:
-                try:
-                    from app.services.agnes_client import agnes_image_generate
-                except ImportError:
-                    logger.warning(
-                        "image job %s [%s]: agnes_client missing — "
-                        "inline fallback", job_id, request_id)
+                if _image_engine() == "robot":
+                    from app.services.studio_robot import \
+                        generate_studio_image
                     url = await asyncio.wait_for(
-                        _agnes_image_generate_inline(
-                            job.prompt, job.style, job.seed, request_id),
-                        timeout=_IMAGE_JOB_TIMEOUT,
-                    )
+                        generate_studio_image(
+                            job.prompt, job.style, job.seed or 0),
+                        timeout=_IMAGE_JOB_TIMEOUT)
                 else:
-                    suffix = _AGNES_STYLE_SUFFIX.get(
-                        job.style, _AGNES_STYLE_SUFFIX["realistic"])
-                    url = await asyncio.wait_for(
-                        agnes_image_generate(
-                            prompt=job.prompt,
-                            style_suffix=suffix,
-                            seed=job.seed,
-                            request_id=request_id,
-                        ),
-                        timeout=_IMAGE_JOB_TIMEOUT,
-                    )
+                    try:
+                        from app.services.agnes_client import \
+                            agnes_image_generate
+                    except ImportError:
+                        logger.warning(
+                            "image job %s [%s]: agnes_client missing — "
+                            "inline fallback", job_id, request_id)
+                        url = await asyncio.wait_for(
+                            _agnes_image_generate_inline(
+                                job.prompt, job.style, job.seed,
+                                request_id),
+                            timeout=_IMAGE_JOB_TIMEOUT,
+                        )
+                    else:
+                        suffix = _AGNES_STYLE_SUFFIX.get(
+                            job.style, _AGNES_STYLE_SUFFIX["realistic"])
+                        url = await asyncio.wait_for(
+                            agnes_image_generate(
+                                prompt=job.prompt,
+                                style_suffix=suffix,
+                                seed=job.seed,
+                                request_id=request_id,
+                            ),
+                            timeout=_IMAGE_JOB_TIMEOUT,
+                        )
                 job.status = "ready"
                 job.image_url = url
                 logger.info(
@@ -550,14 +571,21 @@ async def generate_image_agnes(
     legacy blocking behavior during rollout.
     """
     request_id = uuid.uuid4().hex
-    if sync:
+    if _image_engine() == "robot":
+        if sync:
+            from app.services.studio_robot import generate_studio_image
+            url = await generate_studio_image(
+                body.prompt, body.style, body.seed)
+            return {"image_url": url, "provider": "local-studio"}
+    elif sync:
         url = await _agnes_image_generate_inline(
             body.prompt, body.style, body.seed, request_id)
         return {"image_url": url}
 
     # Fail fast when the provider key is missing (same 503 as before),
-    # before a job row is created.
-    _agnes_image_key()
+    # before a job row is created. The robot needs no key.
+    if _image_engine() != "robot":
+        _agnes_image_key()
     await _prune_image_jobs(db)
     job = ImageJob(
         id=uuid.uuid4().hex,

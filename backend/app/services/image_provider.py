@@ -130,10 +130,40 @@ class PollinationsImageProvider(ImageProvider):
             self._client = None
 
 
+class LocalStudioProvider(ImageProvider):
+    """The Image Studio robot: renders locally with Pillow — no external
+    API, no key (app/services/studio_robot.py). Output is template art
+    (the prompt becomes the design's headline), honestly labeled."""
+
+    name = "local-studio"
+    model = "robot-v1"
+
+    async def generate(self, req: ImageRequest) -> ImageResult:
+        if not req.prompt or not req.prompt.strip():
+            raise ImageProviderError("empty prompt")
+        import time as _time
+        from app.services.studio_robot import generate_studio_image
+        start = _time.monotonic()
+        size = "post"
+        if (req.width, req.height) == (1080, 1920):
+            size = "story"
+        elif (req.width, req.height) == (1280, 720):
+            size = "thumbnail"
+        elif (req.width, req.height) == (1200, 630):
+            size = "wide"
+        url = await generate_studio_image(
+            req.prompt, "realistic", req.seed or 0, size=size)
+        return ImageResult(
+            image_url=url, provider=self.name, model=self.model,
+            width=req.width, height=req.height,
+            latency_ms=int((_time.monotonic() - start) * 1000),
+        )
+
+
 def get_image_provider(name: str = "") -> ImageProvider:
     """Select the image provider from configuration.
 
-    `VIRELLO_IMAGE_PROVIDER`: pollinations (default) | none.
+    `VIRELLO_IMAGE_PROVIDER`: pollinations (default) | local | none.
     `none` disables generation entirely — endpoints fail closed.
     """
     selected = (name or getattr(settings, "image_provider", "pollinations") or "pollinations").lower()
@@ -141,4 +171,6 @@ def get_image_provider(name: str = "") -> ImageProvider:
         raise ImageProviderNotConfigured(
             "image generation is disabled (VIRELLO_IMAGE_PROVIDER=none)"
         )
+    if selected == "local":
+        return LocalStudioProvider()
     return PollinationsImageProvider()
