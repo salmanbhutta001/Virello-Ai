@@ -9,8 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv/virello
 
 COPY backend/requirements.txt .
-# git: the autonomous curation cycle pushes new gallery images to GitHub
-# itself (backend/app/curation/git_push.py); the slim image has no git.
+# git: ops convenience only — product galleries live on Cloudinary now
+# (the old git-push gallery flow was retired 2026-10-01).
 # ffmpeg: free server-side MP4 assembly for Creator Hub video tools
 # (Ken Burns slideshow from AI/user photos — no paid video API needed).
 RUN apt-get update && apt-get install -y --no-install-recommends git \

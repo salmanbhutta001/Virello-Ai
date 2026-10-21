@@ -9,16 +9,21 @@
 """
 from __future__ import annotations
 
+import asyncio
+import os
 import re
+import secrets
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.curation import config
+from app.curation.discovery import add_candidate
 from app.curation.models import CurationCandidate, CurationRun
 from app.curation.service import department_counts
 from app.models.core import User
@@ -83,3 +88,106 @@ async def curation_status(
                  "visual fidelity review is recommended before promoting "
                  "products."),
     }
+
+
+# ---------------------------------------------------------------------------
+# Manual controls (Hafiz, 2026-10-21): the curation system must be fully
+# operable by hand — no Muse / external operator required. Both endpoints
+# accept EITHER an admin login (same rule as the status endpoint) OR the
+# service-to-service X-Curator-Token header (VIRELLO_CURATOR_TOKEN).
+# ---------------------------------------------------------------------------
+
+def _curator_token_ok(token: str | None) -> bool:
+    expected = os.environ.get("VIRELLO_CURATOR_TOKEN", "")
+    return (bool(expected) and bool(token)
+            and secrets.compare_digest(token, expected))
+
+
+async def _require_admin_or_curator(request: Request,
+                                    db: AsyncSession) -> None:
+    if _curator_token_ok(request.headers.get("x-curator-token")):
+        return
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("bearer "):
+        from app.core.security import decode_token
+        try:
+            user_id = decode_token(auth[7:].strip())
+        except ValueError:
+            user_id = ""
+        if user_id:
+            user = (await db.execute(
+                select(User).where(User.id == user_id))).scalar_one_or_none()
+            if user is not None:
+                await require_admin(user)  # raises 403 when not an admin
+                return
+    raise HTTPException(401, "Admin login or curator token required")
+
+
+_run_lock = asyncio.Lock()
+
+
+async def _run_cycle_once() -> None:
+    import logging
+    log = logging.getLogger("virello.curation.routes")
+    from app.core.database import SessionLocal
+    from app.curation.service import run_curation_cycle
+    try:
+        async with SessionLocal() as db:
+            report = await run_curation_cycle(db)
+        log.info("manual curation cycle finished: %s (%s/%s departments, "
+                 "%s created)", report.get("status"),
+                 report.get("departments_covered"),
+                 len(config.DEPARTMENTS), report.get("products_created"))
+    except Exception:
+        log.exception("manual curation cycle crashed")
+    finally:
+        if _run_lock.locked():
+            _run_lock.release()
+
+
+@router.post("/api/v1/curation/run")
+async def curation_run_now(request: Request,
+                           db: AsyncSession = Depends(get_db)) -> dict:
+    """Trigger one curation cycle immediately, in the background.
+
+    The scheduled 3-hourly cycle keeps running regardless; this is the
+    manual 'run it now' button for an operator."""
+    await _require_admin_or_curator(request, db)
+    if _run_lock.locked():
+        raise HTTPException(409, "A manual curation cycle is already running")
+    await _run_lock.acquire()
+    asyncio.create_task(_run_cycle_once())
+    return {"started": True,
+            "note": "Cycle running in the background — watch "
+                    "GET /api/v1/curation/status for the result."}
+
+
+class CandidateIn(BaseModel):
+    asin: str = Field(..., max_length=10)
+    title: str = Field(..., max_length=200)
+    department: str = Field(..., max_length=40)
+    main_image_url: str = Field(default="", max_length=1000)
+
+
+class CandidatesIn(BaseModel):
+    candidates: list[CandidateIn] = Field(..., min_length=1, max_length=25)
+
+
+@router.post("/api/v1/curation/candidates")
+async def curation_add_candidates(payload: CandidatesIn, request: Request,
+                                  db: AsyncSession = Depends(get_db)) -> dict:
+    """Feed the candidate queue by hand. The next cycle (scheduled or
+    manually triggered) builds a verified gallery for each candidate and
+    lists it — gallery-first, incomplete galleries are skipped."""
+    await _require_admin_or_curator(request, db)
+    added = 0
+    for c in payload.candidates:
+        dept = c.department.strip().lower()
+        if dept not in config.DEPARTMENTS:
+            raise HTTPException(400, f"Unknown department: {c.department}")
+        await add_candidate(db, asin=c.asin, title=c.title, department=dept,
+                            source="manual", main_image_url=c.main_image_url)
+        added += 1
+    await db.commit()
+    return {"added": added,
+            "note": "Candidates are listed by the next curation cycle."}

@@ -1,5 +1,14 @@
 """Virello backend — FastAPI. Secure, scalable, audit-logged."""
+import logging
 from contextlib import asynccontextmanager
+
+# App loggers (virello.*) at INFO so operations — including the autonomous
+# curation cycle — are visible in the platform logs. Without this, Python's
+# root default (WARNING, no handler) silently swallows every INFO line.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.getLogger("virello").setLevel(logging.INFO)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

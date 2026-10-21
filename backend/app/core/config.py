@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     play_service_account_json: str = ""  # VIRELLO_PLAY_SERVICE_ACCOUNT_JSON
     play_package_name: str = "com.virello.virello"  # VIRELLO_PLAY_PACKAGE_NAME
     oauth_token_key: str = "change-me-32-bytes-minimum!!"
+    # --- Admin Panel allowlist (Hafiz, 2026-09-30: only these two accounts).
+    # This field MUST exist: app/routers/admin.py reads settings.admin_emails
+    # and a missing field raises AttributeError (the 2026-10-15/16 lesson).
+    # VIRELLO_ADMIN_EMAILS overrides it.
+    admin_emails: str = "salman09bhutta@gmail.com,alif01fiverr@gmail.com"
+    admin_pin: str = ""  # VIRELLO_ADMIN_PIN; empty = PIN unlock refuses
+    # --- Amazon IAP (legacy; Amazon Appstore account terminated 2026-10-06).
+    # Fields exist so the dormant module can never AttributeError.
+    amazon_developer_secret: str = ""
+    amazon_sandbox: bool = True
     # --- Metrics agent (social-metrics data worker; service-token auth) ---
     metrics_agent_token: str = ""  # VIRELLO_METRICS_AGENT_TOKEN
     # --- Cloudinary (product gallery image store; Hafiz's free-tier account) ---

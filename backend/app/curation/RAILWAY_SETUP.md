@@ -1,10 +1,22 @@
 # Autonomous Curation — Railway setup (Hafiz, phone se)
 
-Backend me ab **khud-chalne wala** hourly curation loop hai: har ghante
-(Asia/Karachi) 26 departments me se har ek me kam az kam 1 product dhoondta
-hai, uski 3 tasveeron wali gallery banata hai, aur Shop me list karta hai.
+Backend me ab **khud-chalne wala** curation loop hai: har 3 ghante
+(Asia/Karachi) 26 departments me se har ek ka kam az kam 1 product
+pakka karta hai AUR har department me naye products bhi jorta hai
+(growth quota, default 1/department/cycle — `VIRELLO_CURATION_NEW_PER_DEPT`),
+unki 3 tasveeron wali gallery banata hai, aur Shop me list karta hai.
 Koi agent ya cron ki zaroorat nahi — bas neeche wale 3 steps ek dafa karne
 hain, phir `railway up`.
+
+**Manual control (bina kisi agent ke):**
+- Cycle foran chalana: `POST /api/v1/curation/run`
+- Haath se product queue me daalna: `POST /api/v1/curation/candidates`
+  `{candidates: [{asin, title, department, main_image_url}]}`
+- Haalat dekhna: `GET /api/v1/curation/status`
+Teeno ke liye admin login ya `X-Curator-Token` header chahiye.
+Agar `VIRELLO_CURATOR_CREATOR_EMAIL` set na ho to listings khud hi
+pehle admin account se attribute ho jati hain — cycle kabhi is wajah
+se nahi rukta.
 
 ## Step 1 — Persistent volume (zaroori)
 
@@ -34,7 +46,8 @@ Optional:
 | Variable | Value | Matlab |
 |---|---|---|
 | `VIRELLO_CURATION_AUTONOMOUS` | `true` (default) | `false` karne se loop band |
-| `VIRELLO_CURATION_INTERVAL_HOURS` | `1` (default) | ghanton me waqfa |
+| `VIRELLO_CURATION_INTERVAL_HOURS` | `3` (default) | ghanton me waqfa |
+| `VIRELLO_CURATION_NEW_PER_DEPT` | `1` (default) | har cycle har department me kitne NAYE products |
 
 `VIRELLO_CURATOR_TOKEN` pehle se set hona chahiye (curate API ke liye) —
 usko haath na lagayein.
@@ -73,10 +86,10 @@ kitni products hain, aur kitne candidates queue me hain.
 3. **Pollinations free service hai** — rate limit lagne par angle
    generation fail ho sakta hai; product us ghante skip ho jayega, agle
    ghante phir try hoga.
-4. **Purana hourly curator (Muse agent wala) ab backup hai.** Curate API
-   ASIN dekh kar duplicate skip karti hai, to dono takrayenge nahi. Jab
-   backend loop 2-3 din stable chal jaye, purana cron band kiya ja sakta
-   hai.
+4. **Purana curator (Muse agent wala) 2026-10-21 ko retire kar diya gaya**
+   (Hafiz ka hukm: curation sirf backend se hogi). Backend loop hi ab
+   wahid zariya hai; Curate API phir bhi ASIN dekh kar duplicate skip
+   karti hai.
 5. Volume lagane se **pehle** ki gallery files (`/gallery/*` purani
    commits wali) static folder se hi serve hoti rahengi — naya code
    volume ko pehle, static ko baad me check karta hai.

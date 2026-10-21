@@ -35,6 +35,7 @@ from app.models.core import User
 log = logging.getLogger("virello.curation.service")
 
 MAX_NEW_PER_DEPARTMENT_PER_RUN = 2  # 1 required + up to 1 extra by quality
+HARD_CAP_PER_DEPT_PER_RUN = 4  # absolute safety ceiling, whatever the quota
 
 
 def slugify(title: str) -> str:
@@ -187,6 +188,18 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
     if email:
         creator = (await db.execute(
             select(User).where(User.email == email))).scalar_one_or_none()
+    if creator is None and not email:
+        # No curator email configured anywhere — attribute listings to the
+        # primary admin account, so the autonomous cycle is never blocked
+        # by a missing env var (Hafiz, 2026-10-21: the backend must keep
+        # running with no external operator).
+        creator = (await db.execute(
+            select(User).where(User.is_admin.is_(True))
+            .order_by(User.created_at.asc()).limit(1))).scalar_one_or_none()
+        if creator is not None:
+            log.info("curation: no curator email configured — attributing "
+                     "listings to admin account %s",
+                     config.mask_email(creator.email))
     if creator is None:
         msg = ("creator account not found for "
                f"{config.mask_email(email) or 'unset email'} — listings skipped")
@@ -202,13 +215,19 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
     covered = 0
     created_total = 0
 
+    quota = config.new_per_dept()
     for dept in config.DEPARTMENTS:
         have = counts.get(dept, 0)
-        need = max(0, 1 - have)
+        # Floor: every department keeps >=1 live product. Growth: each cycle
+        # also ADDS up to `quota` brand-new products per department, so the
+        # catalog keeps growing on its own — no external operator needed
+        # (Hafiz, 2026-10-21).
+        need = max(0, 1 - have) + quota
         dept_info: dict = {"existing": have, "needed": need,
                            "created": [], "skipped": [], "notes": []}
-        if need == 0:
+        if have >= 1:
             covered += 1
+        if need == 0:
             report["departments"][dept] = dept_info
             continue
 
@@ -228,7 +247,7 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
         if len(cands) < need:
             found = await adapter.discover(
                 dept, query_index=done_runs,
-                limit=need - len(cands))
+                limit=(need - len(cands)) + 2)
             for c in found:
                 await add_candidate(
                     db, asin=c.asin, title=c.title, department=dept,
@@ -239,7 +258,8 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
                     f"amazon adapter: {adapter.last_error}")
 
         # 3) Gallery-first listing, capped per department per run.
-        for cand in cands[:MAX_NEW_PER_DEPARTMENT_PER_RUN]:
+        list_cap = min(need, HARD_CAP_PER_DEPT_PER_RUN)
+        for cand in cands[:list_cap]:
             gal = await build_gallery(cand.asin, cand.main_image_url)
             if not gal["ok"]:
                 await mark_candidate(db, cand.asin, "skipped",
@@ -260,18 +280,23 @@ async def run_curation_cycle(db: AsyncSession) -> dict:
                     f"{cand.asin}: listing failed ({type(e).__name__})")
                 log.warning("curation listing failed %s: %s", cand.asin, e)
                 continue
-            await mark_candidate(db, cand.asin, "listed",
-                                 "auto-listed by curation cycle")
-            created_total += 1
-            dept_info["created"].append({
-                "asin": cand.asin, "title": cand.title,
-                "real_angles": gal.get("real", 1),
-                "generated_angles": gal.get("generated", 0),
-                "review": "visual-fidelity not auto-verified",
-            })
+            if res.get("created"):
+                await mark_candidate(db, cand.asin, "listed",
+                                     "auto-listed by curation cycle")
+                created_total += 1
+                dept_info["created"].append({
+                    "asin": cand.asin, "title": cand.title,
+                    "real_angles": gal.get("real", 1),
+                    "generated_angles": gal.get("generated", 0),
+                    "review": "visual-fidelity not auto-verified",
+                })
+            else:
+                # Already in the catalog (idempotent hit) — not new growth.
+                await mark_candidate(db, cand.asin, "listed",
+                                     "already in catalog")
+                dept_info["notes"].append(
+                    f"{cand.asin}: already in catalog")
 
-        if dept_info["created"]:
-            covered += 1
         report["departments"][dept] = dept_info
 
     await db.commit()

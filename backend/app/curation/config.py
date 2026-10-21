@@ -102,6 +102,18 @@ def curation_interval_hours() -> float:
         return 3.0
 
 
+def new_per_dept() -> int:
+    """Growth quota: NEW products to add per department per cycle, on top of
+    the >=1-per-department floor. Default 1 → up to 26 new products per
+    cycle when discovery yields; the catalog keeps growing with no external
+    operator (Hafiz, 2026-10-21: curation must run from the backend alone).
+    0 = floor-keeping only. Overridable via VIRELLO_CURATION_NEW_PER_DEPT."""
+    try:
+        return max(0, int(os.environ.get("VIRELLO_CURATION_NEW_PER_DEPT", "1")))
+    except ValueError:
+        return 1
+
+
 def curator_creator_email() -> str:
     """Creator account products are attributed to. Env first, then the
     affiliate.yaml the curator pipeline already uses. Empty → runs skip
@@ -109,6 +121,17 @@ def curator_creator_email() -> str:
     email = os.environ.get("VIRELLO_CURATOR_CREATOR_EMAIL", "").strip().lower()
     if email:
         return email
+    # Fallback: the primary admin account. The admin allowlist is always
+    # configured in production (the Admin Panel depends on it), so the
+    # autonomous cycle can attribute listings without any extra env var.
+    try:
+        from app.core.config import settings
+        admins = [e.strip().lower() for e in
+                  (settings.admin_emails or "").split(",") if e.strip()]
+        if admins:
+            return admins[0]
+    except Exception:
+        pass
     for path in (
         Path.home() / "workspace" / "virello" / "affiliate.yaml",
         Path("/home/hatch/workspace/virello/affiliate.yaml"),
