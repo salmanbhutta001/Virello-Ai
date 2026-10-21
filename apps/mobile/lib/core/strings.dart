@@ -8227,6 +8227,28 @@ class AppStrings {
         'Buat ide',
         'আইডিয়া তৈরি করুন'
       );
+  String get aiWriteScript =>
+      _get('Write with Muse AI', 'Muse AI سے اسکرپٹ لکھوائیں', 'اكتب النص بـ Muse AI',
+        'Muse AI से स्क्रिप्ट लिखें',
+        'Écrire le script avec Muse AI',
+        'Escribir el guion con Muse AI',
+        'Escrever o roteiro com Muse AI',
+        'Skript mit Muse AI schreiben',
+        'Muse AI ile senaryo yaz',
+        'Tulis naskah dengan Muse AI',
+        'Muse AI দিয়ে স্ক্রিপ্ট লিখুন'
+      );
+  String get aiWriteFailed =>
+      _get('Muse AI could not write right now. Please try again.', 'Muse AI ابھی نہیں لکھ سکا۔ دوبارہ کوشش کریں۔', 'تعذّر على Muse AI الكتابة الآن. حاول مجدداً.',
+        'Muse AI अभी नहीं लिख सका। फिर कोशिश करें।',
+        'Muse AI n\'a pas pu écrire. Réessayez.',
+        'Muse AI no pudo escribir ahora. Inténtalo de nuevo.',
+        'O Muse AI não pôde escrever agora. Tente novamente.',
+        'Muse AI konnte gerade nicht schreiben. Bitte erneut versuchen.',
+        'Muse AI şu an yazamadı. Tekrar deneyin.',
+        'Muse AI belum bisa menulis sekarang. Coba lagi.',
+        'Muse AI এখন লিখতে পারেনি। আবার চেষ্টা করুন।'
+      );
   String get generateScript =>
       _get('Generate script', 'اسکرپٹ بنائیں', 'ولِّد نصًا',
         'स्क्रिप्ट बनाएँ',

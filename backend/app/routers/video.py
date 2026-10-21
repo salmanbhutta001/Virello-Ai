@@ -15,6 +15,7 @@ landed on a different worker.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -83,6 +84,44 @@ async def video_status(_user: User = Depends(get_current_user)) -> dict:
     }
 
 
+_DIRECTOR_SYSTEM = (
+    "You are the video director for Virello AI's Create Video tool. "
+    "Rewrite the user's idea into ONE vivid text-to-video prompt: subject "
+    "and action, camera movement, lighting, mood, setting. At most 400 "
+    "characters. Reply with ONLY the prompt text — no quotes, no notes. "
+    "Never add claims about guaranteed growth, followers or income."
+)
+
+
+async def _direct_video_prompt(prompt: str) -> str | None:
+    """Stage 1 — Muse AI directs the video prompt (Hafiz 2026-10-21:
+    pehle Muse AI, phir engine). Returns the enhanced prompt, or None
+    when no real AI provider answered — the caller then submits the
+    user's original prompt unchanged; video never blocks on AI."""
+    try:
+        from app.services.ai.base import AIRequest, get_claude_first_provider
+        provider = get_claude_first_provider()
+        resp = await asyncio.wait_for(
+            provider.complete(AIRequest(
+                agent="video_director",
+                system=_DIRECTOR_SYSTEM,
+                user=prompt,
+                max_tokens=220, temperature=0.7, json_mode=False)),
+            timeout=20)
+    except Exception as exc:
+        logger.info("video direction unavailable: %s", exc)
+        return None
+    if resp.dev:
+        logger.info("video direction skipped: dev/fallback provider")
+        return None
+    text = " ".join((resp.text or "").strip().strip('"').split())
+    if len(text) < 10:
+        return None
+    logger.info("video prompt directed by %s (%d -> %d chars)",
+                resp.provider, len(prompt), len(text))
+    return text[:500]
+
+
 @router.post("/generate")
 async def generate_video(
     body: GenerateRequest,
@@ -92,6 +131,8 @@ async def generate_video(
     """Submit a text-to-video job. Poll GET /video/jobs/{job_id} for result."""
     key = _key_or_503()
     await _prune(db)
+    # Muse AI direction first, Agnes renders second.
+    final_prompt = await _direct_video_prompt(body.prompt) or body.prompt
     try:
         async with httpx.AsyncClient(timeout=_SUBMIT_TIMEOUT) as client:
             resp = await client.post(
@@ -102,7 +143,7 @@ async def generate_video(
                 },
                 json={
                     "model": _AGNES_MODEL,
-                    "prompt": body.prompt,
+                    "prompt": final_prompt,
                     # Hafiz 2026-10-13: 2.5-flash rejects 'duration' param.
                     # Hafiz 2026-10-03: request 9:16 vertical by default.
                     "aspect_ratio": body.aspect,

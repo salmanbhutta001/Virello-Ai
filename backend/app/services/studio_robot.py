@@ -255,12 +255,17 @@ def _split_prompt(prompt: str) -> tuple[str, str]:
 
 
 def render_image(prompt: str, style: str = "realistic", seed: int = 0,
-                 width: int = 1080, height: int = 1080) -> bytes:
-    """Render one studio image locally and return PNG bytes."""
+                 width: int = 1080, height: int = 1080,
+                 brief: dict | None = None) -> bytes:
+    """Render one studio image locally and return PNG bytes. When a
+    Muse AI brief is given, its headline/subtitle/palette lead."""
     from PIL import ImageDraw
     style = style if style in ("realistic", "cartoon", "3d") else "realistic"
     rng = random.Random(f"{prompt}|{style}|{seed}" if seed else None)
-    top, bottom, accent, accent2 = _PALETTES[rng.randrange(len(_PALETTES))]
+    if brief and brief.get("palette") is not None:
+        top, bottom, accent, accent2 = _PALETTES[brief["palette"]]
+    else:
+        top, bottom, accent, accent2 = _PALETTES[rng.randrange(len(_PALETTES))]
 
     img = _gradient((width, height), top, bottom, rng)
     img = _decorate(img, style, accent, accent2, rng)
@@ -283,7 +288,11 @@ def render_image(prompt: str, style: str = "realistic", seed: int = 0,
     d.text((margin + pad, margin + pad - 2), kicker, font=kf,
            fill=(255, 255, 255))
 
-    head, tail = _split_prompt(prompt)
+    if brief and brief.get("headline"):
+        head = brief["headline"]
+        tail = brief.get("subtitle") or ""
+    else:
+        head, tail = _split_prompt(prompt)
     head_font_kind = _font_for(head, bold_headline=True)
 
     # Auto-fit the headline: shrink until it fits the middle band.
@@ -343,16 +352,96 @@ def render_image(prompt: str, style: str = "realistic", seed: int = 0,
     return buf.getvalue()
 
 
+# ---------------------------------------------------------------------------
+# Stage 1 — Muse AI art direction (Hafiz 2026-10-21: "pehly muse ai
+# krey work phr robot"). The AI turns the raw prompt into a design
+# brief; the robot (stage 2) renders it. If no real AI provider answers
+# (dev fallback, error, bad output) the brief is None and the robot
+# renders the raw prompt exactly as before — the studio never blocks
+# on AI, and fallback text is never dressed up as AI work.
+# ---------------------------------------------------------------------------
+
+_DIRECTOR_SYSTEM = """You are the art director for Virello AI Image Studio.
+A user gives a prompt for a social-media post image or thumbnail. Turn it
+into a punchy design brief. Rules:
+- headline: at most 60 characters, scroll-stopping, in the SAME language
+  and script as the user's prompt (Urdu in -> Urdu out).
+- subtitle: at most 100 characters, optional supporting line, same language.
+- palette: one integer — 0 violet/pink (creative, bold), 1 ocean blue/teal
+  (calm, tech, trust), 2 ember orange/red (energy, food, urgency),
+  3 emerald green (growth, health, finance), 4 indigo (premium, night),
+  5 rose dusk (beauty, lifestyle).
+- Never promise guaranteed growth, followers, income or virality.
+- Reply with ONLY a JSON object: {"headline": "...", "subtitle": "...", "palette": 0}"""
+
+
+def _director_provider():
+    """Muse first — the shared Claude-first selection (Anthropic when
+    its key is configured, otherwise the configured provider)."""
+    from app.services.ai.base import get_claude_first_provider
+    return get_claude_first_provider()
+
+
+async def _art_direct(prompt: str, style: str) -> dict | None:
+    """Stage 1. Returns {headline, subtitle, palette} or None."""
+    from app.core.config import settings
+    if not getattr(settings, "studio_ai_director", True):
+        return None
+    try:
+        from app.services.ai.base import AIRequest
+        provider = _director_provider()
+        resp = await asyncio.wait_for(
+            provider.complete(AIRequest(
+                agent="image_studio_director",
+                system=_DIRECTOR_SYSTEM,
+                user=f"Style: {style}\nUser prompt: {prompt}",
+                max_tokens=300, temperature=0.6, json_mode=True)),
+            timeout=45)
+    except Exception as exc:
+        log.info("studio art direction unavailable: %s", exc)
+        return None
+    if resp.dev:
+        log.info("studio art direction skipped: dev/fallback provider")
+        return None
+    try:
+        import json
+        text = resp.text.strip()
+        if text.startswith("```"):
+            text = text.strip("`")
+            text = text[text.find("{"):]
+        data = json.loads(text)
+    except Exception:
+        log.info("studio art direction skipped: unparseable output")
+        return None
+    headline = str(data.get("headline") or "").strip()
+    subtitle = str(data.get("subtitle") or "").strip()
+    palette = data.get("palette")
+    if not (3 <= len(headline) <= 90):
+        log.info("studio art direction skipped: bad headline")
+        return None
+    if not isinstance(palette, int) or not (0 <= palette < len(_PALETTES)):
+        palette = None
+    brief = {"headline": headline, "subtitle": subtitle[:140],
+             "palette": palette, "provider": resp.provider}
+    log.info("studio art direction by %s: palette=%s headline=%r",
+             resp.provider, palette, headline[:60])
+    return brief
+
+
 async def generate_studio_image(prompt: str, style: str = "realistic",
                                 seed: int = 0, *,
-                                size: str = "post") -> str:
-    """Render locally (CPU work off the event loop) and store on
-    Cloudinary — returns the public image URL."""
+                                size: str = "post",
+                                width: int = 0, height: int = 0) -> str:
+    """Full pipeline: Muse AI art-directs (stage 1), the robot renders
+    locally (stage 2), Cloudinary stores — returns the public URL.
+    Explicit width/height win over the named size."""
     from app.curation.cloudinary_store import upload_image
-    w, h = SIZES.get(size, SIZES["post"])
+    w, h = (width, height) if (width and height) else SIZES.get(size, SIZES["post"])
+    brief = await _art_direct(prompt, style)
     data = await asyncio.to_thread(
-        render_image, prompt, style, seed, w, h)
+        render_image, prompt, style, seed, w, h, brief)
     url = await upload_image(
         data, f"studio_{uuid.uuid4().hex[:12]}", folder="virello/studio")
-    log.info("studio robot rendered %dx%d style=%s -> %s", w, h, style, url)
+    log.info("studio pipeline rendered %dx%d style=%s directed=%s -> %s",
+             w, h, style, bool(brief), url)
     return url

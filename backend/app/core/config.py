@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     ai_provider: str = "dev"  # dev | anthropic | openai | google | groq
     image_provider: str = "pollinations"  # pollinations | none (modular, optional)
     image_engine: str = "robot"  # robot (local, no API) | agnes — Image Studio jobs
+    studio_ai_director: bool = True  # Muse AI art-directs before the robot renders
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-20250514"
     openai_api_key: str = ""

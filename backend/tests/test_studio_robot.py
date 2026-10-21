@@ -77,6 +77,88 @@ def test_split_prompt():
 
 
 # ---------------------------------------------------------------------------
+# Stage 1 — Muse AI art direction
+# ---------------------------------------------------------------------------
+
+class _FakeDirector:
+    name = "fake"
+
+    def __init__(self, text: str, dev: bool = False):
+        self._text, self._dev = text, dev
+
+    async def complete(self, req):
+        from app.services.ai.base import AIResponse
+        return AIResponse(text=self._text, provider="fake", model="f-1",
+                          dev=self._dev)
+
+
+@pytest.mark.asyncio
+async def test_art_direct_good_brief(monkeypatch):
+    good = ('{"headline": "Stop the Scroll!", "subtitle": "3 honest hooks", '
+            '"palette": 2}')
+    monkeypatch.setattr(robot, "_director_provider",
+                        lambda: _FakeDirector(good))
+    brief = await robot._art_direct("grow my page", "cartoon")
+    assert brief is not None
+    assert brief["headline"] == "Stop the Scroll!"
+    assert brief["subtitle"] == "3 honest hooks"
+    assert brief["palette"] == 2
+    assert brief["provider"] == "fake"
+
+
+@pytest.mark.asyncio
+async def test_art_direct_refuses_dev_provider(monkeypatch):
+    monkeypatch.setattr(robot, "_director_provider",
+                        lambda: _FakeDirector("{}", dev=True))
+    assert await robot._art_direct("grow my page", "realistic") is None
+
+
+@pytest.mark.asyncio
+async def test_art_direct_bad_json(monkeypatch):
+    monkeypatch.setattr(robot, "_director_provider",
+                        lambda: _FakeDirector("not json at all"))
+    assert await robot._art_direct("grow my page", "realistic") is None
+
+
+@pytest.mark.asyncio
+async def test_art_direct_bad_headline(monkeypatch):
+    monkeypatch.setattr(robot, "_director_provider",
+                        lambda: _FakeDirector('{"headline": "x", "palette": 1}'))
+    assert await robot._art_direct("grow my page", "realistic") is None
+
+
+def test_render_honours_brief():
+    brief = {"headline": "Stop the Scroll!", "subtitle": "3 honest hooks",
+             "palette": 3, "provider": "fake"}
+    with_brief = robot.render_image("grow my page", "cartoon", 7, 800, 800,
+                                    brief)
+    without = robot.render_image("grow my page", "cartoon", 7, 800, 800)
+    assert _png_size(with_brief) == (800, 800)
+    assert with_brief != without
+    other_palette = dict(brief, palette=0)
+    assert robot.render_image("grow my page", "cartoon", 7, 800, 800,
+                              other_palette) != with_brief
+
+
+@pytest.mark.asyncio
+async def test_full_pipeline_director_then_robot(monkeypatch):
+    async def fake_direct(prompt, style):
+        return {"headline": "Directed!", "subtitle": "", "palette": 1,
+                "provider": "fake"}
+    monkeypatch.setattr(robot, "_art_direct", fake_direct)
+
+    import app.curation.cloudinary_store as store
+
+    async def fake_upload(data, public_id, *, folder=""):
+        assert data[:8] == b"\x89PNG\r\n\x1a\n"
+        return "https://res.cloudinary.com/test/directed.jpg"
+    monkeypatch.setattr(store, "upload_image", fake_upload)
+
+    url = await robot.generate_studio_image("grow my page", "realistic", 5)
+    assert url == "https://res.cloudinary.com/test/directed.jpg"
+
+
+# ---------------------------------------------------------------------------
 # Provider factory
 # ---------------------------------------------------------------------------
 

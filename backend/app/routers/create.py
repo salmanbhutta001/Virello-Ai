@@ -30,7 +30,7 @@ from app.core.database import SessionLocal, get_db
 from app.core.deps import get_current_user
 from app.models.core import User
 from app.models.image import ImageJob
-from app.services.ai.base import AIRequest, get_ai_provider
+from app.services.ai.base import AIRequest, get_claude_first_provider
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -144,8 +144,12 @@ def _heuristic_hooks(topic: str, count: int) -> list[str]:
 
 async def _ai_json(agent: str, system: str, user: str,
                    max_tokens: int = 900) -> tuple[dict | None, str, bool]:
-    """Return (parsed_json_or_None, provider_name, dev)."""
-    prov = get_ai_provider()
+    """Return (parsed_json_or_None, provider_name, dev).
+
+    Muse first (Hafiz 2026-10-21): every Creator Hub text tool —
+    ideas, scripts, captions, hooks — goes through the Claude-first
+    provider selection before any fallback."""
+    prov = get_claude_first_provider()
     if prov.name == "dev":
         return None, prov.name, True
     try:

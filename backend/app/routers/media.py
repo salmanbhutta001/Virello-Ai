@@ -19,7 +19,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.services.ai.base import AIRequest, get_ai_provider
+from app.services.ai.base import AIRequest, get_claude_first_provider
 from app.services.image_provider import (
     ImageProviderError,
     ImageProviderNotConfigured,
@@ -81,7 +81,14 @@ async def generate_image(body: GenerateImageIn, request: Request):
     _check_rate_limit(request, "generate-image")
     width, height = _ASPECTS.get(body.aspect, _ASPECTS["4:5"])
     try:
-        provider = get_image_provider()
+        # Muse + robot first (Hafiz 2026-10-21): in robot mode this
+        # endpoint runs the same directed local pipeline as the app's
+        # Image Studio; otherwise the configured image provider.
+        from app.core.config import settings as _cfg
+        if (getattr(_cfg, "image_engine", "robot") or "robot").lower() == "robot":
+            provider = get_image_provider("local")
+        else:
+            provider = get_image_provider()
     except ImageProviderNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc))
     try:
@@ -139,7 +146,7 @@ async def generate_caption(body: GenerateCaptionIn, request: Request):
     if body.goal:
         user_prompt += f"\nGoal: {body.goal}"
     try:
-        provider = get_ai_provider()
+        provider = get_claude_first_provider()
         resp = await provider.complete(
             AIRequest(
                 agent="caption_writer",
@@ -285,7 +292,7 @@ async def generate_text(body: GenerateTextIn, request: Request):
         user_prompt += f"\nNiche: {body.niche}"
     text, provider_label, model = None, "pollinations", "pollinations-text"
     try:
-        provider = get_ai_provider()
+        provider = get_claude_first_provider()
         resp = await provider.complete(
             AIRequest(
                 agent=f"{body.kind}_writer",

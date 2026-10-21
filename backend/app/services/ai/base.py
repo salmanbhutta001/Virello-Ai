@@ -364,6 +364,16 @@ class FallbackProvider(AIProvider):
             return await self._fallback.complete(req)
 
 
+def get_claude_first_provider() -> AIProvider:
+    """Muse first (Hafiz 2026-10-21: Creator Hub ke saare tools mein
+    pehle Muse AI kaam kare): Anthropic when its key is configured,
+    otherwise the app's configured provider (which already falls back
+    honestly to the dev provider)."""
+    if (settings.anthropic_api_key or "").strip():
+        return AnthropicProvider()
+    return get_ai_provider()
+
+
 def get_ai_provider(name: str = "") -> AIProvider:
     """Select the AI provider from configuration. Defaults to the dev
     (Muse environment) provider so local development needs no API keys.

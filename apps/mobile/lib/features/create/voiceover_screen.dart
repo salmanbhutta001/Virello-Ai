@@ -31,6 +31,7 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
   double _pitch = 1.0;
   bool _loadingVoices = true;
   bool _speaking = false;
+  bool _aiWriting = false;
   bool _exporting = false;
   String? _status;
   // Hafiz 2026-10-04: exported file path for sharing.
@@ -65,6 +66,49 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
     _tts.dispose();
     _ctrl.dispose();
     super.dispose();
+  }
+
+  /// Muse AI writes the voiceover script (Hafiz 2026-10-21): the text
+  /// in the box is treated as the topic; the backend's Claude-first
+  /// script tool returns hook/body/cta, which replaces the box content
+  /// ready to speak or export.
+  Future<void> _writeWithAi() async {
+    final topic = _ctrl.text.trim();
+    if (topic.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.boardEnterTextFirst)),
+      );
+      return;
+    }
+    if (_aiWriting) return;
+    setState(() => _aiWriting = true);
+    try {
+      final r = await apiClient.createScript(
+        topic,
+        language: appState.localeCode,
+      );
+      final scr = (r['script'] as Map?)?.cast<String, dynamic>();
+      final beats =
+          (scr?['body'] as List?)?.map((e) => '$e').toList() ?? const <String>[];
+      final parts = <String>[
+        if ((scr?['hook'] ?? '').toString().isNotEmpty)
+          scr!['hook'].toString(),
+        ...beats,
+        if ((scr?['cta'] ?? '').toString().isNotEmpty) scr!['cta'].toString(),
+      ];
+      if (parts.isEmpty) throw Exception('empty script');
+      if (!mounted) return;
+      _ctrl.text = parts.join('\n');
+      setState(() => _status = null);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.aiWriteFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _aiWriting = false);
+    }
   }
 
   Future<void> _speak() async {
@@ -153,6 +197,27 @@ class _VoiceoverScreenState extends State<VoiceoverScreen> {
                 hintText: s.voiceoverTextHint,
                 hintStyle: TextStyle(color: VTheme.textSec(context)),
                 border: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _aiWriting ? null : _writeWithAi,
+              icon: _aiWriting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 18),
+              label: Text(s.aiWriteScript),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),

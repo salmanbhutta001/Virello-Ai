@@ -144,15 +144,9 @@ class LocalStudioProvider(ImageProvider):
         import time as _time
         from app.services.studio_robot import generate_studio_image
         start = _time.monotonic()
-        size = "post"
-        if (req.width, req.height) == (1080, 1920):
-            size = "story"
-        elif (req.width, req.height) == (1280, 720):
-            size = "thumbnail"
-        elif (req.width, req.height) == (1200, 630):
-            size = "wide"
         url = await generate_studio_image(
-            req.prompt, "realistic", req.seed or 0, size=size)
+            req.prompt, "realistic", req.seed or 0,
+            width=req.width, height=req.height)
         return ImageResult(
             image_url=url, provider=self.name, model=self.model,
             width=req.width, height=req.height,

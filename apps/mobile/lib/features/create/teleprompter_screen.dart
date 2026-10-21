@@ -37,6 +37,7 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
   // Hafiz 2026-10-04: TTS speak + audio export state.
   bool _speaking = false;
   bool _exporting = false;
+  bool _aiWriting = false;
   String? _audioPath;
 
   AppStrings get s => AppStrings(appState.localeCode);
@@ -149,6 +150,47 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
     );
   }
 
+  /// Muse AI writes the prompter script (Hafiz 2026-10-21): the text
+  /// in the editor is treated as the topic; the backend's Claude-first
+  /// script tool returns hook/body/cta, loaded ready to roll.
+  Future<void> _writeWithAi() async {
+    final topic = _ctrl.text.trim();
+    if (topic.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.boardEnterTextFirst)),
+      );
+      return;
+    }
+    if (_aiWriting) return;
+    setState(() => _aiWriting = true);
+    try {
+      final r = await apiClient.createScript(
+        topic,
+        language: appState.localeCode,
+      );
+      final scr = (r['script'] as Map?)?.cast<String, dynamic>();
+      final beats =
+          (scr?['body'] as List?)?.map((e) => '$e').toList() ?? const <String>[];
+      final parts = <String>[
+        if ((scr?['hook'] ?? '').toString().isNotEmpty)
+          scr!['hook'].toString(),
+        ...beats,
+        if ((scr?['cta'] ?? '').toString().isNotEmpty) scr!['cta'].toString(),
+      ];
+      if (parts.isEmpty) throw Exception('empty script');
+      if (!mounted) return;
+      setState(() => _ctrl.text = parts.join('\n'));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.aiWriteFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _aiWriting = false);
+    }
+  }
+
   void _toggle() {
     if (_playing) {
       _stop();
@@ -204,6 +246,27 @@ class _TeleprompterScreenState extends State<TeleprompterScreen> {
               hintText: s.scriptHint,
               hintStyle: TextStyle(color: VTheme.textSec(context)),
               border: InputBorder.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _aiWriting ? null : _writeWithAi,
+            icon: _aiWriting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_awesome, size: 18),
+            label: Text(s.aiWriteScript),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),

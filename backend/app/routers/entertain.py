@@ -19,7 +19,7 @@ from app.services.ai.base import (
     AIProviderError,
     AIProviderNotConfigured,
     AIRequest,
-    get_ai_provider,
+    get_claude_first_provider,
 )
 
 router = APIRouter(prefix="/entertain", tags=["entertain"])
@@ -140,7 +140,7 @@ async def write_story(
     subject = body.topic or body.prompt or "a small act of kindness"
     words = {"short": "~150-word", "medium": "~350-word", "long": "~600-word"}.get(body.length, "~350-word")
     max_tok = {"short": 1500, "medium": 2500, "long": 3500}.get(body.length, 2500)
-    provider = get_ai_provider()
+    provider = get_claude_first_provider()
     try:
         resp = await provider.complete(
             AIRequest(
@@ -180,7 +180,7 @@ async def comic_idea(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    provider = get_ai_provider()
+    provider = get_claude_first_provider()
     try:
         resp = await provider.complete(
             AIRequest(
