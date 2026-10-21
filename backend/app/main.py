@@ -16,6 +16,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import settings
 from app.core.database import init_db
+from app.blog import routes as blog_routes  # registers blog models
 from app.curation import routes as curation_routes  # registers curation models
 from app.routers import auth, users, campaigns, ai, billing, analytics, admin, ws, support
 from app.routers import rewards as rewards_router
@@ -63,12 +64,26 @@ async def lifespan(app: FastAPI):
         import logging
         logging.getLogger("virello").exception(
             "curation scheduler wiring failed; continuing without it")
+    # Autonomous daily blog — same never-crash rule.
+    _blog_sched = None
+    try:
+        from app.blog.scheduler import start_blog_scheduler
+        _blog_sched = start_blog_scheduler()
+    except Exception:
+        import logging
+        logging.getLogger("virello").exception(
+            "blog scheduler wiring failed; continuing without it")
     try:
         yield
     finally:
         try:
             from app.curation.scheduler import stop_curation_scheduler
             stop_curation_scheduler(_sched)
+        except Exception:
+            pass
+        try:
+            from app.blog.scheduler import stop_blog_scheduler
+            stop_blog_scheduler(_blog_sched)
         except Exception:
             pass
 
@@ -86,6 +101,7 @@ app = FastAPI(
 # git-committed backend/app/static/gallery. No auth needed for display.
 # GET /api/v1/curation/status is the admin-only curation monitor.
 app.include_router(curation_routes.router)
+app.include_router(blog_routes.router)
 
 
 # Permanent public legal pages (Hafiz 2026-10-03: APKPure/Uptodown/Aptoide
