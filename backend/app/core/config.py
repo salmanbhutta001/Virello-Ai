@@ -44,7 +44,11 @@ class Settings(BaseSettings):
     # and a missing field raises AttributeError (the 2026-10-15/16 lesson).
     # VIRELLO_ADMIN_EMAILS overrides it.
     admin_emails: str = "salman09bhutta@gmail.com,alif01fiverr@gmail.com"
-    admin_pin: str = ""  # VIRELLO_ADMIN_PIN; empty = PIN unlock refuses
+    # Hafiz's chosen admin PIN (2026-09-30). Was "" until 2026-10-22, which
+    # made /admin/unlock refuse EVERY PIN in production (and before the field
+    # existed at all, the endpoint 500'd on AttributeError — the panel never
+    # opened). VIRELLO_ADMIN_PIN overrides this default.
+    admin_pin: str = "0000"
     # --- Amazon IAP (legacy; Amazon Appstore account terminated 2026-10-06).
     # Fields exist so the dormant module can never AttributeError.
     amazon_developer_secret: str = ""
