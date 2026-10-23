@@ -13,7 +13,7 @@ void main() {
 
   group('buildTourSteps', () {
     test('covers welcome, 6 tabs, in-page controls, Ask, done', () {
-      final s = AppStrings('en');
+      const s = AppStrings('en');
       final steps = buildTourSteps(s);
       expect(steps.length, 15);
       // Welcome + done have no target.

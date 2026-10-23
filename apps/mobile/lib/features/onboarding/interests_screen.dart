@@ -5,7 +5,6 @@ import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../core/virello_ui.dart';
 import '../../data/discovery_models.dart';
-import '../../services/api_client.dart';
 import '../../main.dart';
 
 /// Board screen 06 — "What are you interested in?": premium 2-column card

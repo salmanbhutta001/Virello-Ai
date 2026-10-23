@@ -9,7 +9,7 @@ import '../../main.dart';
 /// Full terms URL (public page; also linked from the store listing).
 /// The short terms below are bundled in-app in EN/UR/AR; their numbers
 /// mirror ~/workspace/virello/store_listing/rewards_terms.html.
-const String kRewardsTermsUrl = 'https://virello.com/rewards-terms';
+const String kRewardsTermsUrl = 'https://virelloai.online/rewards-terms.html';
 
 /// Rewards Terms screen: the short in-app terms in EN/UR/AR plus a
 /// "View full terms" link to the public page. Reachable from the Wallet

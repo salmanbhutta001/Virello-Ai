@@ -72,7 +72,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
       _error = null;
     });
     try {
-      final base = AppConfig.baseUrl;
+      const base = AppConfig.baseUrl;
       final catRes = await http.get(
         Uri.parse('$base/api/v1/communities/categories'),
         headers: _headers,

@@ -5,7 +5,6 @@ import '../../core/theme.dart';
 import '../../main.dart';
 import '../../services/api_client.dart';
 import 'creator_profile_screen.dart';
-import 'time_ago.dart';
 
 /// Board screen 13: Following — pixel-faithful.
 ///

@@ -110,6 +110,7 @@ class _VideoToolsScreenState extends State<VideoToolsScreen> {
       );
       return;
     }
+    if (!mounted) return;
     final chosen = await runVideoTaskDialog(context, title: title, task: op);
     if (chosen != null && mounted) _setVideo(chosen);
   }

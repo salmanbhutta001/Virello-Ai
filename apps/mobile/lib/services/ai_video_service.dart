@@ -194,7 +194,7 @@ class AiVideoService {
     required Duration timeout,
     void Function(double)? onProgress,
   }) async {
-    final base = AppConfig.baseUrl;
+    const base = AppConfig.baseUrl;
     final headers = apiClient.authHeaders;
 
     final submit = await http

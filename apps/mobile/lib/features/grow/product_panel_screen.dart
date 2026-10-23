@@ -243,7 +243,7 @@ class _ProductPanelScreenState extends State<ProductPanelScreen> {
                 ],
               ),
                Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Divider(
                     color: VTheme.divider(context), height: 1, thickness: 1),
               ),

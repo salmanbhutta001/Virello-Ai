@@ -21,7 +21,6 @@ import '../social/activity_screen.dart';
 import '../social/creator_dashboard_screen.dart';
 import '../social/following_screen.dart';
 import '../social/messages_screen.dart';
-import '../../core/config.dart';
 
 /// Profile: board-styled cover, real stats (campaigns / credits / interests),
 /// saved collections, and the full menu — settings, Trust Center, support.
@@ -104,7 +103,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings(appState.localeCode);
-    final isAdmin = _me?['is_admin'] == true;
     final initial = _name.isNotEmpty ? _name[0].toUpperCase() : 'V';
     final handle = _email.contains('@') ? '@${_email.split('@').first}' : '';
     final planLabel =

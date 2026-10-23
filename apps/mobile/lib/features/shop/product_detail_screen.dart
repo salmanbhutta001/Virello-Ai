@@ -258,7 +258,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final desc = '${p['description'] ?? ''}';
     final category = '${p['category'] ?? 'all'}';
     final provider = '${p['affiliate_provider'] ?? ''}';
-    final cents = _priceCents(p);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),

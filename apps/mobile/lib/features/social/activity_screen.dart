@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../main.dart';
-import '../../services/api_client.dart';
 import 'creator_profile_screen.dart';
 import 'time_ago.dart';
 

@@ -306,7 +306,7 @@ class _ViralLabScreenState extends State<ViralLabScreen> {
   }
 
   Widget _variationsCard() {
-    final items = ((_variations[_tab]!['variations'] as List?) ?? [])
+    final items = ((_variations[_tab]?['variations'] as List?) ?? [])
         .cast<Map>()
         .toList();
     return Column(

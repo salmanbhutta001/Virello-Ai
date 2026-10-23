@@ -17,7 +17,6 @@ import '../../main.dart';
 import '../../services/ai_video_service.dart';
 import '../../services/ai_image_service.dart';
 import '../../services/local_tools/ffmpeg_service.dart';
-import '../../services/local_tools/storyboard_video_renderer.dart';
 import '../../core/config.dart';
 
 /// Board screen 23: "Create Video" — AI Video Storyboard + real MP4 render.
@@ -403,25 +402,6 @@ class _CreateVideoScreenState extends State<CreateVideoScreen>
       throw Exception('video download failed (HTTP ${res.statusCode})');
     }
     return null;
-  }
-
-  /// On-device FFmpeg slideshow render (always available, no key needed).
-  Future<String?> _renderLocal() async {
-    final renderer = StoryboardVideoRenderer();
-    return renderer.render(
-      scenes: _scenes
-          .map((s) => StoryboardSceneInput(
-                title: s.title,
-                imageUrl: s.url,
-                localPath: s.localPath,
-              ))
-          .toList(),
-      idea: _ideaCtrl.text.trim(),
-      localeCode: appState.localeCode,
-      onProgress: (p) {
-        if (mounted) setState(() => _renderProgress = p);
-      },
-    );
   }
 
   /// Saves the rendered MP4 to the phone's gallery.

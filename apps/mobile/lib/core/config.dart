@@ -4,7 +4,7 @@
 class AppConfig {
   static const String baseUrl = String.fromEnvironment(
     'VIRELLO_API_URL',
-    defaultValue: 'https://api.virello.app',
+    defaultValue: 'https://virello-api-production.up.railway.app',
   );
 
   /// Resolves a product image URL: absolute URLs pass through unchanged,

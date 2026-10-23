@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../data/discovery_models.dart';
-import '../../services/api_client.dart';
 import '../../main.dart';
 import 'post_reader_screen.dart';
 import '../../core/config.dart';
@@ -103,7 +102,7 @@ class _LanguageTrendsScreenState extends State<LanguageTrendsScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../../core/theme.dart';
 
 /// Branded invite card rendered offstage and captured as a PNG for sharing.
 ///

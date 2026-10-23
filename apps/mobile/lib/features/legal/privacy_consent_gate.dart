@@ -62,7 +62,7 @@ class _PrivacyConsentGateState extends State<PrivacyConsentGate> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
+                const Icon(
                   Icons.privacy_tip_outlined,
                   size: 64,
                   color: VirelloColors.pink,

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -893,9 +892,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   /// AI intelligence: fills the template with the user's topic.
   Future<void> _aiCustomize(BuildContext sheetCtx, _Template t) async {
+    final messenger = ScaffoldMessenger.of(context);
     final idea = _matchCtrl.text.trim();
     if (idea.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(s.boardTemplateNeedIdea)),
       );
       return;
@@ -919,14 +919,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         Navigator.pop(sheetCtx);
         _showCustomized(t, body.trim());
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(s.askFailed)),
         );
       }
     } catch (_) {
       if (mounted) {
         setState(() => _customizing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(s.askFailed)),
         );
       }

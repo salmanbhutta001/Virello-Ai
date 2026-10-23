@@ -6,7 +6,6 @@ import 'core/strings.dart';
 import 'services/api_client.dart';
 import 'services/auth_store.dart';
 import 'services/saved_store.dart';
-import 'features/auth/sign_in_screen.dart';
 import 'features/legal/privacy_consent_gate.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/language_select_screen.dart';

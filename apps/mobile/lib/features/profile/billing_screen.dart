@@ -454,7 +454,7 @@ class _BillingScreenState extends State<BillingScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: VirelloColors.violet.withOpacity(0.12),
+                  color: VirelloColors.violet.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.storefront,

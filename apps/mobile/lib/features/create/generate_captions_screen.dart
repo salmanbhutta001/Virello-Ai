@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -82,7 +81,7 @@ class _GenerateCaptionsScreenState extends State<GenerateCaptionsScreen> {
       String tags = '';
       for (final l in lines) {
         if (l.toUpperCase().startsWith('TAGS:')) {
-          tags = l.replaceFirst(RegExp(r'(?i)^tags:\s*'), '').trim();
+          tags = l.replaceFirst(RegExp(r'^tags:\s*', caseSensitive: false), '').trim();
         } else if (text.isEmpty) {
           text = l.replaceAll(RegExp(r'^[\d]+[.)]\s*'), '').trim();
         }

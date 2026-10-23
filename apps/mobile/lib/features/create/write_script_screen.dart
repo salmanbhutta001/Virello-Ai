@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -93,7 +92,7 @@ class _WriteScriptScreenState extends State<WriteScriptScreen> {
       if (titleIdx >= 0) {
         return (
           title: lines[titleIdx]
-              .replaceFirst(RegExp(r'(?i)^title:\s*'), '')
+              .replaceFirst(RegExp(r'^title:\s*', caseSensitive: false), '')
               .trim(),
           body: lines
               .asMap()

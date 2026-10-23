@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../core/strings.dart';
 import '../../core/theme.dart';
 import '../../services/ai_text_service.dart';
@@ -445,7 +444,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     color: VirelloColors.pink.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(pair['q']!,
+                  child: Text(pair['q'] ?? '',
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
@@ -457,13 +456,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     color: VTheme.chip(context),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: pair['a']!.isEmpty
+                  child: (pair['a'] ?? '').isEmpty
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: VirelloColors.pink))
-                      : Text(pair['a']!,
+                      : Text(pair['a'] ?? '',
                           style: const TextStyle(fontSize: 13, height: 1.5)),
                 ),
               ],

@@ -616,7 +616,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     shape: BoxShape.circle,
                     gradient: _Lavish.avatarGradient,
                   ),
-                  child:  Center(
+                  child:  const Center(
                     child: Text('V',
                         style: TextStyle(
                             color: Colors.white,
@@ -1501,7 +1501,7 @@ class _ShopCatalogScreenState extends State<_ShopCatalogScreen> {
                         child: Container(
                           width: 36,
                           height: 36,
-                          decoration:  BoxDecoration(
+                          decoration:  const BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),

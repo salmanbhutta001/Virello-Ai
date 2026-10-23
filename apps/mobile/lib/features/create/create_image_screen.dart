@@ -30,7 +30,6 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
   final _promptCtrl = TextEditingController();
   int _style = 0; // 0 realistic, 1 cartoon, 2 3d
   String? _imageUrl;
-  int _seed = 0;
   bool _loading = false;
   Timer? _genTimer;
   bool _loadFailed = false;
@@ -99,7 +98,6 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
     final seed = Random().nextInt(1000);
     final styleName = ['realistic', 'cartoon', '3d'][_style];
     setState(() {
-      _seed = seed;
       _imageUrl = null;
       _loading = true;
       _loadFailed = false;
@@ -453,11 +451,13 @@ class _CreateImageScreenState extends State<CreateImageScreen> {
             fit: BoxFit.cover,
             errorBuilder: (ctx, err, stack) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() {
+                if (mounted) {
+                  setState(() {
                   _loadFailed = true;
                   _failMessage =
                       'The image could not be loaded. Please try again.';
                 });
+                }
               });
               return const SizedBox.shrink();
             },

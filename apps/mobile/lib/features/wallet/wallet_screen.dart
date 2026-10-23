@@ -13,7 +13,6 @@ import '../../services/api_client.dart';
 import '../../services/rewards_api.dart';
 import '../posts/my_posts_screen.dart';
 import '../rewards/leaderboard_screen.dart';
-import 'rewards_terms_screen.dart';
 
 /// Wallet (POINTS ONLY): No cash, no withdrawal.
 ///

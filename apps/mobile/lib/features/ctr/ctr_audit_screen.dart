@@ -491,9 +491,10 @@ class _CtrAuditScreenState extends State<CtrAuditScreen> {
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     await Clipboard.setData(ClipboardData(text: text));
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context)
+                    messenger
                         .showSnackBar(SnackBar(content: Text(s.get('copied'))));
                   },
                   icon: const Icon(Icons.copy, size: 16),

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/strings.dart';
 import '../../core/theme.dart';
@@ -2804,7 +2803,7 @@ class _CampaignBuilderScreenState extends State<CampaignBuilderScreen> {
             decoration:  BoxDecoration(
               color: VTheme.text(context),
               borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(24)),
+                  const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SafeArea(
               child: Column(children: [

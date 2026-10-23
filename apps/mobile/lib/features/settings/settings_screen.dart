@@ -61,11 +61,6 @@ class SettingsScreen extends StatelessWidget {
         ],
       );
 
-  void _policySoon(BuildContext context) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(_s().policySoon)));
-  }
-
   void _trustDialog(BuildContext context, String title, String body) {
     showDialog(
       context: context,

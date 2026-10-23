@@ -10,6 +10,7 @@
 /// honoured for backward compatibility during the backend rollout.
 ///
 /// All image-generation call sites route through here.
+library;
 import 'dart:async';
 import 'dart:convert';
 

@@ -245,7 +245,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         onTap: _signInWithApple,
                         child:  IconTheme(
                           data: IconThemeData(color: VTheme.text(context)),
-                          child: AppleIcon(size: 24),
+                          child: const AppleIcon(size: 24),
                         ),
                       ),
                     ],

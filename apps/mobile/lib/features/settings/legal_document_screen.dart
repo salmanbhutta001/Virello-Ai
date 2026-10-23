@@ -110,7 +110,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline,
                       size: 48,
                       color: VirelloColors.muted,

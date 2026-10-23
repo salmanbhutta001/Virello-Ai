@@ -17,9 +17,9 @@ class AffiliateDisclosure extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.12),
+        color: Colors.amber.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.withOpacity(0.4)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
