@@ -25,8 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Pre-paint: apply the shared site theme + login state before
+            first paint (same localStorage keys as the main site), so
+            these pages never flash the wrong theme or auth buttons. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('virello-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');document.documentElement.setAttribute('data-auth',localStorage.getItem('virello_token')?'in':'out');}catch(e){document.documentElement.setAttribute('data-theme','dark');document.documentElement.setAttribute('data-auth','out');}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

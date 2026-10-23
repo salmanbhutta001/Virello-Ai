@@ -172,3 +172,72 @@ img { max-width: 100%; display: block; }
 .price-tag { font-family: var(--font-d); font-size: 40px; font-weight: 800; }
 .mut { color: var(--mut); }
 .small { font-size: 13.5px; }
+
+/* ===== Site-shell unification (matches the main virelloai.online shell) ===== */
+
+/* Official logo image (same asset + treatment as the main site header) */
+.logo-img { height: 38px; width: auto; display: block; }
+
+/* Auth visibility — driven by <html data-auth> set pre-paint from the
+   shared 'virello_token' key; no flicker, no wrong-state flash. */
+:root[data-auth="in"] .auth-out { display: none !important; }
+:root[data-auth="out"] .auth-in { display: none !important; }
+
+/* Header icon buttons (settings gear + theme toggle), as on the main site */
+.icon-btn, .theme-toggle {
+  width: 42px; height: 42px; border-radius: 12px; flex: none;
+  border: 1px solid var(--line2); background: var(--surface); color: var(--txt);
+  display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  cursor: pointer; transition: 0.2s;
+}
+.icon-btn:hover, .theme-toggle:hover { border-color: rgba(249, 81, 119, 0.55); color: var(--pink); transform: translateY(-1px); }
+.icon-btn svg, .theme-toggle svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .ic-moon { display: none; }
+:root[data-theme="light"] .theme-toggle .ic-sun { display: none; }
+:root[data-theme="light"] .theme-toggle .ic-moon { display: block; }
+
+/* Active state for the main nav, as on the main site */
+.main-nav a.active { color: var(--txt); background: rgba(249, 81, 119, 0.12); }
+
+/* Pill strip under the header (same strip as the main site) */
+.topnav-strip {
+  display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden;
+  padding: 8px 12px; background: var(--surface); border-top: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.topnav-strip::-webkit-scrollbar { display: none; }
+.topnav-strip a {
+  flex: 0 0 auto; padding: 8px 13px; border-radius: 999px; color: var(--mut);
+  font-weight: 600; font-size: 14px; white-space: nowrap;
+}
+.topnav-strip a.active { color: #fff; background: linear-gradient(135deg, #e91e63, #9c27b0); }
+.topnav-strip a.nav-spot {
+  color: var(--pink); font-weight: 700;
+  background: rgba(249, 81, 119, 0.12); border: 1px solid rgba(249, 81, 119, 0.35);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+.topnav-strip a.nav-spot:hover { transform: translateY(-2px); background: rgba(249, 81, 119, 0.2); box-shadow: 0 4px 14px rgba(249, 81, 119, 0.25); }
+@media (min-width: 1021px) { .topnav-strip { justify-content: center; padding: 10px 24px; } .topnav-strip a { font-size: 14.5px; padding: 9px 16px; } }
+
+/* Light theme — same tokens as the main site's light theme */
+:root[data-theme="light"] {
+  --bg: #f8f9fa; --bg2: #ffffff; --surface: #ffffff; --surface2: #ffffff; --surface3: #eef0f3;
+  --line: rgba(11, 11, 14, 0.09); --line2: rgba(11, 11, 14, 0.17);
+  --grad: linear-gradient(120deg, #e63e63 0%, #c92a54 55%, #a82447 100%);
+  --txt: #0b0b0e; --mut: #4e5764; --mut2: #525b68;
+  --shadow: 0 20px 50px rgba(11, 11, 24, 0.13);
+  color-scheme: light;
+}
+:root[data-theme="light"] .site-header { background: rgba(255, 255, 255, 0.85); }
+:root[data-theme="light"] .btn-ghost { background: rgba(11, 11, 14, 0.03); }
+:root[data-theme="light"] .main-nav a:hover { background: rgba(11, 11, 14, 0.05); }
+:root[data-theme="light"] .logo-img, :root[data-theme="light"] .foot-logo {
+  background: #0b0b0e; border-radius: 12px; padding: 7px 12px; height: 50px;
+  box-shadow: 0 8px 22px rgba(11, 11, 24, 0.18);
+}
+:root[data-theme="light"] .post-body { color: #2a2f38; }
+:root[data-theme="light"] .card:hover { box-shadow: 0 18px 44px rgba(11, 11, 24, 0.13); }
+@media (max-width: 640px) {
+  :root[data-theme="light"] .logo-img { height: 40px; padding: 5px 9px; }
+  .icon-btn, .theme-toggle { width: 38px; height: 38px; border-radius: 10px; }
+}

@@ -4,11 +4,15 @@ export default function Footer() {
       <div className="wrap">
         <div className="footer-grid">
           <div>
-            <div className="logo" style={{ marginBottom: 14 }}>
-              <span className="vmark">V</span>
-              <span>
-                Virello <span className="grad-text">AI</span>
-              </span>
+            <div style={{ marginBottom: 14 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="logo-img foot-logo"
+                src="/logo-virello.png"
+                alt="Virello AI"
+                width={560}
+                height={175}
+              />
             </div>
             <p className="mut" style={{ fontSize: 14.5, maxWidth: 320 }}>
               Your AI Growth Manager. Paste a post, choose a goal, and let AI
