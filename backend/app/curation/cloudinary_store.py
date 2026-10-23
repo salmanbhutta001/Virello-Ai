@@ -91,7 +91,11 @@ async def upload_image(data: bytes, public_id: str,
         try:
             detail = r.json()
         except Exception:
-            detail = (r.text or "")[:300]
+            # Best-effort diagnostics only: never let reading the body
+            # mask the real error — this path must always end in the
+            # RuntimeError below, even for response-like objects whose
+            # .text is unavailable.
+            detail = (getattr(r, "text", "") or "")[:300]
         # Cloudinary returns {"error": {"message": "..."}} — surface the
         # message (never credentials) so 401 causes are diagnosable.
         msg = (detail.get("error", {}).get("message")

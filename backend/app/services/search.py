@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from sqlalchemy import and_, case, desc, func, or_, select
+from sqlalchemy import String, and_, case, cast, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.core import Campaign, CampaignStatus, User
@@ -51,7 +51,7 @@ async def search_posts(db: AsyncSession, q: str,
             func.lower(Campaign.title).like(like),
             func.lower(Campaign.post_url).like(like),
             func.lower(Campaign.platform).like(like),
-            func.lower(func.cast(DiscoveryPlacement.topics, func.String)).like(like),
+            func.lower(cast(DiscoveryPlacement.topics, String)).like(like),
         ))
 
     # Relevance score via CASE: exact title > prefix > contains > other.
@@ -62,7 +62,7 @@ async def search_posts(db: AsyncSession, q: str,
         (func.lower(Campaign.title) == w0, 100),
         (func.lower(Campaign.title).like(f"{w0}%"), 80),
         (func.lower(Campaign.title).like(w0_like), 60),
-        (func.lower(func.cast(DiscoveryPlacement.topics, func.String)).like(w0_like), 40),
+        (func.lower(cast(DiscoveryPlacement.topics, String)).like(w0_like), 40),
         (or_(func.lower(Campaign.post_url).like(w0_like),
              func.lower(Campaign.platform).like(w0_like)), 20),
         else_=10,

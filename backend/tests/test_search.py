@@ -3,6 +3,7 @@
 Verifies real matches return and gibberish returns empty — never fake results.
 """
 import uuid
+from datetime import timedelta
 
 import httpx
 import pytest
@@ -41,7 +42,7 @@ async def auth_headers():
         await db.commit()
         await db.refresh(u)
         uid = u.id
-        token = create_token(uid)
+        token = create_token(str(uid), timedelta(minutes=30), "access")
     return {"Authorization": f"Bearer {token}"}
 
 

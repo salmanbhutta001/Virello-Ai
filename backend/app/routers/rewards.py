@@ -220,8 +220,10 @@ async def share_stats(user: User = Depends(get_current_user),
 @router.get("/volume-progress")
 async def volume_progress(user: User = Depends(get_current_user),
                          db: AsyncSession = Depends(get_db)) -> dict:
-    """Volume-bonus progress: verified share-clicks in rolling 7 days (points)."""
-    return await rewards_svc.get_volume_progress_points(db, user.id)
+    """Volume-bonus progress: verified share-clicks in rolling 7 days.
+    Cash contract (mobile rewards_api.dart): thresholds carry
+    {clicks, cents, achieved, paid, progress}."""
+    return await wallet_svc.get_volume_progress(db, user.id)
 
 
 @router.get("/sellers")
@@ -229,16 +231,10 @@ async def seller_leaderboard(period: str = "week",
                              user: User = Depends(get_current_user),
                              db: AsyncSession = Depends(get_db)) -> dict:
     """Top Sellers leaderboard: ranked by VERIFIED share-link clicks.
-    Separate from the posters leaderboard. Prizes in POINTS (no cash)."""
-    data = await wallet_svc.get_seller_leaderboard(db, period)
-    # Convert cash prize display to points (500 pts = $1.00).
-    if "prize_cents" in data:
-        cents = int(data["prize_cents"] or 0)
-        points = (cents * 500) // 100
-        data["prize_points"] = points
-        data.pop("prize_cents", None)
-        data.pop("prize_display", None)
-    return data
+    Separate from the posters leaderboard. Prizes are CASH (weekly
+    $10.00 / monthly $50.00 — the wallet rate card); the period object
+    carries prize_cents + prize_display per the mobile contract."""
+    return await wallet_svc.get_seller_leaderboard(db, period)
 
 
 @router.get("/seller-winners")
@@ -250,9 +246,9 @@ async def seller_winners(user: User = Depends(get_current_user),
 @router.get("/payouts")
 async def payout_wall(limit: int = 20, offset: int = 0,
                       db: AsyncSession = Depends(get_db)) -> dict:
-    """Points-only system: no cash payouts. Returns empty.
-    (Kept for API compatibility; mobile no longer shows this.)"""
-    return {"payouts": [], "total": 0}
+    """Public payout wall: ONLY withdrawals an admin genuinely marked
+    paid, with masked names and no PII (see wallet.get_payout_wall)."""
+    return await wallet_svc.get_payout_wall(db, limit=limit, offset=offset)
 
 
 @share_redirect_router.get("/s/{code}")
@@ -289,10 +285,10 @@ async def follow_share_link(code: str, request: Request,
         await db.commit()
         viewer_key = f"user:{viewer_id}" if viewer_id else f"ip:{ip_hash}"
         try:
-            await rewards_svc.award_share_click_points(db, sharer_id, viewer_key,
-                                                       viewer_id, asin, code)
+            await wallet_svc.award_share_click_cash(db, sharer_id, viewer_key,
+                                                    viewer_id, asin, code)
         except Exception:
-            log.exception("rewards: share_click points award failed")
+            log.exception("rewards: share_click cash award failed")
     except Exception:
         log.exception("rewards: share_click logging failed (non-fatal)")
         try:

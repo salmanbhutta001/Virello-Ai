@@ -990,7 +990,9 @@ async def admin_post_edit(post_id: str, body: PostRewardIn,
                     details=f"post={post_id} " + ",".join(changed)))
     await db.commit()
     return {"ok": True, "post_id": str(pid),
-            "reward_cents": p.reward_cents, "status": p.status}
+            "reward_cents": p.reward_cents,
+            "reward_display": claims_svc.fmt_reward(p.reward_cents or 0),
+            "status": p.status}
 
 
 @router.delete("/posts/{post_id}")
@@ -1949,119 +1951,6 @@ async def admin_flag_delete(flag_id: str,
     await db.commit()
     return {"ok": True, "deleted": flag_id}
 
-
-# ------------------------------------------------------- reward claims
-class ClaimApproveIn(BaseModel):
-    admin_note: str = ""
-
-
-class ClaimRejectIn(BaseModel):
-    reason: str = ""
-
-
-class PostRewardIn(BaseModel):
-    reward_cents: int
-
-
-@router.get("/reward-claims")
-async def admin_reward_claims(status: str = "",
-                             db: AsyncSession = Depends(get_db),
-                             _admin: User = Depends(require_admin)) -> dict:
-    """Proof-backed reward claims, pending first. Admin reviews the proof
-    image and approves (credits the ledger) or rejects (with reason)."""
-    from sqlalchemy import case
-
-    from app.models.rewards import RewardClaim
-    from app.services import reward_claims as claims_svc
-    stmt = (select(RewardClaim, User.email)
-            .join(User, User.id == RewardClaim.user_id))
-    if status:
-        if status not in ("pending", "approved", "rejected"):
-            raise HTTPException(400, "bad status")
-        stmt = stmt.where(RewardClaim.status == status)
-    stmt = (stmt.order_by(case((RewardClaim.status == "pending", 0), else_=1),
-                          RewardClaim.created_at.desc()).limit(200))
-    rows = (await db.execute(stmt)).all()
-    out = []
-    for c, email in rows:
-        d = claims_svc.claim_to_dict(c)
-        d["user_email"] = email
-        out.append(d)
-    return {"claims": out}
-
-
-async def _get_claim(db: AsyncSession, claim_id: str):
-    from app.models.rewards import RewardClaim
-    try:
-        cid = uuid.UUID(claim_id)
-    except ValueError:
-        raise HTTPException(404, "Claim not found")
-    c = (await db.execute(
-        select(RewardClaim).where(RewardClaim.id == cid))).scalar_one_or_none()
-    if c is None:
-        raise HTTPException(404, "Claim not found")
-    if c.status != "pending":
-        raise HTTPException(422, f"claim already {c.status}")
-    return c
-
-
-@router.post("/reward-claims/{claim_id}/approve")
-async def admin_claim_approve(claim_id: str, body: ClaimApproveIn,
-                             db: AsyncSession = Depends(get_db),
-                             admin: User = Depends(require_admin)) -> dict:
-    """Approve a claim: the proof-backed service credits the ledger
-    (idempotent), notifies the user, and audits the admin action."""
-    from app.services import reward_claims as claims_svc
-
-    c = await _get_claim(db, claim_id)
-    note = (body.admin_note or "").strip() or None
-    c = await claims_svc.decide_claim(db, c, True, admin.id, note)
-    return {"ok": True, "status": c.status,
-            "claim": claims_svc.claim_to_dict(c)}
-
-
-@router.post("/reward-claims/{claim_id}/reject")
-async def admin_claim_reject(claim_id: str, body: ClaimRejectIn,
-                            db: AsyncSession = Depends(get_db),
-                            admin: User = Depends(require_admin)) -> dict:
-    """Reject a claim with a reason. Nothing is credited; the user may
-    re-file with a clearer screenshot."""
-    from app.services import reward_claims as claims_svc
-
-    reason = (body.reason or "").strip()
-    if not reason:
-        raise HTTPException(422, "reason is required")
-    c = await _get_claim(db, claim_id)
-    c = await claims_svc.decide_claim(db, c, False, admin.id, reason)
-    return {"ok": True, "status": c.status,
-            "claim": claims_svc.claim_to_dict(c)}
-
-
-@router.patch("/posts/{post_id}")
-async def admin_post_reward(post_id: str, body: PostRewardIn,
-                           db: AsyncSession = Depends(get_db),
-                           admin: User = Depends(require_admin)) -> dict:
-    """Set the per-post cash reward badge (integer cents) shown on the feed
-    post. Different posts carry different rewards; empty = the admin-tunable
-    default badge."""
-    from app.models.growth import DiscoveryPlacement
-
-    if body.reward_cents < 0:
-        raise HTTPException(422, "reward_cents must be >= 0")
-    try:
-        pid = uuid.UUID(post_id)
-    except ValueError:
-        raise HTTPException(404, "Post not found")
-    p = (await db.execute(select(DiscoveryPlacement).where(
-        DiscoveryPlacement.id == pid))).scalar_one_or_none()
-    if p is None:
-        raise HTTPException(404, "Post not found")
-    p.reward_cents = body.reward_cents
-    _audit(db, admin.id, "admin.post.reward",
-           f"post={post_id} reward_cents={body.reward_cents}")
-    await db.commit()
-    return {"ok": True, "placement_id": post_id,
-            "reward_cents": body.reward_cents}
 
 
 # ---------------------------------------------------------------------------

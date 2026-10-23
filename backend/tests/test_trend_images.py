@@ -235,7 +235,13 @@ async def test_resolve_skips_generation_for_name_like_topics(db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_resolve_schedules_generation_when_no_real_image(db, monkeypatch):
+async def test_resolve_returns_generated_url_when_no_real_image(db, monkeypatch):
+    """Contract since the 2026-10-17 permanent fix in _resolve_one: a
+    non-person topic with no real photo gets the deterministic abstract
+    illustration URL synchronously (and cached) — the old design returned
+    "" and fired a background generate task, which kept failing and left
+    cards imageless forever. No background task is spawned anymore.
+    (This test previously asserted the pre-fix contract.)"""
     async def _no_info(query, lang="en", timeout=8.0):
         return {"image_url": "", "is_person": False}
 
@@ -256,9 +262,14 @@ async def test_resolve_schedules_generation_when_no_real_image(db, monkeypatch):
         await ti.resolve_trend_thumbnails(trends, db)
     finally:
         monkeypatch.setattr(ti.asyncio, "create_task", orig_create)
-    # No thumbnail this load (fallback shows), generation scheduled.
-    assert trends[0].get("thumbnail_url", "") == ""
-    assert len(spawned) == 1
+    expected = ti.generated_image_url(
+        ti.topic_key("Obscure News Headline XYZ"),
+        "Obscure News Headline XYZ")
+    assert trends[0].get("thumbnail_url", "") == expected
+    assert len(spawned) == 0
+    row = await ti.get_cached_image(
+        db, ti.topic_key("Obscure News Headline XYZ"))
+    assert row is not None and row.kind == "generated"
 
 
 @pytest.mark.asyncio

@@ -511,8 +511,16 @@ async def test_top_seller_pays_once_per_period():
         await db.commit()
     a = await _mk_user(name="Seller A")
     b = await _mk_user(name="Seller B")
-    await _add_clicks(a, 10, days_ago=3)   # last week
-    await _add_clicks(b, 4, days_ago=3)
+    # Settlement pays COMPLETED Mon-Sun (Asia/Karachi) weeks only, so the
+    # clicks must land inside last week on ANY run day: the Friday of
+    # last week is always (weekday + 3) days back. (A flat days_ago=3
+    # lands in the still-open current week Thu-Sun, which correctly
+    # pays nothing — the old fixture only passed Mon-Wed.)
+    last_week_days_ago = (
+        datetime.now(timezone.utc).astimezone(wallet_svc.KHI).weekday()
+        + 3)
+    await _add_clicks(a, 10, days_ago=last_week_days_ago)   # last week
+    await _add_clicks(b, 4, days_ago=last_week_days_ago)
     async with SessionLocal() as db:
         paid1 = await wallet_svc.settle_seller_periods(db)
     assert await _cash(a) == 1000   # $10.00 weekly top seller
