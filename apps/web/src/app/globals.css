@@ -208,16 +208,37 @@ img { max-width: 100%; display: block; }
 .topnav-strip::-webkit-scrollbar { display: none; }
 .topnav-strip a {
   flex: 0 0 auto; padding: 8px 13px; border-radius: 999px; color: var(--mut);
-  font-weight: 600; font-size: 14px; white-space: nowrap;
+  font-weight: 600; font-size: 14px; white-space: nowrap; position: relative;
 }
-.topnav-strip a.active { color: #fff; background: linear-gradient(135deg, #e91e63, #9c27b0); }
+/* Active page indicator (2026-10-24 redesign): a highlighted line under
+   the page text — NOT a filled purple pill. The pill hid which page was
+   active on some pages and read as a button, not a location marker. */
+.topnav-strip a.active { color: var(--pink); background: none; }
+.topnav-strip a.active::after {
+  content: ""; position: absolute; left: 13px; right: 13px; bottom: 1px;
+  height: 3px; border-radius: 999px; background: var(--grad);
+}
 .topnav-strip a.nav-spot {
   color: var(--pink); font-weight: 700;
   background: rgba(249, 81, 119, 0.12); border: 1px solid rgba(249, 81, 119, 0.35);
   transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
 .topnav-strip a.nav-spot:hover { transform: translateY(-2px); background: rgba(249, 81, 119, 0.2); box-shadow: 0 4px 14px rgba(249, 81, 119, 0.25); }
-@media (min-width: 1021px) { .topnav-strip { justify-content: center; padding: 10px 24px; } .topnav-strip a { font-size: 14.5px; padding: 9px 16px; } }
+@media (min-width: 1021px) { .topnav-strip { justify-content: center; padding: 10px 24px; } .topnav-strip a { font-size: 14.5px; padding: 9px 16px; } .topnav-strip a.active::after { left: 16px; right: 16px; } }
+
+/* Blog featured (hero) post — horizontal card: picture left, text right.
+   Desktop picture a bit bigger than the original 46% (Hafiz 2026-10-24);
+   mobile keeps a SMALL thumbnail beside the text (never stacked
+   full-width — the stacked version filled the whole phone screen). */
+.hero-post { display: flex; overflow: hidden; align-items: stretch; }
+.hero-post .hero-post-img { flex: 0 0 54%; width: 54%; object-fit: cover; }
+.hero-post .hero-post-body { padding: 26px 28px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.hero-post .hero-post-body h2 { font-size: 26px; }
+@media (max-width: 640px) {
+  .hero-post .hero-post-img { flex-basis: 120px; width: 120px; }
+  .hero-post .hero-post-body { padding: 16px; }
+  .hero-post .hero-post-body h2 { font-size: 18px; }
+}
 
 /* Desktop single-nav rule (legacy parity): the main site hides its
    .nav-links above 1020px and the pill strip is the only nav row.

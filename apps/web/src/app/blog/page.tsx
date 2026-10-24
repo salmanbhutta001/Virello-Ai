@@ -27,6 +27,9 @@ export const metadata: Metadata = {
 };
 
 export default function BlogIndexPage() {
+  // Newest article first (articles.json is newest-first) — the featured
+  // hero post; the grid below shows the rest so nothing appears twice.
+  const [featured, ...rest] = articles;
   return (
     <>
       <section className="hero">
@@ -42,10 +45,45 @@ export default function BlogIndexPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 16 }}>
+      {featured && (
+        <section className="section" style={{ paddingTop: 16, paddingBottom: 0 }}>
+          <div className="wrap">
+            <a
+              href={`/blog/${featured.slug}.html`}
+              className="card hero-post"
+              style={{ padding: 0 }}
+            >
+              <img
+                className="hero-post-img"
+                src={featured.hero}
+                alt=""
+              />
+              <div className="hero-post-body">
+                <span
+                  className="small"
+                  style={{ color: 'var(--pink)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  Featured
+                </span>
+                <p className="small mut" style={{ marginBottom: 0 }}>{featured.meta}</p>
+                <h2 style={{ marginBottom: 0 }}>{featured.title}</h2>
+                <p style={{ flex: 1 }}>{featured.description}</p>
+                <span
+                  className="small"
+                  style={{ color: 'var(--pink)', fontWeight: 600 }}
+                >
+                  Read article →
+                </span>
+              </div>
+            </a>
+          </div>
+        </section>
+      )}
+
+      <section className="section" style={{ paddingTop: 32 }}>
         <div className="wrap">
           <div className="grid grid-3">
-            {articles.map((a) => (
+            {rest.map((a) => (
               <a
                 key={a.slug}
                 href={`/blog/${a.slug}.html`}

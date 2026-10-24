@@ -6,13 +6,15 @@ export default function Footer() {
           <div>
             <div style={{ marginBottom: 14 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="logo-img foot-logo"
-                src="/logo-virello.png"
-                alt="Virello AI"
-                width={560}
-                height={175}
-              />
+              <a href="/" aria-label="Virello AI home">
+                <img
+                  className="logo-img foot-logo"
+                  src="/logo-virello.png"
+                  alt="Virello AI"
+                  width={560}
+                  height={175}
+                />
+              </a>
             </div>
             <p className="mut" style={{ fontSize: 14.5, maxWidth: 320 }}>
               Your AI Growth Manager. Paste a post, choose a goal, and let AI
