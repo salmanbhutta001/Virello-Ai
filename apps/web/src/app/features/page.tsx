@@ -75,7 +75,7 @@ export default function FeaturesPage() {
   return (
     <main>
       <section className="section">
-        <div className="wrap">
+        <div className="wrap center">
           <span className="kicker">Features</span>
           <h1 className="h-xl">
             Built to grow you. <span className="grad-text">Powered by AI.</span>

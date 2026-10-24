@@ -59,7 +59,7 @@ export default function HowPage() {
   return (
     <main>
       <section className="section">
-        <div className="wrap">
+        <div className="wrap center">
           <span className="kicker">How It Works</span>
           <h1 className="h-xl">
             Four steps. <span className="grad-text">Thirty seconds.</span>
