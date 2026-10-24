@@ -105,7 +105,10 @@ export default function FeaturesPage() {
               The free plan includes content analysis, viral scoring and
               audience insights. No card required.
             </p>
-            <a className="btn btn-grad" href="/login.html">
+            <a className="btn btn-grad auth-out" href="/login.html">
+              Start Growing Free
+            </a>
+            <a className="btn btn-grad auth-in" href="/#/dashboard">
               Start Growing Free
             </a>
           </div>

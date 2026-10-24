@@ -58,7 +58,7 @@ export default function Footer() {
                   Uptodown
                 </a>
               </li>
-              <li><a href="/login.html">Web Dashboard</a></li>
+              <li><a href="/login.html" className="auth-out">Web Dashboard</a><a href="/#/dashboard" className="auth-in">Web Dashboard</a></li>
             </ul>
           </div>
         </div>

@@ -110,10 +110,16 @@ export default function HomePage() {
             real people. Never bots, never fake engagement.
           </p>
           <div className="hero-cta">
-            <a className="btn btn-grad" href="/login.html">
+            <a className="btn btn-grad auth-out" href="/login.html">
               Get Started Free
             </a>
-            <a className="btn btn-ghost" href="/login.html">
+            <a className="btn btn-grad auth-in" href="/#/dashboard">
+              Get Started Free
+            </a>
+            <a className="btn btn-ghost auth-out" href="/login.html">
+              Let AI Grow →
+            </a>
+            <a className="btn btn-ghost auth-in" href="/#/dashboard">
               Let AI Grow →
             </a>
           </div>
@@ -391,7 +397,10 @@ export default function HomePage() {
               AI go to work in minutes.
             </p>
             <div className="hero-cta">
-              <a className="btn btn-grad" href="/login.html">
+              <a className="btn btn-grad auth-out" href="/login.html">
+                Try Virello Free
+              </a>
+              <a className="btn btn-grad auth-in" href="/#/dashboard">
                 Try Virello Free
               </a>
               <a className="btn btn-ghost" href="/pricing.html">

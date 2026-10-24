@@ -197,7 +197,10 @@ export default function TrustPage() {
               Accounts built on real audiences don&apos;t get wiped out by the
               next platform cleanup. Start free, grow honestly.
             </p>
-            <a className="btn btn-grad" href="/login.html">
+            <a className="btn btn-grad auth-out" href="/login.html">
+              Start Growing — The Right Way
+            </a>
+            <a className="btn btn-grad auth-in" href="/#/dashboard">
               Start Growing — The Right Way
             </a>
           </div>

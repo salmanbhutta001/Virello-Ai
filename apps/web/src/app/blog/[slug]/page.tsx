@@ -97,7 +97,10 @@ export default async function ArticlePage({ params }: Props) {
               Paste a post, choose a goal, and let your AI Growth Manager
               analyse, optimise and grow it — real audiences, honest analytics.
             </p>
-            <a href="/login.html" className="btn btn-grad">
+            <a href="/login.html" className="btn btn-grad auth-out">
+              Get Started Free
+            </a>
+            <a href="/#/dashboard" className="btn btn-grad auth-in">
               Get Started Free
             </a>
           </div>

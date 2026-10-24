@@ -132,7 +132,10 @@ export default function HowPage() {
           </div>
 
           <div className="center" style={{ marginTop: 48 }}>
-            <a className="btn btn-grad" href="/login.html">
+            <a className="btn btn-grad auth-out" href="/login.html">
+              Try It On Your Post — Free
+            </a>
+            <a className="btn btn-grad auth-in" href="/#/dashboard">
               Try It On Your Post — Free
             </a>
           </div>

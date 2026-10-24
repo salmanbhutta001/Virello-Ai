@@ -141,7 +141,10 @@ export default function AboutPage() {
           </div>
 
           <div className="center" style={{ marginTop: 48 }}>
-            <a className="btn btn-grad" href="/login.html">
+            <a className="btn btn-grad auth-out" href="/login.html">
+              Join Virello Free
+            </a>
+            <a className="btn btn-grad auth-in" href="/#/dashboard">
               Join Virello Free
             </a>
           </div>
