@@ -219,6 +219,17 @@ img { max-width: 100%; display: block; }
 .topnav-strip a.nav-spot:hover { transform: translateY(-2px); background: rgba(249, 81, 119, 0.2); box-shadow: 0 4px 14px rgba(249, 81, 119, 0.25); }
 @media (min-width: 1021px) { .topnav-strip { justify-content: center; padding: 10px 24px; } .topnav-strip a { font-size: 14.5px; padding: 9px 16px; } }
 
+/* Desktop single-nav rule (legacy parity): the main site hides its
+   .nav-links above 1020px and the pill strip is the only nav row.
+   Without this, Next pages show BOTH the main nav and the strip on
+   desktop — the "double bar" reported 2026-10-24. On mobile the
+   main nav is already hidden (max-width:1020px rule above) and the
+   hamburger menu covers navigation, so this changes desktop only. */
+@media (min-width: 1021px) {
+  .site-header .bar { justify-content: space-between; }
+  .main-nav { display: none; }
+}
+
 /* Light theme — same tokens as the main site's light theme */
 :root[data-theme="light"] {
   --bg: #f8f9fa; --bg2: #ffffff; --surface: #ffffff; --surface2: #ffffff; --surface3: #eef0f3;
