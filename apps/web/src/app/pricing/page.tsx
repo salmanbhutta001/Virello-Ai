@@ -165,10 +165,7 @@ export default function PricingPage() {
                 </small>
               </div>
               <FeatureList features={FREE_FEATURES} />
-              <a className="btn btn-ghost auth-out" href="/login.html" style={{ width: '100%' }}>
-                Get Started Free
-              </a>
-              <a className="btn btn-ghost auth-in" href="/#/dashboard" style={{ width: '100%' }}>
+              <a className="btn btn-ghost" href="/#/login?plan=free&next=dashboard" style={{ width: '100%' }}>
                 Get Started Free
               </a>
             </div>
@@ -211,10 +208,7 @@ export default function PricingPage() {
               </div>
               <p className="small mut">Billed monthly</p>
               <FeatureList features={PRO_FEATURES} />
-              <a className="btn btn-grad auth-out" href="/login.html" style={{ width: '100%' }}>
-                Start Growing
-              </a>
-              <a className="btn btn-grad auth-in" href="/#/dashboard" style={{ width: '100%' }}>
+              <a className="btn btn-grad" href="/#/login?plan=Pro" style={{ width: '100%' }}>
                 Start Growing
               </a>
             </div>
@@ -230,10 +224,7 @@ export default function PricingPage() {
               </div>
               <p className="small mut">Billed monthly</p>
               <FeatureList features={BUSINESS_FEATURES} />
-              <a className="btn btn-ghost auth-out" href="/login.html" style={{ width: '100%' }}>
-                Talk To Us
-              </a>
-              <a className="btn btn-ghost auth-in" href="/#/dashboard" style={{ width: '100%' }}>
+              <a className="btn btn-ghost" href="/contact.html" style={{ width: '100%' }}>
                 Talk To Us
               </a>
             </div>
