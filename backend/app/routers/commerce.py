@@ -132,6 +132,11 @@ class ProductOut(BaseModel):
     is_affiliate: bool
     affiliate_url: str | None = None
     affiliate_provider: str | None = None
+    # Amazon ASIN (10-char product id). The Product table has NO asin
+    # column — the ASIN lives only inside affiliate_url as /dp/<ASIN>.
+    # Extracted in _to_out so list items and detail responses carry it
+    # (frontend product pages look products up by ASIN).
+    asin: str | None = None
     trend_score: int = 0
     trend_signals: str = ""
     created_at: str
@@ -163,6 +168,22 @@ def _price_display(price_cents: int, currency: str) -> str:
     return f"{sym}{price_cents / 100:,.2f}"
 
 
+_ASIN_RE = re.compile(r"^[A-Z0-9]{10}$")
+# ASIN inside an affiliate URL: /dp/<10-char ASIN> followed by a
+# non-alphanumeric char (or end of string) so a longer token can't
+# false-match a 10-char prefix.
+_ASIN_IN_URL = re.compile(r"/dp/([A-Z0-9]{10})(?![A-Z0-9])")
+
+
+def _asin_of_url(url: str | None) -> str | None:
+    """Extract the ASIN from an affiliate URL (…/dp/<ASIN>?tag=…).
+
+    The Product table has no asin column — this is the only source of
+    the ASIN for catalog rows. Mirrors app.routers.shop._asin_of_url."""
+    m = _ASIN_IN_URL.search(url or "")
+    return m.group(1) if m else None
+
+
 def _to_out(p: Product) -> ProductOut:
     return ProductOut(
         id=str(p.id),
@@ -180,6 +201,7 @@ def _to_out(p: Product) -> ProductOut:
         is_affiliate=bool(p.is_affiliate),
         affiliate_url=p.affiliate_url,
         affiliate_provider=p.affiliate_provider,
+        asin=_asin_of_url(p.affiliate_url),
         trend_score=int(p.trend_score or 0),
         trend_signals=p.trend_signals or "",
         created_at=p.created_at.isoformat() if p.created_at else "",
@@ -337,6 +359,51 @@ async def list_products(
         "offset": offset,
         "sort_note": sort_note,
     }
+
+
+@router.get("/products/by-asin/{asin}", response_model=dict)
+async def product_by_asin(
+    asin: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Public lookup of one catalog product by Amazon ASIN.
+
+    Fixes /product.html?asin=<older ASIN> showing "Product not found":
+    the catalog has no asin column, so the ASIN is matched against the
+    /dp/<ASIN> pattern inside affiliate_url (canonical server-built URL
+    first, then any /dp/<ASIN> URL — older rows may carry a different
+    partner tag). The returned object is a flat list-item shape (same
+    fields as GET /products items, including a populated ``asin``), so
+    the frontend's renderProductDetailContent can consume it directly.
+
+    Normalization: input is stripped + uppercased. Malformed input
+    (not 10 alphanumeric chars) returns 404 — same convention as
+    GET /shop/go/{asin} ("unknown product" for a bad ASIN). A
+    well-formed but absent ASIN also returns 404 with a clear body.
+    """
+    asin = (asin or "").strip().upper()
+    if not _ASIN_RE.match(asin):
+        raise HTTPException(404, "Product not found")
+    from app.services.affiliate.amazon import AmazonAffiliateProvider
+
+    canonical_url = AmazonAffiliateProvider().build_affiliate_url(asin)
+    rows = (
+        await db.execute(
+            select(Product).where(
+                Product.is_active.is_(True),
+                or_(
+                    Product.affiliate_url == canonical_url,
+                    Product.affiliate_url.ilike(f"%/dp/{asin}%"),
+                ),
+            )
+        )
+    ).scalars().all()
+    # ilike is only a pre-filter: verify the extracted ASIN in Python so
+    # a longer token sharing the 10-char prefix can never false-match.
+    product = next((p for p in rows if _asin_of_url(p.affiliate_url) == asin), None)
+    if product is None:
+        raise HTTPException(404, "Product not found")
+    return _to_out(product).model_dump()
 
 
 @router.get("/products/slug/{slug}", response_model=dict)

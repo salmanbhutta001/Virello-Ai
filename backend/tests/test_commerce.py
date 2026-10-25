@@ -226,3 +226,105 @@ async def test_affiliate_product_fields_and_sync(client: httpx.AsyncClient, user
     assert r.status_code == 400
     await client.delete(f"/api/v1/commerce/products/{pid}", headers=_auth(user))
     await client.delete(f"/api/v1/commerce/products/{pid2}", headers=_auth(user))
+
+
+# ---------------------------------------------------------------------------
+# GET /products/by-asin/{asin} — "Product not found" fix (2026-10-25).
+# The Product table has NO asin column; the ASIN lives only inside
+# affiliate_url as /dp/<ASIN>. The endpoint matches that pattern.
+# ---------------------------------------------------------------------------
+
+def _new_asin() -> str:
+    return f"B0{uuid.uuid4().hex[:8].upper()}"
+
+
+async def _make_affiliate_product(client, user, asin, url=None):
+    from app.services.affiliate.amazon import AmazonAffiliateProvider
+    if url is None:
+        url = AmazonAffiliateProvider().build_affiliate_url(asin)
+    r = await client.post("/api/v1/commerce/products", json={
+        "title": f"By-ASIN test {asin}", "price_cents": 1299,
+        "is_affiliate": True, "affiliate_url": url,
+        "affiliate_provider": "amazon",
+    }, headers=_auth(user))
+    assert r.status_code == 201, r.text
+    return r.json()
+
+
+@pytest.mark.asyncio
+async def test_by_asin_found_canonical_url(client: httpx.AsyncClient, user):
+    asin = _new_asin()
+    p = await _make_affiliate_product(client, user, asin)
+    try:
+        r = await client.get(f"/api/v1/commerce/products/by-asin/{asin}")
+        assert r.status_code == 200, r.text
+        j = r.json()
+        # Flat list-item shape, same id, populated asin.
+        assert j["id"] == p["id"]
+        assert j["asin"] == asin
+        assert j["affiliate_url"] == p["affiliate_url"]
+        assert j["title"] == p["title"]
+        # The list endpoint now carries the ASIN too (was null before).
+        r = await client.get("/api/v1/commerce/products",
+                             params={"q": asin}, headers=_auth(user))
+        assert r.status_code == 200
+        items = [x for x in r.json()["products"] if x["id"] == p["id"]]
+        assert len(items) == 1
+        assert items[0]["asin"] == asin
+    finally:
+        await client.delete(f"/api/v1/commerce/products/{p['id']}", headers=_auth(user))
+
+
+@pytest.mark.asyncio
+async def test_by_asin_found_via_affiliate_url_legacy_tag(client: httpx.AsyncClient, user):
+    # Older catalog rows may carry a different partner tag (or none) —
+    # the /dp/<ASIN> pattern inside affiliate_url is what matches.
+    asin = _new_asin()
+    legacy_url = f"https://www.amazon.com/dp/{asin}?tag=old-tag-20"
+    p = await _make_affiliate_product(client, user, asin, url=legacy_url)
+    try:
+        # Lowercase input is normalized (strip + upper).
+        r = await client.get(f"/api/v1/commerce/products/by-asin/{asin.lower()}")
+        assert r.status_code == 200, r.text
+        j = r.json()
+        assert j["id"] == p["id"]
+        assert j["asin"] == asin
+        assert j["affiliate_url"] == legacy_url
+    finally:
+        await client.delete(f"/api/v1/commerce/products/{p['id']}", headers=_auth(user))
+
+
+@pytest.mark.asyncio
+async def test_by_asin_404_when_missing(client: httpx.AsyncClient, user):
+    asin = _new_asin()  # well-formed, never listed
+    r = await client.get(f"/api/v1/commerce/products/by-asin/{asin}")
+    assert r.status_code == 404, r.text
+    assert "not found" in r.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_by_asin_malformed_input_is_404(client: httpx.AsyncClient, user):
+    # Not a 10-char alphanumeric ASIN → 404 (same convention as
+    # GET /shop/go/{asin}); documented in the endpoint docstring.
+    for bad in ("short", "B07F8S18D5!", "B07F8S18D55", "B07F8S18D"):
+        r = await client.get(f"/api/v1/commerce/products/by-asin/{bad}")
+        assert r.status_code == 404, (bad, r.text)
+        assert "not found" in r.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_by_asin_shape_matches_list_item(client: httpx.AsyncClient, user):
+    # renderProductDetailContent consumes list items — the by-asin
+    # response must carry exactly the same fields.
+    asin = _new_asin()
+    p = await _make_affiliate_product(client, user, asin)
+    try:
+        r = await client.get(f"/api/v1/commerce/products/by-asin/{asin}")
+        assert r.status_code == 200, r.text
+        r2 = await client.get("/api/v1/commerce/products",
+                              params={"q": asin}, headers=_auth(user))
+        listed = next(x for x in r2.json()["products"] if x["id"] == p["id"])
+        assert set(r.json().keys()) == set(listed.keys())
+        assert r.json() == listed
+    finally:
+        await client.delete(f"/api/v1/commerce/products/{p['id']}", headers=_auth(user))
