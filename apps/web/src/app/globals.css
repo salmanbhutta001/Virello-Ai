@@ -204,6 +204,7 @@ img { max-width: 100%; display: block; }
   display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden;
   padding: 8px 12px; background: var(--surface); border-top: 1px solid var(--line);
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  justify-content: safe center; /* mobile wrap rule below centres it as two rows */
 }
 .topnav-strip::-webkit-scrollbar { display: none; }
 .topnav-strip a {
@@ -225,6 +226,7 @@ img { max-width: 100%; display: block; }
 }
 .topnav-strip a.nav-spot:hover { transform: translateY(-2px); background: rgba(249, 81, 119, 0.2); box-shadow: 0 4px 14px rgba(249, 81, 119, 0.25); }
 @media (min-width: 1021px) { .topnav-strip { justify-content: center; padding: 10px 24px; } .topnav-strip a { font-size: 14.5px; padding: 9px 16px; } .topnav-strip a.active::after { left: 16px; right: 16px; } }
+@media (max-width: 1020px) { .topnav-strip { flex-wrap: wrap; justify-content: center; overflow: visible; } }
 
 /* Blog featured (hero) post — horizontal card: picture left, text right.
    Desktop picture a bit bigger than the original 46% (Hafiz 2026-10-24);
