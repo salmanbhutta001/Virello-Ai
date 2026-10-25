@@ -28,6 +28,7 @@ export default function Footer() {
               <li><a href="/how.html">How It Works</a></li>
               <li><a href="/pricing.html">Pricing</a></li>
               <li><a href="/blog.html">Blog</a></li>
+              <li><a href="/free-caption-generator.html">Free Caption Generator</a></li>
               <li><a href="/#/shop">Shop</a></li>
             </ul>
           </div>

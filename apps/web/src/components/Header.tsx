@@ -31,9 +31,8 @@ const STRIP = [
   { href: '/pricing.html', label: 'Pricing', key: 'pricing' },
   { href: '/blog.html', label: 'Blog', key: 'blog' },
   { href: '/about.html', label: 'About Us', key: 'about' },
-  { href: '/help.html', label: 'Help Center', key: 'help' },
-  { href: '/contact.html', label: 'Contact', key: 'contact' },
-  { href: '/trust.html', label: 'Trust & Safety', key: 'trust' },
+  // Help Center / Contact / Trust & Safety live in the footer only
+  // (Hafiz, 2026-10-25) — removed from the top strip.
 ];
 
 function activeKey(pathname: string | null): string {
