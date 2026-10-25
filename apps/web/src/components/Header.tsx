@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { API_BASE } from '@/lib/api';
 
 /* Header matches the main virelloai.online site shell exactly:
    official logo image, same nav, top pill strip, shared theme
@@ -76,6 +77,150 @@ export default function Header() {
     return () => window.removeEventListener('storage', sync);
   }, []);
 
+  // Session timeout — same rules as the legacy SPA shell: 30 min idle or
+  // 24 h since login logs out; an expiring access token is silently
+  // refreshed while the session is still valid.
+  useEffect(() => {
+    const IDLE_MS = 30 * 60 * 1000;
+    const MAX_MS = 24 * 60 * 60 * 1000;
+    const tokenExpMs = (tok: string): number => {
+      try {
+        const p = tok.split('.')[1];
+        if (!p) return 0;
+        const j = JSON.parse(
+          atob(p.replace(/-/g, '+').replace(/_/g, '/')),
+        ) as { exp?: number };
+        return j.exp ? j.exp * 1000 : 0;
+      } catch {
+        return 0;
+      }
+    };
+    const get = (k: string): string | null => {
+      try {
+        return localStorage.getItem(k);
+      } catch {
+        return null;
+      }
+    };
+    const num = (k: string): number => {
+      const v = parseInt(get(k) || '0', 10);
+      return Number.isFinite(v) ? v : 0;
+    };
+    let refreshing: Promise<boolean> | null = null;
+    const refresh = (): Promise<boolean> => {
+      if (refreshing) return refreshing;
+      const rt = get('virello_refresh_token');
+      if (!rt) return Promise.resolve(false);
+      refreshing = fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: rt }),
+      })
+        .then((r) =>
+          r
+            .json()
+            .catch(() => ({}))
+            .then((d) => ({ res: r, data: d as Record<string, unknown> })),
+        )
+        .then(({ res, data }) => {
+          const nested = data.data as Record<string, unknown> | undefined;
+          const at = (data.access_token ?? nested?.access_token) as
+            | string
+            | undefined;
+          const nrt = (data.refresh_token ?? nested?.refresh_token) as
+            | string
+            | undefined;
+          if (res.ok && at) {
+            try {
+              localStorage.setItem('virello_token', at);
+              if (nrt) localStorage.setItem('virello_refresh_token', nrt);
+            } catch {
+              /* ignore */
+            }
+            return true;
+          }
+          return false;
+        })
+        .catch(() => false)
+        .then((ok) => {
+          refreshing = null;
+          return ok;
+        });
+      return refreshing;
+    };
+    const expire = () => {
+      try {
+        localStorage.removeItem('virello_token');
+        localStorage.removeItem('virello_refresh_token');
+        localStorage.removeItem('virello_user');
+        localStorage.removeItem('virello_last_at');
+        localStorage.removeItem('virello_login_at');
+      } catch {
+        /* ignore */
+      }
+      document.documentElement.setAttribute('data-auth', 'out');
+      window.location.href = '/login.html';
+    };
+    const check = () => {
+      const tok = get('virello_token');
+      if (!tok) return;
+      const now = Date.now();
+      const loginAt = num('virello_login_at');
+      if (!loginAt) {
+        try {
+          localStorage.setItem('virello_login_at', String(now));
+          localStorage.setItem('virello_last_at', String(now));
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      if (now - loginAt > MAX_MS) {
+        expire();
+        return;
+      }
+      const last = num('virello_last_at') || loginAt;
+      if (now - last > IDLE_MS) {
+        expire();
+        return;
+      }
+      const exp = tokenExpMs(tok);
+      if (exp && exp <= now + 60000) {
+        const rt = get('virello_refresh_token');
+        if (!rt || tokenExpMs(rt) <= now) {
+          expire();
+          return;
+        }
+        void refresh().then((ok) => {
+          if (!ok) expire();
+        });
+      }
+    };
+    let lastNote = 0;
+    const note = () => {
+      const n = Date.now();
+      if (n - lastNote < 30000) return;
+      lastNote = n;
+      try {
+        localStorage.setItem('virello_last_at', String(n));
+      } catch {
+        /* ignore */
+      }
+    };
+    const events = ['click', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+    events.forEach((ev) =>
+      window.addEventListener(ev, note, { passive: true }),
+    );
+    document.addEventListener('visibilitychange', check);
+    const timer = window.setInterval(check, 60000);
+    check();
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, note));
+      document.removeEventListener('visibilitychange', check);
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const toggleTheme = () => {
     const next =
       document.documentElement.getAttribute('data-theme') === 'light'
@@ -92,7 +237,10 @@ export default function Header() {
   const logout = () => {
     try {
       localStorage.removeItem('virello_token');
+      localStorage.removeItem('virello_refresh_token');
       localStorage.removeItem('virello_user');
+      localStorage.removeItem('virello_last_at');
+      localStorage.removeItem('virello_login_at');
     } catch {
       /* ignore */
     }
