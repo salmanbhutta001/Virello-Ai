@@ -72,6 +72,9 @@ img { max-width: 100%; display: block; }
 .btn:active { transform: translateY(1px); }
 .btn-grad { background: var(--grad); color: #fff; box-shadow: var(--glow); }
 .btn-grad:hover { transform: translateY(-1px); }
+/* Legacy alias: .btn-pink is the same pink gradient button. */
+.btn-pink { background: var(--grad); color: #fff; box-shadow: var(--glow); }
+.btn-pink:hover { transform: translateY(-1px); }
 .btn-ghost { background: var(--surface); border-color: var(--line2); color: var(--txt); }
 .btn-ghost:hover { background: var(--surface2); }
 .btn-sm { padding: 9px 18px; font-size: 14px; }
