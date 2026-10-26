@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ToastRoot from '@/components/ToastRoot';
+import HashRedirect from '@/components/HashRedirect';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -48,9 +50,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-new.png" />
       </head>
       <body>
+        <HashRedirect />
         <Header />
         <main>{children}</main>
         <Footer />
+        <ToastRoot />
         {/* GA4 — virelloai.online web stream */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-X3T458F82Y"
