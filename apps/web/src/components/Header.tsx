@@ -107,6 +107,17 @@ export default function Header() {
       return Number.isFinite(v) ? v : 0;
     };
     let refreshing: Promise<boolean> | null = null;
+    let lastNote = 0;
+    const note = () => {
+      const n = Date.now();
+      if (n - lastNote < 30000) return;
+      lastNote = n;
+      try {
+        localStorage.setItem('virello_last_at', String(n));
+      } catch {
+        /* ignore */
+      }
+    };
     const refresh = (): Promise<boolean> => {
       if (refreshing) return refreshing;
       const rt = get('virello_refresh_token');
@@ -137,6 +148,10 @@ export default function Header() {
             } catch {
               /* ignore */
             }
+            // P3: legacy refreshAccessToken() calls noteActivity() after
+            // a successful silent refresh — a refreshed session is an
+            // active session, so the idle clock restarts here.
+            note();
             return true;
           }
           return false;
@@ -179,7 +194,15 @@ export default function Header() {
         expire();
         return;
       }
-      const last = num('virello_last_at') || loginAt;
+      // P3: a missing virello_last_at expires the session, like
+      // legacy — it must NOT fall back to loginAt (that would silently
+      // extend an idle session whose activity stamp was lost).
+      const lastRaw = get('virello_last_at');
+      if (!lastRaw) {
+        expire();
+        return;
+      }
+      const last = num('virello_last_at');
       if (now - last > IDLE_MS) {
         expire();
         return;
@@ -196,17 +219,7 @@ export default function Header() {
         });
       }
     };
-    let lastNote = 0;
-    const note = () => {
-      const n = Date.now();
-      if (n - lastNote < 30000) return;
-      lastNote = n;
-      try {
-        localStorage.setItem('virello_last_at', String(n));
-      } catch {
-        /* ignore */
-      }
-    };
+    // (note() lives above refresh(); see the watchdog comment there.)
     const events = ['click', 'keydown', 'scroll', 'touchstart', 'mousemove'];
     events.forEach((ev) =>
       window.addEventListener(ev, note, { passive: true }),
@@ -247,6 +260,18 @@ export default function Header() {
     document.documentElement.setAttribute('data-auth', 'out');
     window.location.href = '/';
   };
+
+  // App routes hide the public header (legacy body.app-mode) — the
+  // AppShell sidebar replaces it. All hooks above still run, so the
+  // session watchdog keeps working on app routes.
+  const appPath = pathname?.replace(/\.html$/, '') ?? '';
+  if (
+    ['/dashboard', '/campaigns', '/analytics', '/profile', '/settings'].includes(
+      appPath,
+    )
+  ) {
+    return null;
+  }
 
   return (
     <header className="site-header">

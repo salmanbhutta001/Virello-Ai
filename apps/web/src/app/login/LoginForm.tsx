@@ -8,6 +8,7 @@ import {
   requestPasswordReset,
   setPlan,
 } from '@/lib/auth';
+import { scheduleTourAfterLogin } from '@/lib/tour';
 import { showToast } from '@/lib/toast';
 
 // Login / signup page — port of legacy #page-login
@@ -16,12 +17,11 @@ import { showToast } from '@/lib/toast';
 // "Remember me" is present with NO behavior (legacy parity — flagged).
 // NO referral_code is ever sent (legacy parity).
 //
-// TODO (P3 — tour): on first login, legacy starts the guided tour
-// 900 ms after navigation (startTour, legacy §14). No tour module
-// exists in this repo yet — when P3 builds src/lib/tour.ts, call
-// startTour() here after the redirect if
-// !localStorage.getItem('virello_tour_seen'). The first-login check
-// is captured below as `firstLogin` for that hookup.
+// First login: legacy starts the guided tour 900 ms after navigation
+// (startTour, legacy §14). The tour lives in src/lib/tour.ts +
+// src/components/TourRunner.tsx (mounted in the root layout); on
+// first login we set the pending flag here and the TourRunner starts
+// it 900 ms after the landing page loads.
 
 const PLAN_NOTE_FREE =
   'Free plan selected — $0 forever, no payment needed. Create your account (or log in) and you will go straight to Let AI Grow.';
@@ -103,9 +103,10 @@ export default function LoginForm() {
           return false;
         }
       })();
-      // TODO (P3): if (firstLogin) start the tour 900 ms after the
-      // redirect below — see the header comment on this file.
-      void firstLogin;
+      // First login → the tour starts 900 ms after navigation
+      // (legacy authSubmit, index.html:2836-2837). The flag is picked
+      // up by the TourRunner on the landing page.
+      if (firstLogin) scheduleTourAfterLogin();
       showToast(
         isSignup ? 'Account created — welcome to Virello!' : 'Welcome back!',
       );

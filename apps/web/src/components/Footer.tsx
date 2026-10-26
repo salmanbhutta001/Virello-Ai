@@ -1,3 +1,6 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
 import SubscribeForm from '@/components/SubscribeForm';
 
 /** Social icons — legacy SOCIALS minus X (@virelloai suspended 2026-10-26). */
@@ -25,6 +28,17 @@ const SOCIALS: { name: string; href: string; path: string }[] = [
 ];
 
 export default function Footer() {
+  // App routes hide the public footer (legacy body.app-mode) — the
+  // AppShell sidebar replaces the whole public chrome there.
+  const pathname = usePathname();
+  const appPath = pathname?.replace(/\.html$/, '') ?? '';
+  if (
+    ['/dashboard', '/campaigns', '/analytics', '/profile', '/settings'].includes(
+      appPath,
+    )
+  ) {
+    return null;
+  }
   return (
     <footer className="site-footer">
       <div className="wrap">
