@@ -12,7 +12,8 @@ const SOCIALS: { name: string; href: string }[] = [
   { name: 'Instagram', href: 'https://www.instagram.com/virelloai.online/' },
   { name: 'YouTube', href: 'https://www.youtube.com/@virelloai.online/' },
   { name: 'TikTok', href: 'https://www.tiktok.com/@virelloai.online/' },
-  { name: 'X', href: 'https://x.com/virelloai' },
+  // X TEMPORARILY HIDDEN 2026-10-26 (@virelloai suspended; restore when reinstated):
+  // { name: 'X', href: 'https://x.com/virelloai' },
   { name: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61595418210450' },
 ];
 
