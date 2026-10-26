@@ -146,6 +146,8 @@ const TRENDS: { cat: string; title: string; summary: string; insight: string }[]
       'Do a “my exact remote setup under $200” post — specifics win.',
   },
 ];
+
+export default function HomePage() {
   return (
     <main>
       {/* Hero */}

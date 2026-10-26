@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import AnalyticsScripts from '@/components/AnalyticsScripts';
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AnalyticsScripts from '@/components/AnalyticsScripts';
 import './globals.css';
 
 export const metadata: Metadata = {
