@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Pricing',
   description:
     'Start free. Upgrade when the AI has earned it. Every plan includes legitimate growth only — no bots, no fake engagement, no surprises.',
+  alternates: { canonical: '/pricing.html' },
 };
 
 type Feature = { text: string; included: boolean };

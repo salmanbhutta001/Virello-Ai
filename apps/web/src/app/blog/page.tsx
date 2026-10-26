@@ -15,7 +15,7 @@ const articles = articlesData as Article[];
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'Honest growth playbooks from the Virello team: analytics, hooks, repurposing, platform strategy and how AI growth tools actually work — no fake-engagement shortcuts.',
+    'Honest growth playbooks from the Virello team: analytics, hooks, repurposing, platform strategy and how AI growth tools actually work.',
   alternates: { canonical: '/blog.html' },
   openGraph: {
     type: 'website',

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'About',
   description:
     "Virello exists because great creators shouldn't need a marketing degree, an ads account and a data team to be discovered.",
+  alternates: { canonical: '/about.html' },
 };
 
 const STATS: { value: string; label: string }[] = [

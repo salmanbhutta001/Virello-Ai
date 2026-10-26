@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Delete Your Account',
   description:
     'How to delete your Virello AI account and personal data. Step-by-step instructions for in-app deletion and email requests.',
+  alternates: { canonical: '/delete-account.html' },
 };
 
 export default function DeleteAccountPage() {

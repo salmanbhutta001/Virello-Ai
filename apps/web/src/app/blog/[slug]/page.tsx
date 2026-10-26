@@ -9,6 +9,14 @@ type Article = {
   meta: string;
   hero: string;
   body: string;
+  // Optional: added by the 2026-10-27 SEO fixes. `date` is the real publish
+  // date (only where it could be established from publish records — 12/19);
+  // `seoTitle` is the short SERP title for the 5 articles whose full title
+  // + " — Virello AI" ran 96–127 chars. `category` comes from the legacy
+  // homepage ARTICLES data. Absent fields fall back cleanly.
+  date?: string;
+  seoTitle?: string;
+  category?: string;
 };
 
 const articles = articlesData as Article[];
@@ -24,7 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = articles.find((a) => a.slug === slug);
   if (!article) return { title: 'Article not found' };
   return {
-    title: article.title,
+    // Short SERP title where one exists (5 long titles); the full title
+    // stays as the on-page H1. Template " — Virello AI" still applies.
+    title: article.seoTitle ?? article.title,
     description: article.description,
     alternates: { canonical: `/blog/${article.slug}.html` },
     openGraph: {
@@ -149,8 +159,51 @@ export default async function ArticlePage({ params }: Props) {
     .map((s) => articles.find((a) => a.slug === s))
     .filter((a): a is Article => Boolean(a));
 
+  // BlogPosting JSON-LD (SEO fixes 2026-10-27). datePublished only when a
+  // real publish date is recorded in articles.json (12/19); the other 7
+  // omit it rather than carry a guessed date. dateModified is omitted
+  // everywhere — per-article edit history is not tracked (the 2026-10-26
+  // internal-links edit changed in-body links in some articles, so
+  // dateModified = datePublished would be wrong for those).
+  const wordCount = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&[a-zA-Z]+;/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean).length;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.description,
+    image: article.hero,
+    author: {
+      '@type': 'Organization',
+      name: 'Virello Team',
+      url: 'https://virelloai.online/',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Virello AI',
+      url: 'https://virelloai.online/',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://virelloai.online/logo-virello.png',
+      },
+    },
+    ...(article.date ? { datePublished: article.date } : {}),
+    mainEntityOfPage: `https://virelloai.online/blog-${article.slug}.html`,
+    articleSection: article.category,
+    wordCount: wordCount(article.body),
+    inLanguage: 'en',
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="section" style={{ paddingBottom: 24 }}>
         <div className="wrap">
           <div className="center" style={{ maxWidth: 820, margin: '0 auto' }}>

@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
     'Privacy Policy for Virello AI. Learn what data we collect, how we use it, and your rights.',
+  alternates: { canonical: '/privacy.html' },
 };
 
 export default function PrivacyPage() {

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Help Center',
   description:
     'Search guides and answers, or browse by topic. Still stuck? Our team and the Ask Virello assistant are one tap away.',
+  alternates: { canonical: '/help.html' },
 };
 
 const CATEGORIES: { icon: ReactNode; title: string; text: string }[] = [
@@ -127,8 +128,23 @@ function Icon({ children }: { children: ReactNode }) {
 }
 
 export default function HelpPage() {
+  // FAQPage JSON-LD (SEO fixes 2026-10-27). Built from the same FAQS array
+  // rendered below, so the schema always matches the visible page text.
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <section className="hero">
         <div className="wrap">
           <span className="kicker">Help Center</span>
