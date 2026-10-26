@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
-import Header from '@/components/Header';
+import AnalyticsScripts from '@/components/AnalyticsScripts';
 import Footer from '@/components/Footer';
 import './globals.css';
 
@@ -51,20 +50,7 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
-        {/* AdSense — script tag only, no ad units (legacy parity) */}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9465259914673995"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
-        {/* GA4 — virelloai.online web stream */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-X3T458F82Y"
-          strategy="afterInteractive"
-        />
-        <Script id="ga4" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X3T458F82Y');`}
-        </Script>
+        <AnalyticsScripts />
       </body>
     </html>
   );
