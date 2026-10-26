@@ -211,6 +211,9 @@ export default function HelpPage() {
               <a className="btn btn-ghost" href="/blog.html">
                 Browse Guides
               </a>
+              <a className="btn btn-ghost" href="/score.html">
+                Score a Post
+              </a>
             </div>
           </div>
         </div>

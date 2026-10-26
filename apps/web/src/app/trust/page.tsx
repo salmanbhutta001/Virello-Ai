@@ -203,6 +203,11 @@ export default function TrustPage() {
             <a className="btn btn-grad auth-in" href="/#/dashboard">
               Start Growing — The Right Way
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              See how it works: <a href="/features.html">features</a>
+              {' · '}
+              <a href="/pricing.html">pricing</a>
+            </p>
           </div>
         </div>
       </section>

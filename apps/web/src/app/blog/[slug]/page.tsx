@@ -43,8 +43,111 @@ export default async function ArticlePage({ params }: Props) {
   if (index === -1) notFound();
   const article = articles[index];
 
-  // "More articles": the next 3 pieces in the list, wrapping around.
-  const more = [1, 2, 3].map((i) => articles[(index + i) % articles.length]);
+  // "Related articles": topical picks per article (3 each), not list order.
+  // Every slug in this map must exist in articles.json.
+  const relatedMap: Record<string, string[]> = {
+    'your-post-flopped-now-what': [
+      'the-first-two-seconds-writing-hooks',
+      'one-post-five-platforms-repurposing-playbook',
+      'posting-times-decoded',
+    ],
+    'plan-a-month-of-content-in-one-afternoon': [
+      'one-post-five-platforms-repurposing-playbook',
+      'the-first-two-seconds-writing-hooks',
+      'posting-times-decoded',
+    ],
+    'honest-creator-home-studio-guide': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-instagram-reels-playbook',
+      'the-first-two-seconds-writing-hooks',
+    ],
+    'analytics-without-self-deception': [
+      'reach-is-not-growth-5-numbers-that-matter',
+      'how-ai-content-analysis-actually-works',
+      'comments-are-the-new-followers',
+    ],
+    'comments-are-the-new-followers': [
+      'honest-instagram-reels-playbook',
+      'growing-on-x-2026-text-first-playbook',
+      'reach-is-not-growth-5-numbers-that-matter',
+    ],
+    'free-grow-vs-paid-boost': [
+      'inside-the-ai-growth-orchestrator',
+      'what-an-ai-growth-manager-actually-does',
+      'why-fake-followers-cost-more',
+    ],
+    'growing-on-x-2026-text-first-playbook': [
+      'honest-instagram-reels-playbook',
+      'comments-are-the-new-followers',
+      'youtube-shorts-vs-tiktok-where-to-start',
+    ],
+    'honest-instagram-reels-playbook': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'comments-are-the-new-followers',
+      'posting-times-decoded',
+    ],
+    'honest-state-of-social-media-late-2026': [
+      'why-fake-followers-cost-more',
+      'spot-the-scam-growth-service-signs',
+      'free-grow-vs-paid-boost',
+    ],
+    'how-ai-content-analysis-actually-works': [
+      'inside-the-ai-growth-orchestrator',
+      'analytics-without-self-deception',
+      'your-post-flopped-now-what',
+    ],
+    'inside-the-ai-growth-orchestrator': [
+      'how-ai-content-analysis-actually-works',
+      'what-an-ai-growth-manager-actually-does',
+      'free-grow-vs-paid-boost',
+    ],
+    'one-post-five-platforms-repurposing-playbook': [
+      'plan-a-month-of-content-in-one-afternoon',
+      'honest-instagram-reels-playbook',
+      'growing-on-x-2026-text-first-playbook',
+    ],
+    'posting-times-decoded': [
+      'comments-are-the-new-followers',
+      'honest-instagram-reels-playbook',
+      'analytics-without-self-deception',
+    ],
+    'reach-is-not-growth-5-numbers-that-matter': [
+      'analytics-without-self-deception',
+      'comments-are-the-new-followers',
+      'what-an-ai-growth-manager-actually-does',
+    ],
+    'spot-the-scam-growth-service-signs': [
+      'why-fake-followers-cost-more',
+      'honest-state-of-social-media-late-2026',
+      'free-grow-vs-paid-boost',
+    ],
+    'the-first-two-seconds-writing-hooks': [
+      'your-post-flopped-now-what',
+      'honest-instagram-reels-playbook',
+      'one-post-five-platforms-repurposing-playbook',
+    ],
+    'what-an-ai-growth-manager-actually-does': [
+      'inside-the-ai-growth-orchestrator',
+      'how-ai-content-analysis-actually-works',
+      'free-grow-vs-paid-boost',
+    ],
+    'why-fake-followers-cost-more': [
+      'spot-the-scam-growth-service-signs',
+      'honest-state-of-social-media-late-2026',
+      'free-grow-vs-paid-boost',
+    ],
+    'youtube-shorts-vs-tiktok-where-to-start': [
+      'honest-instagram-reels-playbook',
+      'growing-on-x-2026-text-first-playbook',
+      'the-first-two-seconds-writing-hooks',
+    ],
+  };
+  const relatedSlugs =
+    relatedMap[article.slug] ??
+    [1, 2, 3].map((i) => articles[(index + i) % articles.length].slug);
+  const more = relatedSlugs
+    .map((s) => articles.find((a) => a.slug === s))
+    .filter((a): a is Article => Boolean(a));
 
   return (
     <>
@@ -105,8 +208,22 @@ export default async function ArticlePage({ params }: Props) {
             </a>
           </div>
 
+          <p
+            className="small center"
+            style={{ marginTop: 22, color: 'var(--mut)' }}
+          >
+            Explore Virello:{' '}
+            <a href="/shop.html">Shop</a>
+            {' · '}
+            <a href="/score.html">Score your post</a>
+            {' · '}
+            <a href="/free-caption-generator.html">Free caption generator</a>
+            {' · '}
+            <a href="/pricing.html">Pricing</a>
+          </p>
+
           <h2 className="h-md" style={{ margin: '56px 0 20px' }}>
-            More articles
+            Related articles
           </h2>
           <div className="grid grid-3">
             {more.map((a) => (

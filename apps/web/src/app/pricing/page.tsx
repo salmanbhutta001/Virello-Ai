@@ -312,6 +312,16 @@ export default function PricingPage() {
               </tbody>
             </table>
           </div>
+
+          <p className="small center" style={{ marginTop: 36 }}>
+            Not sure yet? <a href="/score.html">Score a post free</a>
+            {' · '}
+            <a href="/free-caption-generator.html">
+              try the free caption generator
+            </a>
+            {' · '}
+            <a href="/features.html">see all features</a>
+          </p>
         </div>
       </section>
     </>

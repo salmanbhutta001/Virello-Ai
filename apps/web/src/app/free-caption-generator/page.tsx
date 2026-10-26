@@ -107,6 +107,12 @@ export default function FreeCaptionGeneratorPage() {
             <a className="btn btn-grad auth-in" href="/#/dashboard">
               Open Your Dashboard
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              See what else Virello does:{' '}
+              <a href="/features.html">features</a>
+              {' · '}
+              <a href="/score.html">score your post</a>
+            </p>
           </div>
         </div>
       </section>

@@ -138,6 +138,11 @@ export default function HowPage() {
             <a className="btn btn-grad auth-in" href="/#/dashboard">
               Try It On Your Post — Free
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              Before you start: <a href="/score.html">score your post</a>
+              {' · '}
+              <a href="/pricing.html">see Free vs Paid Boost pricing</a>
+            </p>
           </div>
         </div>
       </section>

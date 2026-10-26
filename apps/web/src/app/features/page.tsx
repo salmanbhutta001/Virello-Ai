@@ -111,6 +111,13 @@ export default function FeaturesPage() {
             <a className="btn btn-grad auth-in" href="/#/dashboard">
               Start Growing Free
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              Try it first: <a href="/score.html">score your post free</a>
+              {' · '}
+              <a href="/free-caption-generator.html">
+                generate captions free
+              </a>
+            </p>
           </div>
         </div>
       </section>

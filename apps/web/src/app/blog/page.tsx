@@ -130,6 +130,27 @@ export default function BlogIndexPage() {
           </div>
         </div>
       </section>
+
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="card center" style={{ maxWidth: 760, margin: '0 auto' }}>
+            <h2 className="h-md">New to Virello?</h2>
+            <p className="lead" style={{ margin: '12px auto 20px' }}>
+              The blog is the playbook — the product does the work. Start with
+              the free plan and grow from there.
+            </p>
+            <p className="small" style={{ marginBottom: 0 }}>
+              <a href="/features.html">Features</a>
+              {' · '}
+              <a href="/pricing.html">Pricing</a>
+              {' · '}
+              <a href="/score.html">Score your post</a>
+              {' · '}
+              <a href="/free-caption-generator.html">Free caption generator</a>
+            </p>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
