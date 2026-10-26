@@ -51,6 +51,12 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
+        {/* AdSense — script tag only, no ad units (legacy parity) */}
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9465259914673995"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
         {/* GA4 — virelloai.online web stream */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-X3T458F82Y"
