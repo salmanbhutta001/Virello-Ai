@@ -19,15 +19,12 @@
  * doubled (`/api/v1/api/v1/...`). The proxy paths are sent verbatim as the
  * `p=` value, exactly like legacy.
  *
- * TOAST — MERGE NOTE FOR THE COORDINATOR: `src/lib/toast.ts` (P2) does not
- * exist in this worktree yet, so `notify()` below is a tiny local helper
- * that renders a plain DOM toast (single toast, ~4,200 ms — legacy
- * `showToast` parity). At merge, replace the body of `notify()` with a
- * `showToast(msg)` call from `./toast` (one-line change, all call sites
- * already go through `notify`). Do NOT add a second global toast system.
+ * TOAST — merged with P2: `notify()` delegates to the single global
+ * `showToast` from `./toast` (element #toast in <ToastRoot />).
  */
 
 import { API_BASE } from './api';
+import { showToast } from './toast';
 
 export const WP_AI_PATHS: string[] = [
   '/api/v1/media/generate-text',
@@ -113,33 +110,12 @@ export function assembleVideoUrl(): string {
 /* Toast — local fallback until P2's src/lib/toast.ts lands (see header) */
 /* ------------------------------------------------------------------ */
 
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
-
 /**
- * Show a short toast. Single global toast, visible ~4,200 ms (legacy
- * showToast parity). Renders into a `#creator-toast` div it creates on
- * first use. MERGE: swap this body for `showToast(msg)` from `./toast`.
+ * Show a short toast — delegates to the single global toast (P2's
+ * showToast, element #toast in <ToastRoot />). No second toast system.
  */
 export function notify(msg: string): void {
-  if (typeof document === 'undefined') return;
-  let el = document.getElementById('creator-toast') as HTMLDivElement | null;
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'creator-toast';
-    el.setAttribute('role', 'status');
-    el.style.cssText =
-      'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);' +
-      'background:#111827;color:#fff;padding:12px 20px;border-radius:999px;' +
-      'font-size:14px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.28);' +
-      'z-index:10000;max-width:min(92vw,560px);text-align:center;';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.style.display = 'block';
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    if (el) el.style.display = 'none';
-  }, 4200);
+  showToast(msg);
 }
 
 /* ------------------------------------------------------------------ */

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AnalyticsScripts from '@/components/AnalyticsScripts';
+import ToastRoot from '@/components/ToastRoot';
+import HashRedirect from '@/components/HashRedirect';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -48,9 +50,13 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-new.png" />
       </head>
       <body>
+        <HashRedirect />
         <Header />
         <main>{children}</main>
         <Footer />
+        <ToastRoot />
+        {/* GA4 + AdSense live in AnalyticsScripts (gated off /rewards-terms);
+            P2's inline GA4 snippet was dropped here to avoid double-loading. */}
         <AnalyticsScripts />
       </body>
     </html>

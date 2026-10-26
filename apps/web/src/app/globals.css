@@ -72,6 +72,9 @@ img { max-width: 100%; display: block; }
 .btn:active { transform: translateY(1px); }
 .btn-grad { background: var(--grad); color: #fff; box-shadow: var(--glow); }
 .btn-grad:hover { transform: translateY(-1px); }
+/* Legacy alias: .btn-pink is the same pink gradient button. */
+.btn-pink { background: var(--grad); color: #fff; box-shadow: var(--glow); }
+.btn-pink:hover { transform: translateY(-1px); }
 .btn-ghost { background: var(--surface); border-color: var(--line2); color: var(--txt); }
 .btn-ghost:hover { background: var(--surface2); }
 .btn-sm { padding: 9px 18px; font-size: 14px; }
@@ -278,6 +281,112 @@ img { max-width: 100%; display: block; }
 
 /* Free tools (e.g. /free-caption-generator.html) */
 .tool-wrap { max-width: 780px; margin: 0 auto; }
+
+/* ===== Auth / toast / modals (ported from the legacy SPA) ===== */
+
+/* Global toast — single element, driven by showToast() (src/lib/toast.ts);
+   visible ~4,200 ms. Legacy index.html:414-415, 531. */
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translate(-50%, 80px);
+  background: var(--surface2); border: 1px solid rgba(249, 81, 119, 0.5);
+  color: #fff; padding: 14px 22px; border-radius: 14px; box-shadow: var(--shadow);
+  z-index: 300; transition: 0.35s; font-size: 0.92rem; font-weight: 500;
+  max-width: 90vw; text-align: center; opacity: 0; visibility: hidden; pointer-events: none;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+:root[data-theme="light"] .toast { color: var(--txt); }
+
+/* Modals (pricing checkout + talk) — legacy index.html:416-418.
+   .open toggles display; the checkout modal closes only via its ×
+   button or the activate action (no backdrop-click close, parity). */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(5, 5, 8, 0.75);
+  backdrop-filter: blur(6px); z-index: 200; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--line2); border-radius: 22px;
+  max-width: 560px; width: 100%; max-height: 88vh; overflow: auto;
+  padding: 32px; box-shadow: var(--shadow);
+}
+.modal h3 { font-size: 1.3rem; margin-bottom: 6px; }
+.cat-tag {
+  display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--pink);
+  background: rgba(249, 81, 119, 0.1); border: 1px solid rgba(249, 81, 119, 0.3);
+  border-radius: 999px; padding: 5px 12px;
+}
+
+/* Login page — legacy index.html:339-346, 435. */
+.auth-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; }
+.auth-visual {
+  padding: 48px 44px; display: flex; flex-direction: column; gap: 28px;
+  justify-content: space-between;
+  background: linear-gradient(160deg, rgba(249, 81, 119, 0.1), transparent 55%);
+}
+.auth-form-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.auth-card { width: 100%; max-width: 420px; }
+.auth-tabs {
+  display: flex; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 4px; margin: 26px 0 22px;
+}
+.auth-tabs button {
+  flex: 1; border: none; background: transparent; color: var(--mut);
+  font-weight: 600; padding: 10px; border-radius: 9px; font-size: 0.92rem; cursor: pointer;
+}
+.auth-tabs button.on { background: var(--grad); color: #fff; }
+.auth-note {
+  margin-top: 14px; background: rgba(249, 81, 119, 0.1);
+  border: 1px solid rgba(249, 81, 119, 0.35); color: var(--txt);
+  padding: 11px 14px; border-radius: 12px; font-size: 0.88rem;
+}
+.auth-msg {
+  margin-top: 14px; padding: 11px 14px; border-radius: 12px; font-size: 0.88rem;
+}
+.auth-msg.error {
+  background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.45);
+  color: var(--bad);
+}
+.auth-msg.info {
+  background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.4);
+  color: var(--good);
+}
+@media (max-width: 900px) {
+  .auth-wrap { grid-template-columns: 1fr; }
+  .auth-visual { display: none; }
+}
+
+/* Busy-button spinner — legacy index.html:657. */
+.spin {
+  width: 18px; height: 18px; border: 2.5px solid rgba(249, 81, 119, 0.25);
+  border-top-color: #e63e63; border-radius: 50%; display: inline-block;
+  animation: spin 0.7s linear infinite; vertical-align: -4px; margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Billing toggle (pricing) — legacy setBilling toggles .on + swaps
+   .price-num from data-m/data-y; bill-note text swaps monthly/yearly. */
+.toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--line2); border-radius: 999px; padding: 4px; gap: 4px; }
+.toggle button {
+  border: none; background: transparent; color: var(--mut); font: inherit;
+  font-weight: 700; font-size: 14.5px; padding: 9px 20px; border-radius: 999px; cursor: pointer;
+}
+.toggle button.on { background: var(--grad); color: #fff; }
+.save-tag {
+  display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800;
+  background: rgba(52, 211, 153, 0.16); color: var(--good);
+  border-radius: 999px; padding: 2px 7px;
+}
+
+/* Trust row (pricing + login) — legacy index.html:217-219. */
+.trust-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+.trust-item {
+  display: flex; gap: 9px; align-items: center; color: var(--mut);
+  font-size: 0.88rem; font-weight: 500; background: var(--surface);
+  border: 1px solid var(--line); padding: 11px 18px; border-radius: 999px;
+}
+.trust-item svg { width: 18px; height: 18px; stroke: var(--pink); fill: none; stroke-width: 2; }
 .tool-card { text-align: left; }
 .tool-card .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
