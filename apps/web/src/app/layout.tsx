@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AnalyticsScripts from '@/components/AnalyticsScripts';
 import ToastRoot from '@/components/ToastRoot';
+import TourRunner from '@/components/TourRunner';
 import HashRedirect from '@/components/HashRedirect';
 import './globals.css';
 
@@ -55,6 +56,8 @@ export default function RootLayout({
         <main>{children}</main>
         <Footer />
         <ToastRoot />
+        {/* Website tour overlay (P3): mounted once, walks across pages. */}
+        <TourRunner />
         {/* GA4 + AdSense live in AnalyticsScripts (gated off /rewards-terms);
             P2's inline GA4 snippet was dropped here to avoid double-loading. */}
         <AnalyticsScripts />
