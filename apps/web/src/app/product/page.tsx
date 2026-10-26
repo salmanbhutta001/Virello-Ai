@@ -3,46 +3,14 @@
 /**
  * Product detail page — /product.html?asin=<ASIN>
  *
- * KNOWN LIMITATION (lookup): the catalog API has no guaranteed by-ASIN
- * endpoint, so we cannot fetch one product directly. Instead we scan the
- * trending rail plus the first few catalog pages (3 × 60) and match on
- * `asin`, falling back to the /dp/<ASIN> pattern inside affiliate_url
- * (list responses often carry asin=null). A product deeper in the catalog
- * will honestly show the "not found in the current catalog view" state with
- * a link to the full live shop at /#/shop. When a real by-asin endpoint
- * exists, replace findProduct() with a single fetch.
+ * Lookup is a single call to GET /api/v1/commerce/products/by-asin/{asin}
+ * (backend commerce.py:364+; returns a flat item with a populated `asin`,
+ * 404 for malformed/absent ASIN). No catalog scan.
  */
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchProducts, type Product } from '@/lib/api';
-
-function matchesAsin(p: Product, asinUpper: string): boolean {
-  if (p.asin && p.asin.toUpperCase() === asinUpper) return true;
-  return !!p.affiliate_url && p.affiliate_url.toUpperCase().includes(`/DP/${asinUpper}`);
-}
-
-async function findProduct(asin: string): Promise<Product | null> {
-  const target = asin.toUpperCase();
-
-  // 1) Trending rail first — the most-linked products live there.
-  try {
-    const trending = await fetchProducts({ limit: 60, trending: true });
-    const hit = trending.find((p) => matchesAsin(p, target));
-    if (hit) return hit;
-  } catch {
-    // Fall through to the catalog scan.
-  }
-
-  // 2) Scan the first pages of the catalog (newest first).
-  for (let skip = 0; skip < 180; skip += 60) {
-    const page = await fetchProducts({ limit: 60, skip });
-    const hit = page.find((p) => matchesAsin(p, target));
-    if (hit) return hit;
-    if (page.length < 60) break;
-  }
-  return null;
-}
+import { asinOf, fetchProductByAsin, type Product } from '@/lib/api';
 
 function priceLabel(p: Product): string {
   return p.price_cents && p.price_cents > 0
@@ -66,7 +34,7 @@ function ProductDetail() {
     }
     let cancelled = false;
     setStatus('loading');
-    findProduct(asin)
+    fetchProductByAsin(asin)
       .then((found) => {
         if (cancelled) return;
         if (found) {
@@ -99,13 +67,13 @@ function ProductDetail() {
     return (
       <section className="section">
         <div className="wrap center">
-          <h1 className="h-md">Something went wrong</h1>
+          <h1 className="h-md">Could not load product</h1>
           <p className="lead" style={{ margin: '14px auto 24px' }}>
             We could not reach the catalog just now. Please try again, or
             browse the full shop.
           </p>
-          <a href="/#/shop" className="btn btn-grad">
-            Open the Shop
+          <a href="/shop.html" className="btn btn-grad">
+            Back to Shop
           </a>
         </div>
       </section>
@@ -116,35 +84,50 @@ function ProductDetail() {
     return (
       <section className="section">
         <div className="wrap center">
-          <h1 className="h-md">Product not found in the current catalog view</h1>
+          <h1 className="h-md">Product not found</h1>
           <p className="lead" style={{ margin: '14px auto 24px' }}>
-            {asin
-              ? 'This item is not in the part of the catalog we can show here. It may still be available in the full shop.'
-              : 'No product was specified. Browse the full shop to find what you are looking for.'}
+            This product is not in the Virello catalog.
           </p>
-          <a href="/#/shop" className="btn btn-grad">
-            Browse the full Shop
+          <a href="/shop.html" className="btn btn-grad">
+            Back to Shop
           </a>
         </div>
       </section>
     );
   }
 
-  const images = product.image_urls ?? [];
+  const images = (product.image_urls ?? []).slice(0, 3);
   const mainImage = images[active] ?? images[0];
+  const buyUrl =
+    product.affiliate_url ??
+    (asinOf(product)
+      ? `https://www.amazon.com/dp/${asinOf(product)}?tag=topitems0c1-20`
+      : null);
+  const rating =
+    typeof product.rating === 'number' && product.rating > 0
+      ? product.rating
+      : null;
 
   return (
     <section className="section">
       <div className="wrap">
         <p style={{ marginBottom: 20 }}>
-          <a href="/shop.html" className="small" style={{ color: 'var(--pink)', fontWeight: 600 }}>
+          <a
+            href="/shop.html"
+            className="small"
+            style={{ color: 'var(--pink)', fontWeight: 600 }}
+          >
             ← Back to Shop
           </a>
         </p>
 
-        <div className="grid grid-2" style={{ alignItems: 'start', gap: 32 }}>
+        <div
+          className="grid grid-2"
+          style={{ alignItems: 'start', gap: 32 }}
+        >
           <div>
             {mainImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={mainImage}
                 alt={product.title}
@@ -174,11 +157,18 @@ function ProductDetail() {
                   fontWeight: 800,
                 }}
               >
-                {product.title.charAt(0)}
+                Virello Pick
               </div>
             )}
             {images.length > 1 && (
-              <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  marginTop: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
                 {images.map((url, i) => (
                   <button
                     key={url}
@@ -197,6 +187,7 @@ function ProductDetail() {
                       cursor: 'pointer',
                     }}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
                       alt=""
@@ -210,41 +201,58 @@ function ProductDetail() {
 
           <div>
             {product.category && (
-              <span className="chip" style={{ cursor: 'default', marginBottom: 14 }}>
+              <span
+                className="chip"
+                style={{ cursor: 'default', marginBottom: 14 }}
+              >
                 {product.category.replace(/_/g, ' ')}
+              </span>
+            )}
+            {typeof product.trend_score === 'number' && (
+              <span
+                className="chip"
+                style={{ cursor: 'default', marginBottom: 14, marginLeft: 8 }}
+              >
+                🔥 Trending {product.trend_score}
               </span>
             )}
             <h1 className="h-md" style={{ marginBottom: 12 }}>
               {product.title}
             </h1>
+            {rating !== null && (
+              <p style={{ marginBottom: 12, color: 'var(--warn)' }}>
+                {'★'.repeat(Math.round(rating))}
+                <span className="mut" style={{ marginLeft: 8 }}>
+                  {rating.toFixed(1)}
+                </span>
+              </p>
+            )}
             <p
               style={{
                 fontFamily: 'var(--font-d)',
                 fontWeight: 800,
                 fontSize: 24,
-                marginBottom: 16,
+                marginBottom: 8,
               }}
             >
               {priceLabel(product)}
             </p>
-            {product.description && (
-              <p className="mut" style={{ marginBottom: 24 }}>
-                {product.description}
-              </p>
-            )}
-            {product.affiliate_url ? (
+            <p className="small mut" style={{ marginBottom: 20 }}>
+              Price checked on Amazon
+            </p>
+            {buyUrl ? (
               <>
                 <a
-                  href={product.affiliate_url}
+                  href={buyUrl}
                   target="_blank"
                   rel="sponsored noopener"
                   className="btn btn-grad"
                 >
-                  View on Amazon
+                  Buy Now on Amazon
                 </a>
                 <p className="small mut" style={{ marginTop: 12 }}>
-                  Sponsored — affiliate link. Price and availability are
-                  confirmed on Amazon.
+                  As an Amazon Associate, Virello earns from qualifying
+                  purchases.
                 </p>
               </>
             ) : (
@@ -252,6 +260,19 @@ function ProductDetail() {
                 This product is listed in our catalog but has no store link
                 right now.
               </p>
+            )}
+            <ul style={{ marginTop: 24, marginLeft: 18, color: 'var(--mut)' }}>
+              <li>Curated by Virello AI</li>
+              <li>Secure checkout on Amazon</li>
+              <li>Fast Amazon delivery</li>
+            </ul>
+            {product.description && (
+              <div style={{ marginTop: 28 }}>
+                <h2 style={{ fontSize: 18, marginBottom: 10 }}>
+                  About this product
+                </h2>
+                <p className="mut">{product.description}</p>
+              </div>
             )}
           </div>
         </div>
