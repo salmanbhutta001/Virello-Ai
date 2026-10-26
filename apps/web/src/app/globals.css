@@ -375,6 +375,15 @@ img { max-width: 100%; display: block; }
   background: rgba(52, 211, 153, 0.16); color: var(--good);
   border-radius: 999px; padding: 2px 7px;
 }
+
+/* Trust row (pricing + login) — legacy index.html:217-219. */
+.trust-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+.trust-item {
+  display: flex; gap: 9px; align-items: center; color: var(--mut);
+  font-size: 0.88rem; font-weight: 500; background: var(--surface);
+  border: 1px solid var(--line); padding: 11px 18px; border-radius: 999px;
+}
+.trust-item svg { width: 18px; height: 18px; stroke: var(--pink); fill: none; stroke-width: 2; }
 .tool-card { text-align: left; }
 .tool-card .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
