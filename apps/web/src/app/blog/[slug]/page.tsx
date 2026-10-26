@@ -100,7 +100,7 @@ export default async function ArticlePage({ params }: Props) {
             <a href="/login.html" className="btn btn-grad auth-out">
               Get Started Free
             </a>
-            <a href="/#/dashboard" className="btn btn-grad auth-in">
+            <a href="/dashboard.html" className="btn btn-grad auth-in">
               Get Started Free
             </a>
           </div>

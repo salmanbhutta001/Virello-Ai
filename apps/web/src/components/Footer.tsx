@@ -29,7 +29,7 @@ export default function Footer() {
               <li><a href="/pricing.html">Pricing</a></li>
               <li><a href="/blog.html">Blog</a></li>
               <li><a href="/free-caption-generator.html">Free Caption Generator</a></li>
-              <li><a href="/#/shop">Shop</a></li>
+              <li><a href="/shop.html">Shop</a></li>
             </ul>
           </div>
           <div>
@@ -59,7 +59,7 @@ export default function Footer() {
                   Uptodown
                 </a>
               </li>
-              <li><a href="/login.html" className="auth-out">Web Dashboard</a><a href="/#/dashboard" className="auth-in">Web Dashboard</a></li>
+              <li><a href="/login.html" className="auth-out">Web Dashboard</a><a href="/dashboard.html" className="auth-in">Web Dashboard</a></li>
             </ul>
           </div>
         </div>

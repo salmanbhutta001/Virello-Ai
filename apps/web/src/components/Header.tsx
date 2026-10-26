@@ -20,7 +20,7 @@ const NAV = [
   { href: '/pricing.html', label: 'Pricing', key: 'pricing' },
   { href: '/blog.html', label: 'Blog', key: 'blog' },
   { href: '/score.html', label: 'Free AI Score', key: 'score' },
-  { href: '/#/shop', label: 'Shop', key: 'shop' },
+  { href: '/shop.html', label: 'Shop', key: 'shop' },
   { href: '/about.html', label: 'About', key: 'about' },
   { href: '/help.html', label: 'Help', key: 'help' },
 ];
@@ -274,14 +274,14 @@ export default function Header() {
           <a href="/login.html" className="auth-out">
             Dashboard
           </a>
-          <a href="/#/dashboard" className="auth-in">
+          <a href="/dashboard.html" className="auth-in">
             Dashboard
           </a>
         </nav>
         <div className="header-cta">
           <a
             className="icon-btn auth-in"
-            href="/#/settings"
+            href="/settings.html"
             aria-label="Settings"
             title="Settings"
           >
@@ -332,7 +332,7 @@ export default function Header() {
         <a href="/" className={active === 'home' ? 'active' : undefined}>
           Home
         </a>
-        <a href="/#/shop" className="nav-spot">
+        <a href="/shop.html" className="nav-spot">
           Shop
         </a>
         {STRIP.slice(1, 5).map((n) => (
@@ -347,7 +347,7 @@ export default function Header() {
         <a href="/login.html" className="nav-spot auth-out">
           Dashboard
         </a>
-        <a href="/#/dashboard" className="nav-spot auth-in">
+        <a href="/dashboard.html" className="nav-spot auth-in">
           Dashboard
         </a>
         {STRIP.slice(5).map((n) => (
@@ -375,7 +375,7 @@ export default function Header() {
         <a href="/login.html" className="auth-out" onClick={() => setOpen(false)}>
           Log In / Sign Up
         </a>
-        <a href="/#/dashboard" className="auth-in" onClick={() => setOpen(false)}>
+        <a href="/dashboard.html" className="auth-in" onClick={() => setOpen(false)}>
           Dashboard
         </a>
       </nav>

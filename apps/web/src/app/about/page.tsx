@@ -144,7 +144,7 @@ export default function AboutPage() {
             <a className="btn btn-grad auth-out" href="/login.html">
               Join Virello Free
             </a>
-            <a className="btn btn-grad auth-in" href="/#/dashboard">
+            <a className="btn btn-grad auth-in" href="/dashboard.html">
               Join Virello Free
             </a>
           </div>

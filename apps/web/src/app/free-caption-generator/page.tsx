@@ -104,7 +104,7 @@ export default function FreeCaptionGeneratorPage() {
             <a className="btn btn-grad auth-out" href="/login.html">
               Start Growing Free
             </a>
-            <a className="btn btn-grad auth-in" href="/#/dashboard">
+            <a className="btn btn-grad auth-in" href="/dashboard.html">
               Open Your Dashboard
             </a>
           </div>
