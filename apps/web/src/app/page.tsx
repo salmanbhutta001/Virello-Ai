@@ -1,4 +1,8 @@
 import type { Metadata } from 'next';
+import TrendingRail from '@/components/TrendingRail';
+import MockDashboard from '@/components/MockDashboard';
+import AppShotsCarousel from '@/components/AppShotsCarousel';
+import DownloadApp from '@/components/DownloadApp';
 
 export const metadata: Metadata = {
   title: { absolute: 'Virello AI — Your AI Growth Manager' },
@@ -93,6 +97,56 @@ const STATS: { value: string; label: string }[] = [
   { value: '0', label: 'Bots, fake views or fake followers. Ever.' },
 ];
 
+const TRENDS: { cat: string; title: string; summary: string; insight: string }[] = [
+  {
+    cat: 'Technology',
+    title: 'AI Video Generation Tools',
+    summary:
+      'Short-form creators are switching to AI-assisted video tools to storyboard, voiceover, and caption clips in minutes instead of hours. The barrier to polished video has dropped fast.',
+    insight:
+      'Repurpose one long video into five short clips with auto captions to multiply reach.',
+  },
+  {
+    cat: 'Lifestyle',
+    title: 'Sustainable Fashion',
+    summary:
+      'Thrift flips and capsule wardrobes keep gaining traction as shoppers look for style with a smaller footprint. Resale platforms report steady growth in secondhand fashion.',
+    insight:
+      'Film a “one thrifted outfit, three ways” series to ride the trend authentically.',
+  },
+  {
+    cat: 'Fitness',
+    title: 'Home Workout Routines',
+    summary:
+      'No-equipment routines and 20-minute sessions dominate fitness feeds as people skip the gym commute. Consistency content outperforms intensity content.',
+    insight:
+      'Post a 7-day beginner challenge — daily check-ins drive follows.',
+  },
+  {
+    cat: 'Finance',
+    title: 'Personal Finance Apps',
+    summary:
+      'Budgeting and micro-investing apps are trending as young earners look for simple money habits. “No-spend week” challenges get strong engagement.',
+    insight: 'Share one small money win per week; relatable beats expert.',
+  },
+  {
+    cat: 'Food',
+    title: 'Plant-Based Recipes',
+    summary:
+      'Quick plant-based meals keep performing well, especially 15-minute dinners and high-protein swaps. Viewers save these posts at high rates.',
+    insight:
+      'Lead with the finished dish shot in the first second to stop the scroll.',
+  },
+  {
+    cat: 'Productivity',
+    title: 'Remote Work Tools',
+    summary:
+      'Async standups, focus timers, and desk-setup tours remain popular as hybrid work sticks. Tool-stack breakdowns get bookmarked heavily.',
+    insight:
+      'Do a “my exact remote setup under $200” post — specifics win.',
+  },
+];
+
 export default function HomePage() {
   return (
     <main>
@@ -110,16 +164,22 @@ export default function HomePage() {
             real people. Never bots, never fake engagement.
           </p>
           <div className="hero-cta">
-            <a className="btn btn-grad auth-out" href="/login.html">
+            <a
+              className="btn btn-grad auth-out"
+              href="/login.html?plan=free&next=dashboard"
+            >
               Get Started Free
             </a>
-            <a className="btn btn-grad auth-in" href="/#/dashboard">
+            <a className="btn btn-grad auth-in" href="/dashboard.html">
               Get Started Free
             </a>
-            <a className="btn btn-ghost auth-out" href="/login.html">
+            <a
+              className="btn btn-ghost auth-out"
+              href="/login.html?next=dashboard"
+            >
               Let AI Grow →
             </a>
-            <a className="btn btn-ghost auth-in" href="/#/dashboard">
+            <a className="btn btn-ghost auth-in" href="/dashboard.html">
               Let AI Grow →
             </a>
           </div>
@@ -136,11 +196,14 @@ export default function HomePage() {
               marginTop: 26,
             }}
           >
-            {['Instagram', 'YouTube', 'TikTok', 'Facebook', 'X'].map((p) => (
+            {['Instagram', 'YouTube', 'TikTok', 'Facebook'].map((p) => (
               <span key={p} className="chip">
                 {p}
               </span>
             ))}
+          </div>
+          <div style={{ marginTop: 44 }}>
+            <MockDashboard />
           </div>
         </div>
       </section>
@@ -312,22 +375,59 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Shop teaser */}
+      {/* Live trending rail */}
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
-          <div className="card center" style={{ padding: 48 }}>
-            <span className="kicker">Virello Shop</span>
-            <h2 className="h-md">
-              Hot in the <span className="grad-text">Shop</span> right now
+          <TrendingRail />
+        </div>
+      </section>
+
+      {/* Trending Now — 6 hardcoded trend cards (legacy parity, no API) */}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="center">
+            <span className="kicker">🔥 Trending Now</span>
+            <h2 className="h-lg">
+              What creators are{' '}
+              <span className="grad-text">posting about</span> right now
             </h2>
-            <p className="lead" style={{ margin: '14px auto 26px' }}>
-              Live trending picks from the Virello Shop — refreshed around the
-              clock.
+            <p className="lead" style={{ marginTop: 16 }}>
+              Six topics heating up across the web — each with an original
+              summary and a Virello AI take on how to turn the trend into your
+              next post.
             </p>
-            <a className="btn btn-grad" href="/#/shop">
-              Browse the Shop →
-            </a>
           </div>
+          <div className="trend-rail" style={{ marginTop: 44 }}>
+            {TRENDS.map((t) => (
+              <article key={t.title} className="card trend-card">
+                <div className="trend-card-top">
+                  <span className="trend-cat">{t.cat}</span>
+                  <span className="trend-hot">🔥 Trending</span>
+                </div>
+                <h3>{t.title}</h3>
+                <p className="trend-summary">{t.summary}</p>
+                <div className="trend-insight">
+                  <span className="trend-insight-label">Insight</span>
+                  <p>{t.insight}</p>
+                </div>
+                <span className="trend-source">Source: web trends</span>
+              </article>
+            ))}
+          </div>
+          <p className="mut small center" style={{ marginTop: 20 }}>
+            Swipe to explore all six trends →
+          </p>
+          <p className="mut small center">
+            Trends update regularly. Summaries are original.
+          </p>
+        </div>
+      </section>
+
+      {/* Download + app screenshots */}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <DownloadApp />
+        <div className="wrap">
+          <AppShotsCarousel />
         </div>
       </section>
 
@@ -397,10 +497,10 @@ export default function HomePage() {
               AI go to work in minutes.
             </p>
             <div className="hero-cta">
-              <a className="btn btn-grad auth-out" href="/login.html">
+              <a className="btn btn-grad auth-out" href="/login.html?plan=free&next=dashboard">
                 Try Virello Free
               </a>
-              <a className="btn btn-grad auth-in" href="/#/dashboard">
+              <a className="btn btn-grad auth-in" href="/dashboard.html">
                 Try Virello Free
               </a>
               <a className="btn btn-ghost" href="/pricing.html">

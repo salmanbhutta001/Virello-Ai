@@ -200,7 +200,7 @@ export default function TrustPage() {
             <a className="btn btn-grad auth-out" href="/login.html">
               Start Growing — The Right Way
             </a>
-            <a className="btn btn-grad auth-in" href="/#/dashboard">
+            <a className="btn btn-grad auth-in" href="/dashboard.html">
               Start Growing — The Right Way
             </a>
           </div>

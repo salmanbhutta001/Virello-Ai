@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AnalyticsScripts from '@/components/AnalyticsScripts';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -51,14 +51,7 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
-        {/* GA4 — virelloai.online web stream */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-X3T458F82Y"
-          strategy="afterInteractive"
-        />
-        <Script id="ga4" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X3T458F82Y');`}
-        </Script>
+        <AnalyticsScripts />
       </body>
     </html>
   );

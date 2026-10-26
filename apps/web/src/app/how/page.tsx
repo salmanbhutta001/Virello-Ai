@@ -135,7 +135,7 @@ export default function HowPage() {
             <a className="btn btn-grad auth-out" href="/login.html">
               Try It On Your Post — Free
             </a>
-            <a className="btn btn-grad auth-in" href="/#/dashboard">
+            <a className="btn btn-grad auth-in" href="/dashboard.html">
               Try It On Your Post — Free
             </a>
           </div>

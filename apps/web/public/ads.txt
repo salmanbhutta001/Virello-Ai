@@ -1,0 +1,2 @@
+# ads.txt for virelloai.online
+google.com, pub-9465259914673995, DIRECT, f08c47fec0942fa0

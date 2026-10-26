@@ -13,6 +13,7 @@ export type Product = {
   image_urls?: string[];
   affiliate_url?: string;
   trend_score?: number;
+  rating?: number;
 };
 
 export type BlogPost = {
@@ -32,22 +33,60 @@ async function getJSON<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-/** Shop products (paginated, limit <= 60 per backend rule). */
+/**
+ * Shop products (paginated). Backend contract (verified from
+ * backend/app/routers/commerce.py:298-303): pagination is `limit` (1-60)
+ * + `offset` (>=0) — NOT `skip` (FastAPI silently ignores unknown params,
+ * so `skip` did nothing and the shop showed page 1 forever). Trending is
+ * `sort=trending` — NOT `trending=true` (ignored by the backend's sort
+ * pattern). Returns the envelope { products, total } — the shop needs
+ * `total` for pagination.
+ */
 export async function fetchProducts(params: {
   limit?: number;
-  skip?: number;
+  offset?: number;
   category?: string;
-  trending?: boolean;
-} = {}): Promise<Product[]> {
+  q?: string;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'popular' | 'trending';
+} = {}): Promise<{ products: Product[]; total: number }> {
   const q = new URLSearchParams();
   q.set('limit', String(params.limit ?? 24));
-  if (params.skip) q.set('skip', String(params.skip));
-  if (params.category) q.set('category', params.category);
-  if (params.trending) q.set('trending', 'true');
-  const data = await getJSON<{ products?: Product[] } | Product[]>(
-    `/commerce/products?${q.toString()}`,
+  if (params.offset) q.set('offset', String(params.offset));
+  if (params.category && params.category !== 'all')
+    q.set('category', params.category);
+  if (params.q) q.set('q', params.q);
+  if (params.sort) q.set('sort', params.sort);
+  const data = await getJSON<{
+    products?: Product[];
+    total?: number;
+  } | Product[]>(`/commerce/products?${q.toString()}`);
+  if (Array.isArray(data)) return { products: data, total: data.length };
+  return { products: data.products ?? [], total: data.total ?? 0 };
+}
+
+/**
+ * One product by ASIN (backend commerce.py:364+). Returns the flat
+ * list-item shape with a populated `asin`; null for a malformed/absent
+ * ASIN (backend 404s). Throws on other failures.
+ */
+export async function fetchProductByAsin(
+  asin: string,
+): Promise<Product | null> {
+  const res = await fetch(
+    `${API_BASE}/commerce/products/by-asin/${encodeURIComponent(asin)}`,
   );
-  return Array.isArray(data) ? data : (data.products ?? []);
+  if (res.status === 404) return null;
+  if (!res.ok)
+    throw new Error(`API ${res.status} for /commerce/products/by-asin`);
+  const data = (await res.json()) as Product & { product?: Product };
+  return data.product ?? data;
+}
+
+/** ASIN of a product: the `asin` field, else the /dp/<ASIN> in its affiliate URL. */
+export function asinOf(p: Product): string | null {
+  if (p.asin) return p.asin;
+  const m = p.affiliate_url?.match(/\/dp\/([A-Z0-9]{10})/i);
+  return m ? m[1].toUpperCase() : null;
 }
 
 /** Blog posts from the backend blog engine (seeded + generated posts). */
