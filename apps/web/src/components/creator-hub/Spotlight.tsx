@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiErrorMessage, creatorApi, notify } from '../../lib/creator';
 import { PanelShell, Spinner, errorStyle, inputStyle, rowStyle } from './shared';
 
@@ -12,9 +12,17 @@ import { PanelShell, Spinner, errorStyle, inputStyle, rowStyle } from './shared'
  * consent checkbox. Success shows the server's message.
  */
 
-export default function Spotlight(props: { onBack: () => void }) {
+export default function Spotlight(props: {
+  onBack: () => void;
+  /** P3: prefilled by the dashboard Grow box (legacy growToSpotlight). */
+  initialLink?: string;
+}) {
   const [content, setContent] = useState('');
   const [link, setLink] = useState('');
+  // Prefill the link when the dashboard Grow box opens this panel.
+  useEffect(() => {
+    if (props.initialLink) setLink(props.initialLink);
+  }, [props.initialLink]);
   const [handle, setHandle] = useState('');
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
@@ -64,6 +72,7 @@ export default function Spotlight(props: { onBack: () => void }) {
       onBack={props.onBack}
     >
       <textarea
+        id="spContent"
         rows={4}
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -72,6 +81,7 @@ export default function Spotlight(props: { onBack: () => void }) {
       />
       <div style={rowStyle}>
         <input
+          id="spLink"
           value={link}
           onChange={(e) => setLink(e.target.value)}
           placeholder="Your link (e.g. https://yourshop.com)"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiErrorMessage, copyText, creatorApi, notify } from '../../lib/creator';
 import { PanelShell, Spinner, errorStyle, inputStyle, rowStyle } from './shared';
 
@@ -24,9 +24,17 @@ const PLATFORM_LABELS: Record<string, string> = {
 
 type Variant = { label: string; text: string };
 
-export default function DistributionEngine(props: { onBack: () => void }) {
+export default function DistributionEngine(props: {
+  onBack: () => void;
+  /** P3: prefilled by the dashboard Grow box (legacy growToDistribute). */
+  initialLink?: string;
+}) {
   const [content, setContent] = useState('');
   const [link, setLink] = useState('');
+  // Prefill the link when the dashboard Grow box opens this panel.
+  useEffect(() => {
+    if (props.initialLink) setLink(props.initialLink);
+  }, [props.initialLink]);
   const [platforms, setPlatforms] = useState<string[]>([...PLATFORMS]);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,6 +87,7 @@ export default function DistributionEngine(props: { onBack: () => void }) {
       onBack={props.onBack}
     >
       <textarea
+        id="distContent"
         rows={4}
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -87,6 +96,7 @@ export default function DistributionEngine(props: { onBack: () => void }) {
       />
       <div style={rowStyle}>
         <input
+          id="distLink"
           value={link}
           onChange={(e) => setLink(e.target.value)}
           placeholder="Your link / CTA (e.g. https://virelloai.online) — optional"

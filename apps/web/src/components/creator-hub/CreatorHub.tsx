@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Draft } from '../../lib/creator';
 import { notify } from '../../lib/creator';
@@ -269,6 +269,26 @@ export default function CreatorHub() {
   const [tool, setTool] = useState<MainTool>('image');
   const [panel, setPanel] = useState<PanelId | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [prefillLink, setPrefillLink] = useState('');
+
+  // P3: the dashboard Grow box opens the Distribution / Spotlight
+  // panel with the post URL prefilled (legacy growToDistribute /
+  // growToSpotlight). It dispatches
+  //   window.dispatchEvent(new CustomEvent('virello:open-hub-panel',
+  //     { detail: { panel: 'distribute' | 'spotlight', link } }))
+  // and this listener opens the panel + prefills its link field.
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<{ panel: PanelId; link?: string }>)
+        .detail;
+      if (!detail || (detail.panel !== 'distribute' && detail.panel !== 'spotlight'))
+        return;
+      setPrefillLink(detail.link ?? '');
+      setPanel(detail.panel);
+    };
+    window.addEventListener('virello:open-hub-panel', onOpen);
+    return () => window.removeEventListener('virello:open-hub-panel', onOpen);
+  }, []);
 
   function pickMain(t: MainTool) {
     setTool(t);
@@ -328,6 +348,7 @@ export default function CreatorHub() {
       </div>
 
       <div
+        id="creatorCards"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
@@ -338,9 +359,17 @@ export default function CreatorHub() {
           const active =
             (MAIN_TOOLS.includes(c.id as MainTool) && panel === null && tool === c.id) ||
             panel === c.id;
+          // Legacy card ids (the website tour highlights them).
+          const cardId =
+            c.id === 'distribute'
+              ? 'cardDistribute'
+              : c.id === 'spotlight'
+                ? 'cardSpotlight'
+                : undefined;
           return (
             <button
               key={c.id}
+              id={cardId}
               type="button"
               onClick={() =>
                 MAIN_TOOLS.includes(c.id as MainTool)
@@ -404,8 +433,12 @@ export default function CreatorHub() {
       {panel === 'voice' && <VoiceoverStudio onBack={backToMain} />}
       {panel === 'storyvideo' && <StoryVideo onBack={backToMain} />}
       {panel === 'analyze' && <UploadAnalyze onBack={backToMain} />}
-      {panel === 'distribute' && <DistributionEngine onBack={backToMain} />}
-      {panel === 'spotlight' && <Spotlight onBack={backToMain} />}
+      {panel === 'distribute' && (
+        <DistributionEngine onBack={backToMain} initialLink={prefillLink} />
+      )}
+      {panel === 'spotlight' && (
+        <Spotlight onBack={backToMain} initialLink={prefillLink} />
+      )}
     </section>
   );
 }
