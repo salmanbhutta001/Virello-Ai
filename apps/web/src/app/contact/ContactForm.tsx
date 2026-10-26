@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
-const CONTACT_EMAIL = 'privacy@virelloai.online';
+const CONTACT_EMAIL = 'support@virelloai.online';
 
 const CATEGORIES = [
   'General question',

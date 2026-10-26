@@ -146,8 +146,8 @@ export default function PrivacyPage() {
           <p>
             For privacy questions or data requests:{' '}
             <strong>
-              <a href="mailto:alif01fiverr@gmail.com">
-                alif01fiverr@gmail.com
+              <a href="mailto:support@virelloai.online">
+                support@virelloai.online
               </a>
             </strong>
           </p>

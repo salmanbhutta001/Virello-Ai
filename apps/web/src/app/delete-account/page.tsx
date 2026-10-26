@@ -62,8 +62,8 @@ export default function DeleteAccountPage() {
           <p>
             If you can&apos;t access the app, send an email to{' '}
             <strong>
-              <a href="mailto:alif01fiverr@gmail.com">
-                alif01fiverr@gmail.com
+              <a href="mailto:support@virelloai.online">
+                support@virelloai.online
               </a>
             </strong>{' '}
             from the email address registered to your account with the subject
@@ -134,8 +134,8 @@ export default function DeleteAccountPage() {
           <p>
             Contact us at{' '}
             <strong>
-              <a href="mailto:alif01fiverr@gmail.com">
-                alif01fiverr@gmail.com
+              <a href="mailto:support@virelloai.online">
+                support@virelloai.online
               </a>
             </strong>{' '}
             — we respond to deletion and privacy requests within 30 days.

@@ -160,7 +160,7 @@ use of the app after changes means you accept the updated policy.</p>
 <h2>8. Contact</h2>
 <p><strong>Developer:</strong> Hafiz Muhmmad Salman<br>
 <strong>App:</strong> Virello AI<br>
-For privacy questions or data requests: <strong>alif01fiverr@gmail.com</strong></p>
+For privacy questions or data requests: <strong>support@virelloai.online</strong></p>
 <p class="updated">© 2026 Hafiz Muhmmad Salman — Virello AI. All rights reserved.</p>
 </body></html>"""
 

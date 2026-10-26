@@ -209,8 +209,8 @@ export default function TermsPage() {
           <p>
             Questions about these Terms:{' '}
             <strong>
-              <a href="mailto:alif01fiverr@gmail.com">
-                alif01fiverr@gmail.com
+              <a href="mailto:support@virelloai.online">
+                support@virelloai.online
               </a>
             </strong>
           </p>

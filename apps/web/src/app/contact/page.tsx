@@ -71,10 +71,10 @@ export default function ContactPage() {
                 <p style={{ marginTop: 12 }}>
                   Email us at{' '}
                   <a
-                    href="mailto:privacy@virelloai.online"
+                    href="mailto:support@virelloai.online"
                     style={{ color: 'var(--pink)', fontWeight: 600 }}
                   >
-                    privacy@virelloai.online
+                    support@virelloai.online
                   </a>
                 </p>
                 <a
