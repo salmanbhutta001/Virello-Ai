@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import PricingClient from './PricingClient';
 
 export const metadata: Metadata = {
-  title: 'Pricing',
+  title: { absolute: 'Pricing — Free $0, Pro $19/mo, Business $49/mo' },
   description:
     'Start free. Upgrade when the AI has earned it. Every plan includes legitimate growth only — no bots, no fake engagement, no surprises.',
+  alternates: { canonical: '/pricing.html' },
 };
 
 // Server wrapper: metadata stays here; all interactive wiring

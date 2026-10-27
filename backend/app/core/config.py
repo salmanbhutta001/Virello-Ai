@@ -9,7 +9,21 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 30
     refresh_token_days: int = 30
-    cors_origins: list[str] = ["*"]
+    # CORS: explicit allowlist only (security fix 2026-10-27). A wildcard here
+    # with allow_credentials=True made the API reflect ANY Origin (verified
+    # live: evil.example.com got access-control-allow-credentials: true).
+    # Website + admin panel + local dev only. Override via
+    # VIRELLO_CORS_ORIGINS (JSON list) if a new first-party origin is added.
+    cors_origins: list[str] = [
+        "https://virelloai.online",
+        "https://www.virelloai.online",
+        "https://admin.virelloai.online",
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]
+    # Set VIRELLO_ENVIRONMENT=development for local dev (enables /docs).
+    # Production keeps the API docs disabled.
+    environment: str = "production"
     # --- AI provider layer (provider-agnostic; swap via config, no rewrites) ---
     ai_provider: str = "dev"  # dev | anthropic | openai | google | groq
     image_provider: str = "pollinations"  # pollinations | none (modular, optional)

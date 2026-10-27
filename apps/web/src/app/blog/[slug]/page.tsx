@@ -9,6 +9,14 @@ type Article = {
   meta: string;
   hero: string;
   body: string;
+  // Optional: added by the 2026-10-27 SEO fixes. `date` is the real publish
+  // date (only where it could be established from publish records — 12/19);
+  // `seoTitle` is the short SERP title for the 5 articles whose full title
+  // + " — Virello AI" ran 96–127 chars. `category` comes from the legacy
+  // homepage ARTICLES data. Absent fields fall back cleanly.
+  date?: string;
+  seoTitle?: string;
+  category?: string;
 };
 
 const articles = articlesData as Article[];
@@ -24,7 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = articles.find((a) => a.slug === slug);
   if (!article) return { title: 'Article not found' };
   return {
-    title: article.title,
+    // Short SERP title where one exists (5 long titles); the full title
+    // stays as the on-page H1. Template " — Virello AI" still applies.
+    title: article.seoTitle ?? article.title,
     description: article.description,
     alternates: { canonical: `/blog/${article.slug}.html` },
     openGraph: {
@@ -33,6 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: article.description,
       url: `https://virelloai.online/blog/${article.slug}.html`,
       images: [{ url: article.hero }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.seoTitle ?? article.title,
+      description: article.description,
+      images: [article.hero],
     },
   };
 }
@@ -43,11 +59,162 @@ export default async function ArticlePage({ params }: Props) {
   if (index === -1) notFound();
   const article = articles[index];
 
-  // "More articles": the next 3 pieces in the list, wrapping around.
-  const more = [1, 2, 3].map((i) => articles[(index + i) % articles.length]);
+  // "Related articles": topical picks per article (3 each), not list order.
+  // Every slug in this map must exist in articles.json.
+  const relatedMap: Record<string, string[]> = {
+    'honest-tiktok-playbook-new-creators': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-instagram-reels-playbook',
+      'one-post-five-platforms-repurposing-playbook',
+    ],
+    'your-post-flopped-now-what': [
+      'the-first-two-seconds-writing-hooks',
+      'one-post-five-platforms-repurposing-playbook',
+      'posting-times-decoded',
+    ],
+    'plan-a-month-of-content-in-one-afternoon': [
+      'one-post-five-platforms-repurposing-playbook',
+      'the-first-two-seconds-writing-hooks',
+      'posting-times-decoded',
+    ],
+    'honest-creator-home-studio-guide': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-instagram-reels-playbook',
+      'the-first-two-seconds-writing-hooks',
+    ],
+    'analytics-without-self-deception': [
+      'reach-is-not-growth-5-numbers-that-matter',
+      'how-ai-content-analysis-actually-works',
+      'comments-are-the-new-followers',
+    ],
+    'comments-are-the-new-followers': [
+      'honest-instagram-reels-playbook',
+      'growing-on-x-2026-text-first-playbook',
+      'reach-is-not-growth-5-numbers-that-matter',
+    ],
+    'free-grow-vs-paid-boost': [
+      'inside-the-ai-growth-orchestrator',
+      'what-an-ai-growth-manager-actually-does',
+      'why-fake-followers-cost-more',
+    ],
+    'growing-on-x-2026-text-first-playbook': [
+      'honest-instagram-reels-playbook',
+      'comments-are-the-new-followers',
+      'youtube-shorts-vs-tiktok-where-to-start',
+    ],
+    'honest-instagram-reels-playbook': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-tiktok-playbook-new-creators',
+      'comments-are-the-new-followers',
+    ],
+    'honest-state-of-social-media-late-2026': [
+      'why-fake-followers-cost-more',
+      'spot-the-scam-growth-service-signs',
+      'free-grow-vs-paid-boost',
+    ],
+    'how-ai-content-analysis-actually-works': [
+      'inside-the-ai-growth-orchestrator',
+      'analytics-without-self-deception',
+      'your-post-flopped-now-what',
+    ],
+    'inside-the-ai-growth-orchestrator': [
+      'how-ai-content-analysis-actually-works',
+      'what-an-ai-growth-manager-actually-does',
+      'free-grow-vs-paid-boost',
+    ],
+    'one-post-five-platforms-repurposing-playbook': [
+      'plan-a-month-of-content-in-one-afternoon',
+      'honest-instagram-reels-playbook',
+      'honest-creator-home-studio-guide',
+    ],
+    'posting-times-decoded': [
+      'comments-are-the-new-followers',
+      'honest-instagram-reels-playbook',
+      'analytics-without-self-deception',
+    ],
+    'reach-is-not-growth-5-numbers-that-matter': [
+      'analytics-without-self-deception',
+      'comments-are-the-new-followers',
+      'what-an-ai-growth-manager-actually-does',
+    ],
+    'spot-the-scam-growth-service-signs': [
+      'why-fake-followers-cost-more',
+      'honest-state-of-social-media-late-2026',
+      'free-grow-vs-paid-boost',
+    ],
+    'the-first-two-seconds-writing-hooks': [
+      'your-post-flopped-now-what',
+      'honest-instagram-reels-playbook',
+      'one-post-five-platforms-repurposing-playbook',
+    ],
+    'what-an-ai-growth-manager-actually-does': [
+      'inside-the-ai-growth-orchestrator',
+      'how-ai-content-analysis-actually-works',
+      'free-grow-vs-paid-boost',
+    ],
+    'why-fake-followers-cost-more': [
+      'spot-the-scam-growth-service-signs',
+      'honest-state-of-social-media-late-2026',
+      'free-grow-vs-paid-boost',
+    ],
+    'youtube-shorts-vs-tiktok-where-to-start': [
+      'honest-tiktok-playbook-new-creators',
+      'honest-instagram-reels-playbook',
+      'growing-on-x-2026-text-first-playbook',
+    ],
+  };
+  const relatedSlugs =
+    relatedMap[article.slug] ??
+    [1, 2, 3].map((i) => articles[(index + i) % articles.length].slug);
+  const more = relatedSlugs
+    .map((s) => articles.find((a) => a.slug === s))
+    .filter((a): a is Article => Boolean(a));
+
+  // BlogPosting JSON-LD (SEO fixes 2026-10-27). datePublished only when a
+  // real publish date is recorded in articles.json (12/19); the other 7
+  // omit it rather than carry a guessed date. dateModified is omitted
+  // everywhere — per-article edit history is not tracked (the 2026-10-26
+  // internal-links edit changed in-body links in some articles, so
+  // dateModified = datePublished would be wrong for those).
+  const wordCount = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&[a-zA-Z]+;/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean).length;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.description,
+    image: article.hero,
+    author: {
+      '@type': 'Organization',
+      name: 'Virello Team',
+      url: 'https://virelloai.online/',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Virello AI',
+      url: 'https://virelloai.online/',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://virelloai.online/logo-virello.png',
+      },
+    },
+    ...(article.date ? { datePublished: article.date } : {}),
+    mainEntityOfPage: `https://virelloai.online/blog-${article.slug}.html`,
+    articleSection: article.category,
+    wordCount: wordCount(article.body),
+    inLanguage: 'en',
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="section" style={{ paddingBottom: 24 }}>
         <div className="wrap">
           <div className="center" style={{ maxWidth: 820, margin: '0 auto' }}>
@@ -105,8 +272,22 @@ export default async function ArticlePage({ params }: Props) {
             </a>
           </div>
 
+          <p
+            className="small center"
+            style={{ marginTop: 22, color: 'var(--mut)' }}
+          >
+            Explore Virello:{' '}
+            <a href="/shop.html">Shop</a>
+            {' · '}
+            <a href="/score.html">Score your post</a>
+            {' · '}
+            <a href="/free-caption-generator.html">Free caption generator</a>
+            {' · '}
+            <a href="/pricing.html">Pricing</a>
+          </p>
+
           <h2 className="h-md" style={{ margin: '56px 0 20px' }}>
-            More articles
+            Related articles
           </h2>
           <div className="grid grid-3">
             {more.map((a) => (

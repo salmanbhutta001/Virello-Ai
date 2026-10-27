@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Free AI Caption + Hashtag Generator',
   description:
     'Write a better caption in seconds. Describe your post, pick a platform, and get an AI-written caption with hashtags — free, no signup needed to try.',
+  alternates: { canonical: '/free-caption-generator.html' },
 };
 
 const STEPS = [
@@ -107,6 +108,12 @@ export default function FreeCaptionGeneratorPage() {
             <a className="btn btn-grad auth-in" href="/dashboard.html">
               Open Your Dashboard
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              See what else Virello does:{' '}
+              <a href="/features.html">features</a>
+              {' · '}
+              <a href="/score.html">score your post</a>
+            </p>
           </div>
         </div>
       </section>

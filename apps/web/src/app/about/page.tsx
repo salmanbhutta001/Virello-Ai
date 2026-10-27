@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'About',
+  title: { absolute: 'About Virello AI — Your AI Growth Manager' },
   description:
     "Virello exists because great creators shouldn't need a marketing degree, an ads account and a data team to be discovered.",
+  alternates: { canonical: '/about.html' },
 };
 
 const STATS: { value: string; label: string }[] = [
@@ -147,6 +148,9 @@ export default function AboutPage() {
             <a className="btn btn-grad auth-in" href="/dashboard.html">
               Join Virello Free
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              Read how creators grow: <a href="/blog.html">the Virello blog</a>
+            </p>
           </div>
         </div>
       </section>

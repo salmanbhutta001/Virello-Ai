@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'How It Works',
+  title: { absolute: 'How Virello AI Works — Paste, Choose, Grow' },
   description:
-    "No dashboards to learn, no ads manager to fight. Paste your post, choose your goal, set an optional budget — Virello's AI handles everything after step four.",
+    "No dashboards to learn, no ads manager to fight. Paste your post, choose your goal, set an optional budget — Virello's AI handles everything.",
+  alternates: { canonical: '/how.html' },
 };
 
 type Step = { num: string; title: string; text: string };
@@ -138,6 +139,11 @@ export default function HowPage() {
             <a className="btn btn-grad auth-in" href="/dashboard.html">
               Try It On Your Post — Free
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              Before you start: <a href="/score.html">score your post</a>
+              {' · '}
+              <a href="/pricing.html">see Free vs Paid Boost pricing</a>
+            </p>
           </div>
         </div>
       </section>

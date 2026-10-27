@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Features',
+  title: { absolute: 'Features — AI Growth Manager for Social Media' },
   description:
     'Every Virello feature serves one job: getting your content in front of the people most likely to love it — legitimately.',
+  alternates: { canonical: '/features.html' },
 };
 
 type FeatureCard = { icon: string; title: string; text: string };
@@ -111,6 +112,13 @@ export default function FeaturesPage() {
             <a className="btn btn-grad auth-in" href="/dashboard.html">
               Start Growing Free
             </a>
+            <p className="small" style={{ marginTop: 18 }}>
+              Try it first: <a href="/score.html">score your post free</a>
+              {' · '}
+              <a href="/free-caption-generator.html">
+                generate captions free
+              </a>
+            </p>
           </div>
         </div>
       </section>

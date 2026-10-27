@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
     'Terms of Service for Virello AI. Acceptable use, subscriptions and billing, intellectual property, and limitations.',
+  alternates: { canonical: '/terms.html' },
 };
 
 export default function TermsPage() {
