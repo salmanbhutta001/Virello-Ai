@@ -74,13 +74,10 @@ export default function RootLayout({
           />
         </noscript>
         {/* Microsoft Clarity (heatmaps) — SEO fixes 2026-10-27.
-            TODO: replace PROJECT_ID with the real Clarity Project ID (from
-            the Clarity browser task) before deploying. Until then the tag
-            requests https://www.clarity.ms/tag/PROJECT_ID, which resolves
-            to no project — the script no-ops harmlessly. */}
+            Project "Virello" created 2026-10-27 14:01, ID z474d70ks5. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "PROJECT_ID");`,
+            __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "z474d70ks5");`,
           }}
         />
         <link rel="icon" href="/favicon-new.png" />
