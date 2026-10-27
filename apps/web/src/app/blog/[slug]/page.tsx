@@ -62,6 +62,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'honest-tiktok-playbook-new-creators': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-instagram-reels-playbook',
+      'one-post-five-platforms-repurposing-playbook',
+    ],
     'your-post-flopped-now-what': [
       'the-first-two-seconds-writing-hooks',
       'one-post-five-platforms-repurposing-playbook',
@@ -99,8 +104,8 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'honest-instagram-reels-playbook': [
       'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-tiktok-playbook-new-creators',
       'comments-are-the-new-followers',
-      'posting-times-decoded',
     ],
     'honest-state-of-social-media-late-2026': [
       'why-fake-followers-cost-more',
@@ -120,7 +125,7 @@ export default async function ArticlePage({ params }: Props) {
     'one-post-five-platforms-repurposing-playbook': [
       'plan-a-month-of-content-in-one-afternoon',
       'honest-instagram-reels-playbook',
-      'growing-on-x-2026-text-first-playbook',
+      'honest-creator-home-studio-guide',
     ],
     'posting-times-decoded': [
       'comments-are-the-new-followers',
@@ -153,9 +158,9 @@ export default async function ArticlePage({ params }: Props) {
       'free-grow-vs-paid-boost',
     ],
     'youtube-shorts-vs-tiktok-where-to-start': [
+      'honest-tiktok-playbook-new-creators',
       'honest-instagram-reels-playbook',
       'growing-on-x-2026-text-first-playbook',
-      'the-first-two-seconds-writing-hooks',
     ],
   };
   const relatedSlugs =

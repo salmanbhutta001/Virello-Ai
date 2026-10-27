@@ -147,6 +147,10 @@ export default function BlogIndexPage() {
               <a href="/score.html">Score your post</a>
               {' · '}
               <a href="/free-caption-generator.html">Free caption generator</a>
+              {' · '}
+              <a href="/about.html">About Virello</a>
+              {' · '}
+              <a href="/help.html">Help</a>
             </p>
           </div>
         </div>
