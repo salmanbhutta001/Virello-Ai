@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import articlesData from '@/data/articles.json';
 import TrendingRail from '@/components/TrendingRail';
 import MockDashboard from '@/components/MockDashboard';
 import AppShotsCarousel from '@/components/AppShotsCarousel';
@@ -146,6 +147,20 @@ const TRENDS: { cat: string; title: string; summary: string; insight: string }[]
       'Do a “my exact remote setup under $200” post — specifics win.',
   },
 ];
+
+type Article = {
+  slug: string;
+  title: string;
+  description: string;
+  meta: string;
+  hero: string;
+  body: string;
+};
+
+// Newest first (articles.json is newest-first). The daily blog cron only
+// appends to articles.json, so this strip rotates automatically — no
+// hardcoded article list, no manual rotation step.
+const LATEST_ARTICLES = (articlesData as Article[]).slice(0, 3);
 
 export default function HomePage() {
   return (
@@ -420,6 +435,72 @@ export default function HomePage() {
           <p className="mut small center">
             Trends update regularly. Summaries are original.
           </p>
+        </div>
+      </section>
+
+      {/* From the Blog — 3 newest articles, data-driven from articles.json */}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="center">
+            <span className="kicker">From The Blog</span>
+            <h2 className="h-lg">
+              Growth, <span className="grad-text">without the gimmicks</span>
+            </h2>
+            <p className="lead" style={{ marginTop: 16 }}>
+              Honest, practical guides for creators — no fake growth, no bots.
+            </p>
+          </div>
+          <div className="grid grid-3" style={{ marginTop: 44 }}>
+            {LATEST_ARTICLES.map((a) => (
+              <a
+                key={a.slug}
+                href={`/blog/${a.slug}.html`}
+                className="card"
+                style={{
+                  padding: 0,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {/* Plain <img>: static export has no image optimizer configured. */}
+                <img
+                  src={a.hero}
+                  alt=""
+                  loading="lazy"
+                  style={{
+                    width: '100%',
+                    aspectRatio: '16 / 9',
+                    objectFit: 'cover',
+                  }}
+                />
+                <div
+                  style={{
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    flex: 1,
+                  }}
+                >
+                  <p className="small mut">{a.meta}</p>
+                  <h3 style={{ marginBottom: 0 }}>{a.title}</h3>
+                  <p style={{ flex: 1 }}>{a.description}</p>
+                  <span
+                    className="small"
+                    style={{ color: 'var(--pink)', fontWeight: 600 }}
+                  >
+                    Read article →
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+          <div className="center" style={{ marginTop: 40 }}>
+            <a className="btn btn-ghost" href="/blog.html">
+              Browse All Articles
+            </a>
+          </div>
         </div>
       </section>
 
