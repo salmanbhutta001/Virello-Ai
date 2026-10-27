@@ -93,6 +93,12 @@ app = FastAPI(
     description="Your AI Growth Manager — legitimate AI-powered social growth.",
     version="0.1.0",
     lifespan=lifespan,
+    # Security fix 2026-10-27: /docs + /redoc + /openapi.json were publicly
+    # listing the full API surface (incl. admin endpoints). Docs are enabled
+    # only when VIRELLO_ENVIRONMENT=development.
+    docs_url="/docs" if settings.environment == "development" else None,
+    redoc_url="/redoc" if settings.environment == "development" else None,
+    openapi_url="/openapi.json" if settings.environment == "development" else None,
 )
 
 # Product gallery images.
