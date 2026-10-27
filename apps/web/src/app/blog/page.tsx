@@ -13,13 +13,13 @@ type Article = {
 const articles = articlesData as Article[];
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: { absolute: 'AI Growth Blog — Creator Guides & Playbooks | Virello AI' },
   description:
     'Honest growth playbooks from the Virello team: analytics, hooks, repurposing, platform strategy and how AI growth tools actually work.',
   alternates: { canonical: '/blog.html' },
   openGraph: {
     type: 'website',
-    title: 'Blog — Virello AI',
+    title: 'AI Growth Blog — Creator Guides & Playbooks | Virello AI',
     description:
       'Honest growth playbooks from the Virello team — analytics, hooks, repurposing and platform strategy.',
     url: 'https://virelloai.online/blog.html',

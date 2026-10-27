@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Help Center',
+  title: { absolute: 'Help Center — Guides, Answers & AI Assistant' },
   description:
     'Search guides and answers, or browse by topic. Still stuck? Our team and the Ask Virello assistant are one tap away.',
   alternates: { canonical: '/help.html' },

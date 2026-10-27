@@ -44,6 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `https://virelloai.online/blog/${article.slug}.html`,
       images: [{ url: article.hero }],
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.seoTitle ?? article.title,
+      description: article.description,
+      images: [article.hero],
+    },
   };
 }
 

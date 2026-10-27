@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Features',
+  title: { absolute: 'Features — AI Growth Manager for Social Media' },
   description:
     'Every Virello feature serves one job: getting your content in front of the people most likely to love it — legitimately.',
   alternates: { canonical: '/features.html' },

@@ -16,6 +16,21 @@ export const metadata: Metadata = {
     siteName: 'Virello AI',
     type: 'website',
     url: 'https://virelloai.online/',
+    images: [
+      {
+        url: '/logo-virello.png',
+        width: 560,
+        height: 175,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Virello AI — Your AI Growth Manager',
+    description:
+      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
+    images: ['/logo-virello.png'],
   },
 };
 

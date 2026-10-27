@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'About',
+  title: { absolute: 'About Virello AI — Your AI Growth Manager' },
   description:
     "Virello exists because great creators shouldn't need a marketing degree, an ads account and a data team to be discovered.",
   alternates: { canonical: '/about.html' },

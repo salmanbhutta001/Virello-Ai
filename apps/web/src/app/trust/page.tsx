@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Trust & Safety',
+  title: { absolute: 'Trust & Safety — No Bots, No Fake Engagement' },
   description:
     "Virello's rules are simple, public and non-negotiable: no fake views, no fake followers, no bots, no password access — real growth, no shortcuts.",
   alternates: { canonical: '/trust.html' },

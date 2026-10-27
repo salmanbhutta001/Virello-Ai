@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'How It Works',
+  title: { absolute: 'How Virello AI Works — Paste, Choose, Grow' },
   description:
     "No dashboards to learn, no ads manager to fight. Paste your post, choose your goal, set an optional budget — Virello's AI handles everything.",
   alternates: { canonical: '/how.html' },
