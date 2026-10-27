@@ -187,6 +187,9 @@ export default async function ArticlePage({ params }: Props) {
     '@type': 'BlogPosting',
     headline: article.title,
     description: article.description,
+    // AEO 2026-10-28: the visible "Short answer" box below renders this
+    // same description, so abstract matches the page text.
+    abstract: article.description,
     image: article.hero,
     author: {
       '@type': 'Organization',
@@ -223,6 +226,27 @@ export default async function ArticlePage({ params }: Props) {
             <p className="mut small" style={{ marginTop: 14 }}>
               {article.meta}
             </p>
+            {/* Short answer (AEO 2026-10-28): the article's own
+                description, rendered as a direct answer up front so
+                readers — and answer engines — get the point in 2–3
+                sentences before the full article. */}
+            <div
+              className="card"
+              style={{
+                maxWidth: 820,
+                margin: '28px auto 0',
+                padding: '20px 24px',
+                textAlign: 'left',
+                borderColor: 'rgba(249, 81, 119, 0.35)',
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65 }}>
+                <strong style={{ fontFamily: 'var(--font-d)' }}>
+                  Short answer:{' '}
+                </strong>
+                {article.description}
+              </p>
+            </div>
           </div>
           <img
             src={article.hero}

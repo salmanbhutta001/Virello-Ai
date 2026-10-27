@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'Privacy Policy for Virello AI. Learn what data we collect, how we use it, and your rights.',
+    'Privacy Policy for Virello AI. Learn what data we collect, how we use it, how we protect it, and your rights — including access, correction and deletion.',
   alternates: { canonical: '/privacy.html' },
+  openGraph: { url: 'https://virelloai.online/privacy.html' },
 };
 
 export default function PrivacyPage() {

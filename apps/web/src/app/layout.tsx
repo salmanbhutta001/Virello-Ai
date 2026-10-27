@@ -18,7 +18,9 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: 'Virello AI',
     type: 'website',
-    url: 'https://virelloai.online/',
+    // NOTE: no `url` here on purpose — every public page declares its own
+    // openGraph.url matching its canonical (Ahrefs 2026-10-27: the shared
+    // homepage URL on all pages read as "OG URL not matching canonical").
     images: [
       {
         url: '/logo-virello.png',
@@ -37,6 +39,54 @@ export const metadata: Metadata = {
   },
 };
 
+// Organization + WebSite graph (AEO/GEO 2026-10-28). sameAs lists only
+// real, verifiable profiles — Instagram/TikTok/YouTube/Facebook plus the
+// directory listings (ProvenExpert live; GoodFirms + AlternativeTo pending
+// review; Product Hunt maker profile). No X: @virelloai is suspended.
+// Keep identical to the legacy homepage's graph in
+// ~/workspace/your_files/virello-official-website/index.html.
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://virelloai.online/#organization',
+      name: 'Virello AI',
+      url: 'https://virelloai.online/',
+      logo: 'https://virelloai.online/logo-virello.png',
+      description:
+        "Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.",
+      foundingDate: '2026-01-10',
+      foundingLocation: 'Multan, Punjab, Pakistan',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Multan',
+        addressRegion: 'Punjab',
+        addressCountry: 'PK',
+      },
+      email: 'support@virelloai.online',
+      sameAs: [
+        'https://www.instagram.com/virelloai.online/',
+        'https://www.youtube.com/@virelloai.online',
+        'https://www.tiktok.com/@virelloai.online',
+        'https://www.facebook.com/61595418210450',
+        'https://www.provenexpert.com/virello-ai/',
+        'https://goodfirms.co/software/virello-ai',
+        'https://alternativeto.net/software/virello-ai/',
+        'https://www.producthunt.com/@hafiz_muhammad_salman',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://virelloai.online/#website',
+      url: 'https://virelloai.online/',
+      name: 'Virello AI',
+      publisher: { '@id': 'https://virelloai.online/#organization' },
+      inLanguage: 'en',
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -45,6 +95,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Organization + WebSite JSON-LD (AEO/GEO 2026-10-28). Same block
+            as the legacy homepage's graph — keep the two in sync. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         {/* Pre-paint: apply the shared site theme + login state before
             first paint (same localStorage keys as the main site), so
             these pages never flash the wrong theme or auth buttons. */}

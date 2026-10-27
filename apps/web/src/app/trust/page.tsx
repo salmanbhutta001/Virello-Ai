@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "Virello's rules are simple, public and non-negotiable: no fake views, no fake followers, no bots, no password access — real growth, no shortcuts.",
   alternates: { canonical: '/trust.html' },
+  openGraph: { url: 'https://virelloai.online/trust.html' },
 };
 
 const NEVER: { lead: string; text: string }[] = [

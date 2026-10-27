@@ -4,8 +4,9 @@ import type { ReactNode } from 'react';
 export const metadata: Metadata = {
   title: { absolute: 'Help Center — Guides, Answers & AI Assistant' },
   description:
-    'Search guides and answers, or browse by topic. Still stuck? Our team and the Ask Virello assistant are one tap away.',
+    'Search guides and answers, or browse by topic — plans, budgets, safety, refunds and the app. Still stuck? Our team and the Ask Virello assistant are one tap away.',
   alternates: { canonical: '/help.html' },
+  openGraph: { url: 'https://virelloai.online/help.html' },
 };
 
 const CATEGORIES: { icon: ReactNode; title: string; text: string }[] = [

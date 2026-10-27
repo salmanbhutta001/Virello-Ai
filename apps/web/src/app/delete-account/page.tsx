@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description:
     'How to delete your Virello AI account and personal data. Step-by-step instructions for in-app deletion and email requests.',
   alternates: { canonical: '/delete-account.html' },
+  openGraph: { url: 'https://virelloai.online/delete-account.html' },
 };
 
 export default function DeleteAccountPage() {

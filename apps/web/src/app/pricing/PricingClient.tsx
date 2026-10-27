@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { isLoggedIn, setPlan } from '@/lib/auth';
 import { showToast } from '@/lib/toast';
+import { PRICING_FAQS } from './faqs';
 
 // Pricing CTAs + modals — port of legacy #page-pricing wiring
 // (index.html:1047-1129 HTML; 2634-2640 setBilling; 2762-2794
@@ -426,6 +427,40 @@ export default function PricingClient() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pricing FAQ (AEO 2026-10-28) — same PRICING_FAQS array as the
+              FAQPage JSON-LD in page.tsx, so visible text and schema match. */}
+          <h2 className="h-md center" style={{ margin: '70px 0 26px' }}>
+            Pricing questions, answered
+          </h2>
+          <div style={{ maxWidth: 820, margin: '0 auto' }}>
+            {PRICING_FAQS.map((f) => (
+              <details
+                key={f.q}
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r-md)',
+                  padding: '18px 22px',
+                  marginBottom: 12,
+                }}
+              >
+                <summary
+                  style={{
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-d)',
+                    fontWeight: 700,
+                    fontSize: 16,
+                  }}
+                >
+                  {f.q}
+                </summary>
+                <p className="mut" style={{ marginTop: 10, fontSize: 15 }}>
+                  {f.a}
+                </p>
+              </details>
+            ))}
           </div>
 
           <p className="small center" style={{ marginTop: 36 }}>

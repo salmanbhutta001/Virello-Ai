@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description:
     "No dashboards to learn, no ads manager to fight. Paste your post, choose your goal, set an optional budget — Virello's AI handles everything.",
   alternates: { canonical: '/how.html' },
+  openGraph: { url: 'https://virelloai.online/how.html' },
 };
 
 type Step = { num: string; title: string; text: string };
@@ -57,8 +58,33 @@ const TIMELINE: TimelineItem[] = [
 ];
 
 export default function HowPage() {
+  // HowTo JSON-LD (AEO 2026-10-28) — built from the visible STEPS cards
+  // below, so schema matches the page. Step 1 drops the card's platform
+  // enumeration (it names X); everything else is word for word.
+  // totalTime mirrors the page headline: "Four steps. Thirty seconds."
+  const howToJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'How Virello AI Works — Paste, Choose, Grow',
+    description:
+      "No dashboards to learn, no ads manager to fight. Paste your post, choose your goal, set an optional budget — Virello's AI handles everything.",
+    totalTime: 'PT30S',
+    step: STEPS.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.title,
+      text:
+        i === 0
+          ? 'Paste a link to any post or video. The AI Content Analysis agent scores it instantly — hook, format, caption and viral potential.'
+          : s.text,
+    })),
+  };
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+      />
       <section className="section">
         <div className="wrap center">
           <span className="kicker">How It Works</span>

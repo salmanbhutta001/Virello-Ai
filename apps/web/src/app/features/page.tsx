@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description:
     'Every Virello feature serves one job: getting your content in front of the people most likely to love it — legitimately.',
   alternates: { canonical: '/features.html' },
+  openGraph: { url: 'https://virelloai.online/features.html' },
 };
 
 type FeatureCard = { icon: string; title: string; text: string };

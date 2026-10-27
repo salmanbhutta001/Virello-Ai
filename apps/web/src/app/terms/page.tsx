@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
-    'Terms of Service for Virello AI. Acceptable use, subscriptions and billing, intellectual property, and limitations.',
+    'Terms of Service for Virello AI: acceptable use, subscriptions and billing, intellectual property, and limitations of liability.',
   alternates: { canonical: '/terms.html' },
+  openGraph: { url: 'https://virelloai.online/terms.html' },
 };
 
 export default function TermsPage() {

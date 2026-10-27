@@ -5,8 +5,9 @@ import ContactForm from './ContactForm';
 export const metadata: Metadata = {
   title: { absolute: 'Contact Virello AI — Questions, Billing & Press' },
   description:
-    "Questions about growth, billing, partnerships or press — send us a message and we'll get back to you.",
+    "Questions about growth, billing, partnerships or press — send us a message and we'll get back to you. Or reach us at support@virelloai.online.",
   alternates: { canonical: '/contact.html' },
+  openGraph: { url: 'https://virelloai.online/contact.html' },
 };
 
 const SOCIALS: { name: string; href: string }[] = [

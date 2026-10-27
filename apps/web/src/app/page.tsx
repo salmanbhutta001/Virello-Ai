@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: { absolute: 'Virello AI — Your AI Growth Manager' },
   description:
     'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
+  alternates: { canonical: '/' },
+  openGraph: { url: 'https://virelloai.online/' },
 };
 
 type Step = { num: string; title: string; text: string };
