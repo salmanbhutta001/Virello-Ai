@@ -63,6 +63,13 @@ export default function Footer() {
             </ul>
           </div>
         </div>
+        <div style={{ marginTop: 18, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <a href="https://showmebest.ai" target="_blank" rel="noreferrer">
+            <img src="https://showmebest.ai/badge/feature-badge-white.webp" alt="Featured on ShowMeBestAI" width={220} height={60} loading="lazy" />
+          </a>
+          <a href="https://fazier.com" target="_blank" rel="noreferrer">Listed on Fazier</a>
+        </div>
         <div className="footer-base">
           <span>© 2026 Virello AI — virelloai.online. All rights reserved.</span>
           <span>
