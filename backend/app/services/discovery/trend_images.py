@@ -38,6 +38,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import SessionLocal
 from app.models.discovery import TrendImageCache
 
 log = logging.getLogger(__name__)
@@ -231,8 +232,7 @@ def generated_image_url(key: str, query: str) -> str:
 
 
 async def _resolve_one(query: str, lang: str, db: AsyncSession,
-                     article_url: str = "",
-                     db_lock: asyncio.Lock | None = None) -> str:
+                     article_url: str = "") -> str:
     """Return a thumbnail URL for one topic ("" only for person topics with
     no real photo, by design).
 
@@ -240,27 +240,10 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     Wikipedia pageimage → skip persons → deterministic abstract
     illustration URL, returned and cached synchronously.
     """
-    # One AsyncSession is NOT safe for concurrent use (SQLAlchemy raises
-    # "concurrent operations are not permitted"). The per-topic resolvers
-    # run in parallel via gather, so their DB reads/writes go behind this
-    # lock; the slow HTTP lookups stay outside it and stay parallel.
-    async def _cached(key: str):
-        if db_lock is not None:
-            async with db_lock:
-                return await get_cached_image(db, key)
-        return await get_cached_image(db, key)
-
-    async def _store(key: str, url: str, kind: str) -> None:
-        if db_lock is not None:
-            async with db_lock:
-                await put_cached_image(db, key, url, kind)
-        else:
-            await put_cached_image(db, key, url, kind)
-
     key = topic_key(query)
     if not key:
         return ""
-    cached = await _cached(key)
+    cached = await get_cached_image(db, key)
     if cached and cached.image_url:
         return cached.image_url
     # News trends carry the real article URL: its og:image is the most
@@ -268,11 +251,11 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     if article_url:
         og = await fetch_og_image(article_url)
         if og:
-            await _store(key, og, "og_image")
+            await put_cached_image(db, key, og, "og_image")
             return og
     info = await wikipedia_topic_info(query, lang=lang)
     if info["image_url"]:
-        await _store(key, info["image_url"], "wikipedia")
+        await put_cached_image(db, key, info["image_url"], "wikipedia")
         return info["image_url"]
     if info["is_person"] or looks_like_person_name(query):
         # Never fabricate a likeness of a real person: no real photo, no
@@ -288,11 +271,18 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     # and the app's errorBuilder falls back to its gradient if the image
     # ever fails to load, so there is no broken-image risk.
     url = generated_image_url(key, query)
-    await _store(key, url, "generated")
+    await put_cached_image(db, key, url, "generated")
     return url
 
 
-async def resolve_trend_thumbnails(trends: list[dict], db: AsyncSession,
+async def _resolve_one_with_session(query: str, lang: str,
+                                    article_url: str = "") -> str:
+    """_resolve_one on its own short-lived session (see below)."""
+    async with SessionLocal() as session:
+        return await _resolve_one(query, lang, session, article_url=article_url)
+
+
+async def resolve_trend_thumbnails(trends: list[dict],
                                    lang: str = "en") -> None:
     """Fill missing ``thumbnail_url`` on trend dicts, in place.
 
@@ -302,19 +292,19 @@ async def resolve_trend_thumbnails(trends: list[dict], db: AsyncSession,
     pending = [t for t in trends if not (t.get("thumbnail_url") or "").strip()]
     if not pending:
         return
-    # Shared-session guard (see _resolve_one): the resolvers run in
-    # parallel, so their DB access goes behind one lock. return_exceptions
-    # so one failing topic cannot abort the rest — and so no task is left
-    # running on the session after this returns (a leaked task using the
-    # session concurrently with the caller's cache write raises the same
-    # "concurrent operations" error there).
-    db_lock = asyncio.Lock()
+    # Each topic resolves on its OWN short-lived session. One AsyncSession
+    # is NOT safe for concurrent use (SQLAlchemy: "concurrent operations
+    # are not permitted") — sharing the caller's session across the
+    # parallel gather broke it and poisoned the caller's cache write.
+    # A lock instead would serialize the DB round-trips (Vercel iad1 →
+    # Neon Singapore is ~200ms each), blowing the 7s fetch budget; own
+    # sessions stay fully parallel. return_exceptions so one failing
+    # topic cannot abort the rest.
     results = await asyncio.gather(
         *(
-            _resolve_one(
-                t.get("query", ""), lang, db,
+            _resolve_one_with_session(
+                t.get("query", ""), lang,
                 article_url=(t.get("url") or "").strip(),
-                db_lock=db_lock,
             )
             for t in pending
         ),

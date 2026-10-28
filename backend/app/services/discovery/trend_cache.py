@@ -49,7 +49,7 @@ log = logging.getLogger("virello.trending.cache")
 # 20 trends and the endpoint slices to the requested limit.
 CACHE_TTL_SECONDS = 3600
 CACHE_LIMIT = 20
-_SUMMARY_CONCURRENCY = 6
+_SUMMARY_CONCURRENCY = 10
 
 TRENDS_NOTE = (
     "Real public attention signals (Wikipedia views + news headlines), "
@@ -330,7 +330,7 @@ async def fetch_trends_live(
     # a deterministic abstract illustration (person topics keep the
     # gradient fallback by design). Already parallel internally.
     try:
-        await resolve_trend_thumbnails(trends, db, lang)
+        await resolve_trend_thumbnails(trends, lang)
     except Exception as exc:
         log.warning("trend thumbnail resolution failed: %s", exc)
     # The thumbnail step shares this session across concurrent tasks; a
