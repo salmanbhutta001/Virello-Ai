@@ -1,6 +1,6 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
-  'https://virello-api-production.up.railway.app/api/v1';
+  'https://virello-api.vercel.app/api/v1';
 
 export type Product = {
   id?: number;
