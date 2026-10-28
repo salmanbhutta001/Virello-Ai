@@ -5,10 +5,13 @@ relevant creators. All engagement here is real by construction.
 """
 from __future__ import annotations
 
+import asyncio
+import os
 import re
+import secrets
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +30,22 @@ from app.services.discovery.service import tagged_products_for_placements
 from app.services.discovery.trend_images import (  # noqa: F401 — registers TrendImageCache model
     resolve_trend_thumbnails,
 )
+from app.services.discovery.trend_cache import (
+    CACHE_LIMIT,
+    build_response,
+    cache_is_fresh,
+    fetch_trends_live,
+    read_trend_cache,
+    write_trend_cache,
+)
 
 router = APIRouter()
+
+
+def _curator_token_ok(token: str | None) -> bool:
+    """Service-to-service check — same as /curate (VIRELLO_CURATOR_TOKEN)."""
+    expected = os.environ.get("VIRELLO_CURATOR_TOKEN", "")
+    return bool(expected) and bool(token) and secrets.compare_digest(token, expected)
 
 
 @router.get("/topics")
@@ -435,156 +452,123 @@ async def trending_now(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Real trending topics from free public sources.
+    """Real trending topics from free public sources — cache-first.
 
     Aggregates (no API keys needed, works from any server):
     - Wikimedia Top Articles: most-viewed Wikipedia articles (real pageviews)
       Supports language editions via `lang` (en, ur, ar, es, fr, de, etc.)
     - Google News RSS: current top headlines (real news)
 
-    Returns honestly-labeled trend data — these are public attention
+    Served from a DB snapshot (``discovery_trends_cache``, TTL 1h) while
+    fresh, so the app's Trending screen answers in <1s instead of waiting
+    on a live upstream fetch that blew Vercel's 10s function limit and
+    showed the app an empty screen. On expiry the snapshot is refetched
+    (per-article summary calls run in parallel) and stored. A stale
+    snapshot is served rather than an empty list when the live fetch
+    fails. Returns honestly-labeled trend data — public attention
     signals, not Virello posts. Never fabricated.
     """
-    import httpx
-    import xml.etree.ElementTree as ET
-    from datetime import date, timedelta
-
-    # Validate language code (2-3 letter codes only)
+    # Validate language code (2-3 letter codes only) and clamp the page.
     lang = (lang or "en").lower().strip()[:3]
     if not lang.isalpha():
         lang = "en"
+    geo = (geo or "US").upper().strip() or "US"
+    limit = max(1, min(int(limit), CACHE_LIMIT))
 
-    trends: list[dict] = []
-    sources_used: list[str] = []
-
-    # ---- Source 1: Wikimedia Top Articles (yesterday, real pageviews) ----
-    # Supports language editions: en.wikipedia, ur.wikipedia, ar.wikipedia, etc.
+    # 1. Fresh snapshot? Serve it immediately — no upstream calls.
+    # A cache read failure degrades to a live fetch, never a 500.
     try:
-        yesterday = date.today() - timedelta(days=1)
-        wiki_url = (
-            "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/"
-            f"{lang}.wikipedia/all-access/"
-            f"{yesterday.year}/{yesterday.month:02d}/{yesterday.day:02d}"
-        )
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(
-                wiki_url,
-                headers={"User-Agent": "Virello/1.0 (trends; contact@virello.app)"},
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                articles = data.get("items", [{}])[0].get("articles", [])
-                for art in articles:
-                    title = art.get("article", "").replace("_", " ").strip()
-                    # Skip meta pages
-                    if not title or ":" in title or title.lower().startswith("main page"):
-                        continue
-                    # Skip technical/junk titles
-                    if title.startswith(".") or len(title) < 3:
-                        continue
-                    views = art.get("views", 0)
-
-                    # Fetch thumbnail + description from Wikipedia summary API
-                    thumb_url = ""
-                    description = ""
-                    try:
-                        slug = art.get("article", "")
-                        sum_resp = await client.get(
-                            f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{slug}",
-                            headers={"User-Agent": "Virello/1.0 (trends)"},
-                            timeout=8.0,
-                        )
-                        if sum_resp.status_code == 200:
-                            sum_data = sum_resp.json()
-                            thumb = sum_data.get("thumbnail") or {}
-                            thumb_url = thumb.get("source", "")
-                            description = sum_data.get("description", "") or ""
-                    except Exception:
-                        pass
-
-                    trends.append({
-                        "query": title,
-                        "source": "Wikipedia",
-                        "geo": "Global",
-                        "type": "trend",
-                        "detail": f"{views:,} views yesterday" if views else "",
-                        "thumbnail_url": thumb_url,
-                        "description": description,
-                    })
-                    if len(trends) >= limit:
-                        break
-                if trends:
-                    sources_used.append("Wikipedia Top Articles")
+        cached = await read_trend_cache(db, lang, geo)
     except Exception:
-        pass  # honest empty fallback below
-
-    # ---- Source 2: Google News RSS (top headlines, fills remaining) ----
-    if len(trends) < limit:
-        try:
-            news_url = (
-                f"https://news.google.com/rss?hl=en-{geo.upper()}"
-                f"&gl={geo.upper()}&ceid={geo.upper()}:en"
+        cached = None
+    if cached is not None:
+        payload, fetched_at = cached
+        cached_trends = payload.get("trends") or []
+        if cached_trends and cache_is_fresh(fetched_at):
+            out = build_response(
+                cached_trends[:limit], payload.get("sources", []), lang
             )
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.get(news_url)
-                if resp.status_code == 200:
-                    root = ET.fromstring(resp.text)
-                    for item in root.findall(".//item"):
-                        if len(trends) >= limit:
-                            break
-                        title_elem = item.find("title")
-                        source_elem = item.find("source")
-                        link_elem = item.find("link")
-                        if title_elem is not None and title_elem.text:
-                            # Google News titles are "Headline - Source"
-                            full = title_elem.text.strip()
-                            headline = full.rsplit(" - ", 1)[0].strip()
-                            src_name = (
-                                source_elem.text.strip()
-                                if source_elem is not None and source_elem.text
-                                else "Google News"
-                            )
-                            # The RSS <link> is a news.google.com/rss/articles/…
-                            # URL that 302-redirects to the publisher's real
-                            # article. The mobile reader follows it, so tapping
-                            # a card opens the real article (with a working
-                            # preview) instead of an unpreviewable search page.
-                            article_url = (
-                                link_elem.text.strip()
-                                if link_elem is not None and link_elem.text
-                                else ""
-                            )
-                            if headline and not any(
-                                t["query"] == headline for t in trends
-                            ):
-                                trends.append({
-                                    "query": headline,
-                                    "source": src_name,
-                                    "geo": geo.upper(),
-                                    "type": "news",
-                                    "url": article_url,
-                                })
-                    if any(t["type"] == "news" for t in trends):
-                        sources_used.append("Google News")
-        except Exception:
-            pass
+            out["cached"] = True
+            out["cached_at"] = fetched_at.isoformat() if fetched_at else None
+            return out
 
-    # Fill display images for topics missing one: DB cache first, then the
-    # real article og:image, then the real Wikipedia pageimage, then a
-    # deterministic abstract illustration URL returned synchronously
-    # (person topics keep the gradient fallback by design). Shape
-    # unchanged — mobile already renders `thumbnail_url` (gradient fallback
-    # when empty).
-    await resolve_trend_thumbnails(trends, db, lang)
+    # 2. Expired/missing snapshot: refetch live (parallelized) and store.
+    # Hard 7s budget: Vercel Hobby kills the function at 10s, so a slow
+    # upstream must degrade to the stale snapshot (step 3), never to a
+    # killed invocation and an empty screen in the app.
+    try:
+        trends, sources_used = await asyncio.wait_for(
+            fetch_trends_live(db, geo=geo, limit=CACHE_LIMIT, lang=lang),
+            timeout=7.0,
+        )
+    except (asyncio.TimeoutError, Exception):
+        trends, sources_used = [], []
+    if trends:
+        payload = build_response(trends, sources_used, lang)
+        await write_trend_cache(db, lang, geo, payload)
+        out = build_response(trends[:limit], sources_used, lang)
+        out["cached"] = False
+        out["cached_at"] = None
+        return out
 
+    # 3. Live fetch failed: serve a stale snapshot rather than nothing.
+    if cached is not None:
+        payload, fetched_at = cached
+        cached_trends = payload.get("trends") or []
+        if cached_trends:
+            out = build_response(
+                cached_trends[:limit], payload.get("sources", []), lang
+            )
+            out["cached"] = True
+            out["stale"] = True
+            out["cached_at"] = fetched_at.isoformat() if fetched_at else None
+            return out
+
+    # 4. No snapshot at all and no live data: honest empty, as before.
+    out = build_response([], [], lang)
+    out["cached"] = False
+    out["cached_at"] = None
+    return out
+
+
+@router.post("/trending/refresh")
+async def refresh_trending(
+    request: Request,
+    geo: str = "US",
+    lang: str = "en",
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Warm the trending snapshot now (curator token).
+
+    Runs the live trend fetch and stores the snapshot, so the app's
+    Trending screen serves it instantly. Called by the curation cron
+    (every 3h) with the X-Curator-Token header — the same token as
+    /curate. Admins can use POST /api/v1/trending/refresh (the robot)
+    for the full curated-topics pipeline instead.
+    """
+    if not _curator_token_ok(request.headers.get("x-curator-token")):
+        raise HTTPException(401, "Curator token required")
+    lang = (lang or "en").lower().strip()[:3]
+    if not lang.isalpha():
+        lang = "en"
+    geo = (geo or "US").upper().strip() or "US"
+    try:
+        trends, sources_used = await asyncio.wait_for(
+            fetch_trends_live(db, geo=geo, limit=CACHE_LIMIT, lang=lang),
+            timeout=7.0,
+        )
+    except (asyncio.TimeoutError, Exception):
+        trends, sources_used = [], []
+    ok = False
+    if trends:
+        payload = build_response(trends, sources_used, lang)
+        ok = await write_trend_cache(db, lang, geo, payload)
     return {
-        "trends": trends[:limit],
+        "ok": ok,
+        "count": len(trends),
         "sources": sources_used,
         "language": lang,
-        "note": (
-            "Real public attention signals (Wikipedia views + news headlines), "
-                    "not Virello posts. No data was fabricated."
-        ),
+        "geo": geo,
     }
 
 

@@ -128,6 +128,11 @@ async def init_db() -> None:
     # ensure function existed for either).
     await _ensure_image_jobs_table()
     await _ensure_video_jobs_table()
+    # Same for discovery_trends_cache (2026-10-28: the app's Trending
+    # screen showed empty because GET /discovery/trending refetched live
+    # on every call and blew Vercel's 10s limit — the endpoint now serves
+    # a cached snapshot from this table).
+    await _ensure_discovery_trends_cache_table()
 
 
 async def _ensure_spotlight_table() -> None:
@@ -203,6 +208,32 @@ async def _ensure_video_jobs_table() -> None:
             print("init_db: created missing video_jobs table")
     except Exception as e:
         print(f"init_db: video_jobs table check non-fatal ({type(e).__name__}): {e}")
+
+
+async def _ensure_discovery_trends_cache_table() -> None:
+    """Create the discovery_trends_cache table if missing. Idempotent.
+
+    Backs GET /api/v1/discovery/trending (app Trending screen): the
+    endpoint serves a cached snapshot from this table while fresh and
+    only refetches upstream when it expires. Follows the existing
+    ensure pattern — never crashes boot.
+    """
+    import sqlalchemy as sa
+
+    try:
+        async with engine.begin() as conn:
+            tables = await conn.run_sync(
+                lambda c: sa.inspect(c).get_table_names()
+            )
+            if "discovery_trends_cache" in tables:
+                return
+            from app.models.trending import DiscoveryTrendsCache
+            await conn.run_sync(
+                lambda c: DiscoveryTrendsCache.__table__.create(c, checkfirst=True)
+            )
+            print("init_db: created missing discovery_trends_cache table")
+    except Exception as e:
+        print(f"init_db: discovery_trends_cache table check non-fatal ({type(e).__name__}): {e}")
 
 
 async def _ensure_users_columns() -> None:
