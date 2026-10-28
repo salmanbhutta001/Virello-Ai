@@ -8,10 +8,26 @@ Local dev defaults work out of the box. On Railway set:
 """
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
 from app.models.commerce import PRODUCT_CATEGORIES
+
+log = logging.getLogger("virello.curation.config")
+
+
+def _ensure_dir(d: Path) -> Path:
+    """mkdir that never raises: Vercel serverless /var/task is read-only,
+    so creating app/static/... fails with OSError. Callers that only READ
+    (gallery fallback) tolerate a missing dir; callers that WRITE fall
+    back to /tmp via their own logic. Never let a mkdir kill a request
+    (or, at import time, the whole app)."""
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        log.warning("cannot create dir %s (read-only fs?) — continuing", d)
+    return d
 
 # UI-only slugs — merchandising/filter concepts, not departments.
 UI_FILTER_SLUGS = {"all", "men", "women", "sale", "best_sellers"}
@@ -68,15 +84,19 @@ def gallery_dir() -> Path:
     (persistent volume). Local: backend/app/static/gallery."""
     override = os.environ.get("VIRELLO_GALLERY_DIR", "").strip()
     d = Path(override) if override else _default_gallery_dir()
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        # Read-only fs (Vercel): writes go to /tmp instead.
+        d = Path("/tmp") / "virello-gallery"
+        _ensure_dir(d)
     return d
 
 
 def static_gallery_dir() -> Path:
-    """Git-committed fallback gallery (backend/app/static/gallery)."""
-    d = _default_gallery_dir()
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+    """Git-committed fallback gallery (backend/app/static/gallery).
+    Read-only fallback: never create it — callers only check is_file()."""
+    return _ensure_dir(_default_gallery_dir())
 
 
 def public_base_url() -> str:
@@ -160,7 +180,7 @@ def log_path() -> Path:
         p = Path(override)
     else:
         p = _default_gallery_dir().parent / "curation_runs.log"
-    p.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_dir(p.parent)
     return p
 
 

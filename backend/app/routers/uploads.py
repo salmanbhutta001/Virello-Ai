@@ -12,6 +12,7 @@ re-derived from the stored file, so no migration is needed.
 from __future__ import annotations
 
 import io
+import os
 import re
 import uuid
 from pathlib import Path
@@ -25,13 +26,38 @@ from app.models.core import User
 
 router = APIRouter()
 
-UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+
+def _writable_dir(default: Path, env_var: str, fallback_name: str) -> Path:
+    """Pick a writable dir for file storage.
+
+    Railway/local: the default under app/ is writable. Vercel serverless:
+    /var/task is READ-ONLY and app/static may not even exist in the bundle,
+    so a bare mkdir() at import time raises OSError and kills the whole
+    app import (deploy 9/10: every route 500). On OSError fall back to
+    /tmp, the only writable dir on Vercel. Never raises.
+    """
+    override = os.environ.get(env_var, "").strip()
+    candidates = ([Path(override)] if override else []) + [default]
+    for d in candidates:
+        try:
+            d.mkdir(parents=True, exist_ok=True)
+            return d
+        except OSError:
+            continue
+    tmp = Path("/tmp") / fallback_name
+    tmp.mkdir(parents=True, exist_ok=True)
+    return tmp
+
+
+UPLOAD_DIR = _writable_dir(
+    Path(__file__).resolve().parent.parent / "uploads",
+    "VIRELLO_UPLOAD_DIR", "virello-uploads")
 
 # Proof screenshots for reward claims (share rewards). Kept separate from
 # general uploads: owner-or-admin-only serving, never public.
-PROOF_DIR = Path(__file__).resolve().parent.parent / "static" / "proofs"
-PROOF_DIR.mkdir(parents=True, exist_ok=True)
+PROOF_DIR = _writable_dir(
+    Path(__file__).resolve().parent.parent / "static" / "proofs",
+    "VIRELLO_PROOF_DIR", "virello-proofs")
 MAX_PROOF_BYTES = 5 * 1024 * 1024  # 5 MB
 _PROOF_EXTS = {"jpg", "jpeg", "png", "webp", "gif"}
 

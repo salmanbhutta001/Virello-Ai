@@ -1,21 +1,24 @@
-"""Vercel serverless entrypoint — lazy-loading diagnostic wrapper.
+"""Vercel serverless entrypoint — lazy-loading wrapper.
 
-Why this exists (2026-10-28): deploy 9 (834d1f0) is READY but every route
-500s with FUNCTION_INVOCATION_FAILED in ~6s, deterministically. The
-traceback is only in the dashboard runtime logs, which the Vercel MCP
-tools cannot read (403). So this wrapper:
+ROOT CAUSE (proven 2026-10-28 via /__diag, deploy 10 dpl_Ah43s7q4):
+the app import died at app/routers/uploads.py:34 — PROOF_DIR.mkdir()
+on Vercel's READ-ONLY /var/task (app/static isn't even in the bundle),
+OSError [Errno 30]. Every route 500'd. Fixed by making all import-time
+mkdirs defensive (/tmp fallback) in uploads.py + curation/config.py.
 
+This wrapper:
 - imports app.main LAZILY on the first HTTP request, timed, with any
-  exception captured (type + full traceback) instead of killing the
-  function — /__diag reports it as JSON;
+  exception captured instead of killing the function — a future import
+  failure degrades to a JSON 500 naming the cause instead of a black
+  box FUNCTION_INVOCATION_FAILED;
 - answers the ASGI lifespan handshake ITSELF (startup.complete at
   once) and never forwards lifespan to the real app, so the real
   app's lifespan (init_db() DDL round-trips to Neon Singapore) does
   not run on Vercel cold start. The schema already exists in Neon
   from the restore, and the engine connects lazily per-request.
 
-If diagnosis shows the lifespan was the killer, this wrapper (minus
-/__diag) IS the fix. If the import itself fails, /__diag shows why.
+The /__diag probe that found the cause was REMOVED before this fix
+shipped — it returned full tracebacks publicly.
 """
 
 import json
@@ -59,20 +62,6 @@ async def _send_json(send, status, payload):
     await send({"type": "http.response.body", "body": body})
 
 
-async def _diag_response(send):
-    _try_import()
-    await _send_json(
-        send,
-        200,
-        {
-            "imported": _state["imported"],
-            "import_seconds": _state["import_seconds"],
-            "error": _state["error"],
-            "traceback": _state["traceback"],
-        },
-    )
-
-
 async def app(scope, receive, send):
     if scope["type"] == "lifespan":
         # Skip the real app's lifespan on Vercel (see module docstring).
@@ -84,9 +73,6 @@ async def app(scope, receive, send):
                 await send({"type": "lifespan.shutdown.complete"})
                 return
     if scope["type"] != "http":
-        return
-    if scope.get("path") == "/__diag":
-        await _diag_response(send)
         return
     _try_import()
     real_app = _state["app"]
