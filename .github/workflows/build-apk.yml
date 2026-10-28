@@ -102,7 +102,7 @@ jobs:
         working-directory: apps/mobile
         # Production build: connect to Railway backend.
         # --flavor play selects Google Play Billing on the Dart side.
-        run: flutter build apk --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api.vercel.app/api/v1
+        run: flutter build apk --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api.vercel.app
 
       - name: Verify release signature (never ship debug-signed)
         working-directory: apps/mobile
@@ -127,7 +127,7 @@ jobs:
         working-directory: apps/mobile
         # Signed with the release keystore (upload key for Play App Signing).
         # --flavor play selects Google Play Billing on the Dart side.
-        run: flutter build appbundle --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api.vercel.app/api/v1
+        run: flutter build appbundle --release --flavor play --dart-define=VIRELLO_STORE=play --dart-define=VIRELLO_API_URL=https://virello-api.vercel.app
 
       - name: Publish to GitHub Release (latest)
         env:
