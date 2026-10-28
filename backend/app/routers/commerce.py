@@ -184,6 +184,37 @@ def _asin_of_url(url: str | None) -> str | None:
     return m.group(1) if m else None
 
 
+_CLOUDINARY_VERSION_RE = re.compile(r"^v\d+/")
+# Phone-width serving size for product pictures. Stored gallery URLs are
+# the full-size originals (often 1000px+, ~70-100KB each); the app shows
+# them at phone width, so the API returns Cloudinary's on-the-fly variant
+# instead — same image, roughly half the bytes. f_jpg (not f_auto) on
+# purpose: Flutter's image decoder handles JPEG everywhere, while f_auto
+# could serve AVIF, which it cannot decode.
+_IMAGE_OPTIMIZE = "w_800,q_auto,f_jpg"
+
+
+def _optimized_image_url(url: str) -> str:
+    """Rewrite a stored Cloudinary URL to its phone-optimized variant.
+
+    Only applies to res.cloudinary.com URLs whose path after
+    /image/upload/ starts with a version segment (v<digits>/), i.e. the
+    plain originals we store. Non-Cloudinary URLs and URLs that already
+    carry a transformation segment pass through untouched, so the
+    function is idempotent and safe to run on every response.
+    """
+    if not url or "res.cloudinary.com" not in url:
+        return url
+    marker = "/image/upload/"
+    i = url.find(marker)
+    if i < 0:
+        return url
+    rest = url[i + len(marker):]
+    if not _CLOUDINARY_VERSION_RE.match(rest):
+        return url
+    return url[: i + len(marker)] + _IMAGE_OPTIMIZE + "/" + rest
+
+
 def _to_out(p: Product) -> ProductOut:
     return ProductOut(
         id=str(p.id),
@@ -194,7 +225,7 @@ def _to_out(p: Product) -> ProductOut:
         price_display=_price_display(p.price_cents, p.currency),
         currency=p.currency,
         category=p.category,
-        image_urls=list(p.image_urls or []),
+        image_urls=[_optimized_image_url(u) for u in (p.image_urls or [])],
         stock_qty=p.stock_qty,
         is_active=p.is_active,
         views=p.views or 0,
