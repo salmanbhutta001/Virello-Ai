@@ -569,6 +569,9 @@ async def refresh_trending(
         "sources": sources_used,
         "language": lang,
         "geo": geo,
+        # First 3 titles so the curation cron can log what was cached
+        # (curator-token only — no user data).
+        "sample": [t.get("query", "") for t in trends[:3]],
     }
 
 
