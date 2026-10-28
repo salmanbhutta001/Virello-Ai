@@ -1,1 +1,1 @@
-{"rewrites":[{"source":"/(.*)","destination":"/api/index.py"}],"functions":{"api/index.py":{"includeFiles":"app/**","excludeFiles":"{app/static/gallery/**,tests/**}","maxDuration":10}}}
+{"rewrites":[{"source":"/(.*)","destination":"/api/index.py"}],"functions":{"api/index.py":{"includeFiles":["app/**/*.py","app/**/*.ttf","app/**/*.yaml","app/**/*.yml","app/**/*.json","app/**/*.png","app/**/*.md"],"excludeFiles":"{app/static/gallery/**,tests/**}","maxDuration":10}}}
