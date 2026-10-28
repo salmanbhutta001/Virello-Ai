@@ -4,11 +4,45 @@ Postgres (asyncpg) in production; SQLite (aiosqlite) for local dev —
 pick via VIRELLO_DATABASE_URL.
 """
 from collections.abc import AsyncIterator
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
 from app.models.core import Base
+
+
+def _normalize_db_url(url: str) -> str:
+    """Translate asyncpg-style query params to psycopg-style.
+
+    The Neon URL is a plain postgresql:// URL, which SQLAlchemy resolves
+    to the ASYNC psycopg dialect — and psycopg REJECTS the asyncpg-style
+    ?ssl=require ("invalid connection option 'ssl'"). It wants
+    ?sslmode=require. A ?ssl=require DATABASE_URL (set 2026-10-28 for an
+    asyncpg test that never matched the real driver) made EVERY DB
+    connection fail instantly, so /health still said ok (it only checks
+    URL parsing) while blog/products/login all 500'd. Accept both forms
+    so a future env edit can't silently 500 every DB route again.
+    """
+    try:
+        parts = urlsplit(url or "")
+        qs = dict(parse_qsl(parts.query, keep_blank_values=True))
+        if "sslmode" not in qs and "ssl" in qs:
+            ssl = qs.pop("ssl")
+            qs["sslmode"] = (
+                ssl
+                if ssl in ("require", "prefer", "disable", "allow",
+                           "verify-ca", "verify-full")
+                else "require"
+            )
+            return urlunsplit((parts.scheme, parts.netloc, parts.path,
+                               urlencode(qs), parts.fragment))
+        return url
+    except Exception:
+        return url
+
+
+_DB_URL = _normalize_db_url(settings.database_url)
 
 connect_args: dict = {}
 if (settings.database_url or "").startswith("sqlite"):
@@ -24,7 +58,7 @@ _DB_URL_VALID = True
 _DB_URL_ERROR: str | None = None
 try:
     engine = create_async_engine(
-        settings.database_url,
+        _DB_URL,
         connect_args=connect_args,
         pool_pre_ping=True,
     )
