@@ -17,17 +17,23 @@
 #     account anyway (VIRELLO_PLAY_SERVICE_ACCOUNT_JSON is unset).
 #   - uvicorn[standard]: local dev server only; Vercel serves ASGI itself.
 #     (uvloop, watchfiles, websockets, python-dotenv go with it.)
-#   - psycopg[binary]: only used by Alembic (migrations never run on
-#     Vercel); the app itself uses asyncpg.
+#   - psycopg[binary]: MUST STAY (fixed deploy 3, 2026-10-28). The Neon
+#     DATABASE_URL is a plain postgresql:// string, and SQLAlchemy 2.1
+#     resolves that scheme to the ASYNC psycopg dialect at engine creation
+#     (app/core/database.py import). Without the package the import raises
+#     ModuleNotFoundError 'psycopg' and the whole API 500s on every route
+#     (FUNCTION_INVOCATION_FAILED) — local sqlite import tests never catch
+#     this because sqlite never loads the postgres dialect. ~19 MB.
 #   - alembic: migrations never run on Vercel (init_db() bootstraps).
 #
 # Everything kept here is imported at app boot (top-level) or needed by
 # FastAPI/SQLAlchemy at runtime. Measured: full set installs ~957 MB of
-# site-packages; this file installs ~156 MB. Verified: app.main imports
-# cleanly with this set (48 routes).
+# site-packages; this file installs ~175 MB. Verified: app.main imports
+# cleanly with this set incl. a plain postgresql:// DATABASE_URL (48 routes).
 fastapi>=0.115
 sqlalchemy[asyncio]>=2.0
 asyncpg>=0.29
+psycopg[binary]>=3.0
 pydantic>=2.7
 pydantic-settings>=2.3
 python-jose[cryptography]>=3.3
