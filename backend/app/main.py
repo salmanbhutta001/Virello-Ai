@@ -258,7 +258,9 @@ app.include_router(
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "virello-api"}
+    from app.core.database import db_url_status
+
+    return {"status": "ok", "service": "virello-api", "db": db_url_status()}
 
 
 @app.get("/c/{campaign_id}")

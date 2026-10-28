@@ -11,14 +11,37 @@ from app.core.config import settings
 from app.models.core import Base
 
 connect_args: dict = {}
-if settings.database_url.startswith("sqlite"):
+if (settings.database_url or "").startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
-engine = create_async_engine(
-    settings.database_url,
-    connect_args=connect_args,
-    pool_pre_ping=True,
-)
+# A bad DATABASE_URL must never take down the whole API: engine creation
+# parses the URL at import time, and an unparseable value used to raise
+# here and 500 every route (Vercel deploy 3/4, 2026-10-28). Fall back to
+# a throwaway sqlite engine so the app still boots and /health can report
+# the problem. Only the exception TYPE is recorded — never the message,
+# which can echo the URL (and its password).
+_DB_URL_VALID = True
+_DB_URL_ERROR: str | None = None
+try:
+    engine = create_async_engine(
+        settings.database_url,
+        connect_args=connect_args,
+        pool_pre_ping=True,
+    )
+except Exception as e:  # noqa: BLE001 - startup must survive a bad URL
+    _DB_URL_VALID = False
+    _DB_URL_ERROR = type(e).__name__
+    print(f"database: DATABASE_URL unusable ({_DB_URL_ERROR}); using sqlite fallback")
+    engine = create_async_engine(
+        "sqlite+aiosqlite:////tmp/virello-fallback.db",
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True,
+    )
+
+
+def db_url_status() -> dict:
+    """Whether the configured DATABASE_URL parsed. No secret values here."""
+    return {"valid": _DB_URL_VALID, "error": _DB_URL_ERROR}
 
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
