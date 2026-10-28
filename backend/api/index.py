@@ -62,6 +62,57 @@ async def _send_json(send, status, payload):
     await send({"type": "http.response.body", "body": body})
 
 
+async def _diagq_response(send):
+    """TEMPORARY (2026-10-28): run the exact blog/products queries the
+    live routes run, return per-query ok/error + traceback as JSON.
+    Vercel MCP runtime logs are 403, so this is the only way to see the
+    real DB error. REMOVE before the final deploy."""
+    _try_import()
+    if _state["app"] is None:
+        await _send_json(send, 500, {"error": "app import failed",
+                                     "detail": _state["error"]})
+        return
+    results = {}
+    try:
+        from sqlalchemy import func, select, text
+
+        from app.blog.models import BlogPost
+        from app.core.database import SessionLocal
+        from app.models.commerce import Product
+
+        async def _run(name, stmt):
+            t0 = time.time()
+            try:
+                async with SessionLocal() as db:
+                    res = await db.execute(stmt)
+                    val = res.scalar() if "count" in name else len(res.scalars().all())
+                results[name] = {"ok": True, "value": val,
+                                 "seconds": round(time.time() - t0, 3)}
+            except Exception as e:  # noqa: BLE001 - diagnostic
+                results[name] = {"ok": False,
+                                 "error": f"{type(e).__name__}: {e}",
+                                 "traceback": traceback.format_exc(),
+                                 "seconds": round(time.time() - t0, 3)}
+
+        await _run("select_1", select(text("1")))
+        await _run("blog_count",
+                   select(func.count(BlogPost.id)).where(
+                       BlogPost.status == "published"))
+        await _run("blog_row",
+                   select(BlogPost).where(
+                       BlogPost.status == "published").limit(1))
+        await _run("products_count",
+                   select(func.count(Product.id)).where(
+                       Product.is_active.is_(True)))
+        await _run("products_row",
+                   select(Product).where(
+                       Product.is_active.is_(True)).limit(1))
+    except Exception as e:  # noqa: BLE001 - diagnostic
+        results["diag_error"] = {"error": f"{type(e).__name__}: {e}",
+                                 "traceback": traceback.format_exc()}
+    await _send_json(send, 200, results)
+
+
 async def app(scope, receive, send):
     if scope["type"] == "lifespan":
         # Skip the real app's lifespan on Vercel (see module docstring).
@@ -73,6 +124,9 @@ async def app(scope, receive, send):
                 await send({"type": "lifespan.shutdown.complete"})
                 return
     if scope["type"] != "http":
+        return
+    if scope.get("path") == "/_diagq":
+        await _diagq_response(send)
         return
     _try_import()
     real_app = _state["app"]
