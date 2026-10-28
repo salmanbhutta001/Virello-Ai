@@ -1,0 +1,46 @@
+# Vercel (serverless) requirements — slimmed for the 500 MB function bundle.
+#
+# Same as requirements.txt MINUS the packages that are only used lazily
+# (inside functions / try-except) or not at all on serverless:
+#   - rembg + onnxruntime (+ scipy, numpy, numba, llvmlite, scikit-image,
+#     networkx, imageio, tifffile, pooch, pymatting): background removal.
+#     Imported lazily in app/services/bg_remover.py; the admin
+#     remove-backgrounds endpoint degrades (ImportError) on Vercel.
+#     Railway keeps the full requirements.txt and the working endpoint.
+#   - pytrends (+ pandas, lxml): Google Trends connector already guards
+#     the import (app/services/audience_sources/google_trends.py,
+#     try/except -> _PYTRENDS=False); audience sources fall back.
+#   - google-auth + google-api-python-client (~120 MB of discovery docs):
+#     Play Billing client is built lazily in
+#     app/services/payments/google_play.py and 503s without a service
+#     account anyway (VIRELLO_PLAY_SERVICE_ACCOUNT_JSON is unset).
+#   - uvicorn[standard]: local dev server only; Vercel serves ASGI itself.
+#     (uvloop 16 MB, watchfiles, websockets, python-dotenv go with it.)
+#   - psycopg[binary]: only used by Alembic (migrations never run on
+#     Vercel); the app itself uses asyncpg.
+#   - alembic: migrations never run on Vercel (init_db() bootstraps).
+#
+# Everything kept here is imported at app boot (top-level) or needed by
+# FastAPI/SQLAlchemy at runtime. Measured: full requirements.txt installs
+# ~957 MB of site-packages; this file installs ~110 MB.
+# Railway / local dev keep using requirements.txt unchanged.
+fastapi>=0.115
+sqlalchemy[asyncio]>=2.0
+asyncpg>=0.29
+pydantic>=2.7
+pydantic-settings>=2.3
+python-jose[cryptography]>=3.3
+bcrypt>=4.1
+celery[redis]>=5.4
+redis>=5.0
+httpx>=0.27
+cryptography>=42.0
+python-multipart>=0.0.9
+aiosqlite>=0.20
+email-validator>=2.0
+langdetect==1.0.9
+pyyaml>=6.0
+pillow
+apscheduler>=3.10
+arabic-reshaper
+python-bidi
