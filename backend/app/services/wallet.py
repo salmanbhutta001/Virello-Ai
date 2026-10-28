@@ -18,6 +18,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import uuid
 from datetime import date, datetime, timedelta, timezone
@@ -34,7 +35,9 @@ from app.models.rewards import PointsLedger, ShareClick
 from app.models.wallet import (WD_APPROVED, WD_PAID, WD_PENDING, WD_REJECTED,
                                CashLedger, Withdrawal)
 
-SHARE_BASE_URL = "https://virello-api-production.up.railway.app"
+SHARE_BASE_URL = os.environ.get(
+    "VIRELLO_PUBLIC_BASE_URL", "https://virello-api-production.up.railway.app"
+).rstrip("/")
 
 # Final rate card (Hafiz). All values integer cents, caps per day.
 # share:              $0.05 x 20/day  = $1.00/day max

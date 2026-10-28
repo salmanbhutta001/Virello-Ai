@@ -1,4 +1,5 @@
 """Campaigns — LET AI GROW with real persistence + orchestrator pipeline."""
+import os
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -210,8 +211,10 @@ async def get_share_link(
     """Get the public trackable share link for a campaign."""
     from app.core.config import settings
     campaign = await _owned(db, user, campaign_id)
-    base = getattr(settings, "public_base_url",
-                   "https://virello-api-production.up.railway.app")
+    base = os.environ.get(
+        "VIRELLO_PUBLIC_BASE_URL",
+        "https://virello-api-production.up.railway.app",
+    ).rstrip("/")
     return ShareLinkOut(
         campaign_id=str(campaign.id),
         share_url=f"{base}/c/{campaign.id}",
