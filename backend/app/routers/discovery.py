@@ -560,9 +560,10 @@ async def refresh_trending(
     except (asyncio.TimeoutError, Exception):
         trends, sources_used = [], []
     ok = False
+    write_error = ""
     if trends:
         payload = build_response(trends, sources_used, lang)
-        ok = await write_trend_cache(db, lang, geo, payload)
+        ok, write_error = await write_trend_cache(db, lang, geo, payload)
     return {
         "ok": ok,
         "count": len(trends),
@@ -572,6 +573,9 @@ async def refresh_trending(
         # First 3 titles so the curation cron can log what was cached
         # (curator-token only — no user data).
         "sample": [t.get("query", "") for t in trends[:3]],
+        # "" on success; the DB error when the snapshot could not be
+        # stored (curator-only — lets the cron diagnose a failed warm).
+        "write_error": write_error,
     }
 
 

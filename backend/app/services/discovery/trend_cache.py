@@ -75,7 +75,15 @@ async def _ensure_cache_table(db: AsyncSession) -> None:
 
     Vercel never runs init_db (the serverless wrapper answers lifespan
     itself), so the endpoint path must be able to create its own table.
+    Rolls back first: the thumbnail step shares this session across
+    concurrent tasks, and a failed query there leaves the transaction
+    broken — without the rollback the CREATE itself would die with
+    PendingRollbackError and the table would never be created.
     """
+    try:
+        await db.rollback()
+    except Exception:
+        pass
     try:
         await db.execute(
             text(
@@ -144,8 +152,8 @@ def cache_is_fresh(fetched_at: datetime | None) -> bool:
 
 async def write_trend_cache(
     db: AsyncSession, lang: str, geo: str, payload: dict
-) -> bool:
-    """Upsert a snapshot. Returns True on success, False on any failure."""
+) -> tuple[bool, str]:
+    """Upsert a snapshot. Returns (True, "") or (False, error)."""
     try:
         await _ensure_cache_table(db)
         row = (
@@ -168,14 +176,14 @@ async def write_trend_cache(
             row.payload = blob
             row.fetched_at = now
         await db.commit()
-        return True
+        return True, ""
     except Exception as exc:  # noqa: BLE001 — caching must never break trends
         log.warning("trend cache write failed (%s/%s): %s", lang, geo, exc)
         try:
             await db.rollback()
         except Exception:
             pass
-        return False
+        return False, f"{type(exc).__name__}: {exc}"
 
 
 # ------------------------------------------------------------------ live fetch
@@ -325,5 +333,14 @@ async def fetch_trends_live(
         await resolve_trend_thumbnails(trends, db, lang)
     except Exception as exc:
         log.warning("trend thumbnail resolution failed: %s", exc)
+    # The thumbnail step shares this session across concurrent tasks; a
+    # failed query there leaves the transaction broken. Clear it here —
+    # the caller's cache write must not die on that stale state (each
+    # cached image was already committed individually by the resolver).
+    if db is not None:
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
     return trends[:limit], sources_used
