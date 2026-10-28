@@ -1,9 +1,33 @@
+# Vercel (serverless) requirements — slimmed for the 500 MB function bundle.
+# Vercel installs THIS file by default; do NOT set a custom installCommand
+# (a custom install command disables Vercel's Python bundle handling and
+# drops the effective limit to 225 MB — deploy dpl_GdfM failed on that).
+#
+# Dropped vs requirements-full.txt (Railway/Docker/local keep the full set):
+#   - rembg + onnxruntime (+ scipy, numpy, numba, llvmlite, scikit-image,
+#     networkx, imageio, tifffile, pooch, pymatting): background removal.
+#     Imported lazily in app/services/bg_remover.py; the admin
+#     remove-backgrounds endpoint degrades on Vercel.
+#   - pytrends (+ pandas, lxml): Google Trends connector already guards
+#     the import (app/services/audience_sources/google_trends.py,
+#     try/except -> _PYTRENDS=False); audience sources fall back.
+#   - google-auth + google-api-python-client (~120 MB of discovery docs):
+#     Play Billing client is built lazily in
+#     app/services/payments/google_play.py and 503s without a service
+#     account anyway (VIRELLO_PLAY_SERVICE_ACCOUNT_JSON is unset).
+#   - uvicorn[standard]: local dev server only; Vercel serves ASGI itself.
+#     (uvloop, watchfiles, websockets, python-dotenv go with it.)
+#   - psycopg[binary]: only used by Alembic (migrations never run on
+#     Vercel); the app itself uses asyncpg.
+#   - alembic: migrations never run on Vercel (init_db() bootstraps).
+#
+# Everything kept here is imported at app boot (top-level) or needed by
+# FastAPI/SQLAlchemy at runtime. Measured: full set installs ~957 MB of
+# site-packages; this file installs ~156 MB. Verified: app.main imports
+# cleanly with this set (48 routes).
 fastapi>=0.115
-uvicorn[standard]>=0.30
 sqlalchemy[asyncio]>=2.0
 asyncpg>=0.29
-psycopg[binary]>=3.0
-alembic>=1.13
 pydantic>=2.7
 pydantic-settings>=2.3
 python-jose[cryptography]>=3.3
@@ -17,12 +41,7 @@ aiosqlite>=0.20
 email-validator>=2.0
 langdetect==1.0.9
 pyyaml>=6.0
-pytrends>=4.9.2
 pillow
-rembg
-onnxruntime
-google-auth>=2.0
-google-api-python-client>=2.0
 apscheduler>=3.10
 arabic-reshaper
 python-bidi

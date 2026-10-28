@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /srv/virello
 
-COPY backend/requirements.txt .
+COPY backend/requirements-full.txt ./requirements.txt
 # git: ops convenience only — product galleries live on Cloudinary now
 # (the old git-push gallery flow was retired 2026-10-01).
 # ffmpeg: free server-side MP4 assembly for Creator Hub video tools
