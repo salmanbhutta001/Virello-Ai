@@ -231,7 +231,8 @@ def generated_image_url(key: str, query: str) -> str:
 
 
 async def _resolve_one(query: str, lang: str, db: AsyncSession,
-                     article_url: str = "") -> str:
+                     article_url: str = "",
+                     db_lock: asyncio.Lock | None = None) -> str:
     """Return a thumbnail URL for one topic ("" only for person topics with
     no real photo, by design).
 
@@ -239,10 +240,27 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     Wikipedia pageimage → skip persons → deterministic abstract
     illustration URL, returned and cached synchronously.
     """
+    # One AsyncSession is NOT safe for concurrent use (SQLAlchemy raises
+    # "concurrent operations are not permitted"). The per-topic resolvers
+    # run in parallel via gather, so their DB reads/writes go behind this
+    # lock; the slow HTTP lookups stay outside it and stay parallel.
+    async def _cached(key: str):
+        if db_lock is not None:
+            async with db_lock:
+                return await get_cached_image(db, key)
+        return await get_cached_image(db, key)
+
+    async def _store(key: str, url: str, kind: str) -> None:
+        if db_lock is not None:
+            async with db_lock:
+                await put_cached_image(db, key, url, kind)
+        else:
+            await put_cached_image(db, key, url, kind)
+
     key = topic_key(query)
     if not key:
         return ""
-    cached = await get_cached_image(db, key)
+    cached = await _cached(key)
     if cached and cached.image_url:
         return cached.image_url
     # News trends carry the real article URL: its og:image is the most
@@ -250,11 +268,11 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     if article_url:
         og = await fetch_og_image(article_url)
         if og:
-            await put_cached_image(db, key, og, "og_image")
+            await _store(key, og, "og_image")
             return og
     info = await wikipedia_topic_info(query, lang=lang)
     if info["image_url"]:
-        await put_cached_image(db, key, info["image_url"], "wikipedia")
+        await _store(key, info["image_url"], "wikipedia")
         return info["image_url"]
     if info["is_person"] or looks_like_person_name(query):
         # Never fabricate a likeness of a real person: no real photo, no
@@ -270,7 +288,7 @@ async def _resolve_one(query: str, lang: str, db: AsyncSession,
     # and the app's errorBuilder falls back to its gradient if the image
     # ever fails to load, so there is no broken-image risk.
     url = generated_image_url(key, query)
-    await put_cached_image(db, key, url, "generated")
+    await _store(key, url, "generated")
     return url
 
 
@@ -284,15 +302,26 @@ async def resolve_trend_thumbnails(trends: list[dict], db: AsyncSession,
     pending = [t for t in trends if not (t.get("thumbnail_url") or "").strip()]
     if not pending:
         return
+    # Shared-session guard (see _resolve_one): the resolvers run in
+    # parallel, so their DB access goes behind one lock. return_exceptions
+    # so one failing topic cannot abort the rest — and so no task is left
+    # running on the session after this returns (a leaked task using the
+    # session concurrently with the caller's cache write raises the same
+    # "concurrent operations" error there).
+    db_lock = asyncio.Lock()
     results = await asyncio.gather(
         *(
             _resolve_one(
                 t.get("query", ""), lang, db,
                 article_url=(t.get("url") or "").strip(),
+                db_lock=db_lock,
             )
             for t in pending
-        )
+        ),
+        return_exceptions=True,
     )
     for trend, url in zip(pending, results):
+        if isinstance(url, Exception):
+            continue
         if url:
             trend["thumbnail_url"] = url
