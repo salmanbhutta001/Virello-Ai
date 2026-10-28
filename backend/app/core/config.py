@@ -12,12 +12,13 @@ class Settings(BaseSettings):
     # CORS: explicit allowlist only (security fix 2026-10-27). A wildcard here
     # with allow_credentials=True made the API reflect ANY Origin (verified
     # live: evil.example.com got access-control-allow-credentials: true).
-    # Website + admin panel + local dev only. Override via
+    # Website + admin panel + Vercel website + local dev only. Override via
     # VIRELLO_CORS_ORIGINS (JSON list) if a new first-party origin is added.
     cors_origins: list[str] = [
         "https://virelloai.online",
         "https://www.virelloai.online",
         "https://admin.virelloai.online",
+        "https://virello-website.vercel.app",
         "http://localhost:3000",
         "http://localhost:8000",
     ]

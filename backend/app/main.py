@@ -1,5 +1,6 @@
 """Virello backend — FastAPI. Secure, scalable, audit-logged."""
 import logging
+import os
 from contextlib import asynccontextmanager
 
 # App loggers (virello.*) at INFO so operations — including the autonomous
@@ -55,24 +56,33 @@ from app.routers import public_score as public_score_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()  # dev bootstrap; production uses Alembic migrations
+    # Vercel serverless: APScheduler timers do not survive between
+    # invocations (each cold start would spawn its own schedulers, and
+    # they die with the instance). Set VIRELLO_DISABLE_SCHEDULERS=1 on
+    # Vercel; curation + daily blog then run from their own crons instead.
+    # Railway (default) keeps the schedulers exactly as before.
+    _schedulers_enabled = os.environ.get(
+        "VIRELLO_DISABLE_SCHEDULERS", "").lower() not in ("1", "true", "yes")
     # Autonomous hourly product curation — must never crash the app.
     _sched = None
-    try:
-        from app.curation.scheduler import start_curation_scheduler
-        _sched = start_curation_scheduler()
-    except Exception:
-        import logging
-        logging.getLogger("virello").exception(
-            "curation scheduler wiring failed; continuing without it")
+    if _schedulers_enabled:
+        try:
+            from app.curation.scheduler import start_curation_scheduler
+            _sched = start_curation_scheduler()
+        except Exception:
+            import logging
+            logging.getLogger("virello").exception(
+                "curation scheduler wiring failed; continuing without it")
     # Autonomous daily blog — same never-crash rule.
     _blog_sched = None
-    try:
-        from app.blog.scheduler import start_blog_scheduler
-        _blog_sched = start_blog_scheduler()
-    except Exception:
-        import logging
-        logging.getLogger("virello").exception(
-            "blog scheduler wiring failed; continuing without it")
+    if _schedulers_enabled:
+        try:
+            from app.blog.scheduler import start_blog_scheduler
+            _blog_sched = start_blog_scheduler()
+        except Exception:
+            import logging
+            logging.getLogger("virello").exception(
+                "blog scheduler wiring failed; continuing without it")
     try:
         yield
     finally:
