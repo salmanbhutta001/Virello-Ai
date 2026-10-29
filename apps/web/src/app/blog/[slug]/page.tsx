@@ -62,9 +62,14 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'hashtags-in-2026-what-still-works': [
+      'instagram-algorithm-2026-honestly-explained',
+      'honest-instagram-reels-playbook',
+      'posting-times-decoded',
+    ],
     'instagram-algorithm-2026-honestly-explained': [
       'honest-instagram-reels-playbook',
-      'youtube-shorts-vs-tiktok-where-to-start',
+      'hashtags-in-2026-what-still-works',
       'analytics-without-self-deception',
     ],
     'honest-tiktok-playbook-new-creators': [
@@ -110,7 +115,7 @@ export default async function ArticlePage({ params }: Props) {
     'honest-instagram-reels-playbook': [
       'youtube-shorts-vs-tiktok-where-to-start',
       'instagram-algorithm-2026-honestly-explained',
-      'comments-are-the-new-followers',
+      'hashtags-in-2026-what-still-works',
     ],
     'honest-state-of-social-media-late-2026': [
       'why-fake-followers-cost-more',
@@ -135,7 +140,7 @@ export default async function ArticlePage({ params }: Props) {
     'posting-times-decoded': [
       'comments-are-the-new-followers',
       'honest-instagram-reels-playbook',
-      'analytics-without-self-deception',
+      'hashtags-in-2026-what-still-works',
     ],
     'reach-is-not-growth-5-numbers-that-matter': [
       'analytics-without-self-deception',
