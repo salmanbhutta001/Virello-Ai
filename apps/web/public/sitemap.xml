@@ -25,7 +25,7 @@
 <url><loc>https://virelloai.online/blog-comments-are-the-new-followers.html</loc></url>
 <url><loc>https://virelloai.online/blog-free-grow-vs-paid-boost.html</loc></url>
 <url><loc>https://virelloai.online/blog-growing-on-x-2026-text-first-playbook.html</loc></url>
-<url><loc>https://virelloai.online/blog-honest-instagram-reels-playbook.html</loc></url>
+<url><loc>https://virelloai.online/blog-honest-instagram-reels-playbook.html</loc><lastmod>2026-10-29</lastmod></url>
 <url><loc>https://virelloai.online/blog-honest-state-of-social-media-late-2026.html</loc></url>
 <url><loc>https://virelloai.online/blog-how-ai-content-analysis-actually-works.html</loc></url>
 <url><loc>https://virelloai.online/blog-inside-the-ai-growth-orchestrator.html</loc></url>
@@ -71,6 +71,12 @@
   <url>
     <loc>https://virelloai.online/blog-hashtags-in-2026-what-still-works.html</loc>
     <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://virelloai.online/blog-why-your-reels-are-stuck-at-200-views.html</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
