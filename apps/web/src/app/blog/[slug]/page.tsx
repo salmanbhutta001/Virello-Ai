@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'why-your-followers-dont-see-your-posts': [
+      'instagram-algorithm-2026-honestly-explained',
+      'reach-is-not-growth-5-numbers-that-matter',
+      'why-your-reels-are-stuck-at-200-views',
+    ],
     'why-your-reels-are-stuck-at-200-views': [
       'your-post-flopped-now-what',
       'honest-instagram-reels-playbook',
@@ -79,7 +84,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'instagram-algorithm-2026-honestly-explained': [
       'honest-instagram-reels-playbook',
-      'hashtags-in-2026-what-still-works',
+      'why-your-followers-dont-see-your-posts',
       'analytics-without-self-deception',
     ],
     'honest-tiktok-playbook-new-creators': [
@@ -109,7 +114,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'comments-are-the-new-followers': [
       'honest-instagram-reels-playbook',
-      'growing-on-x-2026-text-first-playbook',
+      'why-your-followers-dont-see-your-posts',
       'reach-is-not-growth-5-numbers-that-matter',
     ],
     'free-grow-vs-paid-boost': [
@@ -155,7 +160,7 @@ export default async function ArticlePage({ params }: Props) {
     'reach-is-not-growth-5-numbers-that-matter': [
       'analytics-without-self-deception',
       'comments-are-the-new-followers',
-      'what-an-ai-growth-manager-actually-does',
+      'why-your-followers-dont-see-your-posts',
     ],
     'spot-the-scam-growth-service-signs': [
       'why-fake-followers-cost-more',
