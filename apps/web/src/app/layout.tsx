@@ -140,6 +140,8 @@ export default function RootLayout({
           }}
         />
         <link rel="icon" href="/favicon-new.png" />
+        {/* Google Preferred Sources button (2026-11-02) */}
+        <script async src="https://news.google.com/swg/js/v1/publisher.js" />
       </head>
       <body>
         <HashRedirect />

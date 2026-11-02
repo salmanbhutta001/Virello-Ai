@@ -79,6 +79,14 @@ export default function Footer() {
               <h4 style={{ marginBottom: 4 }}>Growth tips, monthly</h4>
               <SubscribeForm />
             </div>
+            {/* Google Preferred Sources button (2026-11-02) */}
+            <div style={{ marginTop: 18 }}>
+              <p className="mut" style={{ fontSize: 13, marginBottom: 8 }}>
+                See our guides in Google Top Stories
+              </p>
+              {/* eslint-disable-next-line react/no-unknown-property */}
+              <div google-add-preferred-source-btn="" />
+            </div>
           </div>
           <div>
             <h4>Product</h4>
@@ -124,10 +132,26 @@ export default function Footer() {
         </div>
         <div style={{ marginTop: 18, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <a href="https://showmebest.ai" target="_blank" rel="noreferrer">
-            <img src="https://showmebest.ai/badge/feature-badge-white.webp" alt="Featured on ShowMeBestAI" width={220} height={60} loading="lazy" />
+          <a href="https://showmebest.ai" target="_blank" rel="noreferrer" aria-label="Featured on ShowMeBest.ai">
+            <img className="smb-badge-dark" src="https://showmebest.ai/badge/feature-badge-dark.webp" alt="Featured on ShowMeBestAI" width={220} height={60} loading="lazy" />
+            <img className="smb-badge-white" src="https://showmebest.ai/badge/feature-badge-white.webp" alt="" aria-hidden="true" width={220} height={60} loading="lazy" />
           </a>
-          <a href="https://fazier.com" target="_blank" rel="noreferrer">Listed on Fazier</a>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <a href="https://www.goodfirms.co/software/virello-ai" target="_blank" rel="noreferrer" aria-label="GoodFirms" style={{ background: '#fff', borderRadius: 10, padding: '9px 14px', display: 'inline-flex', alignItems: 'center' }}>
+            <img src="/images/goodfirms-logo.svg" alt="GoodFirms" height={26} loading="lazy" />
+          </a>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <a href="https://bookshop.org/shop/virelloshop" target="_blank" rel="noreferrer" aria-label="Virello Shop on Bookshop.org" style={{ background: '#fff', borderRadius: 10, padding: '9px 14px', display: 'inline-flex', alignItems: 'center' }}>
+            <img src="/images/bookshop-logo.svg" alt="Bookshop.org" height={26} loading="lazy" />
+          </a>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <a href="https://www.provenexpert.com/virello-ai/" target="_blank" rel="noreferrer" aria-label="ProvenExpert" style={{ background: '#fff', borderRadius: 10, padding: '9px 14px', display: 'inline-flex', alignItems: 'center' }}>
+            <img src="/images/provenexpert-logo.svg" alt="ProvenExpert" height={26} loading="lazy" />
+          </a>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <a href="https://fazier.com" target="_blank" rel="noreferrer" aria-label="Launched on Fazier" style={{ background: '#fff', borderRadius: 10, padding: '9px 14px', display: 'inline-flex', alignItems: 'center' }}>
+            <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=light" alt="Launched on Fazier" height={26} loading="lazy" />
+          </a>
         </div>
         <div className="footer-base">
           <span>© 2026 Virello AI — virelloai.online. All rights reserved.</span>
