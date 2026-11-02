@@ -105,7 +105,7 @@ export default async function ArticlePage({ params }: Props) {
     'honest-creator-home-studio-guide': [
       'youtube-shorts-vs-tiktok-where-to-start',
       'honest-instagram-reels-playbook',
-      'lock-down-your-creator-accounts-2026',
+      'youtube-seo-for-new-creators-2026',
     ],
     'analytics-without-self-deception': [
       'reach-is-not-growth-5-numbers-that-matter',
@@ -170,7 +170,7 @@ export default async function ArticlePage({ params }: Props) {
     'the-first-two-seconds-writing-hooks': [
       'your-post-flopped-now-what',
       'honest-instagram-reels-playbook',
-      'why-your-reels-are-stuck-at-200-views',
+      'youtube-seo-for-new-creators-2026',
     ],
     'what-an-ai-growth-manager-actually-does': [
       'inside-the-ai-growth-orchestrator',
@@ -185,12 +185,17 @@ export default async function ArticlePage({ params }: Props) {
     'youtube-shorts-vs-tiktok-where-to-start': [
       'honest-tiktok-playbook-new-creators',
       'honest-instagram-reels-playbook',
-      'instagram-algorithm-2026-honestly-explained',
+      'youtube-seo-for-new-creators-2026',
     ],
     'lock-down-your-creator-accounts-2026': [
       'spot-the-scam-growth-service-signs',
       'why-fake-followers-cost-more',
       'honest-creator-home-studio-guide',
+    ],
+     'youtube-seo-for-new-creators-2026': [
+      'youtube-shorts-vs-tiktok-where-to-start',
+      'honest-creator-home-studio-guide',
+      'the-first-two-seconds-writing-hooks',
     ],
   };
   const relatedSlugs =
