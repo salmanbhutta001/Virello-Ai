@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: 'Virello AI',
     type: 'website',
+    title: 'Virello AI — Your AI Growth Manager',
+    description:
+      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
     // NOTE: no `url` here on purpose — every public page declares its own
     // openGraph.url matching its canonical (Ahrefs 2026-10-27: the shared
     // homepage URL on all pages read as "OG URL not matching canonical").
