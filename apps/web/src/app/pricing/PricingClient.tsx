@@ -21,7 +21,7 @@ import { PRICING_FAQS } from './faqs';
 //   virello_plan='free'; logged-in → toast + /dashboard.html;
 //   logged-out → toast + /login.html?plan=free&next=dashboard.
 //   The checkout modal has NO backdrop-click close (parity).
-// - Pro → toast "Coming soon on the Play Store" (no navigation).
+// - Pro → Google Play link (app is live; no toast).
 // - Business → talk modal; submit validates, closes the modal and
 //   opens the user's mail app after 400 ms (mailto to
 //   support@virelloai.online). Nothing is sent to any server.
@@ -313,15 +313,16 @@ export default function PricingClient() {
               </div>
               <p className="small mut bill-note">{billNote}</p>
               <FeatureList features={PRO_FEATURES} />
-              <button
-                type="button"
+              <a
+                href="https://play.google.com/store/apps/details?id=com.virello.virello"
+                target="_blank"
+                rel="noopener"
                 className="btn btn-grad"
                 style={{ width: '100%' }}
-                onClick={() => showToast('Coming soon on the Play Store')}
                 aria-label="Choose the Pro plan"
               >
                 Start Growing
-              </button>
+              </a>
             </div>
 
             <div className="card">

@@ -104,7 +104,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Where can I download the Virello app?',
-    a: 'Virello is available now on Huawei AppGallery, APKPure and Uptodown — see the download section on our home page. The Google Play version is coming soon and is not yet available; beware of any site claiming otherwise.',
+    a: 'Virello is available now on Google Play, Huawei AppGallery, APKPure and Uptodown — see the download section on our home page.',
   },
 ];
 
