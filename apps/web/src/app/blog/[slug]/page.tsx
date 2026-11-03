@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'threads-in-2026-honest-creators-guide': [
+      'growing-on-x-2026-text-first-playbook',
+      'comments-are-the-new-followers',
+      'hashtags-in-2026-what-still-works',
+    ],
     'why-your-followers-dont-see-your-posts': [
       'instagram-algorithm-2026-honestly-explained',
       'reach-is-not-growth-5-numbers-that-matter',
@@ -79,7 +84,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'hashtags-in-2026-what-still-works': [
       'instagram-algorithm-2026-honestly-explained',
-      'honest-instagram-reels-playbook',
+      'threads-in-2026-honest-creators-guide',
       'posting-times-decoded',
     ],
     'instagram-algorithm-2026-honestly-explained': [
@@ -113,7 +118,7 @@ export default async function ArticlePage({ params }: Props) {
       'instagram-algorithm-2026-honestly-explained',
     ],
     'comments-are-the-new-followers': [
-      'honest-instagram-reels-playbook',
+      'threads-in-2026-honest-creators-guide',
       'why-your-followers-dont-see-your-posts',
       'reach-is-not-growth-5-numbers-that-matter',
     ],
@@ -123,7 +128,7 @@ export default async function ArticlePage({ params }: Props) {
       'why-fake-followers-cost-more',
     ],
     'growing-on-x-2026-text-first-playbook': [
-      'honest-instagram-reels-playbook',
+      'threads-in-2026-honest-creators-guide',
       'comments-are-the-new-followers',
       'youtube-shorts-vs-tiktok-where-to-start',
     ],
