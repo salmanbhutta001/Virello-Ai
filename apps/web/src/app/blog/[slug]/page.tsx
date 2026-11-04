@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'going-live-in-2026-honest-playbook': [
+      'comments-are-the-new-followers',
+      'honest-tiktok-playbook-new-creators',
+      'honest-creator-home-studio-guide',
+    ],
     'threads-in-2026-honest-creators-guide': [
       'growing-on-x-2026-text-first-playbook',
       'comments-are-the-new-followers',
@@ -93,7 +98,7 @@ export default async function ArticlePage({ params }: Props) {
       'analytics-without-self-deception',
     ],
     'honest-tiktok-playbook-new-creators': [
-      'youtube-shorts-vs-tiktok-where-to-start',
+      'going-live-in-2026-honest-playbook',
       'honest-instagram-reels-playbook',
       'one-post-five-platforms-repurposing-playbook',
     ],
@@ -108,7 +113,7 @@ export default async function ArticlePage({ params }: Props) {
       'posting-times-decoded',
     ],
     'honest-creator-home-studio-guide': [
-      'youtube-shorts-vs-tiktok-where-to-start',
+      'going-live-in-2026-honest-playbook',
       'honest-instagram-reels-playbook',
       'youtube-seo-for-new-creators-2026',
     ],
@@ -120,7 +125,7 @@ export default async function ArticlePage({ params }: Props) {
     'comments-are-the-new-followers': [
       'threads-in-2026-honest-creators-guide',
       'why-your-followers-dont-see-your-posts',
-      'reach-is-not-growth-5-numbers-that-matter',
+      'going-live-in-2026-honest-playbook',
     ],
     'free-grow-vs-paid-boost': [
       'inside-the-ai-growth-orchestrator',
