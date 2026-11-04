@@ -11,7 +11,7 @@ import 'billing_provider.dart';
 ///   Consumables (one-time credit packs):
 ///     virello_credits_1000 / virello_credits_5000 / virello_credits_20000
 ///   Subscriptions:
-///     virello_pro_monthly / virello_scale_monthly
+///     virello_pro_monthly / virello_business_monthly
 ///   One-time products (AI Ad Builder ad packages — NOT credit packs;
 ///   each buys one fixed-price/fixed-duration Paid Boost package):
 ///     virello_ad_starter / virello_ad_growth / virello_ad_pro /
@@ -25,7 +25,7 @@ class GooglePlayBilling implements BillingProvider {
     'virello_credits_5000',
     'virello_credits_20000',
     'virello_pro_monthly',
-    'virello_scale_monthly',
+    'virello_business_monthly',
     'virello_ad_starter',
     'virello_ad_growth',
     'virello_ad_pro',
@@ -67,7 +67,7 @@ class GooglePlayBilling implements BillingProvider {
         return {'kind': 'credits', 'creditPack': 'scale'};
       case 'virello_pro_monthly':
         return {'kind': 'subscription', 'planSlug': 'pro'};
-      case 'virello_scale_monthly':
+      case 'virello_business_monthly':
         return {'kind': 'subscription', 'planSlug': 'scale'};
       case 'virello_ad_starter':
         return {'kind': 'ad_package', 'adPackage': 'starter'};
@@ -103,7 +103,7 @@ class GooglePlayBilling implements BillingProvider {
         case 'pro':
           return 'virello_pro_monthly';
         case 'scale':
-          return 'virello_scale_monthly';
+          return 'virello_business_monthly';
       }
     } else if (kind == 'ad_package') {
       return adPackage == null ? null : adPackageProductId(adPackage);

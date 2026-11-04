@@ -7,7 +7,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 ///   Consumables (one-time credit packs):
 ///     virello_credits_1000 / virello_credits_5000 / virello_credits_20000
 ///   Subscriptions:
-///     virello_pro_monthly / virello_scale_monthly
+///     virello_pro_monthly / virello_business_monthly
 ///
 /// Money rule: the app NEVER treats a purchase as successful on its own.
 /// Every purchased/restored item goes to the backend
@@ -22,7 +22,7 @@ class PlayBillingService {
     'virello_credits_5000',
     'virello_credits_20000',
     'virello_pro_monthly',
-    'virello_scale_monthly',
+    'virello_business_monthly',
   };
 
   /// Map a Play product ID to the backend purchase kind.
@@ -37,7 +37,7 @@ class PlayBillingService {
         return {'kind': 'credits', 'creditPack': 'scale'};
       case 'virello_pro_monthly':
         return {'kind': 'subscription', 'planSlug': 'pro'};
-      case 'virello_scale_monthly':
+      case 'virello_business_monthly':
         return {'kind': 'subscription', 'planSlug': 'scale'};
       default:
         return null;
@@ -65,7 +65,7 @@ class PlayBillingService {
         case 'pro':
           return 'virello_pro_monthly';
         case 'scale':
-          return 'virello_scale_monthly';
+          return 'virello_business_monthly';
       }
     }
     return null;

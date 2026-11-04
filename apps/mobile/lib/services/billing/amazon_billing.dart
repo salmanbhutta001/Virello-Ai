@@ -21,7 +21,7 @@ import 'billing_provider.dart';
 /// SKU IDs — these exact SKUs must exist in the Amazon Developer Console
 /// (In-App Items tab) BEFORE the app is submitted:
 ///   Consumables: virello_credits_1000 / virello_credits_5000 / virello_credits_20000
-///   Subscriptions: virello_pro_monthly / virello_scale_monthly
+///   Subscriptions: virello_pro_monthly / virello_business_monthly
 ///   Consumables (AI Ad Builder ad packages — NOT credit packs):
 ///     virello_ad_starter / virello_ad_growth / virello_ad_pro / virello_ad_scale
 ///
@@ -36,9 +36,9 @@ class AmazonBilling implements BillingProvider {
     'virello_credits_20000',
     // Subscriptions are purchased via their TERM SKUs (Amazon requires
     // term SKU != parent SKU). Parents: virello_pro_monthly /
-    // virello_scale_monthly (defined in Amazon console).
+    // virello_business_monthly (defined in Amazon console).
     'virello_pro_monthly_term',
-    'virello_scale_monthly_term',
+    'virello_business_monthly_term',
     'virello_ad_starter',
     'virello_ad_growth',
     'virello_ad_pro',
@@ -84,7 +84,7 @@ class AmazonBilling implements BillingProvider {
         return {'kind': 'credits', 'creditPack': 'scale'};
       case 'virello_pro_monthly_term':
         return {'kind': 'subscription', 'planSlug': 'pro'};
-      case 'virello_scale_monthly_term':
+      case 'virello_business_monthly_term':
         return {'kind': 'subscription', 'planSlug': 'scale'};
       case 'virello_ad_starter':
         return {'kind': 'ad_package', 'adPackage': 'starter'};
@@ -120,7 +120,7 @@ class AmazonBilling implements BillingProvider {
         case 'pro':
           return 'virello_pro_monthly_term';
         case 'scale':
-          return 'virello_scale_monthly_term';
+          return 'virello_business_monthly_term';
       }
     } else if (kind == 'ad_package') {
       return adPackage == null ? null : adPackageSku(adPackage);
