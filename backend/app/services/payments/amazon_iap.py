@@ -33,7 +33,7 @@ AMAZON_SKUS: dict[str, tuple[str, str]] = {
     "virello_credits_5000": ("credits", "growth"),
     "virello_credits_20000": ("credits", "scale"),
     "virello_pro_monthly": ("subscription", "pro"),
-    "virello_scale_monthly": ("subscription", "scale"),
+    "virello_business_monthly": ("subscription", "scale"),
     "virello_ad_starter": ("ad_package", "starter"),
     "virello_ad_growth": ("ad_package", "growth"),
     "virello_ad_pro": ("ad_package", "pro"),
