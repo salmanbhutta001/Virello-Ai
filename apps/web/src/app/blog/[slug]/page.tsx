@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'use-ai-to-plan-content-without-losing-your-voice': [
+      'plan-a-month-of-content-in-one-afternoon',
+      'inside-the-ai-growth-orchestrator',
+      'how-ai-content-analysis-actually-works',
+    ],
     'linkedin-for-creators-honest-playbook-2026': [
       'growing-on-x-2026-text-first-playbook',
       'comments-are-the-new-followers',
@@ -120,7 +125,7 @@ export default async function ArticlePage({ params }: Props) {
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
       'the-first-two-seconds-writing-hooks',
-      'posting-times-decoded',
+      'use-ai-to-plan-content-without-losing-your-voice',
     ],
     'honest-creator-home-studio-guide': [
       'pinterest-for-creators-honest-guide-2026',
@@ -160,12 +165,12 @@ export default async function ArticlePage({ params }: Props) {
     'how-ai-content-analysis-actually-works': [
       'inside-the-ai-growth-orchestrator',
       'analytics-without-self-deception',
-      'your-post-flopped-now-what',
+      'use-ai-to-plan-content-without-losing-your-voice',
     ],
     'inside-the-ai-growth-orchestrator': [
       'how-ai-content-analysis-actually-works',
       'what-an-ai-growth-manager-actually-does',
-      'free-grow-vs-paid-boost',
+      'use-ai-to-plan-content-without-losing-your-voice',
     ],
     'one-post-five-platforms-repurposing-playbook': [
       'plan-a-month-of-content-in-one-afternoon',
