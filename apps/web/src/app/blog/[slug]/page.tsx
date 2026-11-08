@@ -67,10 +67,15 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'how-creators-actually-make-money-2026': [
+      'plan-a-month-of-content-in-one-afternoon',
+      'honest-creator-home-studio-guide',
+      'use-ai-to-plan-content-without-losing-your-voice',
+    ],
     'use-ai-to-plan-content-without-losing-your-voice': [
       'plan-a-month-of-content-in-one-afternoon',
       'inside-the-ai-growth-orchestrator',
-      'how-ai-content-analysis-actually-works',
+      'how-creators-actually-make-money-2026',
     ],
     'linkedin-for-creators-honest-playbook-2026': [
       'growing-on-x-2026-text-first-playbook',
@@ -124,11 +129,11 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
-      'the-first-two-seconds-writing-hooks',
+      'how-creators-actually-make-money-2026',
       'use-ai-to-plan-content-without-losing-your-voice',
     ],
     'honest-creator-home-studio-guide': [
-      'pinterest-for-creators-honest-guide-2026',
+      'how-creators-actually-make-money-2026',
       'honest-instagram-reels-playbook',
       'youtube-seo-for-new-creators-2026',
     ],
