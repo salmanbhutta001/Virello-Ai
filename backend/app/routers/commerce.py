@@ -903,6 +903,25 @@ async def update_product_gallery(
             "image_urls": image_urls, "count": len(image_urls)}
 
 
+@router.post("/products/{product_id}/deactivate", response_model=dict)
+async def deactivate_product_curator(
+    product_id: str,
+    x_curator_token: str | None = Header(default=None, alias="X-Curator-Token"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Curator deactivation for the retention job (Hafiz's 2 GB cap, 2026-11-09).
+    Auth: X-Curator-Token header (service token, not user JWT). Soft-deletes
+    (is_active=False); orders/leads history preserved. The stock DELETE
+    endpoint needs a user JWT, which an automated driver must never hold —
+    this endpoint is the retention driver's step (1). Deploy pending Vercel
+    team authorization; until it is live the driver stays in dry-run mode."""
+    _check_curator_token(x_curator_token or "")
+    product = await _get_product(db, _parse_uuid(product_id))
+    product.is_active = False
+    await db.commit()
+    return {"ok": True, "deactivated": True, "product_id": str(product.id)}
+
+
 @router.post("/products/gallery-upload", response_model=dict, status_code=201)
 async def upload_gallery_image(
     file: UploadFile = File(...),
