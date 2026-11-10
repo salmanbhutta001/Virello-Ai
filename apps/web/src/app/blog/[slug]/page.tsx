@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'facebook-for-creators-honest-playbook-2026': [
+      'going-live-in-2026-honest-playbook',
+      'comments-are-the-new-followers',
+      'honest-instagram-reels-playbook',
+    ],
     'your-first-1000-followers-honest-playbook': [
       'honest-instagram-reels-playbook',
       'the-first-two-seconds-writing-hooks',
@@ -95,7 +100,7 @@ export default async function ArticlePage({ params }: Props) {
     'going-live-in-2026-honest-playbook': [
       'comments-are-the-new-followers',
       'honest-tiktok-playbook-new-creators',
-      'honest-creator-home-studio-guide',
+      'facebook-for-creators-honest-playbook-2026',
     ],
     'threads-in-2026-honest-creators-guide': [
       'growing-on-x-2026-text-first-playbook',
@@ -150,7 +155,7 @@ export default async function ArticlePage({ params }: Props) {
     'comments-are-the-new-followers': [
       'threads-in-2026-honest-creators-guide',
       'why-your-followers-dont-see-your-posts',
-      'linkedin-for-creators-honest-playbook-2026',
+      'facebook-for-creators-honest-playbook-2026',
     ],
     'free-grow-vs-paid-boost': [
       'inside-the-ai-growth-orchestrator',
@@ -185,7 +190,7 @@ export default async function ArticlePage({ params }: Props) {
     'one-post-five-platforms-repurposing-playbook': [
       'plan-a-month-of-content-in-one-afternoon',
       'honest-instagram-reels-playbook',
-      'pinterest-for-creators-honest-guide-2026',
+      'facebook-for-creators-honest-playbook-2026',
     ],
     'posting-times-decoded': [
       'comments-are-the-new-followers',
