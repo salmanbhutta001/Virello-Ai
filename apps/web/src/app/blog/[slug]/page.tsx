@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'how-often-should-you-post-2026': [
+      'posting-times-decoded',
+      'plan-a-month-of-content-in-one-afternoon',
+      'analytics-without-self-deception',
+    ],
     'facebook-for-creators-honest-playbook-2026': [
       'going-live-in-2026-honest-playbook',
       'comments-are-the-new-followers',
@@ -140,7 +145,7 @@ export default async function ArticlePage({ params }: Props) {
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
       'how-creators-actually-make-money-2026',
-      'your-first-1000-followers-honest-playbook',
+      'how-often-should-you-post-2026',
     ],
     'honest-creator-home-studio-guide': [
       'how-creators-actually-make-money-2026',
@@ -190,12 +195,12 @@ export default async function ArticlePage({ params }: Props) {
     'one-post-five-platforms-repurposing-playbook': [
       'plan-a-month-of-content-in-one-afternoon',
       'honest-instagram-reels-playbook',
-      'facebook-for-creators-honest-playbook-2026',
+      'how-often-should-you-post-2026',
     ],
     'posting-times-decoded': [
       'comments-are-the-new-followers',
       'honest-instagram-reels-playbook',
-      'hashtags-in-2026-what-still-works',
+      'how-often-should-you-post-2026',
     ],
     'reach-is-not-growth-5-numbers-that-matter': [
       'analytics-without-self-deception',
