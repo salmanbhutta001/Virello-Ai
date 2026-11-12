@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'build-an-email-list-as-a-creator-2026': [
+      'how-creators-actually-make-money-2026',
+      'your-first-1000-followers-honest-playbook',
+      'comments-are-the-new-followers',
+    ],
     'how-often-should-you-post-2026': [
       'posting-times-decoded',
       'plan-a-month-of-content-in-one-afternoon',
@@ -80,12 +85,12 @@ export default async function ArticlePage({ params }: Props) {
     'your-first-1000-followers-honest-playbook': [
       'honest-instagram-reels-playbook',
       'the-first-two-seconds-writing-hooks',
-      'plan-a-month-of-content-in-one-afternoon',
+      'build-an-email-list-as-a-creator-2026',
     ],
     'how-creators-actually-make-money-2026': [
       'plan-a-month-of-content-in-one-afternoon',
       'honest-creator-home-studio-guide',
-      'use-ai-to-plan-content-without-losing-your-voice',
+      'build-an-email-list-as-a-creator-2026',
     ],
     'use-ai-to-plan-content-without-losing-your-voice': [
       'plan-a-month-of-content-in-one-afternoon',
@@ -159,7 +164,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'comments-are-the-new-followers': [
       'threads-in-2026-honest-creators-guide',
-      'why-your-followers-dont-see-your-posts',
+      'build-an-email-list-as-a-creator-2026',
       'facebook-for-creators-honest-playbook-2026',
     ],
     'free-grow-vs-paid-boost': [
