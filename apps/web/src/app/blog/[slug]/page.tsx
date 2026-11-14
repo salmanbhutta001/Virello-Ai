@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'turn-comments-dms-polls-into-content': [
+      'comments-are-the-new-followers',
+      'analytics-without-self-deception',
+      'use-ai-to-plan-content-without-losing-your-voice',
+    ],
     'grow-with-creator-collaborations-2026': [
       'comments-are-the-new-followers',
       'your-first-1000-followers-honest-playbook',
@@ -100,7 +105,7 @@ export default async function ArticlePage({ params }: Props) {
     'use-ai-to-plan-content-without-losing-your-voice': [
       'plan-a-month-of-content-in-one-afternoon',
       'inside-the-ai-growth-orchestrator',
-      'how-creators-actually-make-money-2026',
+      'turn-comments-dms-polls-into-content',
     ],
     'linkedin-for-creators-honest-playbook-2026': [
       'growing-on-x-2026-text-first-playbook',
@@ -165,10 +170,10 @@ export default async function ArticlePage({ params }: Props) {
     'analytics-without-self-deception': [
       'reach-is-not-growth-5-numbers-that-matter',
       'how-ai-content-analysis-actually-works',
-      'instagram-algorithm-2026-honestly-explained',
+      'turn-comments-dms-polls-into-content',
     ],
     'comments-are-the-new-followers': [
-      'threads-in-2026-honest-creators-guide',
+      'turn-comments-dms-polls-into-content',
       'build-an-email-list-as-a-creator-2026',
       'grow-with-creator-collaborations-2026',
     ],
