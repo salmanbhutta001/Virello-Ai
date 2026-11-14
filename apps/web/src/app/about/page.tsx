@@ -6,7 +6,18 @@ export const metadata: Metadata = {
   description:
     "Virello exists because great creators shouldn't need a marketing degree, an ads account and a data team to be discovered.",
   alternates: { canonical: '/about.html' },
-  openGraph: { url: 'https://virelloai.online/about.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/about.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 const STATS: { value: string; label: string }[] = [

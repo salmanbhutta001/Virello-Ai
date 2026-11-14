@@ -4,6 +4,19 @@ export const metadata: Metadata = {
   title: 'Virello Rewards — Terms & Conditions',
   description:
     'Virello Rewards terms: earn Points for posting and engaging, and Cash (USD) for sharing products that lead to real shopping clicks.',
+  alternates: { canonical: '/rewards-terms.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/rewards-terms.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 /**

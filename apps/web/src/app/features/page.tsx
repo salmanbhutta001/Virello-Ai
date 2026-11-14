@@ -5,7 +5,18 @@ export const metadata: Metadata = {
   description:
     'Every Virello feature serves one job: getting your content in front of the people most likely to love it — legitimately.',
   alternates: { canonical: '/features.html' },
-  openGraph: { url: 'https://virelloai.online/features.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/features.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 type FeatureCard = { icon: string; title: string; text: string };
@@ -118,6 +129,10 @@ export default function FeaturesPage() {
               {' · '}
               <a href="/free-caption-generator.html">
                 generate captions free
+              </a>
+              {' · '}
+              <a href="/virello-vs-buffer.html">
+                how Virello compares with Buffer
               </a>
             </p>
           </div>

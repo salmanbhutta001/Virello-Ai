@@ -41,12 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // stays as the on-page H1. Template " — Virello AI" still applies.
     title: article.seoTitle ?? article.title,
     description: article.description,
-    alternates: { canonical: `/blog/${article.slug}.html` },
+    alternates: { canonical: `/blog-${article.slug}.html` },
     openGraph: {
       type: 'article',
       title: article.title,
       description: article.description,
-      url: `https://virelloai.online/blog/${article.slug}.html`,
+      url: `https://virelloai.online/blog-${article.slug}.html`,
       images: [{ url: article.hero }],
     },
     twitter: {
@@ -526,7 +526,7 @@ export default async function ArticlePage({ params }: Props) {
             {more.map((a) => (
               <a
                 key={a.slug}
-                href={`/blog/${a.slug}.html`}
+                href={`/blog-${a.slug}.html`}
                 className="card"
                 style={{
                   padding: 0,

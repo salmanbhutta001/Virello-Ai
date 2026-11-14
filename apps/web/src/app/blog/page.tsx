@@ -23,6 +23,14 @@ export const metadata: Metadata = {
     description:
       'Honest growth playbooks from the Virello team — analytics, hooks, repurposing and platform strategy.',
     url: 'https://virelloai.online/blog.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
   },
 };
 
@@ -49,7 +57,7 @@ export default function BlogIndexPage() {
         <section className="section" style={{ paddingTop: 16, paddingBottom: 0 }}>
           <div className="wrap">
             <a
-              href={`/blog/${featured.slug}.html`}
+              href={`blog-${featured.slug}.html`}
               className="card hero-post"
               style={{ padding: 0 }}
             >
@@ -86,7 +94,7 @@ export default function BlogIndexPage() {
             {rest.map((a) => (
               <a
                 key={a.slug}
-                href={`/blog/${a.slug}.html`}
+                href={`blog-${a.slug}.html`}
                 className="card"
                 style={{
                   padding: 0,

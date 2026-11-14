@@ -5,7 +5,18 @@ export const metadata: Metadata = {
   description:
     'Terms of Service for Virello AI: acceptable use, subscriptions and billing, intellectual property, and limitations of liability.',
   alternates: { canonical: '/terms.html' },
-  openGraph: { url: 'https://virelloai.online/terms.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/terms.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 export default function TermsPage() {

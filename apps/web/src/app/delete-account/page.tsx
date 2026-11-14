@@ -5,7 +5,18 @@ export const metadata: Metadata = {
   description:
     'How to delete your Virello AI account and personal data. Step-by-step instructions for in-app deletion and email requests.',
   alternates: { canonical: '/delete-account.html' },
-  openGraph: { url: 'https://virelloai.online/delete-account.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/delete-account.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 export default function DeleteAccountPage() {

@@ -5,7 +5,18 @@ export const metadata: Metadata = {
   description:
     'Privacy Policy for Virello AI. Learn what data we collect, how we use it, how we protect it, and your rights — including access, correction and deletion.',
   alternates: { canonical: '/privacy.html' },
-  openGraph: { url: 'https://virelloai.online/privacy.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/privacy.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 export default function PrivacyPage() {

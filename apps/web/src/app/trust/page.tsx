@@ -6,7 +6,18 @@ export const metadata: Metadata = {
   description:
     "Virello's rules are simple, public and non-negotiable: no fake views, no fake followers, no bots, no password access — real growth, no shortcuts.",
   alternates: { canonical: '/trust.html' },
-  openGraph: { url: 'https://virelloai.online/trust.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/trust.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 const NEVER: { lead: string; text: string }[] = [

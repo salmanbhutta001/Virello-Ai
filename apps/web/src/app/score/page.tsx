@@ -5,6 +5,19 @@ export const metadata: Metadata = {
   title: 'Free AI Post Score',
   description:
     'Paste your social media draft and get a free AI content score with actionable tips. No signup. By Virello AI — Your AI Growth Manager.',
+  alternates: { canonical: '/score.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/score.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 export default function ScorePage() {

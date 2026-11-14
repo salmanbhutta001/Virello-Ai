@@ -4,9 +4,20 @@ import type { ReactNode } from 'react';
 export const metadata: Metadata = {
   title: { absolute: 'Help Center — Guides, Answers & AI Assistant' },
   description:
-    'Search guides and answers, or browse by topic — plans, budgets, safety, refunds and the app. Still stuck? Our team and the Ask Virello assistant are one tap away.',
+    'Search guides and answers, or browse by topic — plans, budgets, safety, refunds. Still stuck? Our team and the Ask Virello assistant are one tap away.',
   alternates: { canonical: '/help.html' },
-  openGraph: { url: 'https://virelloai.online/help.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/help.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 const CATEGORIES: { icon: ReactNode; title: string; text: string }[] = [
@@ -230,6 +241,9 @@ export default function HelpPage() {
               </a>
               <a className="btn btn-ghost" href="/score.html">
                 Score a Post
+              </a>
+              <a className="btn btn-ghost" href="/rewards-terms.html">
+                Rewards Terms
               </a>
             </div>
           </div>

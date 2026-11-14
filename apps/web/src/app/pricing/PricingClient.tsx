@@ -472,6 +472,10 @@ export default function PricingClient() {
             </a>
             {' · '}
             <a href="/features.html">see all features</a>
+            {' · '}
+            <a href="/virello-vs-predis-ai.html">
+              compare Virello with Buffer and Predis.ai
+            </a>
           </p>
         </div>
       </section>

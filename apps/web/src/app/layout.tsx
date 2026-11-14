@@ -14,21 +14,21 @@ export const metadata: Metadata = {
     template: '%s — Virello AI',
   },
   description:
-    'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
+    'Virello AI is your AI Growth Manager: paste a post, choose a goal, set a budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
   openGraph: {
     siteName: 'Virello AI',
     type: 'website',
     title: 'Virello AI — Your AI Growth Manager',
     description:
-      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
+      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set a budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
     // NOTE: no `url` here on purpose — every public page declares its own
     // openGraph.url matching its canonical (Ahrefs 2026-10-27: the shared
     // homepage URL on all pages read as "OG URL not matching canonical").
     images: [
       {
-        url: '/logo-virello.png',
-        width: 560,
-        height: 175,
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
         alt: 'Virello AI — Your AI Growth Manager',
       },
     ],
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Virello AI — Your AI Growth Manager',
     description:
-      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
-    images: ['/logo-virello.png'],
+      'Virello AI is your AI Growth Manager: paste a post, choose a goal, set a budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.',
+    images: ['/images/virello-social-card.png'],
   },
 };
 
@@ -58,7 +58,7 @@ const orgJsonLd = {
       url: 'https://virelloai.online/',
       logo: 'https://virelloai.online/logo-virello.png',
       description:
-        "Virello AI is your AI Growth Manager: paste a post, choose a goal, set an optional budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.",
+        "Virello AI is your AI Growth Manager: paste a post, choose a goal, set a budget, and let AI grow it. Real audiences, honest analytics, no fake engagement.",
       foundingDate: '2026-01-10',
       foundingLocation: 'Multan, Punjab, Pakistan',
       address: {

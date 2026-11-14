@@ -7,7 +7,18 @@ export const metadata: Metadata = {
   description:
     'Start free. Upgrade when the AI has earned it. Every plan includes legitimate growth only — no bots, no fake engagement, no surprises.',
   alternates: { canonical: '/pricing.html' },
-  openGraph: { url: 'https://virelloai.online/pricing.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/pricing.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 // Server wrapper: metadata stays here; all interactive wiring

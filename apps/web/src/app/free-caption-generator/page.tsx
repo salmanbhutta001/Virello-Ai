@@ -6,7 +6,18 @@ export const metadata: Metadata = {
   description:
     'Write a better caption in seconds. Describe your post, pick a platform, and get an AI-written caption with hashtags — free, no signup needed to try.',
   alternates: { canonical: '/free-caption-generator.html' },
-  openGraph: { url: 'https://virelloai.online/free-caption-generator.html' },
+  openGraph: {
+    type: 'website',
+    url: 'https://virelloai.online/free-caption-generator.html',
+    images: [
+      {
+        url: '/images/virello-social-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'Virello AI — Your AI Growth Manager',
+      },
+    ],
+  },
 };
 
 const STEPS = [
