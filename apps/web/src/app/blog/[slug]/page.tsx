@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'tiktok-stuck-at-200-views': [
+      'honest-tiktok-playbook-new-creators',
+      'why-your-reels-are-stuck-at-200-views',
+      'youtube-shorts-vs-tiktok-where-to-start',
+    ],
     'turn-comments-dms-polls-into-content': [
       'comments-are-the-new-followers',
       'analytics-without-self-deception',
@@ -135,7 +140,7 @@ export default async function ArticlePage({ params }: Props) {
     'why-your-reels-are-stuck-at-200-views': [
       'your-post-flopped-now-what',
       'honest-instagram-reels-playbook',
-      'the-first-two-seconds-writing-hooks',
+      'tiktok-stuck-at-200-views',
     ],
     'hashtags-in-2026-what-still-works': [
       'instagram-algorithm-2026-honestly-explained',
@@ -148,7 +153,7 @@ export default async function ArticlePage({ params }: Props) {
       'analytics-without-self-deception',
     ],
     'honest-tiktok-playbook-new-creators': [
-      'going-live-in-2026-honest-playbook',
+      'tiktok-stuck-at-200-views',
       'honest-instagram-reels-playbook',
       'one-post-five-platforms-repurposing-playbook',
     ],
@@ -244,7 +249,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'youtube-shorts-vs-tiktok-where-to-start': [
       'honest-tiktok-playbook-new-creators',
-      'honest-instagram-reels-playbook',
+      'tiktok-stuck-at-200-views',
       'youtube-seo-for-new-creators-2026',
     ],
     'lock-down-your-creator-accounts-2026': [
