@@ -72,6 +72,11 @@ export default async function ArticlePage({ params }: Props) {
       'why-your-reels-are-stuck-at-200-views',
       'youtube-shorts-vs-tiktok-where-to-start',
     ],
+    'captions-that-get-engagement': [
+      'the-first-two-seconds-writing-hooks',
+      'comments-are-the-new-followers',
+      'hashtags-in-2026-what-still-works',
+    ],
     'turn-comments-dms-polls-into-content': [
       'comments-are-the-new-followers',
       'analytics-without-self-deception',
@@ -145,7 +150,7 @@ export default async function ArticlePage({ params }: Props) {
     'hashtags-in-2026-what-still-works': [
       'instagram-algorithm-2026-honestly-explained',
       'threads-in-2026-honest-creators-guide',
-      'posting-times-decoded',
+      'captions-that-get-engagement',
     ],
     'instagram-algorithm-2026-honestly-explained': [
       'honest-instagram-reels-playbook',
@@ -180,7 +185,7 @@ export default async function ArticlePage({ params }: Props) {
     'comments-are-the-new-followers': [
       'turn-comments-dms-polls-into-content',
       'build-an-email-list-as-a-creator-2026',
-      'grow-with-creator-collaborations-2026',
+      'captions-that-get-engagement',
     ],
     'free-grow-vs-paid-boost': [
       'inside-the-ai-growth-orchestrator',
@@ -235,7 +240,7 @@ export default async function ArticlePage({ params }: Props) {
     'the-first-two-seconds-writing-hooks': [
       'your-post-flopped-now-what',
       'honest-instagram-reels-playbook',
-      'your-first-1000-followers-honest-playbook',
+      'captions-that-get-engagement',
     ],
     'what-an-ai-growth-manager-actually-does': [
       'inside-the-ai-growth-orchestrator',
