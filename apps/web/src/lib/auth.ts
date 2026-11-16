@@ -5,6 +5,12 @@
 // keys and the same refresh endpoint) — this module is the shared
 // auth client P3 imports; there is NO login gate anywhere (legacy
 // parity: app routes render logged-out too).
+//
+// ⚠️ API_BASE TRAP: API_BASE (src/lib/api.ts) already ends in `/api/v1`.
+// Paths passed to apiAuth must NOT start with `/api/v1` — the prefix
+// would double (`/api/v1/api/v1/...`) and 404. (This silently broke
+// fetchMe, loadPlatforms, uploads and the Analytics overview until
+// 2026-11-16. creator.ts already documents the same trap.)
 
 import { API_BASE } from './api';
 import { showToast } from './toast';

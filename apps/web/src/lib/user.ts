@@ -74,7 +74,7 @@ export async function fetchMe(force = false): Promise<UserProfile | null> {
   if (!force && _meCache && now - _meCacheAt < 60000) return _meCache;
   if (!getToken()) return null;
   try {
-    const res = await apiAuth('/api/v1/users/me');
+    const res = await apiAuth('/users/me');
     if (!res.ok) return null;
     const data = (await res.json().catch(() => null)) as UserProfile | null;
     if (!data) return null;
@@ -98,13 +98,13 @@ export function clearMeCache(): void {
 }
 
 /**
- * GET /api/v1/connected-accounts via apiAuth. Returns the connected
+ * GET /connected-accounts via apiAuth. Returns the connected
  * platform keys (lowercased), or [] on any failure (legacy parity:
  * any failure renders all five rows as not-connected).
  */
 export async function loadPlatforms(): Promise<string[]> {
   try {
-    const res = await apiAuth('/api/v1/connected-accounts');
+    const res = await apiAuth('/connected-accounts');
     if (!res.ok) return [];
     const data = (await res.json().catch(() => ({}))) as {
       connected?: unknown;
@@ -155,7 +155,7 @@ export async function uploadProfilePhoto(
   const fd = new FormData();
   fd.append('file', file);
   try {
-    const res = await fetch(`${API_BASE}/api/v1/uploads`, {
+    const res = await fetch(`${API_BASE}/uploads`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}` },
       body: fd,
@@ -164,7 +164,7 @@ export async function uploadProfilePhoto(
     if (!d || !d.url) return;
     const body: Record<string, string> = {};
     body[kind === 'cover' ? 'cover_url' : 'avatar_url'] = API_BASE + d.url;
-    await apiAuth('/api/v1/users/me', {
+    await apiAuth('/users/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
     });

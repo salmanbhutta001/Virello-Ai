@@ -169,7 +169,7 @@ export default function ProfilePage() {
     }
     setSaving(true);
     try {
-      const res = await apiAuth('/api/v1/users/me', {
+      const res = await apiAuth('/users/me', {
         method: 'PATCH',
         body: JSON.stringify({ name: n, preferred_language: language }),
       });

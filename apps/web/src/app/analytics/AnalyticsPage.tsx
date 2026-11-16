@@ -6,7 +6,9 @@ import { apiAuth } from '@/lib/auth';
 
 // Analytics — real data only (2026-11-16).
 //
-// GET /api/v1/analytics/overview returns the user's own recorded
+// GET /analytics/overview (via apiAuth — API_BASE already ends in
+// /api/v1, so the path must NOT start with /api/v1; doubling the
+// prefix 404s) returns the user's own recorded
 // campaign events: { reach, engagement_rate, clicks, conversions }.
 // With no data every field is zero — demo numbers are never served.
 // No data → empty state (never fake KPIs). Has data → only the four
@@ -30,7 +32,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     let live = true;
-    apiAuth('/api/v1/analytics/overview')
+    apiAuth('/analytics/overview')
       .then(async (res) => {
         if (!res.ok) throw new Error(`overview ${res.status}`);
         const j = (await res.json()) as Overview;
