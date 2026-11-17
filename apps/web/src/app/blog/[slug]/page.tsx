@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'reels-troubleshooting-0-views-drops': [
+      'why-your-reels-are-stuck-at-200-views',
+      'honest-instagram-reels-playbook',
+      'your-post-flopped-now-what',
+    ],
     'tiktok-stuck-at-200-views': [
       'honest-tiktok-playbook-new-creators',
       'why-your-reels-are-stuck-at-200-views',
@@ -145,7 +150,7 @@ export default async function ArticlePage({ params }: Props) {
     'why-your-reels-are-stuck-at-200-views': [
       'your-post-flopped-now-what',
       'honest-instagram-reels-playbook',
-      'tiktok-stuck-at-200-views',
+      'reels-troubleshooting-0-views-drops',
     ],
     'hashtags-in-2026-what-still-works': [
       'instagram-algorithm-2026-honestly-explained',
@@ -165,7 +170,7 @@ export default async function ArticlePage({ params }: Props) {
     'your-post-flopped-now-what': [
       'the-first-two-seconds-writing-hooks',
       'why-your-reels-are-stuck-at-200-views',
-      'posting-times-decoded',
+      'reels-troubleshooting-0-views-drops',
     ],
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
@@ -200,7 +205,7 @@ export default async function ArticlePage({ params }: Props) {
     'honest-instagram-reels-playbook': [
       'why-your-reels-are-stuck-at-200-views',
       'instagram-algorithm-2026-honestly-explained',
-      'your-first-1000-followers-honest-playbook',
+      'reels-troubleshooting-0-views-drops',
     ],
     'honest-state-of-social-media-late-2026': [
       'why-fake-followers-cost-more',
