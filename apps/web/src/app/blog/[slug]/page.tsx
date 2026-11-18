@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'instagram-reels-seo-can-reels-rank-on-google': [
+      'honest-instagram-reels-playbook',
+      'instagram-algorithm-2026-honestly-explained',
+      'youtube-seo-for-new-creators-2026',
+    ],
     'reels-troubleshooting-0-views-drops': [
       'why-your-reels-are-stuck-at-200-views',
       'honest-instagram-reels-playbook',
@@ -160,7 +165,7 @@ export default async function ArticlePage({ params }: Props) {
     'instagram-algorithm-2026-honestly-explained': [
       'honest-instagram-reels-playbook',
       'why-your-followers-dont-see-your-posts',
-      'analytics-without-self-deception',
+      'instagram-reels-seo-can-reels-rank-on-google',
     ],
     'honest-tiktok-playbook-new-creators': [
       'tiktok-stuck-at-200-views',
@@ -205,7 +210,7 @@ export default async function ArticlePage({ params }: Props) {
     'honest-instagram-reels-playbook': [
       'why-your-reels-are-stuck-at-200-views',
       'instagram-algorithm-2026-honestly-explained',
-      'reels-troubleshooting-0-views-drops',
+      'instagram-reels-seo-can-reels-rank-on-google',
     ],
     'honest-state-of-social-media-late-2026': [
       'why-fake-followers-cost-more',
@@ -270,7 +275,7 @@ export default async function ArticlePage({ params }: Props) {
      'youtube-seo-for-new-creators-2026': [
       'youtube-shorts-vs-tiktok-where-to-start',
       'honest-creator-home-studio-guide',
-      'pinterest-for-creators-honest-guide-2026',
+      'instagram-reels-seo-can-reels-rank-on-google',
     ],
   };
   const relatedSlugs =
