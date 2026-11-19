@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'how-to-choose-your-niche-2026': [
+      'your-first-1000-followers-honest-playbook',
+      'plan-a-month-of-content-in-one-afternoon',
+      'use-ai-to-plan-content-without-losing-your-voice',
+    ],
     'instagram-reels-seo-can-reels-rank-on-google': [
       'honest-instagram-reels-playbook',
       'instagram-algorithm-2026-honestly-explained',
@@ -114,7 +119,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'your-first-1000-followers-honest-playbook': [
       'honest-instagram-reels-playbook',
-      'grow-with-creator-collaborations-2026',
+      'how-to-choose-your-niche-2026',
       'build-an-email-list-as-a-creator-2026',
     ],
     'how-creators-actually-make-money-2026': [
@@ -125,7 +130,7 @@ export default async function ArticlePage({ params }: Props) {
     'use-ai-to-plan-content-without-losing-your-voice': [
       'plan-a-month-of-content-in-one-afternoon',
       'inside-the-ai-growth-orchestrator',
-      'turn-comments-dms-polls-into-content',
+      'how-to-choose-your-niche-2026',
     ],
     'linkedin-for-creators-honest-playbook-2026': [
       'growing-on-x-2026-text-first-playbook',
@@ -179,7 +184,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
-      'how-creators-actually-make-money-2026',
+      'how-to-choose-your-niche-2026',
       'how-often-should-you-post-2026',
     ],
     'honest-creator-home-studio-guide': [
