@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'film-better-short-form-video-with-your-phone': [
+      'honest-creator-home-studio-guide',
+      'the-first-two-seconds-writing-hooks',
+      'honest-instagram-reels-playbook',
+    ],
     'creator-burnout-how-to-keep-posting-2026': [
       'how-often-should-you-post-2026',
       'plan-a-month-of-content-in-one-afternoon',
@@ -193,7 +198,7 @@ export default async function ArticlePage({ params }: Props) {
       'how-often-should-you-post-2026',
     ],
     'honest-creator-home-studio-guide': [
-      'how-creators-actually-make-money-2026',
+      'film-better-short-form-video-with-your-phone',
       'honest-instagram-reels-playbook',
       'youtube-seo-for-new-creators-2026',
     ],
@@ -220,7 +225,7 @@ export default async function ArticlePage({ params }: Props) {
     'honest-instagram-reels-playbook': [
       'why-your-reels-are-stuck-at-200-views',
       'instagram-algorithm-2026-honestly-explained',
-      'instagram-reels-seo-can-reels-rank-on-google',
+      'film-better-short-form-video-with-your-phone',
     ],
     'honest-state-of-social-media-late-2026': [
       'why-fake-followers-cost-more',
@@ -258,7 +263,7 @@ export default async function ArticlePage({ params }: Props) {
       'lock-down-your-creator-accounts-2026',
     ],
     'the-first-two-seconds-writing-hooks': [
-      'your-post-flopped-now-what',
+      'film-better-short-form-video-with-your-phone',
       'honest-instagram-reels-playbook',
       'captions-that-get-engagement',
     ],
