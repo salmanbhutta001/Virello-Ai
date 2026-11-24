@@ -67,10 +67,15 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'snapchat-for-creators-honest-guide-2026': [
+      'instagram-stories-that-get-replies-2026',
+      'honest-instagram-reels-playbook',
+      'film-better-short-form-video-with-your-phone',
+    ],
     'instagram-stories-that-get-replies-2026': [
       'captions-that-get-engagement',
       'honest-instagram-reels-playbook',
-      'profile-that-turns-visits-into-follows-2026',
+      'snapchat-for-creators-honest-guide-2026',
     ],
     'profile-that-turns-visits-into-follows-2026': [
       'your-first-1000-followers-honest-playbook',
@@ -79,7 +84,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'film-better-short-form-video-with-your-phone': [
       'honest-creator-home-studio-guide',
-      'the-first-two-seconds-writing-hooks',
+      'snapchat-for-creators-honest-guide-2026',
       'honest-instagram-reels-playbook',
     ],
     'creator-burnout-how-to-keep-posting-2026': [
@@ -234,7 +239,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'honest-instagram-reels-playbook': [
       'why-your-reels-are-stuck-at-200-views',
-      'instagram-algorithm-2026-honestly-explained',
+      'snapchat-for-creators-honest-guide-2026',
       'instagram-stories-that-get-replies-2026',
     ],
     'honest-state-of-social-media-late-2026': [
