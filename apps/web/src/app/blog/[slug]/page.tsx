@@ -67,6 +67,11 @@ export default async function ArticlePage({ params }: Props) {
   // "Related articles": topical picks per article (3 each), not list order.
   // Every slug in this map must exist in articles.json.
   const relatedMap: Record<string, string[]> = {
+    'your-post-went-viral-now-what': [
+      'your-post-flopped-now-what',
+      'profile-that-turns-visits-into-follows-2026',
+      'turn-comments-dms-polls-into-content',
+    ],
     'reddit-for-creators-honest-guide-2026': [
       'turn-comments-dms-polls-into-content',
       'how-to-choose-your-niche-2026',
@@ -85,7 +90,7 @@ export default async function ArticlePage({ params }: Props) {
     'profile-that-turns-visits-into-follows-2026': [
       'your-first-1000-followers-honest-playbook',
       'how-to-choose-your-niche-2026',
-      'instagram-stories-that-get-replies-2026',
+      'your-post-went-viral-now-what',
     ],
     'film-better-short-form-video-with-your-phone': [
       'honest-creator-home-studio-guide',
@@ -124,7 +129,7 @@ export default async function ArticlePage({ params }: Props) {
     ],
     'turn-comments-dms-polls-into-content': [
       'comments-are-the-new-followers',
-      'analytics-without-self-deception',
+      'your-post-went-viral-now-what',
       'reddit-for-creators-honest-guide-2026',
     ],
     'grow-with-creator-collaborations-2026': [
@@ -210,7 +215,7 @@ export default async function ArticlePage({ params }: Props) {
     'your-post-flopped-now-what': [
       'the-first-two-seconds-writing-hooks',
       'why-your-reels-are-stuck-at-200-views',
-      'reels-troubleshooting-0-views-drops',
+      'your-post-went-viral-now-what',
     ],
     'plan-a-month-of-content-in-one-afternoon': [
       'one-post-five-platforms-repurposing-playbook',
