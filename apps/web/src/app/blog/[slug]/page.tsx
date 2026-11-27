@@ -395,9 +395,10 @@ export default async function ArticlePage({ params }: Props) {
     abstract: article.description,
     image: article.hero,
     author: {
-      '@type': 'Organization',
-      name: 'Virello Team',
-      url: 'https://virelloai.online/',
+      '@type': 'Person',
+      name: 'Hafiz Muhammad Salman',
+      jobTitle: 'Founder of Virello AI',
+      url: 'https://virelloai.online/about.html',
     },
     publisher: {
       '@type': 'Organization',
@@ -540,12 +541,13 @@ export default async function ArticlePage({ params }: Props) {
           >
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>
               <strong style={{ fontFamily: 'var(--font-d)' }}>
-                Written by the Virello Team
+                Written by Hafiz Muhammad Salman
               </strong>
               <br />
               <span className="mut">
-                We build Virello AI — your AI growth manager for social media.
-                Honest analytics, real audiences, no bots, no fake engagement.
+                Founder of Virello AI — he builds Virello AI, your AI growth
+                manager for social media. Honest analytics, real audiences, no
+                bots, no fake engagement.
               </span>
             </p>
           </div>
